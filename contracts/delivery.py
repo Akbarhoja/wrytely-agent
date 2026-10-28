@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
+from contracts.templates import TemplatePayload, TextPayload
+
 
 @dataclass(frozen=True)
 class DeliveryClaim:
@@ -28,6 +30,7 @@ class SendAuthorization:
     retry_at: datetime | None = None
     recipient: str | None = None
     text: str | None = None
+    payload: TextPayload | TemplatePayload | None = None
 
 
 class WhatsAppStatusEvent(BaseModel):
