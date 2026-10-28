@@ -17,6 +17,17 @@ class WhatsAppText:
     provider_id: str
     sender: str
     text: str
+    event_at: datetime | None = None
+
+
+def _event_time(timestamp: object, now: datetime) -> datetime | None:
+    if not isinstance(timestamp, str) or not re.fullmatch(r"[0-9]{1,12}", timestamp):
+        return None
+    try:
+        event_at = datetime.fromtimestamp(int(timestamp), UTC)
+    except (OverflowError, OSError, ValueError):
+        return None
+    return event_at if event_at <= now + timedelta(minutes=5) else None
 
 
 @dataclass(frozen=True)
@@ -104,7 +115,11 @@ def verify_signature(body: bytes, signature: str, app_secret: str) -> bool:
 
 
 def extract_texts(
-    payload: dict, *, phone_number_id: str, business_account_id: str
+    payload: dict,
+    *,
+    phone_number_id: str,
+    business_account_id: str,
+    now: datetime | None = None,
 ) -> list[WhatsAppText]:
     """Extract only text for our configured business and number. No identity inference.
 
@@ -138,7 +153,14 @@ def extract_texts(
                     and isinstance(text, str)
                     and 0 < len(text.strip()) <= 12000
                 ):
-                    result.append(WhatsAppText(provider_id, sender, text.strip()))
+                    result.append(
+                        WhatsAppText(
+                            provider_id,
+                            sender,
+                            text.strip(),
+                            _event_time(message.get("timestamp"), now or datetime.now(UTC)),
+                        )
+                    )
     return result
 
 

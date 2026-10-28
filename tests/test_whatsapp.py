@@ -255,6 +255,29 @@ def test_extract_only_configured_account_number_and_text():
     assert not extract_texts(payload, phone_number_id="123", business_account_id="999")
 
 
+@pytest.mark.parametrize("timestamp", [None, True, "bad", "1793189101"])
+def test_invalid_inbound_timestamp_preserves_text_but_cannot_enable_delivery(timestamp):
+    payload = status_payload([])
+    payload["entry"][0]["changes"][0]["value"]["messages"] = [
+        {
+            "id": "wamid.in",
+            "from": "15555550123",
+            "type": "text",
+            "text": {"body": "Help"},
+            "timestamp": timestamp,
+        }
+    ]
+    rows = extract_texts(
+        payload,
+        phone_number_id="123",
+        business_account_id="456",
+        now=datetime(2026, 10, 28, 12, tzinfo=UTC),
+    )
+    assert len(rows) == 1
+    assert rows[0].text == "Help"
+    assert rows[0].event_at is None
+
+
 @pytest.mark.parametrize(
     "status,body,state",
     [
