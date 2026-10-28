@@ -99,7 +99,7 @@ AGENT_WHATSAPP_BUSINESS_NUMBER (public international digits, distinct from Meta'
 internal number ID). Configuration does not prove a live connection.
 
 `whatsapp-connection.tsx` contains the testable view and preference form. Codes are
-masked, expire from display, and are never put in URLs or browser storage; an
+masked, expire from display, and are never put in URLs or browser storage; the
 controller clears its in-memory challenge on expiry/account/session change.
 Link/unlink callbacks have a submission lock. Unlink asks for a separate inline
 confirmation and restores keyboard focus. Preference saves are explicit and new

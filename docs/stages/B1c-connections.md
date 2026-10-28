@@ -42,7 +42,7 @@ at desktop and phone widths; do not represent simulated sessions as live Clerk.
 - [x] Implement status/read assembly and tests using the owner's Store method.
 - [x] Add connection/preference UI with uncertainty, expiry and account isolation.
 - [ ] Finish authenticated browser/live checks; offline tests and build are verified.
-- [ ] Independent review, draft PR, and exact offline/live limits in #17.
+- [x] Independent review, draft PR #20, and exact offline/live limits in #17.
 
 ## Prepared UI checkpoint — October 28
 
