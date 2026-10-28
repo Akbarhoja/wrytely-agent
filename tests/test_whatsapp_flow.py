@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import json
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 from fastapi.testclient import TestClient
@@ -9,6 +10,196 @@ from test_api import TestVerifier, auth
 from app.main import create_app
 from integrations.whatsapp import WhatsAppText
 from shared.config import Settings
+
+
+def post_signed(client, value, *, valid=True):
+    body = json.dumps(
+        {
+            "object": "whatsapp_business_account",
+            "entry": [
+                {
+                    "id": "456",
+                    "changes": [
+                        {
+                            "field": "messages",
+                            "value": {
+                                "metadata": {"phone_number_id": "123"},
+                                **value,
+                            },
+                        }
+                    ],
+                }
+            ],
+        }
+    ).encode()
+    signature = "sha256=" + hmac.new(b"test-secret", body, hashlib.sha256).hexdigest()
+    return client.post(
+        "/webhooks/whatsapp",
+        content=body,
+        headers={"x-hub-signature-256": signature if valid else "bad"},
+    )
+
+
+def test_private_preferences_validate_input_and_derive_verified_owner(store, alice):
+    client = setup(store)
+    preferences = {"consent": True, "timezone": "America/Denver", "quiet_start": 22, "quiet_end": 7}
+    assert client.post("/v1/whatsapp/preferences", json=preferences).status_code == 401
+    assert (
+        client.post("/v1/whatsapp/preferences", json=preferences, headers=auth()).status_code == 200
+    )
+    for patch in [
+        {"user_id": "user_bob"},
+        {"timezone": "Invalid/Timezone"},
+        {"quiet_start": 24},
+        {"quiet_start": True},
+        {"consent": "true"},
+    ]:
+        assert (
+            client.post(
+                "/v1/whatsapp/preferences", json={**preferences, **patch}, headers=auth()
+            ).status_code
+            == 422
+        )
+    store.provision("user_bob")
+    with store.connection() as conn:
+        rows = conn.execute(
+            "SELECT p.*,a.user_id FROM wrytely_agent.communication_preferences p "
+            "JOIN wrytely_agent.agents a ON a.id=p.agent_id"
+        ).fetchall()
+    assert len(rows) == 1
+    assert rows[0]["user_id"] == "user_alice"
+    assert rows[0]["timezone"] == "America/Denver"
+
+
+def test_signed_inbound_time_is_persisted_from_event_not_receipt(store, alice):
+    client = setup(store)
+    phone = link(store)
+    old = datetime.now(UTC) - timedelta(hours=25)
+    event = {
+        "type": "text",
+        "from": phone,
+        "id": "delayed-inbound",
+        "text": {"body": "Read this"},
+        "timestamp": str(int(old.timestamp())),
+    }
+    assert post_signed(client, {"messages": [event]}, valid=False).status_code == 403
+    assert post_signed(client, {"messages": [event]}).status_code == 200
+    assert post_signed(client, {"messages": [event]}).status_code == 200
+    with store.connection() as conn:
+        row = conn.execute("SELECT last_event_at FROM wrytely_agent.channel_links").fetchone()
+    assert row["last_event_at"] == old.replace(microsecond=0)
+    assert len(store.tasks("user_alice")) == 1
+
+
+def test_authenticated_status_replay_before_response_reconciles_without_regression(store, alice):
+    from contracts.models import DeliveryResult
+
+    client = setup(store)
+    phone = link(store)
+    store.ingest_whatsapp(WhatsAppText("status-task", phone, "Help"))
+    store.record_whatsapp_inbound_time("status-task", phone, datetime.now(UTC))
+    store.set_communication_preferences(
+        "user_alice", consent=True, timezone="UTC", quiet_start=0, quiet_end=0
+    )
+    store.complete(store.claim(), "Ready")
+    claim = store.claim_whatsapp_delivery("test-worker")
+    store.authorize_whatsapp_send(claim, business_id="456", phone_number_id="123")
+    event = {
+        "id": "wamid.callback",
+        "recipient_id": phone,
+        "status": "delivered",
+        "timestamp": str(int(datetime.now(UTC).timestamp())),
+    }
+    assert post_signed(client, {"statuses": [event]}, valid=False).status_code == 403
+    assert post_signed(client, {"statuses": [event]}).status_code == 200
+    store.record_whatsapp_result(
+        claim,
+        DeliveryResult(
+            internal_id=claim.action_id, state="accepted", provider_ref="wamid.callback"
+        ),
+    )
+    assert post_signed(client, {"statuses": [event]}).status_code == 200
+    assert post_signed(client, {"statuses": [{**event, "status": "sent"}]}).status_code == 200
+    assert post_signed(client, {"statuses": [{**event, "status": "failed"}]}).status_code == 200
+    with store.connection() as conn:
+        row = conn.execute("SELECT state FROM wrytely_agent.whatsapp_outbound").fetchone()
+        events = conn.execute("SELECT * FROM wrytely_agent.whatsapp_status_events").fetchall()
+    assert row["state"] == "delivered"
+    assert len(events) == 3
+    assert all(item["action_id"] == claim.action_id for item in events)
+
+
+def test_status_wrong_recipient_cannot_mark_another_accounts_reply_delivered(store, alice):
+    from contracts.models import DeliveryResult
+
+    client = setup(store)
+    phone = link(store)
+    store.ingest_whatsapp(WhatsAppText("private-status", phone, "Help"))
+    store.record_whatsapp_inbound_time("private-status", phone, datetime.now(UTC))
+    store.set_communication_preferences(
+        "user_alice", consent=True, timezone="UTC", quiet_start=0, quiet_end=0
+    )
+    store.complete(store.claim(), "Private result")
+    claim = store.claim_whatsapp_delivery("test-worker")
+    store.authorize_whatsapp_send(claim, business_id="456", phone_number_id="123")
+    store.record_whatsapp_result(
+        claim,
+        DeliveryResult(internal_id=claim.action_id, state="accepted", provider_ref="wamid.private"),
+    )
+    store.provision("user_bob")
+    link(store, user="user_bob", phone="15555550999")
+    event = {
+        "id": "wamid.private",
+        "recipient_id": "15555550999",
+        "status": "delivered",
+        "timestamp": str(int(datetime.now(UTC).timestamp())),
+    }
+    assert post_signed(client, {"statuses": [event]}).status_code == 200
+    with store.connection() as conn:
+        assert (
+            conn.execute("SELECT state FROM wrytely_agent.whatsapp_outbound").fetchone()["state"]
+            == "accepted"
+        )
+        assert (
+            conn.execute("SELECT action_id FROM wrytely_agent.whatsapp_status_events").fetchone()[
+                "action_id"
+            ]
+            is None
+        )
+
+
+def test_callback_storage_rejection_is_not_acknowledged_and_replay_can_recover(
+    store, alice, monkeypatch
+):
+    client = setup(store)
+    event = {
+        "id": "wamid.orphan",
+        "recipient_id": "15555550123",
+        "status": "delivered",
+        "timestamp": str(int(datetime.now(UTC).timestamp())),
+    }
+    record = store.record_whatsapp_status
+
+    def unavailable(*args, **kwargs):
+        raise ValueError("Unmatched status capacity reached")
+
+    monkeypatch.setattr(store, "record_whatsapp_status", unavailable)
+    assert post_signed(client, {"statuses": [event]}).status_code == 503
+    monkeypatch.setattr(store, "record_whatsapp_status", record)
+    assert post_signed(client, {"statuses": [event]}).status_code == 200
+    with store.connection() as conn:
+        assert (
+            conn.execute(
+                "SELECT count(*) AS n FROM wrytely_agent.whatsapp_status_events"
+            ).fetchone()["n"]
+            == 1
+        )
+        assert (
+            conn.execute("SELECT action_id FROM wrytely_agent.whatsapp_status_events").fetchone()[
+                "action_id"
+            ]
+            is None
+        )
 
 
 def setup(store):

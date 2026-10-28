@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     authorized_parties: list[str] = Field(default_factory=list)
     meta_api_key: SecretStr | None = None
     meta_model: str = "muse-spark-1.3"
+    whatsapp_access_token: SecretStr | None = None
+    whatsapp_api_version: str | None = Field(default=None, pattern=r"^v[0-9]+\.0$")
     whatsapp_app_secret: SecretStr | None = None
     whatsapp_verify_token: SecretStr | None = None
     whatsapp_phone_number_id: str | None = None
