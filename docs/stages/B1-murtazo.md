@@ -1,6 +1,9 @@
 # B1a — first work order for Murtazo
 
 Owner: Murtazo. State: ready after foundation merge; no work claimed yet.
+Update: Codex has begun a Next.js scaffold in `codex/student-workspace`. Review that
+PR and use `web/README.md`; do not create a competing frontend. The work below
+remains the live integration acceptance contract.
 Goal: a new or existing Wrytely user signs in, gets one private agent and exchanges
 messages through the deployed backend contract.
 
