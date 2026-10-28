@@ -154,3 +154,19 @@ models prove orchestration, not live policy interpretation or drafting quality.
 No live inference/sends/production changes. Ordinary worker dispatch, automatic
 policy/rubric extraction and student-facing delegation/review remain pending.
 Full A3 is not complete. #12 remains open for review.
+
+October 28 — #15 A3 worker wiring prepared on codex/drafting-worker. Migration 007
+persists explicitly configured drafting requests for ready/unattempted academic
+steps. The existing worker now invokes generation → saved draft → mandatory
+verification → bounded revisions, with recovery from saved artifacts/reports.
+Ready results complete internal tasks and queue responsibility reassessment;
+policy denial/revision exhaustion blocks task/duty without consuming a worker slot.
+Ordinary academic notes and chat do not automatically enable assignment drafting.
+
+Validation: 153 backend tests pass against disposable Postgres; ten new worker
+integration tests cover real run_once dispatch, private/idempotent configuration,
+active-task rejection, no implicit drafting, blocked-duty fairness, retry recovery,
+revision exhaustion, pause, source-version changes and unbound policy rejection.
+Ruff lint/format/diff checks pass. No Murtazo-owned files changed. No live inference,
+WhatsApp delivery, production migration or deployment. Student-facing delegation,
+automatic policy/rubric extraction and end-to-end live usage still pending.

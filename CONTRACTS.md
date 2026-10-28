@@ -337,3 +337,35 @@ prevent stale writes. Committed drafts resume at review; reports are reused.
 Crashes before persisting inference can repeat model usage; no exactly-once billing
 claim. Callers must not use new keys to evade task/account execution budgets.
 Automatic source-policy extraction and end-to-end worker wiring remain pending.
+
+## A3 worker dispatch — issue #15
+
+Migration 007 stores immutable drafting-request specifications. Existing worker
+run_once now dispatches academic tasks with a persisted request through the checked
+draft workflow; tasks without a request retain the internal-analysis path.
+
+Trusted assembly calls `configure_drafting_task(verified_user_id, task_id,
+policy=CoursePolicy, rubric=list[RubricItem], max_revisions=2)` only after explicit
+student delegation. It requires an owned, current, ready, never-attempted academic
+step under an active responsibility, source-backed permitted/disclosure-required
+policy and 1–30 exact current bound rubric quotes. It must be configured before the
+worker claims it; otherwise configuration fails rather than upgrading active work.
+Repeated identical configuration is idempotent; changed configuration conflicts.
+A model, connector payload or arbitrary caller-supplied identity cannot authorize
+this operation. This change adds no HTTP endpoint or automatic delegation classifier.
+
+The worker reloads the persisted policy/rubric under its fence and calls
+`generate_checked_draft` using a fixed task-scoped workflow key. Current sources,
+freshness, preflight, draft/checkpoint recovery, pause and revision limits remain
+mandatory. Passing saves a private ready_for_review result referencing the artifact
+and completes the task via the existing fenced transaction, which also creates the
+next responsibility planning job. This path does not create WhatsApp delivery or
+imply instructor approval. It does not publish the draft body in ordinary chat.
+
+Blocked policy or exhausted revisions record a private drafting_outcome event and
+atomically block the task and responsibility, release the lease and preserve saved
+artifacts/checks for review. Other work can proceed. Provider/validation exceptions
+use existing bounded retries and redacted error codes. Source-change revocation
+prevents old drafts/tasks from completing. Trusted API/connector assembly must still
+coordinate how delegation, policy evidence and rubric extraction reach this boundary;
+Murtazo owns that assembly. Automatic task selection for drafting remains future.

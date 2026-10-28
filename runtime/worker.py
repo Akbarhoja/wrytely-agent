@@ -3,7 +3,9 @@ import json
 import logging
 import time
 
+from contracts.artifacts import CoursePolicy, RubricItem
 from contracts.models import ModelClient, TaskLease
+from runtime.drafting import generate_checked_draft
 from runtime.planner import run_planning_episode
 from shared.config import Settings
 from shared.db import LeaseLost, Store, json_text
@@ -43,6 +45,34 @@ def run_episode(store: Store, model: ModelClient, settings: Settings, lease: Tas
     context = store.context(lease)
     if context["task_kind"] == "plan":
         run_planning_episode(store, model, settings, lease)
+        return
+    request = store.drafting_request(lease)
+    if request is not None:
+        outcome = generate_checked_draft(
+            store,
+            model,
+            settings,
+            lease,
+            workflow_key="delegated-draft",
+            policy=CoursePolicy.model_validate(request["policy"]),
+            rubric=[RubricItem.model_validate(item) for item in request["rubric"]],
+            max_revisions=request["max_revisions"],
+        )
+        if outcome["state"] == "ready":
+            store.complete(
+                lease,
+                json_text(
+                    {
+                        "state": "ready_for_review",
+                        "artifact_id": str(outcome["artifact_id"]),
+                        "limits": "Checks passed; not delivered, submitted or instructor-approved.",
+                    }
+                ),
+            )
+        else:
+            # Keep private reports/artifact references inspectable; do not report
+            # verification failure as success or schedule further drafting blindly.
+            store.block_drafting_task(lease, json.loads(json_text(outcome)))
         return
     internal = context["task_kind"] == "academic"
     instructions = (
