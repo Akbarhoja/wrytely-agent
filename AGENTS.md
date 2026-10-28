@@ -47,3 +47,22 @@ local disposable Postgres or explicitly designated test databases, never product
 Live provider calls require a configured development key and explicit test budget.
 Continue until all work-order checks pass or record the precise remaining blocker.
 Update STATUS.md with actual evidence and limits. Do not commit `.env` or `.venv`.
+
+## Mandatory ownership and coordination gate
+
+Before implementation, read TEAM.md and the pinned coordination issue linked
+there. Claim one work item with owner, branch, files and acceptance checks. Check
+other active claims. Codex may implement runtime/shared/contracts and their tests;
+Murtazo implements messaging/sources/app/web/deploy and their tests. Existing
+scaffolds must be reused. Never duplicate another owner's module or take over
+because they are absent, blocked or slow. Only Akbar may explicitly reassign work;
+record his authorization in the issue before crossing scope.
+
+If a dependency or shared file is needed, post the precise requested interface or
+change in the coordination issue and wait for agreement from its owner. Continue
+unblocked work inside your own scope. A file claim with another owner blocks edits
+until they release it or Akbar reassigns it. Do not push into another's branch.
+Every implementation PR links its claimed issue and documents tests, interface
+changes, limits and handoff. Review the other engineer's changes and integrate
+through PRs. Mark done only after acceptance evidence and review. Existing draft
+baseline PR #3 predates this claim gate; the gate applies to new implementation.

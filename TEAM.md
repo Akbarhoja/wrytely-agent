@@ -64,3 +64,47 @@ Akbar can paste Murtazo’s PR URL into the Codex chat with “review this PR.�
 can inspect repository state when asked to continue, but does not monitor GitHub
 between turns automatically. No scheduled monitoring or external messages have
 been configured.
+
+## Mandatory non-overlap rule
+
+Each implementation task has exactly one owner and a GitHub issue claim BEFORE
+coding: owner, branch, files, acceptance checks and dependencies. Other engineers
+must read active claims before starting and cannot modify claimed files. Shared
+files require an explicit agreement recorded in the coordination issue. Source
+and messaging tests belong to Murtazo; runtime/store/planner tests belong to Codex.
+The integration owner coordinates cross-layer smoke tests rather than creating a
+second implementation. If a test touches both domains, agree its owner first.
+
+Nobody takes over another's task due to delay or missing access. Only Akbar can
+reassign scope, and his approval must be recorded in the issue before edits. A
+request for review is not permission to rewrite the other engineer's branch.
+Review feedback goes on the PR; its author implements fixes unless reassigned.
+
+GitHub is the shared record, not separate chat histories. Use the coordination
+issue for interface questions, blockers and handoffs; task issues for claims and
+progress; PR comments for code review. At the start of each work session, check
+new coordination comments, open PRs and active claims. At the end, post completed
+work, next step, blockers, contract changes and exact validated evidence. Notify
+@Akbarhoja or @murtazokhon-tech when their input is required. Codex may communicate
+about this project through those GitHub issues/PRs under Akbar's authorization.
+Do not expand that authorization to email, Discord or unrelated channels.
+
+An unresolved contract change blocks dependent edits. Record a proposed payload,
+ownership, error behavior and migration plan; obtain the affected owner's agreement,
+update CONTRACTS.md, then implement. Resolve disagreements with Akbar.
+
+CODEOWNERS routes review to the opposite engineer. It does not prevent writes;
+strict scope is a repository rule enforced by each contributor/assistant and review.
+Existing write access and main protection are unchanged. These rules do not create
+an autonomous background watcher: Codex reads GitHub during active work sessions.
+
+## Active GitHub coordination
+
+- [Pinned team coordination thread — #4](https://github.com/Akbarhoja/wrytely-agent/issues/4)
+- [Murtazo: WhatsApp delivery — #5](https://github.com/Akbarhoja/wrytely-agent/issues/5)
+- [Codex: academic memory — #6](https://github.com/Akbarhoja/wrytely-agent/issues/6)
+
+These work items are assigned and ready, not claimed as already in progress.
+Each engineer posts the exact branch/file claim before starting implementation.
+Use `.github/ISSUE_TEMPLATE/work-item.md` for further tasks and the PR template
+for the ownership/review checklist.
