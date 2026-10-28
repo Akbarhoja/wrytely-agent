@@ -20,6 +20,7 @@ import {
 } from "@phosphor-icons/react";
 import { useWorkspace } from "@/lib/use-workspace";
 import { Overview } from "./overview";
+import { WhatsAppConnection } from "./whatsapp-connection";
 
 type Props = {
   mode: "signed-in" | "signed-out" | "unconfigured" | "loading";
@@ -87,7 +88,7 @@ export function Workspace({ mode, userId, name, account }: Props) {
               aria-current={view === "connections" ? "page" : undefined}
             >
               <LinkSimple size={20} aria-hidden />
-              Connections<span className="count">0</span>
+              Connections
             </button>
           </nav>
           <div className="sidebar-note">
@@ -195,47 +196,53 @@ export function Workspace({ mode, userId, name, account }: Props) {
               onRefresh={data.retry}
             />
           ) : view === "connections" ? (
-            <section className="connections-panel">
-              <div className="section-heading">
-                <h2>Bring your semester together</h2>
-                <span>0 connected</span>
-              </div>
-              <p className="body-copy">
-                Your connections will help Wrytely understand what’s happening across your courses.
-              </p>
-              {[
-                {
-                  name: "Canvas",
-                  detail: "Assignments, deadlines and course discussions",
-                  icon: BookOpen,
-                },
-                {
-                  name: "Microsoft Teams",
-                  detail: "Team conversations and shared work",
-                  icon: ChatCircle,
-                },
-                {
-                  name: "Calendar",
-                  detail: "Classes, meetings and study time",
-                  icon: CalendarBlank,
-                },
-              ].map(({ name: label, detail, icon: Icon }) => (
-                <div className="connection-row" key={label}>
-                  <div className="connection-icon">
-                    <Icon size={23} aria-hidden />
-                  </div>
-                  <div>
-                    <h3>{label}</h3>
-                    <p>{detail}</p>
-                  </div>
-                  <span className="coming">Coming soon</span>
+            <div className="connections-layout">
+              <WhatsAppConnection mode={mode === "signed-in" ? "unavailable" : mode} />
+              <section className="connections-panel">
+                <div className="section-heading">
+                  <h2>Bring your semester together</h2>
+                  <span>Course integrations</span>
                 </div>
-              ))}
-              <p className="privacy-note">
-                <Check size={16} aria-hidden />
-                No courses or chats are connected yet.
-              </p>
-            </section>
+                <p className="body-copy">
+                  Your connections will help Wrytely understand what’s happening across your
+                  courses.
+                </p>
+                {[
+                  {
+                    name: "Canvas",
+                    detail: "Assignments, deadlines and course discussions",
+                    icon: BookOpen,
+                  },
+                  {
+                    name: "Microsoft Teams",
+                    detail: "Team conversations and shared work",
+                    icon: ChatCircle,
+                  },
+                  {
+                    name: "Calendar",
+                    detail: "Classes, meetings and study time",
+                    icon: CalendarBlank,
+                  },
+                ].map(({ name: label, detail, icon: Icon }) => (
+                  <div className="connection-row" key={label}>
+                    <div className="connection-icon">
+                      <Icon size={23} aria-hidden />
+                    </div>
+                    <div>
+                      <h3>{label}</h3>
+                      <p>{detail}</p>
+                    </div>
+                    <span className="coming">Coming soon</span>
+                  </div>
+                ))}
+                <p className="privacy-note">
+                  <Check size={16} aria-hidden />
+                  {signedIn
+                    ? "Course connections are not available yet."
+                    : "No courses or chats are connected yet."}
+                </p>
+              </section>
+            </div>
           ) : (
             <div className="workspace-grid">
               <section className="conversation" aria-label="Conversation with Wrytely">

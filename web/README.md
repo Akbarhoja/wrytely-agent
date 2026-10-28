@@ -88,3 +88,25 @@ Before marking M1 complete, use two actual development accounts to verify distin
 agents, private results, session expiry, refresh/re-login, retry recovery, pause,
 and an actual message → Python queue → Meta worker → saved response round trip.
 No public deployment or pilot is enabled by this scaffold.
+
+## WhatsApp controls preparation (issue #17)
+
+The Connections view includes a WhatsApp panel. Public/unconfigured and signed-in
+unavailable states are honest: no number is claimed connected, and actions remain
+unavailable until the shared account-scoped status read and public destination
+number contract are supplied. This is UI preparation, not complete onboarding.
+
+`whatsapp-connection.tsx` contains the testable view and preference form. Codes are
+masked, expire from display, and are never put in URLs or browser storage; an
+eventual controller must clear its in-memory challenge on expiry/account change.
+Link/unlink callbacks have a submission lock. Unlink asks for a separate inline
+confirmation and restores keyboard focus. Preference saves are explicit and new
+authoritative reads reconcile without silently discarding edited drafts.
+
+The existing proxy allowlists only POST whatsapp/link, whatsapp/unlink and
+whatsapp/preferences in addition to previous routes, preserving exact Origin,
+verified session and no-cache rules. It does not expose an unimplemented GET.
+Current web validation: 35 tests, format check, typecheck and production build
+pass. Ready/linked/error states use component fixtures in tests; live two-account
+Clerk, actual linking and provider delivery remain unverified. See
+`docs/stages/B1c-connections.md` and root DESIGN.md for scope and design decisions.

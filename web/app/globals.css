@@ -658,6 +658,272 @@ h1 {
   padding: 28px;
   max-width: 850px;
 }
+.connections-layout {
+  display: grid;
+  gap: 24px;
+  max-width: 960px;
+}
+.connections-layout > .connections-panel {
+  max-width: none;
+}
+.whatsapp-panel {
+  padding: 32px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  min-width: 0;
+}
+.whatsapp-heading,
+.whatsapp-heading > div,
+.connection-actions,
+.connection-summary > p:first-child {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.whatsapp-heading {
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.whatsapp-heading svg {
+  color: var(--green);
+}
+.whatsapp-heading h2 {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.connection-lead {
+  color: var(--muted);
+  margin-top: 12px;
+  max-width: 64ch;
+}
+.connection-status {
+  font-size: 12px;
+  color: var(--green);
+  font-weight: 600;
+}
+.connection-notice {
+  margin-top: 24px;
+  background: var(--bg);
+  padding: 18px;
+  border-radius: 8px;
+}
+.connection-notice > svg {
+  vertical-align: middle;
+}
+.connection-notice a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.connection-summary {
+  margin-top: 28px;
+}
+.connection-summary > p + p {
+  margin-top: 8px;
+  color: var(--muted);
+}
+.disconnect-button {
+  color: var(--danger);
+}
+.disconnect-confirm {
+  margin-top: 18px;
+  padding-block: 18px;
+  border-top: 1px solid var(--border);
+}
+.disconnect-confirm h3 {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+.verification-flow {
+  margin-top: 28px;
+}
+.verification-flow ol {
+  padding-left: 24px;
+  margin: 0 0 24px;
+  display: grid;
+  gap: 18px;
+}
+.verification-flow li {
+  padding-left: 8px;
+}
+.verification-flow li p {
+  color: var(--muted);
+  margin-top: 4px;
+}
+.destination-number {
+  color: var(--text);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.verification-message {
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.verification-message > label,
+.preference-fields label,
+.preference-fields legend {
+  display: block;
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 7px;
+}
+.whatsapp-panel input:not([type="checkbox"]),
+.whatsapp-panel select {
+  font: inherit;
+  font-size: 16px;
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--surface);
+  color: var(--text);
+}
+.whatsapp-panel input {
+  accent-color: var(--green);
+  caret-color: var(--green);
+}
+.whatsapp-panel input:focus-visible,
+.whatsapp-panel select:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+.whatsapp-panel input:disabled,
+.whatsapp-panel select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.connection-actions {
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+.connection-actions .primary-button {
+  margin-top: 0;
+}
+.code-expiry {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.communication-preferences {
+  border-top: 1px solid var(--border);
+  padding-top: 28px;
+  margin-top: 32px;
+}
+.communication-preferences h3 {
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+.communication-preferences > p {
+  color: var(--muted);
+  max-width: 65ch;
+}
+.communication-preferences .preferences-unsaved {
+  font-size: 12px;
+  margin-top: 12px;
+}
+.consent-field {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-top: 24px;
+  cursor: pointer;
+}
+.consent-field input {
+  width: 19px;
+  height: 19px;
+  margin: 3px 0 0;
+  flex-shrink: 0;
+}
+.preference-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+  margin-top: 24px;
+}
+.preference-fields > div,
+.preference-fields fieldset {
+  min-width: 0;
+}
+.preference-fields fieldset {
+  padding: 0;
+  border: 0;
+  margin: 0;
+}
+.quiet-hour-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.quiet-hour-fields label {
+  font-weight: 400;
+}
+.quiet-hour-fields select {
+  margin-top: 7px;
+}
+.preference-fields p {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 7px;
+}
+.connection-error,
+.preference-fields .connection-error {
+  color: var(--danger);
+  margin-top: 12px;
+}
+::selection {
+  background: var(--tint);
+  color: var(--text);
+}
+* {
+  scrollbar-color: var(--muted) var(--bg);
+  scrollbar-width: thin;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--muted);
+  border: 2px solid var(--bg);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--green);
+}
+::-webkit-scrollbar-thumb:active {
+  background: var(--text);
+}
+@media (forced-colors: active) {
+  * {
+    scrollbar-color: auto;
+  }
+}
+@media (max-width: 640px) {
+  .whatsapp-panel {
+    padding: 22px 18px;
+  }
+  .whatsapp-heading h2 {
+    font-size: 18px;
+  }
+  .preference-fields {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+  }
+  .connection-actions {
+    align-items: stretch;
+  }
+  .connection-actions > button,
+  .connection-actions > a {
+    flex: 1 1 160px;
+    justify-content: center;
+  }
+}
 .body-copy {
   font-size: 12px;
   color: var(--muted);
@@ -1317,5 +1583,14 @@ h1 {
   }
   .work-scope {
     font-size: 10px;
+  }
+}
+@media (max-width: 380px) {
+  .nav-item {
+    flex: 1;
+    min-width: 0;
+    flex-direction: column;
+    gap: 3px;
+    padding: 7px 3px;
   }
 }
