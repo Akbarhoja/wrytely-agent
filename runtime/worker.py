@@ -43,30 +43,29 @@ def run_episode(store: Store, model: ModelClient, settings: Settings, lease: Tas
         {"role": "system", "content": INSTRUCTIONS},
         {"role": "user", "content": context["current_message"]},
     ]
-    for _ in range(settings.max_episode_turns):
-        store.heartbeat(lease, settings.lease_seconds)
-        result = model.turn(history, TOOLS)
-        store.event(
-            lease,
-            "model_turn",
-            {
-                "output": result.output,
-                "input_tokens": result.input_tokens,
-                "output_tokens": result.output_tokens,
-            },
-        )
-        history.extend(result.output)
-        calls = [item for item in result.output if item.get("type") == "function_call"]
-        if len(calls) > 8:
+    # Replay only this task's committed observations, including encrypted Meta
+    # reasoning blocks. Never reconstruct context from another queued message.
+    pending = []
+    final_text = None
+    for event in store.episode_history(lease):
+        data = event["data"]
+        if event["kind"] == "model_turn":
+            history.extend(data["output"])
+            pending = [item for item in data["output"] if item.get("type") == "function_call"]
+            final_text = data.get("text") if not pending else None
+        else:
+            history.append(data)
+            pending = [call for call in pending if call["call_id"] != data["call_id"]]
+
+    def execute_pending():
+        if len(pending) > 8:
             raise EpisodeLimit("Too many tool calls")
-        if not calls:
-            if not result.text.strip() or len(result.text) > 24000:
-                raise EpisodeLimit("Invalid final response")
-            store.complete(lease, result.text)
-            return
-        for call in calls:
+        for call in pending:
             store.heartbeat(lease, settings.lease_seconds)
-            arguments = json.loads(call["arguments"])
+            try:
+                arguments = json.loads(call["arguments"])
+            except (ValueError, TypeError):
+                arguments = None
             if call["name"] != "get_academic_context" or arguments != {}:
                 value = {"error": "tool_not_permitted"}
             else:
@@ -76,8 +75,38 @@ def run_episode(store: Store, model: ModelClient, settings: Settings, lease: Tas
                 "call_id": call["call_id"],
                 "output": json_text(value),
             }
+            # Current tools are read-only. Future side effects need an action
+            # ledger; this checkpoint alone cannot guarantee exactly-once IO.
             store.event(lease, "tool_result", output)
             history.append(output)
+
+    if final_text is not None:
+        if not final_text.strip() or len(final_text) > 24000:
+            raise EpisodeLimit("Invalid saved response")
+        store.complete(lease, final_text)
+        return
+    execute_pending()
+    for _ in range(settings.max_episode_turns):
+        store.heartbeat(lease, settings.lease_seconds)
+        result = model.turn(history, TOOLS)
+        store.event(
+            lease,
+            "model_turn",
+            {
+                "output": result.output,
+                "text": result.text,
+                "input_tokens": result.input_tokens,
+                "output_tokens": result.output_tokens,
+            },
+        )
+        history.extend(result.output)
+        pending = [item for item in result.output if item.get("type") == "function_call"]
+        if not pending:
+            if not result.text.strip() or len(result.text) > 24000:
+                raise EpisodeLimit("Invalid final response")
+            store.complete(lease, result.text)
+            return
+        execute_pending()
     store.event(
         lease,
         "handoff",

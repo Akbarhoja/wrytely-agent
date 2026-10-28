@@ -280,6 +280,16 @@ class Store(WhatsAppStore):
                 "context_status": "foundation_only_no_course_connectors",
             }
 
+    def episode_history(self, lease: TaskLease):
+        """Private replay records across attempts, fenced to the current owner."""
+        with self.connection() as conn:
+            self._fence(conn, lease)
+            return conn.execute(
+                "SELECT kind,data FROM wrytely_agent.episode_events WHERE task_id=%s "
+                "AND kind IN ('model_turn','tool_result') ORDER BY id",
+                (lease.task_id,),
+            ).fetchall()
+
     def events(self, lease: TaskLease):
         with self.connection() as conn:
             return conn.execute(

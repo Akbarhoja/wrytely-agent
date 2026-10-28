@@ -91,3 +91,18 @@ Worker completion for an inbound WhatsApp task atomically creates its queued rep
 if the original link is still current. Web tasks do not create WhatsApp replies.
 Delivery worker, status callback ingestion, template/window rules and web linking
 controls are still pending. No automatic WhatsApp sends are enabled.
+
+## A1 episode resumption
+
+`Store.episode_history(lease)` verifies the current live lease and returns only
+that task's committed model turns and tool outputs across attempts. The runtime
+reconstructs the model history in event order, retains encrypted reasoning blocks,
+executes pending read-only calls, and reuses a saved final response. A model turn
+now records `text` as well as its full output and usage. Legacy turns without text
+cannot recover their final text through this new field and may require inference.
+
+Each episode remains bounded and total attempts remain capped. Source mutations,
+new responsibilities and true next-task selection are separate future stages.
+Do not add a side-effect tool to replay without an action ledger and documented
+reconciliation behavior. A crash after an external action but before its checkpoint
+can otherwise duplicate that action. Current tools are read-only.

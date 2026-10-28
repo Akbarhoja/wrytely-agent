@@ -27,3 +27,11 @@ deletion are disabled. Akbar retains the administrator override. The new `web`
 job runs on the frontend PR and should become required after that workflow lands.
 Codex is an engineering assistant, not a distinct GitHub user who can approve
 Akbar's own PR. Murtazo can supply the independent review after his invitation.
+
+## Ownership confirmed by Akbar — October 28
+
+Codex continues Akbar's runtime, memory, planning, verification, shared contracts
+and integration-review work. Murtazo owns WhatsApp delivery, source integrations,
+onboarding and the student-facing web experience. Existing Codex scaffolds in
+those areas are starting points for Murtazo, not an ongoing reassignment. Akbar
+owns product decisions, supervision, account access and release approval.

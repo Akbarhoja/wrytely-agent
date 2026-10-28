@@ -6,9 +6,9 @@ Started October 27, 2026. Supervisor: Akbar. Lead: Codex. Engineer: Murtazo.
 |---|---|---|---|
 | P0 existing-service inspection | Codex | partial | Existing product uses Clerk Next.js 7, Neon/Postgres, S3-compatible storage; no production changes. Live account configuration pending. |
 | S0 foundation | Codex | in review | Isolated repo, scoped Postgres migration, auth verifier, provisioning, durable queue, bounded Meta adapter and API. Offline tests against real local Postgres pass. |
-| A1 task/worker foundation | Codex | in review | Attempts fenced, same-agent concurrency controlled, pause/restart behavior tested. Full planner and stateful episode resumption still to build. |
+| A1 task/worker foundation | Codex | in review | Attempts fenced, same-agent concurrency controlled, pause/restart behavior tested. Stateful episode resumption implemented locally; full responsibility planner still to build. |
 | B1a signed-in frontend | Codex scaffold; Murtazo live integration | scaffold in review | Next.js workspace, Clerk routes/provider, authenticated same-origin API boundary, persisted retry keys, task status and pause controls. Live two-account checks pending. Akbar will invite Murtazo. |
-| B1b verified messaging | Murtazo | not started | Requires selected provider access and expanded delivery/linking contracts. |
+| B1b verified messaging | Murtazo | partial scaffold | Codex prepared adapter, linking, inbound task storage and reply outbox. Murtazo owns remaining delivery, web controls and live integration. |
 | M1 live round trip | Both | not achieved | Need isolated database configuration, existing Clerk instance public verification configuration, Meta development key, frontend and messaging integration. |
 | M2 academic ownership | Codex + Murtazo | not started | Responsibilities, assignment context, self-directed planner, artifacts and checks. |
 | M3 public pilot | Both | not started | Usage budgets, connectors, controls, external-action gateway and integration evidence required. |
@@ -59,3 +59,17 @@ format and diff checks pass. No frontend files changed. No live credentials,
 WhatsApp sends or production migrations were used. Delivery worker, web linking
 controls, delivery callbacks and template/window enforcement remain unfinished.
 Development setup is documented in docs/stages/B1b-whatsapp.md.
+
+October 28 runtime continuation (Akbar/Codex ownership): task episodes now replay
+saved model turns and tool results across worker attempts. Pending read-only tool
+calls finish before the next model turn. A saved final answer can be committed
+without repeating inference after an interruption. Replay is scoped and fenced to
+the current task/agent, including Meta encrypted reasoning blocks. Episode turn
+limits and maximum attempts still apply. No new model/provider service adopted.
+
+Validation: 67 backend tests pass on disposable local Postgres, including five new
+resumption tests using abrupt-termination simulation and fresh Store instances.
+Ruff lint, format and diff checks pass. This is not an OS process-kill test or a
+live Meta smoke test. External side effects require their own durable action
+ledger; replay alone does not ensure exactly-once sending. Full autonomous
+responsibility planning and academic source memory are still pending.
