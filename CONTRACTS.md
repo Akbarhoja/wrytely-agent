@@ -400,3 +400,46 @@ fields, proxy allowlist and student controls under #17. No app/frontend endpoint
 are added here. No migration, connection authorization or sending permission is
 introduced. Approved-template policy/configuration remains a separate Codex-owned
 shared-contract task; expired-window delivery stays held.
+
+## Approved reply templates — issue #21 (review before worker opt-in)
+
+Settings adds whatsapp_approved_templates (max 20 ApprovedTemplate entries, default
+empty) and whatsapp_reply_template_key (default None). Environment names use the
+existing AGENT_ prefix. Configuration is trusted server/operator input, never a
+student API or model/source tool. Operator must verify actual provider approval for
+the exact account/name/language/body schema; provider_approved=true is an explicit
+configuration assertion, NOT a provider approval lookup performed by Wrytely.
+No real template/name/approval is configured by this code change.
+
+ApprovedTemplate fields: key, name (lowercase letters/digits/underscore), language,
+business_id, phone_number_id, provider_approved (literal boolean True), body_parameters
+(tuple of 1–10 TemplateParameter). Each parameter has source literal/reply_text,
+optional literal value, and max_length 1–1024. Literal values must be nonblank and
+fit the bound; reply_text cannot set literal. Exactly one reply_text parameter is
+required to carry the complete authorized reply. No notification-only substitution
+or truncation is allowed in this first contract. Static transport templates may
+exist, but this authorization path does not use them to claim answer delivery.
+
+`authorize_whatsapp_send` adds supports_templates=False, approved_templates=(),
+reply_template_key=None. Existing workers remain held for expired windows, even if
+operator templates exist. Murtazo must review and explicitly opt in a worker that
+can branch on SendAuthorization.payload.kind. TextPayload is {kind:text,text};
+TemplatePayload is {kind:template,key,name,language,body_parameters}. For permitted
+text, legacy authorization.text is preserved. For permitted template, legacy text
+is None: worker MUST consume the typed payload, not fall back to claim.content.
+
+For expired conversation windows only: match exactly one selected approved key,
+verify configured business/number, populate only allowed parameters, and ensure
+the entire reply fits. Missing key/approval/capability remains approved_template_required;
+wrong account holds template_account_mismatch; invalid/oversized body holds
+template_parameter_invalid. Existing link, consent, pause, quiet hours, known trusted
+inbound time and completed reply requirements remain enforced. No body truncation,
+model-selected template or new recipient permission. Within-window text is unchanged.
+
+Dispatch authorization atomically records delivery_authorized evidence in the
+existing private episode ledger (task ID, action ID, owning attempt, typed payload).
+The one-use dispatch fence and accepted/failed/unknown/status correlation remain
+unchanged. This is no new migration. Existing send/network cancellation race and
+unknown-outcome rules still apply. Murtazo owns passing Settings values/capability,
+dispatching payload to the existing adapter once, and adding worker/API tests after
+agreement. No transport/worker/app code was changed by Codex in this increment.

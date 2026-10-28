@@ -183,3 +183,17 @@ This branch intentionally excludes downstream A3 tests; the count is not a loss
 of tests. No live provider calls, production migrations or deployment. Murtazo
 has incorporated shared fix d61217b into #14; current GitHub checks were green.
 #18 remains open awaiting interface/implementation review.
+
+October 28 — #21 approved-template shared contract prepared on
+codex/approved-templates, stacked on connection-status #19 / delivery-storage #9.
+Adds scoped trusted allowlist configuration, typed text/template authorization,
+parameter bounds and payload audit evidence. Old workers stay held outside the
+window by default; opt-in requires typed payload support. Full reply must fit the
+approved body slot; no silent notification-only replacement or truncation.
+
+Validation: 147 backend tests pass on this delivery-only branch, including 19 new
+template cases; Ruff lint/format/diff checks pass. No new migration or Murtazo-owned
+implementation files changed. No real template configured/approved, provider API
+lookup, live send or production changes. Template approval is operator evidence,
+not inferred by code. Murtazo agreement/worker wiring and real provider validation
+remain pending. Issue #21 is not marked complete.

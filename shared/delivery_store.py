@@ -5,8 +5,12 @@ from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
+from psycopg.types.json import Jsonb
+
 from contracts.delivery import DeliveryClaim, SendAuthorization, WhatsAppStatusEvent
 from contracts.models import DeliveryResult
+from contracts.templates import TextPayload
+from shared.template_policy import select_reply_template
 
 
 class DeliveryStore:
@@ -109,7 +113,16 @@ class DeliveryStore:
             raise LeaseLost("Delivery attempt no longer owned")
         return row
 
-    def authorize_whatsapp_send(self, claim, *, business_id, phone_number_id):
+    def authorize_whatsapp_send(
+        self,
+        claim,
+        *,
+        business_id,
+        phone_number_id,
+        supports_templates=False,
+        approved_templates=(),
+        reply_template_key=None,
+    ):
         if not business_id or not phone_number_id:
             raise ValueError("Configured WhatsApp account required")
         with self.connection() as conn:
@@ -125,6 +138,7 @@ class DeliveryStore:
                 "SELECT * FROM wrytely_agent.channel_links WHERE agent_id=%s", (row["agent_id"],)
             ).fetchone()
             reason, cancel = None, False
+            payload = None
             if (
                 not link
                 or row["link_generation"] != link["generation"]
@@ -162,7 +176,16 @@ class DeliveryStore:
                     elif link["last_event_at"] is None:
                         reason = "inbound_time_unknown"
                     elif now - link["last_event_at"] >= timedelta(hours=24):
-                        reason = "approved_template_required"
+                        if supports_templates is not True:
+                            reason = "approved_template_required"
+                        else:
+                            payload, reason = select_reply_template(
+                                approved_templates,
+                                reply_template_key,
+                                business_id=business_id,
+                                phone_number_id=phone_number_id,
+                                reply_text=row["content"],
+                            )
                     elif not 0 < len(row["content"].strip()) <= 4096:
                         reason = "text_payload_limit"
             if reason:
@@ -179,7 +202,27 @@ class DeliveryStore:
                 "phone_number_id=%s,hold_reason=NULL,retry_at=NULL WHERE id=%s",
                 (business_id, phone_number_id, row["id"]),
             )
-            return SendAuthorization("permitted", recipient=row["recipient"], text=row["content"])
+            payload = payload or TextPayload(text=row["content"])
+            conn.execute(
+                "INSERT INTO wrytely_agent.episode_events(task_id,attempt,kind,data) "
+                "VALUES (%s,0,'delivery_authorized',%s)",
+                (
+                    row["task_id"],
+                    Jsonb(
+                        {
+                            "action_id": str(row["id"]),
+                            "attempt_token": str(row["attempt_token"]),
+                            "payload": payload.model_dump(mode="json"),
+                        }
+                    ),
+                ),
+            )
+            return SendAuthorization(
+                "permitted",
+                recipient=row["recipient"],
+                text=payload.text if isinstance(payload, TextPayload) else None,
+                payload=payload,
+            )
 
     def record_whatsapp_result(self, claim, result: DeliveryResult):
         if result.internal_id != claim.action_id or result.state not in (
