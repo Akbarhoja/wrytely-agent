@@ -109,3 +109,19 @@ frontend, connector or WhatsApp files changed. The connector contract is a draft
 pending agreement in #4. Source ingestion is not exposed to students yet. Semantic
 claim verification, model-driven fact extraction and automatic requirement-change
 revision remain unimplemented. Issue #6 is awaiting review, not marked done.
+
+October 28 — issue #8 delivery storage prepared on codex/delivery-storage, stacked
+on academic-memory PR #7. Adds migration 005, typed fenced delivery claims,
+one-time send authorization, conservative preference/window holds, private consent
+and quiet-hour storage, current-link generations, trusted inbound event-time
+storage and replay-safe status evidence with early-callback reconciliation.
+Murtazo retains transport/parser/worker/API assembly and messaging tests.
+
+Validation: 106 backend tests pass locally against disposable Postgres; 17 new
+storage tests cover concurrent claims, one-time dispatch authorization, controls,
+expired windows, unknown attempts, relinking, wrong callback scope, callback/result
+races, orphan reconciliation and private preferences. Required Ruff/diff checks
+run before review. No live provider calls, source connections, production schema
+changes or app deployment. Template payload/configuration support is not implemented;
+expired-window sends stay held as approved_template_required. No M1 live milestone
+is claimed. Typed contract awaits Murtazo review before dependent assembly.
