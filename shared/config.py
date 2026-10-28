@@ -10,6 +10,10 @@ class Settings(BaseSettings):
     authorized_parties: list[str] = Field(default_factory=list)
     meta_api_key: SecretStr | None = None
     meta_model: str = "muse-spark-1.3"
+    whatsapp_app_secret: SecretStr | None = None
+    whatsapp_verify_token: SecretStr | None = None
+    whatsapp_phone_number_id: str | None = None
+    whatsapp_business_account_id: str | None = None
     max_episode_turns: int = Field(default=6, ge=1, le=20)
     lease_seconds: int = Field(default=300, ge=30, le=3600)
     max_attempts: int = Field(default=3, ge=1, le=10)

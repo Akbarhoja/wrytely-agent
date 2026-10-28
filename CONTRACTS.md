@@ -70,3 +70,24 @@ Before enabling them: persist webhook IDs uniquely, verify account/number linkin
 add durable outbound intents and permission checks, enforce the conversation
 window, implement approved templates and consume status callbacks. Never route a
 phone number directly to a Clerk user ID. Media intake remains future work.
+
+## B1b durable inbound path
+
+Migration 002 adds link challenges, verified numbers, inbound IDs and a reply
+outbox. Migration runner now applies ordered versioned migrations with checksum
+validation; 001 is unchanged.
+
+- `POST /v1/whatsapp/link`: Clerk-authenticated; bootstrapped accounts receive one
+  single-use challenge, valid ten minutes. Reissue invalidates its predecessor.
+- `POST /v1/whatsapp/unlink`: Clerk-authenticated; unlink own number, revoke pending
+  challenge and cancel own queued/deferred outbound messages.
+- `GET /webhooks/whatsapp`: configured token challenge verification.
+- `POST /webhooks/whatsapp`: bounded raw body, app-secret signature, configured
+  business and phone filtering. Persist accepted text and task atomically; unique
+  provider ID prevents duplicate tasks. Unknown senders are ignored. Return 503
+  when work cannot be durably accepted because of queue capacity or storage.
+
+Worker completion for an inbound WhatsApp task atomically creates its queued reply
+if the original link is still current. Web tasks do not create WhatsApp replies.
+Delivery worker, status callback ingestion, template/window rules and web linking
+controls are still pending. No automatic WhatsApp sends are enabled.

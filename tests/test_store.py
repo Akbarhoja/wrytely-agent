@@ -16,9 +16,10 @@ def expire(store, task_id):
 def test_migration_repeat_is_safe(store):
     store.migrate()
     with store.connection() as conn:
-        assert (
-            conn.execute("SELECT count(*) AS n FROM wrytely_agent.migrations").fetchone()["n"] == 1
-        )
+        versions = conn.execute(
+            "SELECT version FROM wrytely_agent.migrations ORDER BY version"
+        ).fetchall()
+        assert [row["version"] for row in versions] == ["001", "002"]
 
 
 def test_concurrent_provisioning_is_idempotent(store):

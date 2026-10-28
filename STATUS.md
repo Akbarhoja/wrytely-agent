@@ -45,3 +45,17 @@ trial, not an adopted dependency.
 Validation for this continuation: all 54 backend tests pass against disposable
 local Postgres; Ruff lint and formatting pass. Dependency lock updated. Existing
 24 frontend tests were not rerun because no frontend code changed.
+
+October 28 B1b continuation: development webhook routes and authenticated
+link/unlink APIs now persist single-use expiring challenges, verified numbers,
+unique inbound provider IDs, text tasks and a transactional reply outbox. Link
+secrets do not enter model context. Unlink cancels pending delivery and relinking
+does not redirect old work. Migration 002 is local-only; existing migration 001
+is unchanged. A concurrency test exposed a pre-existing task-claim race; a fresh
+active-lease check under the agent lock now prevents overlapping worker claims.
+
+Validation: 62 backend tests pass against disposable local Postgres; Ruff lint,
+format and diff checks pass. No frontend files changed. No live credentials,
+WhatsApp sends or production migrations were used. Delivery worker, web linking
+controls, delivery callbacks and template/window enforcement remain unfinished.
+Development setup is documented in docs/stages/B1b-whatsapp.md.

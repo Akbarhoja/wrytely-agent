@@ -1,14 +1,18 @@
+import hmac
+import json
 import logging
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from psycopg import Error as DatabaseError
+from starlette.concurrency import run_in_threadpool
 
 from contracts.models import AgentControl, Identity, MessageIn, SessionVerifier
+from integrations.whatsapp import extract_texts, verify_signature
 from shared.auth import AuthenticationError, ClerkSessionVerifier
 from shared.config import Settings
 from shared.db import QueueFull, RequestConflict, Store
@@ -122,6 +126,79 @@ def create_app(
         if not row:
             raise HTTPException(404, "Task not found")
         return row
+
+    def whatsapp_configured():
+        if not all(
+            (
+                settings.whatsapp_app_secret,
+                settings.whatsapp_verify_token,
+                settings.whatsapp_phone_number_id,
+                settings.whatsapp_business_account_id,
+            )
+        ):
+            raise HTTPException(503, "WhatsApp is not configured")
+
+    @api.post("/v1/whatsapp/link")
+    def whatsapp_link(user: User, db: DB):
+        whatsapp_configured()
+        try:
+            return db.create_whatsapp_challenge(user.user_id)
+        except LookupError:
+            raise HTTPException(409, "Complete agent setup first") from None
+        except ValueError:
+            raise HTTPException(409, "Unlink existing WhatsApp first") from None
+
+    @api.post("/v1/whatsapp/unlink")
+    def whatsapp_unlink(user: User, db: DB):
+        db.unlink_whatsapp(user.user_id)
+        return {"unlinked": True}
+
+    @api.get("/webhooks/whatsapp")
+    def whatsapp_verify(request: Request):
+        whatsapp_configured()
+        query = request.query_params
+        supplied = query.get("hub.verify_token", "")
+        if query.get("hub.mode") != "subscribe" or not hmac.compare_digest(
+            supplied.encode(), settings.whatsapp_verify_token.get_secret_value().encode()
+        ):
+            raise HTTPException(403, "Invalid verification")
+        challenge = query.get("hub.challenge", "")
+        if not challenge.isascii() or not challenge.isdigit() or len(challenge) > 128:
+            raise HTTPException(400, "Invalid challenge")
+        return PlainTextResponse(challenge)
+
+    @api.post("/webhooks/whatsapp")
+    async def whatsapp_receive(request: Request, db: DB):
+        whatsapp_configured()
+        body = bytearray()
+        async for chunk in request.stream():
+            body.extend(chunk)
+            if len(body) > 262144:
+                raise HTTPException(413, "Webhook too large")
+        if not verify_signature(
+            bytes(body),
+            request.headers.get("x-hub-signature-256", ""),
+            settings.whatsapp_app_secret.get_secret_value(),
+        ):
+            raise HTTPException(403, "Invalid signature")
+        try:
+            payload = json.loads(body)
+            messages = extract_texts(
+                payload,
+                phone_number_id=settings.whatsapp_phone_number_id,
+                business_account_id=settings.whatsapp_business_account_id,
+            )
+        except (ValueError, TypeError, AttributeError):
+            raise HTTPException(400, "Invalid webhook payload") from None
+        try:
+            for message in messages:
+                await run_in_threadpool(
+                    db.ingest_whatsapp, message, limit=settings.pending_task_limit
+                )
+        except QueueFull:
+            # Do not acknowledge work we did not durably accept; provider may retry.
+            raise HTTPException(503, "Agent queue is full") from None
+        return {"received": True}
 
     return api
 

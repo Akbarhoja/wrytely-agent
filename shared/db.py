@@ -9,6 +9,7 @@ from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 
 from contracts.models import TaskLease
+from shared.whatsapp_store import WhatsAppStore
 
 
 class LeaseLost(Exception):
@@ -23,7 +24,7 @@ class QueueFull(Exception):
     pass
 
 
-class Store:
+class Store(WhatsAppStore):
     def __init__(self, url: str):
         self._url = url
 
@@ -34,9 +35,7 @@ class Store:
 
     def migrate(self):
         """Explicit command only. Never run automatically on app startup."""
-        path = Path(__file__).parents[1] / "contracts" / "001_foundation.sql"
-        sql = path.read_text()
-        checksum = hashlib.sha256(sql.encode()).hexdigest()
+        paths = sorted((Path(__file__).parents[1] / "contracts").glob("[0-9]*_*.sql"))
         with self.connection() as conn:
             conn.execute("SELECT pg_advisory_xact_lock(20417351)")
             conn.execute("CREATE SCHEMA IF NOT EXISTS wrytely_agent")
@@ -45,18 +44,24 @@ class Store:
                 "(version text PRIMARY KEY, checksum text NOT NULL, "
                 "applied_at timestamptz NOT NULL DEFAULT now())"
             )
-            row = conn.execute(
-                "SELECT checksum FROM wrytely_agent.migrations WHERE version='001'"
-            ).fetchone()
-            if row:
-                if row["checksum"] != checksum:
-                    raise RuntimeError("Applied migration checksum changed; add a new migration")
-                return
-            conn.execute(sql, prepare=False)
-            conn.execute(
-                "INSERT INTO wrytely_agent.migrations(version,checksum) VALUES ('001',%s)",
-                (checksum,),
-            )
+            for path in paths:
+                version = path.name.split("_", 1)[0]
+                sql = path.read_text()
+                checksum = hashlib.sha256(sql.encode()).hexdigest()
+                row = conn.execute(
+                    "SELECT checksum FROM wrytely_agent.migrations WHERE version=%s", (version,)
+                ).fetchone()
+                if row:
+                    if row["checksum"] != checksum:
+                        raise RuntimeError(
+                            "Applied migration checksum changed; add a new migration"
+                        )
+                    continue
+                conn.execute(sql, prepare=False)
+                conn.execute(
+                    "INSERT INTO wrytely_agent.migrations(version,checksum) VALUES (%s,%s)",
+                    (version, checksum),
+                )
 
     def provision(self, user_id: str):
         with self.connection() as conn:
@@ -164,6 +169,14 @@ class Store:
             ).fetchone()
             if not agent:
                 return None
+            # Recheck with a fresh statement snapshot after acquiring the agent
+            # lock: selection may have started before another worker committed.
+            if conn.execute(
+                "SELECT 1 FROM wrytely_agent.tasks WHERE agent_id=%s "
+                "AND status='running' AND lease_until>now()",
+                (agent["id"],),
+            ).fetchone():
+                return None
             conn.execute(
                 "UPDATE wrytely_agent.tasks SET status='blocked',last_error='attempt_limit', "
                 "lease_token=NULL,lease_until=NULL WHERE agent_id=%s AND attempts>=%s "
@@ -222,6 +235,15 @@ class Store:
                 "INSERT INTO wrytely_agent.messages(id,agent_id,role,content,source_task_id) "
                 "VALUES (%s,%s,'assistant',%s,%s)",
                 (uuid4(), lease.agent_id, text, lease.task_id),
+            )
+            conn.execute(
+                "INSERT INTO wrytely_agent.whatsapp_outbound "
+                "(id,agent_id,task_id,recipient,content) "
+                "SELECT %s,%s,%s,l.phone,%s FROM wrytely_agent.channel_links l "
+                "JOIN wrytely_agent.whatsapp_inbound i ON i.agent_id=l.agent_id "
+                "WHERE i.task_id=%s AND l.agent_id=%s AND l.linked_at<=i.received_at "
+                "ON CONFLICT(task_id) DO NOTHING",
+                (uuid4(), lease.agent_id, lease.task_id, text, lease.task_id, lease.agent_id),
             )
             conn.execute(
                 "UPDATE wrytely_agent.tasks SET status='done',lease_token=NULL,lease_until=NULL "
