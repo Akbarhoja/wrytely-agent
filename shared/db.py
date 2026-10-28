@@ -11,6 +11,7 @@ from psycopg.types.json import Jsonb
 from contracts.models import TaskLease
 from shared.academic_memory import AcademicMemoryStore
 from shared.artifacts import ArtifactStore
+from shared.connection_status import ConnectionStatusStore
 from shared.delivery_store import DeliveryStore
 from shared.drafting_tasks import DraftingTaskStore
 from shared.responsibilities import ResponsibilityStore
@@ -36,6 +37,7 @@ class Store(
     DeliveryStore,
     ArtifactStore,
     DraftingTaskStore,
+    ConnectionStatusStore,
 ):
     def __init__(self, url: str):
         self._url = url

@@ -1,23 +1,44 @@
 import hmac
 import json
 import logging
+from datetime import UTC, datetime
 from typing import Annotated
 from uuid import UUID
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Request
+from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from psycopg import Error as DatabaseError
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from starlette.concurrency import run_in_threadpool
 
+from contracts.delivery import WhatsAppStatusEvent
 from contracts.models import AgentControl, Identity, MessageIn, SessionVerifier
-from integrations.whatsapp import extract_texts, verify_signature
+from integrations.whatsapp import extract_statuses, extract_texts, verify_signature
 from shared.auth import AuthenticationError, ClerkSessionVerifier
 from shared.config import Settings
 from shared.db import QueueFull, RequestConflict, Store
 
 log = logging.getLogger(__name__)
+
+
+class CommunicationPreferences(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    consent: bool
+    timezone: str = Field(min_length=1, max_length=100)
+    quiet_start: int = Field(ge=0, le=23)
+    quiet_end: int = Field(ge=0, le=23)
+
+    @field_validator("timezone")
+    @classmethod
+    def valid_timezone(cls, value: str) -> str:
+        try:
+            ZoneInfo(value)
+        except (ZoneInfoNotFoundError, ValueError):
+            raise ValueError("Use a valid IANA timezone") from None
+        return value
 
 
 def create_app(
@@ -127,16 +148,31 @@ def create_app(
             raise HTTPException(404, "Task not found")
         return row
 
-    def whatsapp_configured():
-        if not all(
+    def whatsapp_ready():
+        return all(
             (
                 settings.whatsapp_app_secret,
                 settings.whatsapp_verify_token,
                 settings.whatsapp_phone_number_id,
                 settings.whatsapp_business_account_id,
             )
-        ):
+        )
+
+    def whatsapp_configured():
+        if not whatsapp_ready():
             raise HTTPException(503, "WhatsApp is not configured")
+
+    @api.get("/v1/whatsapp")
+    def whatsapp_connection(user: User, db: DB, response: Response):
+        state = db.whatsapp_connection(user.user_id)
+        if state is None:
+            raise HTTPException(404, "Complete agent setup first")
+        response.headers["Cache-Control"] = "no-store"
+        return {
+            **state,
+            "destination": settings.whatsapp_business_number,
+            "configured": bool(whatsapp_ready() and settings.whatsapp_business_number),
+        }
 
     @api.post("/v1/whatsapp/link")
     def whatsapp_link(user: User, db: DB):
@@ -152,6 +188,14 @@ def create_app(
     def whatsapp_unlink(user: User, db: DB):
         db.unlink_whatsapp(user.user_id)
         return {"unlinked": True}
+
+    @api.post("/v1/whatsapp/preferences")
+    def whatsapp_preferences(body: CommunicationPreferences, user: User, db: DB):
+        try:
+            db.set_communication_preferences(user.user_id, **body.model_dump())
+        except LookupError:
+            raise HTTPException(409, "Complete agent setup first") from None
+        return {"saved": True}
 
     @api.get("/webhooks/whatsapp")
     def whatsapp_verify(request: Request):
@@ -188,6 +232,12 @@ def create_app(
                 phone_number_id=settings.whatsapp_phone_number_id,
                 business_account_id=settings.whatsapp_business_account_id,
             )
+            statuses = extract_statuses(
+                payload,
+                phone_number_id=settings.whatsapp_phone_number_id,
+                business_account_id=settings.whatsapp_business_account_id,
+                now=datetime.now(UTC),
+            )
         except (ValueError, TypeError, AttributeError):
             raise HTTPException(400, "Invalid webhook payload") from None
         try:
@@ -195,9 +245,35 @@ def create_app(
                 await run_in_threadpool(
                     db.ingest_whatsapp, message, limit=settings.pending_task_limit
                 )
+                if message.event_at is not None:
+                    await run_in_threadpool(
+                        db.record_whatsapp_inbound_time,
+                        message.provider_id,
+                        message.sender,
+                        message.event_at,
+                    )
+            for status in statuses:
+                event = WhatsAppStatusEvent(
+                    business_id=status.business_account_id,
+                    phone_number_id=status.phone_number_id,
+                    provider_ref=status.provider_id,
+                    recipient=status.recipient,
+                    status=status.status,
+                    event_at=datetime.fromtimestamp(status.provider_timestamp, UTC),
+                )
+                await run_in_threadpool(
+                    db.record_whatsapp_status,
+                    event,
+                    business_id=settings.whatsapp_business_account_id,
+                    phone_number_id=settings.whatsapp_phone_number_id,
+                )
         except QueueFull:
             # Do not acknowledge work we did not durably accept; provider may retry.
             raise HTTPException(503, "Agent queue is full") from None
+        except ValueError:
+            # Capacity/persistence policy may reject a callback. Never acknowledge
+            # evidence that was not retained; provider replay remains safe.
+            raise HTTPException(503, "Delivery evidence could not be stored") from None
         return {"received": True}
 
     return api

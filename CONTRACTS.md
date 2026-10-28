@@ -369,3 +369,34 @@ use existing bounded retries and redacted error codes. Source-change revocation
 prevents old drafts/tasks from completing. Trusted API/connector assembly must still
 coordinate how delegation, policy evidence and rubric extraction reach this boundary;
 Murtazo owns that assembly. Automatic task selection for drafting remains future.
+## Private WhatsApp connection read — issue #18, requested by #17
+
+`Store.whatsapp_connection(verified_user_id)` returns None before provisioning;
+otherwise `{linked: bool, phone_last4: str|null, preferences: object|null,
+latest_delivery: object|null}`. Preferences, when saved, contain consent (bool),
+timezone (IANA string), quiet_start and quiet_end (integers). Explicit false/zero
+values are preserved. Missing preferences remain null. Latest delivery, when any,
+contains state (existing persisted enum), reason (nullable controlled hold reason)
+and retry_at (nullable aware datetime, serialized as ISO by API assembly).
+
+State `sending` means a pending attempt, not confirmed delivery. accepted means
+provider acceptance; only delivered reflects recipient delivery evidence. unknown
+must remain visibly uncertain. This is the latest historical account action, not
+necessarily a send for the currently linked generation. On unlink, phone_last4 is
+null and linked false; explicit saved preferences and historical delivery remain.
+Return no full phone, source/result text, account IDs, challenge/hash, worker IDs,
+attempt tokens or secrets. The query uses one statement snapshot. Database errors
+propagate; do not replace them with disconnected/default success state. Caller
+identity must come from verified auth, never a model or arbitrary request body.
+
+Existing Settings now includes optional whatsapp_business_number (environment:
+AGENT_WHATSAPP_BUSINESS_NUMBER), default None, validated 7–15 digits with nonzero
+first digit, no plus/spacing. This is a PUBLIC destination number, distinct from
+Meta's internal phone_number_id. No guessed/default number is configured. This is
+shape validation, not proof the business owns/configured the number.
+
+Murtazo owns authenticated GET /v1/whatsapp assembly, public configuration/readiness
+fields, proxy allowlist and student controls under #17. No app/frontend endpoints
+are added here. No migration, connection authorization or sending permission is
+introduced. Approved-template policy/configuration remains a separate Codex-owned
+shared-contract task; expired-window delivery stays held.

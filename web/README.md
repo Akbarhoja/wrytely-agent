@@ -88,3 +88,29 @@ Before marking M1 complete, use two actual development accounts to verify distin
 agents, private results, session expiry, refresh/re-login, retry recovery, pause,
 and an actual message → Python queue → Meta worker → saved response round trip.
 No public deployment or pilot is enabled by this scaffold.
+
+## WhatsApp connection controls (issue #17)
+
+The Connections view reads authenticated GET /v1/whatsapp after agent provisioning.
+The verified session determines ownership. The response contains linked status,
+last four digits, nullable saved preferences and historical delivery status.
+Link generation is unavailable until the backend has webhook configuration and
+AGENT_WHATSAPP_BUSINESS_NUMBER (public international digits, distinct from Meta's
+internal number ID). Configuration does not prove a live connection.
+
+`whatsapp-connection.tsx` contains the testable view and preference form. Codes are
+masked, expire from display, and are never put in URLs or browser storage; the
+controller clears its in-memory challenge on expiry/account/session change.
+Link/unlink callbacks have a submission lock. Unlink asks for a separate inline
+confirmation and restores keyboard focus. Preference saves are explicit and new
+authoritative reads reconcile without silently discarding edited drafts. Recoverable
+read failures retain unsaved preference drafts with saves disabled. Interrupted
+mutations are not replayed; a fresh status check is required before another action.
+
+The existing proxy allowlists GET whatsapp and POST whatsapp/link, whatsapp/unlink and
+whatsapp/preferences in addition to previous routes, preserving exact Origin,
+verified session and no-cache rules.
+Current web validation: 44 tests, format check, typecheck and production build
+pass. Ready/linked/error states use simulated API responses in tests; live two-account
+Clerk, actual linking and provider delivery remain unverified. See
+`docs/stages/B1c-connections.md` and root DESIGN.md for scope and design decisions.
