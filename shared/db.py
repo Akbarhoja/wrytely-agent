@@ -12,6 +12,7 @@ from contracts.models import TaskLease
 from shared.academic_memory import AcademicMemoryStore
 from shared.artifacts import ArtifactStore
 from shared.delivery_store import DeliveryStore
+from shared.drafting_tasks import DraftingTaskStore
 from shared.responsibilities import ResponsibilityStore
 from shared.whatsapp_store import WhatsAppStore
 
@@ -28,7 +29,14 @@ class QueueFull(Exception):
     pass
 
 
-class Store(WhatsAppStore, ResponsibilityStore, AcademicMemoryStore, DeliveryStore, ArtifactStore):
+class Store(
+    WhatsAppStore,
+    ResponsibilityStore,
+    AcademicMemoryStore,
+    DeliveryStore,
+    ArtifactStore,
+    DraftingTaskStore,
+):
     def __init__(self, url: str):
         self._url = url
 
