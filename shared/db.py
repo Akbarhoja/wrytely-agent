@@ -10,6 +10,7 @@ from psycopg.types.json import Jsonb
 
 from contracts.models import TaskLease
 from shared.academic_memory import AcademicMemoryStore
+from shared.connection_status import ConnectionStatusStore
 from shared.delivery_store import DeliveryStore
 from shared.responsibilities import ResponsibilityStore
 from shared.whatsapp_store import WhatsAppStore
@@ -27,7 +28,9 @@ class QueueFull(Exception):
     pass
 
 
-class Store(WhatsAppStore, ResponsibilityStore, AcademicMemoryStore, DeliveryStore):
+class Store(
+    WhatsAppStore, ResponsibilityStore, AcademicMemoryStore, DeliveryStore, ConnectionStatusStore
+):
     def __init__(self, url: str):
         self._url = url
 

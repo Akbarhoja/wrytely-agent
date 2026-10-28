@@ -125,3 +125,17 @@ run before review. No live provider calls, source connections, production schema
 changes or app deployment. Template payload/configuration support is not implemented;
 expired-window sends stay held as approved_template_required. No M1 live milestone
 is claimed. Typed contract awaits Murtazo review before dependent assembly.
+
+October 28 — #18 connection read/config dependency prepared on
+codex/connection-status (based on delivery-storage #9). Adds private one-snapshot
+whatsapp_connection with masked phone, nullable preferences and latest historical
+delivery state. Adds optional validated public business-number Settings field,
+distinct from internal phone-number ID. This supplies Murtazo's requested #17
+boundary; no app/frontend files changed and no new endpoint is claimed.
+
+Validation: 128 backend tests pass on this delivery branch, including six private
+read tests and seven business-number config cases; Ruff lint/format/diff pass.
+This branch intentionally excludes downstream A3 tests; the count is not a loss
+of tests. No live provider calls, production migrations or deployment. Murtazo
+has incorporated shared fix d61217b into #14; current GitHub checks were green.
+#18 remains open awaiting interface/implementation review.
