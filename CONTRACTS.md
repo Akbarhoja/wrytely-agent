@@ -369,3 +369,34 @@ use existing bounded retries and redacted error codes. Source-change revocation
 prevents old drafts/tasks from completing. Trusted API/connector assembly must still
 coordinate how delegation, policy evidence and rubric extraction reach this boundary;
 Murtazo owns that assembly. Automatic task selection for drafting remains future.
+
+## A4 internal source reassessment — issue #23
+
+Migration 008 adds responsibilities.reassess_source_changes (default false) and
+makes academic step-key uniqueness specific to memory revision. Trusted assembly
+may call set_source_reassessment(verified_user_id, responsibility_id, enabled:bool)
+for an owned duty after student delegation. No API or model permission tool is added.
+Changing the flag affects future source changes; it does not itself resume a task.
+
+Without opt-in, source promotion retains the existing source_changed hold. With
+opt-in, a new current version atomically invalidates old ready/running tasks,
+revokes their leases, increments memory revision and queues one current planning
+job for an active/completed duty with remaining original step budget. Paused agents
+retain queued work but cannot execute until resumed. Multiple updates obsolete the
+intermediate plans; repeated identical observations and late versions do not add
+work. Queue-write failure rolls back the source promotion and invalidation together.
+
+Already-blocked duties are not automatically reopened: source text cannot override
+policy, permissions, cancellation or exhausted budgets. Source-triggered reassessment
+does not reset steps_created. Old blocked revisions no longer poison current task
+selection; current-revision failure still blocks its duty. Historical step results
+remain marked stale. The model may choose the same step key for revised work under
+a new revision, but repeats inside the current revision are still blocked. A duty
+cannot finish based solely on stale completed results.
+
+This is internal requirement reassessment, not automatic graded-draft authorization.
+Old drafting requests/policy quotes are not copied to new steps. Fresh explicit
+configuration with current policy/rubric evidence is required before checked drafting.
+Existing artifacts remain auditable and stale after source changes. Automatic source
+monitoring depends on Murtazo's actual connector; uploads remain snapshots. A4 still
+needs changed-draft revision wiring, decisions, authorized sharing and follow-up.

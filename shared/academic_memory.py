@@ -74,7 +74,28 @@ class AcademicMemoryStore:
                     self._invalidate_memory(conn, row["responsibility_id"])
             return version
 
+    def set_source_reassessment(self, user_id, responsibility_id, enabled: bool):
+        if type(enabled) is not bool:
+            raise ValueError("Explicit boolean setting required")
+        with self.connection() as conn:
+            agent = conn.execute(
+                "SELECT id FROM wrytely_agent.agents WHERE user_id=%s FOR UPDATE", (user_id,)
+            ).fetchone()
+            if not agent:
+                raise LookupError("Responsibility not found")
+            row = conn.execute(
+                "UPDATE wrytely_agent.responsibilities SET reassess_source_changes=%s "
+                "WHERE id=%s AND agent_id=%s RETURNING id",
+                (enabled, responsibility_id, agent["id"]),
+            ).fetchone()
+            if not row:
+                raise LookupError("Responsibility not found")
+
     def _invalidate_memory(self, conn, responsibility_id):
+        previous = conn.execute(
+            "SELECT * FROM wrytely_agent.responsibilities WHERE id=%s FOR UPDATE",
+            (responsibility_id,),
+        ).fetchone()
         conn.execute(
             "UPDATE wrytely_agent.responsibilities SET memory_revision=memory_revision+1, "
             "status='blocked',status_reason='source_changed' WHERE id=%s",
@@ -86,6 +107,19 @@ class AcademicMemoryStore:
             "AND status IN ('ready','running')",
             (responsibility_id,),
         )
+        if (
+            previous["reassess_source_changes"]
+            and previous["status"] in ("active", "done")
+            and previous["steps_created"] < previous["max_steps"]
+        ):
+            conn.execute(
+                "UPDATE wrytely_agent.responsibilities SET status='active', "
+                "status_reason='source_changed_reassess' WHERE id=%s",
+                (responsibility_id,),
+            )
+            self._responsibility_task(
+                conn, previous["agent_id"], responsibility_id, "plan", previous["objective"]
+            )
 
     def bind_source(self, user_id, responsibility_id, source_id):
         with self.connection() as conn:
