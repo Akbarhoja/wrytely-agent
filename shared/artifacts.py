@@ -102,3 +102,53 @@ class ArtifactStore:
                 "UPDATE wrytely_agent.artifacts SET state=%s WHERE id=%s",
                 ("ready" if report["passed"] else "needs_revision", artifact_id),
             )
+
+    def drafting_checkpoint(self, lease, kind, workflow_key):
+        """Fenced recovery of this task's private drafting workflow state."""
+        if kind not in ("drafting_spec", "drafting_preflight"):
+            raise ValueError("Invalid checkpoint type")
+        with self.connection() as conn:
+            self._fence(conn, lease)
+            row = conn.execute(
+                "SELECT data FROM wrytely_agent.episode_events WHERE task_id=%s AND kind=%s "
+                "AND data->>'workflow_key'=%s ORDER BY id DESC LIMIT 1",
+                (lease.task_id, kind, workflow_key),
+            ).fetchone()
+            return row["data"] if row else None
+
+    def draft_progress(self, lease, request_key):
+        with self.connection() as conn:
+            self._fence(conn, lease)
+            artifact = conn.execute(
+                "SELECT * FROM wrytely_agent.artifacts WHERE task_id=%s AND agent_id=%s "
+                "AND request_key=%s",
+                (lease.task_id, lease.agent_id, request_key),
+            ).fetchone()
+            if not artifact:
+                return None, None
+            report = conn.execute(
+                "SELECT report FROM wrytely_agent.artifact_checks WHERE artifact_id=%s "
+                "ORDER BY created_at DESC,id DESC LIMIT 1",
+                (artifact["id"],),
+            ).fetchone()
+            return artifact, report["report"] if report else None
+
+    def drafting_sources(self, lease):
+        """Full current bound evidence for policy preflight and generation."""
+        with self.connection() as conn:
+            self._fence(conn, lease)
+            row = conn.execute(
+                "SELECT responsibility_id,kind FROM wrytely_agent.tasks WHERE id=%s",
+                (lease.task_id,),
+            ).fetchone()
+            if row["kind"] != "academic":
+                raise ValueError("Drafting requires an academic responsibility task")
+            return conn.execute(
+                "SELECT v.id,v.content,v.coverage,v.retrieved_at FROM "
+                "wrytely_agent.responsibility_sources b JOIN wrytely_agent.academic_sources s "
+                "ON s.id=b.source_id AND s.agent_id=b.agent_id JOIN "
+                "wrytely_agent.source_versions v "
+                "ON v.id=s.latest_version_id AND v.agent_id=s.agent_id "
+                "WHERE b.responsibility_id=%s AND b.agent_id=%s",
+                (row["responsibility_id"], lease.agent_id),
+            ).fetchall()
