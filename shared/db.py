@@ -9,6 +9,7 @@ from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 
 from contracts.models import TaskLease
+from shared.responsibilities import ResponsibilityStore
 from shared.whatsapp_store import WhatsAppStore
 
 
@@ -24,7 +25,7 @@ class QueueFull(Exception):
     pass
 
 
-class Store(WhatsAppStore):
+class Store(WhatsAppStore, ResponsibilityStore):
     def __init__(self, url: str):
         self._url = url
 
@@ -129,6 +130,9 @@ class Store(WhatsAppStore):
             return conn.execute(
                 "SELECT m.id,m.role,m.content,m.created_at FROM wrytely_agent.messages m "
                 "JOIN wrytely_agent.agents a ON a.id=m.agent_id WHERE a.user_id=%s "
+                "AND m.role IN ('user','assistant') "
+                "AND NOT EXISTS (SELECT 1 FROM wrytely_agent.tasks t "
+                "WHERE t.id=m.source_task_id AND t.kind='academic') "
                 "ORDER BY m.created_at DESC,m.id DESC LIMIT 100",
                 (user_id,),
             ).fetchall()[::-1]
@@ -183,6 +187,7 @@ class Store(WhatsAppStore):
                 "AND (status='ready' OR (status='running' AND lease_until<=now()))",
                 (agent["id"], max_attempts),
             )
+            self._block_failed_responsibilities(conn, agent["id"])
             token = uuid4()
             row = conn.execute(
                 "UPDATE wrytely_agent.tasks SET status='running',attempts=attempts+1, "
@@ -250,6 +255,7 @@ class Store(WhatsAppStore):
                 "WHERE id=%s",
                 (lease.task_id,),
             )
+            self._continue_responsibility(conn, lease)
 
     def retry(self, lease: TaskLease, code: str, max_attempts: int = 3):
         with self.connection() as conn:
@@ -266,6 +272,9 @@ class Store(WhatsAppStore):
                 ),
             )
 
+            if lease.attempt >= max_attempts:
+                self._block_failed_responsibilities(conn, lease.agent_id)
+
     def context(self, lease: TaskLease):
         with self.connection() as conn:
             self._fence(conn, lease)
@@ -277,7 +286,8 @@ class Store(WhatsAppStore):
             return {
                 "current_message": source["content"],
                 "agent_id": str(lease.agent_id),
-                "context_status": "foundation_only_no_course_connectors",
+                "context_status": "stored_context_only_no_course_connectors",
+                **self._responsibility_context(conn, lease),
             }
 
     def episode_history(self, lease: TaskLease):

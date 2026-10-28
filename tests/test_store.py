@@ -19,7 +19,7 @@ def test_migration_repeat_is_safe(store):
         versions = conn.execute(
             "SELECT version FROM wrytely_agent.migrations ORDER BY version"
         ).fetchall()
-        assert [row["version"] for row in versions] == ["001", "002"]
+        assert [row["version"] for row in versions] == ["001", "002", "003"]
 
 
 def test_concurrent_provisioning_is_idempotent(store):

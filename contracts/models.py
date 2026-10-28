@@ -68,3 +68,20 @@ class ChannelAdapter(Protocol):
     """Provider implementations must document ambiguous-send reconciliation limits."""
 
     def send(self, *, recipient: str, text: str, action_id: UUID) -> DeliveryResult: ...
+
+
+class PlannerDecision(BaseModel):
+    """One bounded internal step, or an honest terminal/waiting reason."""
+
+    model_config = ConfigDict(extra="forbid")
+    action: Literal["work", "blocked", "done"]
+    reason: str = Field(min_length=1, max_length=2000)
+    step_key: str = Field(min_length=1, max_length=100)
+    instruction: str = Field(max_length=4000)
+
+    @field_validator("reason", "step_key")
+    @classmethod
+    def nonblank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("Must contain text")
+        return value.strip()

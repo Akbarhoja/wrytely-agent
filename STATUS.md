@@ -10,7 +10,7 @@ Started October 27, 2026. Supervisor: Akbar. Lead: Codex. Engineer: Murtazo.
 | B1a signed-in frontend | Codex scaffold; Murtazo live integration | scaffold in review | Next.js workspace, Clerk routes/provider, authenticated same-origin API boundary, persisted retry keys, task status and pause controls. Live two-account checks pending. Akbar will invite Murtazo. |
 | B1b verified messaging | Murtazo | partial scaffold | Codex prepared adapter, linking, inbound task storage and reply outbox. Murtazo owns remaining delivery, web controls and live integration. |
 | M1 live round trip | Both | not achieved | Need isolated database configuration, existing Clerk instance public verification configuration, Meta development key, frontend and messaging integration. |
-| M2 academic ownership | Codex + Murtazo | not started | Responsibilities, assignment context, self-directed planner, artifacts and checks. |
+| M2 academic ownership | Codex + Murtazo | internal planner implemented locally | Duties select bounded internal steps and continue from saved results. Source context ingestion, commitments, verified artifacts and student-facing delegation remain pending. |
 | M3 public pilot | Both | not started | Usage budgets, connectors, controls, external-action gateway and integration evidence required. |
 
 No live Meta or Clerk call has been verified. No public signup or deployment is
@@ -73,3 +73,22 @@ Ruff lint, format and diff checks pass. This is not an OS process-kill test or a
 live Meta smoke test. External side effects require their own durable action
 ledger; replay alone does not ensure exactly-once sending. Full autonomous
 responsibility planning and academic source memory are still pending.
+
+October 28 A2 runtime continuation: responsibilities and internal planning tasks
+are persisted by migration 003. Explicit trusted delegation creates a planning
+job; the model chooses one internal step, its saved result triggers reassessment,
+and the loop stops at completion, blockage or a bounded step limit. Duties and
+history are account-scoped. Planning decisions recover across attempts. Internal
+prompts/results are excluded from ordinary student conversations. No Murtazo-owned
+app, frontend, messaging or source adapter files changed in this stage.
+
+Validation: 77 backend tests pass on disposable local Postgres, including ten new
+planner tests. A scripted model selects three useful steps over seven separate
+worker runs with no new external input; prior results reach later planning turns.
+Tests also cover idempotency, isolation, pause, duplicate steps, budget exhaustion,
+blocked duty fairness, saved-decision recovery and rollback without orphan tasks.
+Ruff lint/format and diff checks pass. This proves orchestration with scripted
+responses; autonomous planning quality and Meta tool-schema compatibility are not
+live-validated. Migrations remain local-only. API/UI delegation, course-policy
+handling, source retrieval, verified artifacts and requirement changes remain
+unfinished. DBOS is still not adopted.
