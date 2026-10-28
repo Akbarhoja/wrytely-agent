@@ -232,3 +232,60 @@ def test_consent_preferences_are_private(store, alice):
         store.authorize_whatsapp_send(store.claim_whatsapp_delivery("worker"), **ACCOUNT).state
         == "permitted"
     )
+
+
+def fill_orphan_capacity(store):
+    with store.connection() as conn:
+        conn.execute(
+            "INSERT INTO wrytely_agent.whatsapp_status_events "
+            "(event_hash,business_id,phone_number_id,provider_ref,recipient,status,event_at) "
+            "SELECT 'orphan-'||n,%s,%s,'unknown-'||n,%s,'sent',now() "
+            "FROM generate_series(1,10000) AS n",
+            (ACCOUNT["business_id"], ACCOUNT["phone_number_id"], PHONE),
+        )
+
+
+def test_matched_delivery_callback_bypasses_orphan_capacity(store, alice):
+    queued(store, alice)
+    claim = store.claim_whatsapp_delivery("worker")
+    store.authorize_whatsapp_send(claim, **ACCOUNT)
+    store.record_whatsapp_result(
+        claim,
+        DeliveryResult(internal_id=claim.action_id, state="accepted", provider_ref="wamid.one"),
+    )
+    fill_orphan_capacity(store)
+    event = status()
+    assert store.record_whatsapp_status(event, **ACCOUNT) == {"matched": True}
+    assert state(store)["state"] == "delivered"
+    assert store.record_whatsapp_status(event, **ACCOUNT) == {"matched": True}
+    with store.connection() as conn:
+        assert (
+            conn.execute(
+                "SELECT count(*) AS n FROM wrytely_agent.whatsapp_status_events "
+                "WHERE action_id IS NULL"
+            ).fetchone()["n"]
+            == 10000
+        )
+
+
+def test_new_orphan_still_rejected_at_capacity_even_with_known_reference(store, alice):
+    queued(store, alice)
+    claim = store.claim_whatsapp_delivery("worker")
+    store.authorize_whatsapp_send(claim, **ACCOUNT)
+    store.record_whatsapp_result(
+        claim,
+        DeliveryResult(internal_id=claim.action_id, state="accepted", provider_ref="wamid.one"),
+    )
+    fill_orphan_capacity(store)
+    with pytest.raises(ValueError, match="capacity"):
+        store.record_whatsapp_status(status(recipient="15555550999"), **ACCOUNT)
+    with pytest.raises(ValueError, match="capacity"):
+        store.record_whatsapp_status(status(provider_ref="wamid.unmatched"), **ACCOUNT)
+    assert state(store)["state"] == "accepted"
+
+
+def test_existing_orphan_replay_is_accepted_at_capacity(store, alice):
+    event = status(provider_ref="wamid.early")
+    assert store.record_whatsapp_status(event, **ACCOUNT) == {"matched": False}
+    fill_orphan_capacity(store)
+    assert store.record_whatsapp_status(event, **ACCOUNT) == {"matched": False}
