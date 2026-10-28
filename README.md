@@ -9,8 +9,10 @@ Foundation milestone: Python/FastAPI API, Clerk session verification, one privat
 agent per verified user, scoped Postgres storage, durable message/task queue,
 bounded Meta Responses tool loop, pause/resume checks, attempt fencing and retries.
 
-The academic planner, course connectors, signed-in frontend, messaging adapters,
-artifacts and public pilot are **not implemented yet**. See STATUS.md for evidence
+The academic planner, course connectors, messaging adapters,
+artifacts and public pilot are **not implemented yet**. The new `web/` app adds the
+student interface and Clerk integration code; live authentication is still pending.
+See STATUS.md for evidence
 and TEAM.md for ownership. No external message sends or assignment submissions are
 possible in this foundation. Test results do not imply live Meta/Clerk integration
 has been verified.
@@ -64,9 +66,15 @@ session bearer token. There is no debug-user fallback or public test login.
 
 ## Engineering review
 
-Murtazo's first work order is `docs/stages/B1-murtazo.md`. All feature changes use
-PRs, contract checks and integrated review. Akbar will invite him. No branch-rule
-enforcement is claimed until the repository settings are configured and verified.
+The source repository is public at https://github.com/Akbarhoja/wrytely-agent.
+The MIT license covers this repository's code. Connected services and any future
+model weights remain subject to their own terms.
+
+The lead has started the B1a web scaffold; Murtazo's integration work order is
+`docs/stages/B1-murtazo.md`. All feature changes use
+PRs, contract checks and integrated review. Akbar will invite him. Main requires
+passing foundation checks and one approving review; Akbar retains administrator
+override. See TEAM.md for the verified review settings.
 
 ## Prior work and shared services
 
@@ -85,3 +93,9 @@ does not mean those services were created during the hackathon.
 Public pilot launch requires additional usage budgets, authentication/frontend
 smoke tests, per-user connectors, artifact ownership, delivery controls and live
 integration evidence. This foundation is not a production launch.
+
+## Web development
+
+See [web/README.md](web/README.md) for the Next.js app, auth setup, same-origin API
+boundary and the live acceptance checks. Its unconfigured public shell works
+without credentials and cannot access private data or send work to an agent.

@@ -112,6 +112,10 @@ def create_app(
     def messages(user: User, db: DB):
         return {"messages": db.messages(user.user_id)}
 
+    @api.get("/v1/tasks")
+    def tasks(user: User, db: DB):
+        return {"tasks": db.tasks(user.user_id)}
+
     @api.get("/v1/tasks/{task_id}")
     def task(task_id: UUID, user: User, db: DB):
         row = db.task(user.user_id, task_id)

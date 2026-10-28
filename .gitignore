@@ -13,3 +13,10 @@ htmlcov/
 dist/
 *.egg-info/
 .DS_Store
+node_modules/
+.next/
+*.tsbuildinfo
+playwright-report/
+test-results/
+.playwright-cli/
+output/playwright/

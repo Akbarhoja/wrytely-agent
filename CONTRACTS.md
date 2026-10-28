@@ -22,6 +22,7 @@ or source control.
 | POST /v1/messages | `{content}` and `Idempotency-Key` | 202 `{task_id,status}`; durable queueing, not a completed answer |
 | GET /v1/messages | authenticated | Own recent messages in chronological order, at most 100 |
 | GET /v1/tasks/{id} | authenticated | Own task state; 404 also for another user's task |
+| GET /v1/tasks | authenticated | `{tasks}`: own latest 50 tasks, newest first; includes status, attempts, controlled error, creation time and a title clipped to 180 characters from the source message |
 | POST /v1/agent/control | `{paused: true/false}` | Own agent state |
 
 Repeat a message request with the same key and identical content to safely retrieve
