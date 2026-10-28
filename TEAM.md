@@ -1,37 +1,66 @@
-# Team and review responsibilities
+# Wrytely team agreement
 
-| Role | Person | Responsibility |
-|---|---|---|
-| Supervisor/product owner | Akbar | Product direction, account access, releases and priorities |
-| Lead engineer | Codex working with Akbar | Architecture, shared contracts/runtime, integration review and evidence |
-| Engineer | Murtazo | Messaging, connected sources and student-facing app under agreed work orders |
+Updated October 28, 2026. Shared plan: [docs/BUILD-PLAN.md](docs/BUILD-PLAN.md).
+Actual evidence: [STATUS.md](STATUS.md). Shared interfaces: [CONTRACTS.md](CONTRACTS.md).
 
-Akbar will invite Murtazo himself. His GitHub username is not yet provided; no
-invitation or message has been sent by Codex. His first assignment is prepared in
-`docs/stages/B1-murtazo.md`, not claimed as in progress. While Akbar arranges his
-invitation, Codex is preparing the B1a interface scaffold. Murtazo should extend
-the reviewed scaffold and verify real development integrations, avoiding a second
-frontend implementation.
+| Owner | Responsibility |
+|---|---|
+| Akbar | Product decisions, supervision, account access and release approval |
+| Codex, supporting Akbar | Agent runtime, memory, planner, verification, shared contracts, integration review |
+| Murtazo (`murtazokhon-tech`) | WhatsApp delivery, course/group source connections, onboarding, student website and deployment preparation |
 
-Murtazo branches from main after the foundation is merged, reads the contract,
-then opens a draft PR. Each PR includes acceptance evidence and known limitations.
-Codex reviews the diff and reruns the relevant integrated path before recommending
-merge. Akbar can inspect the PR and STATUS.md at any time. Critical auth/data and
-external-action changes need review; green unit tests alone do not establish that
-an actual provider integration works.
+GitHub write access for Murtazo was verified October 28. Existing scaffolds are
+his starting point; Codex does not continue his implementation scope by default.
+Shared-file fixes are welcome after coordinating the interface and edit scope.
 
-CODEOWNERS routes initial review to Akbar's GitHub account. Main protection is
-configured and verified: passing `foundation` checks, an up-to-date branch, one
-approving review and resolved conversations are required; force pushes and branch
-deletion are disabled. Akbar retains the administrator override. The new `web`
-job runs on the frontend PR and should become required after that workflow lands.
-Codex is an engineering assistant, not a distinct GitHub user who can approve
-Akbar's own PR. Murtazo can supply the independent review after his invitation.
+## Shared baseline and branches
 
-## Ownership confirmed by Akbar — October 28
+`codex/team-integration` contains all current implementation and the shared plan.
+Until the reviewed integration baseline lands on `main`, both engineers branch
+from `codex/team-integration` and target it with their feature PRs. Do not start
+from the current minimal `main`, which does not yet contain the implementation.
+The integration-to-main PR is the canonical combined baseline review; older PRs
+1 and 2 are constituent reviews, not additional changes to merge on top of it.
+After that baseline is merged, use `main` as the normal feature branch base.
 
-Codex continues Akbar's runtime, memory, planning, verification, shared contracts
-and integration-review work. Murtazo owns WhatsApp delivery, source integrations,
-onboarding and the student-facing web experience. Existing Codex scaffolds in
-those areas are starting points for Murtazo, not an ongoing reassignment. Akbar
-owns product decisions, supervision, account access and release approval.
+- Murtazo: `murtazo/whatsapp-delivery`, then separate onboarding/source branches.
+- Codex: `codex/academic-memory`, then separate verification/adaptation branches.
+- Never push directly into the other engineer’s branch or rewrite shared history.
+- Keep one coherent task per PR. Open a draft early and state files/interfaces
+  being changed. Coordinate before editing shared contracts, schema or assembly.
+- Pull the latest baseline before starting. Rebase/merge baseline updates into
+  your own feature branch before final integration checks; do not force-push a
+  shared integration branch.
+
+## Review and integration
+
+Codex reviews Murtazo’s diff for scope, ownership checks, tests and actual integrated
+behavior, then reports findings to Akbar. Murtazo reviews Codex’s runtime PRs.
+Codex uses Akbar’s GitHub account and cannot supply an independent approval of
+Akbar’s own PR; Murtazo supplies that human approval after his review. Akbar
+approves product or release decisions. Do not bypass protections to claim review.
+
+Every PR states what changed, validation performed and remaining limitations.
+Require relevant CI and an up-to-date integrated path before recommending merge.
+For live integration, record redacted evidence and account isolation checks;
+offline simulated responses do not prove the real provider works. Security or
+permission-sensitive changes require focused review. No production migrations,
+connector authorization or release is implied by an item existing in the plan.
+
+Main protection was previously verified: required `foundation`, strict up-to-date
+status, one approval and resolved conversations; force pushes/deletion disabled.
+The `web` check should also be made required once its workflow lands. Akbar retains
+the existing administrator override. The integration branch has no newly promised
+protection; use PRs and the review procedure above.
+
+## Lightweight daily coordination
+
+Each engineer updates their task/PR with: completed work, next work, blockers and
+any contract changes. STATUS.md records validated milestones, not aspirations.
+Review one full end-to-end scenario together each day. Escalate missing provider
+access early; continue independent code and tests while setup is pending.
+
+Akbar can paste Murtazo’s PR URL into the Codex chat with “review this PR.” Codex
+can inspect repository state when asked to continue, but does not monitor GitHub
+between turns automatically. No scheduled monitoring or external messages have
+been configured.

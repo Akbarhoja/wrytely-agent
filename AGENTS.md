@@ -4,8 +4,8 @@
 
 Akbar is supervisor/product owner. Codex is lead engineer. Murtazo is engineer for
 integrations and the web experience. Read TEAM.md, STATUS.md, CONTRACTS.md and your
-current work order before editing. The current goal is the foundation/M1 path,
-not every future feature at once.
+current work order before editing. The current work follows the active track: Codex runtime/memory/verification and
+Murtazo messaging/onboarding/sources. Read docs/stages/B1-murtazo.md before integration work.
 
 Reuse existing Wrytely services as agreed, but do not change the existing product
 repository or production configuration as a side effect. Agent migrations stay

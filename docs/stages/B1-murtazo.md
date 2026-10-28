@@ -1,62 +1,79 @@
-# B1a — first work order for Murtazo
+# Murtazo — integration handoff
 
-Owner: Murtazo. State: ready after foundation merge; no work claimed yet.
-Update: Codex has begun a Next.js scaffold in `codex/student-workspace`. Review that
-PR and use `web/README.md`; do not create a competing frontend. The work below
-remains the live integration acceptance contract.
-Goal: a new or existing Wrytely user signs in, gets one private agent and exchanges
-messages through the deployed backend contract.
+Owner: `murtazokhon-tech`. Start here, then read [the plan](../BUILD-PLAN.md),
+[TEAM.md](../../TEAM.md), [STATUS.md](../../STATUS.md),
+[CONTRACTS.md](../../CONTRACTS.md) and [web setup](../../web/README.md).
 
-## Before starting
+## Start from the implemented baseline
 
-Akbar invites you to the repo. Read AGENTS.md, TEAM.md, CONTRACTS.md and STATUS.md.
-Branch `engineer/b1-authenticated-web` from the merged foundation. Open a draft PR.
-Coordinate the frontend stack and visual direction with the lead before installing
-a framework. The backend remains Python/FastAPI. Existing Wrytely brand and the
-academic agent experience guide the design; polish follows a reviewed direction.
+```sh
+git clone https://github.com/Akbarhoja/wrytely-agent.git
+cd wrytely-agent
+git switch codex/team-integration
+git pull --ff-only
+git switch -c murtazo/whatsapp-delivery
+```
 
-Primary edit scope: `web/`, `integrations/`, `app/` assembly, `deploy/`, related
-tests and your status line. Changes to contracts/shared code are welcome in a
-focused reviewed PR; read any relevant code. Do not create new production Clerk,
-database or storage accounts, or copy the old product's private code into this repo.
+Use `codex/team-integration` as the PR base until the combined baseline lands on
+main. Extend existing code. Do not create a second frontend, database client,
+authentication system or agent runtime. See TEAM.md for review/merge rules.
 
-## Deliver
+## First PR: official WhatsApp delivery
 
-1. Reuse the chosen existing Clerk instance in development. Never use production
-   keys in a local test, call `clerk init` to create a replacement app, or place a
-   secret key in frontend code.
-2. Provide signup/login/logout using Clerk's current supported SDK. On agent entry,
-   call `POST /v1/bootstrap` using a session token; restore the same profile on return.
-3. Build the initial authenticated conversation: submit with a fresh idempotency
-   key, display queued/running/done/blocked states, and retrieve own results. Poll
-   only while needed; do not present queued work as a completed response.
-4. Add pause/resume controls, recoverable session-expiry handling and useful
-   empty/error states. Do not invent course data or show seeded records as live.
-5. Supply a minimal separate web deployment configuration; discuss worker hosting
-   with the lead. No automatic deployment into existing Wrytely production.
+The adapter, signature verification, verified linking, inbound task persistence
+and reply outbox already exist. See [WhatsApp setup](B1b-whatsapp.md).
+Akbar confirmed the Meta app/test number is not set up yet. Prepare the code and
+tests while coordinating development credentials securely with him.
 
-## Acceptance evidence in PR
+Deliver a durable outbound worker that claims queued replies, checks current
+number ownership, pause/cancellation and permitted delivery timing before sending,
+records provider acceptance accurately and handles ambiguous sends without blind
+retry. A restart after sending must not silently duplicate delivery. Agree schema
+and concurrency changes with Codex before implementing. Add authenticated provider
+status handling with valid state transitions. Replayed/out-of-order callbacks must
+not regress delivered state or affect another account.
 
-- Two different test accounts each see one distinct agent and private messages.
-- Refresh and re-login preserve agent identity and saved work.
-- Another account's task ID returns 404; unauthenticated requests fail.
-- A retry after a lost response reuses the same idempotency key, creating one task.
-- Session expiry prompts sign-in without discarding unsent content or granting access.
-- Own pause/resume works. Backend unavailability is shown honestly.
-- Offline frontend/contract checks pass; a live development smoke test is clearly
-  labeled with credentials omitted and no real student data.
-- Screenshots/video of the actual flow and a list of remaining limitations.
+The adapter is text-only. Implement conversation-window enforcement and approved
+templates for proactive messages before promising unrestricted follow-ups. Quiet
+hours require persisted timezone/preferences; coordinate those fields. If a required
+permission/window/preference is unknown, hold delivery with a visible reason.
+Use official Cloud API, not a personal-account bridge.
 
-## Next stage, not part of B1a
+Acceptance: offline transport/storage tests cover lost responses, repeated claims,
+pause/unlink, expired conversation windows, webhook replay and restart. A separate
+live development smoke test uses consenting test numbers and a real Meta-powered
+reply. No real classmates or instructors are contacted without explicit approval.
 
-B1b adds WhatsApp if platform access works, or Telegram fallback. First agree a
-verified channel-linking challenge, durable inbound ID, signature verification,
-delivery queue and uncertain-send behavior with the lead. Never send messages to
-real classmates/instructors during development without explicit authorization.
+## Second PR: onboarding and account/WhatsApp connection controls
 
-## How the lead reviews your work
+Extend the existing Next.js/Clerk scaffold. WhatsApp is the student's primary
+communication channel. Website: signup, connections, academic context, results,
+status and controls. Keep the existing work-first overview; do not make a new
+chat-first homepage. Add verified link/status/unlink controls and the necessary
+same-origin backend proxy allowlist. Keep link codes out of logs/analytics.
 
-Codex inspects your PR diff, runs the relevant tests, checks auth and data ownership,
-and exercises the full request → queue → worker → result path. An adapter passing
-its own fake tests does not substitute for the integrated test. Akbar receives the
-review outcome before any critical change reaches production.
+Prove two independent test students have separate agents, phone mappings and saved
+results; logout/re-login restores the same agent. Session expiry, backend failures,
+limits and retry uncertainty must preserve useful student work. Reuse existing
+Clerk development settings, not production keys or a new replacement app.
+
+## Third PR: initial course/group context
+
+Choose one approved source path with Codex. Supply versioned observations with
+stable IDs, evidence and actual coverage. Use synthetic fixtures if institutional
+access is unavailable, labeled clearly. An uploaded snapshot is not ongoing Canvas
+monitoring. Review institutional permissions/platform terms before connecting.
+The runtime planner already supports internal responsibilities; coordinate how an
+explicit student delegation reaches its trusted store interface. Source memory,
+policy checks and artifact verification belong to Codex’s runtime track.
+
+## Every PR includes
+
+- Concrete behavior and edited interfaces; mention planned shared-file edits early.
+- Relevant test commands/results, screenshots when UI changes, known limitations.
+- Clear separation of offline tests from real provider evidence.
+- No credentials, personal course records or fake claims of completed integration.
+
+Do not modify the current Wrytely product or deploy/migrate its production services
+as a side effect. Akbar owns release approval and credentials; Codex reviews
+integration and coordinates the shared runtime/contracts.
