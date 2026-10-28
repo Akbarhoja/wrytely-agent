@@ -11,6 +11,7 @@ export type Task = {
   last_error?: string | null;
 };
 export type Submission = { key: string; content: string };
+export type WorkItem = Task & { title: string; created_at: string; attempts: number };
 
 export class ApiError extends Error {
   constructor(

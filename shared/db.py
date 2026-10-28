@@ -137,6 +137,17 @@ class Store:
                 (user_id, task_id),
             ).fetchone()
 
+    def tasks(self, user_id: str):
+        with self.connection() as conn:
+            return conn.execute(
+                "SELECT t.id,t.status,t.attempts,t.last_error,t.created_at, "
+                "left(m.content,180) AS title FROM wrytely_agent.tasks t "
+                "JOIN wrytely_agent.agents a ON a.id=t.agent_id "
+                "JOIN wrytely_agent.messages m ON m.id=t.message_id AND m.agent_id=t.agent_id "
+                "WHERE a.user_id=%s ORDER BY t.created_at DESC,t.id DESC LIMIT 50",
+                (user_id,),
+            ).fetchall()
+
     def claim(self, lease_seconds: int = 300, max_attempts: int = 3):
         with self.connection() as conn:
             # Serialize task selection per agent across worker processes, skip busy agents.

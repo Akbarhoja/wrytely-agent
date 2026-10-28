@@ -9,6 +9,7 @@ import {
   type Message,
   type Submission,
   type Task,
+  type WorkItem,
 } from "./client";
 
 type Draft = { text: string; pending?: Submission; task?: string };
@@ -38,6 +39,8 @@ export function useWorkspace(userId?: string) {
   const [agent, setAgent] = useState<Agent | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [task, setTask] = useState<Task | null>(null);
+  const [work, setWork] = useState<WorkItem[]>([]);
+  const [workLoaded, setWorkLoaded] = useState(false);
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [expired, setExpired] = useState(false);
@@ -73,8 +76,20 @@ export function useWorkspace(userId?: string) {
     );
   }, []);
   const refreshMessages = useCallback(async (signal?: AbortSignal) => {
-    const result = await api<{ messages: Message[] }>("messages", { signal });
+    const [result, activity] = await Promise.all([
+      api<{ messages: Message[] }>("messages", { signal }),
+      api<{ tasks: WorkItem[] }>("tasks", { signal }),
+    ]);
+    if (signal?.aborted) return;
     setMessages(result.messages);
+    setWork(activity.tasks);
+    setWorkLoaded(true);
+  }, []);
+  const refreshWork = useCallback(async (signal?: AbortSignal) => {
+    const result = await api<{ tasks: WorkItem[] }>("tasks", { signal });
+    if (signal?.aborted) return;
+    setWork(result.tasks);
+    setWorkLoaded(true);
   }, []);
 
   useEffect(() => {
@@ -109,6 +124,26 @@ export function useWorkspace(userId?: string) {
     void load();
     return () => abort.abort();
   }, [userId, storageKey, revision, report, refreshMessages]);
+
+  // Watch saved work from other tabs and later background sources, even with chat closed.
+  useEffect(() => {
+    if (!userId || !agent || agent.paused || loading || expired) return;
+    const abort = new AbortController();
+    let timer: ReturnType<typeof setTimeout>;
+    async function refresh() {
+      try {
+        await refreshWork(abort.signal);
+        if (!abort.signal.aborted) timer = setTimeout(refresh, document.hidden ? 30000 : 10000);
+      } catch (failure) {
+        if (!abort.signal.aborted) report(failure);
+      }
+    }
+    timer = setTimeout(refresh, 10000);
+    return () => {
+      clearTimeout(timer);
+      abort.abort();
+    };
+  }, [userId, agent?.id, agent?.paused, loading, expired, revision, refreshWork, report]);
 
   useEffect(() => {
     if (!task || !["ready", "running"].includes(task.status) || agent?.paused) return;
@@ -202,6 +237,8 @@ export function useWorkspace(userId?: string) {
     agent,
     messages,
     task,
+    work,
+    workLoaded,
     draft,
     edit,
     send,

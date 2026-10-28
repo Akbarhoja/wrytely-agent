@@ -57,8 +57,16 @@ closed. No test-session switch or authentication bypass exists in the runtime.
 ## Design
 
 The workspace uses a restrained green palette, self-hosted Plus Jakarta Sans,
-Phosphor icons, a conversation-first layout and a secondary activity rail. Empty
+Phosphor icons, a work-first overview and a separate conversation view. The default
+screen groups real saved tasks into In motion, Needs attention and Completed.
+Decision requests have their own future integration area; blocked execution is
+not presented as a request for approval. Empty
 states explain what can happen next without inventing assignments or activity.
+`GET /v1/tasks` provides only the authenticated account's most recent 50 tasks.
+The overview refreshes saved work independently of the conversation; it stops
+refreshing while paused, on unmount or after a read failure. A reconnect action
+restores reads. Unknown/unloaded work is distinguished from a verified empty list.
+
 All interactive elements have visible focus, labeled controls and reduced-motion
 support. Phone layouts stack the workspace and activity panel.
 

@@ -14,7 +14,7 @@ export async function forward(request: Request, path: string[], deps: Dependenci
   const route = path.join("/");
   const permitted =
     request.method === "GET"
-      ? ["me", "messages"].includes(route) || /^tasks\/[0-9a-f-]{36}$/i.test(route)
+      ? ["me", "messages", "tasks"].includes(route) || /^tasks\/[0-9a-f-]{36}$/i.test(route)
       : request.method === "POST" && ["bootstrap", "messages", "agent/control"].includes(route);
   if (!permitted) return json(404, "Route not found");
   if (request.method === "POST" && request.headers.get("origin") !== new URL(request.url).origin) {

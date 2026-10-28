@@ -22,8 +22,14 @@ do not establish a live authenticated round trip.
 The GitHub repository is now public at Akbar's request. The application itself is
 not deployed publicly. Existing Wrytely production configuration is unchanged.
 
-Current local verification: 42 backend tests against disposable Postgres and 19
+Current local verification: 44 backend tests against disposable Postgres and 24
 frontend boundary/interaction tests pass. Ruff, Prettier, TypeScript and the Next.js
 production build pass. Browser checks cover 1440px desktop and 390px phone views,
 connection navigation and no horizontal overflow. Main branch protection is verified
 as described in TEAM.md. Live provider integration remains unverified.
+
+The default student screen is now a work overview, with conversation as a separate
+view. Its account-scoped task list reads the latest 50 real records and refreshes
+without opening chat. No sample course work or decision requests are populated.
+Current saved tasks are conversation tasks; academic responsibility ingestion,
+decision requests and autonomous course workflows remain future implementation.

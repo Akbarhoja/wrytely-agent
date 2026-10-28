@@ -16,8 +16,10 @@ import {
   Sparkle,
   Tray,
   WarningCircle,
+  SquaresFour,
 } from "@phosphor-icons/react";
 import { useWorkspace } from "@/lib/use-workspace";
+import { Overview } from "./overview";
 
 type Props = {
   mode: "signed-in" | "signed-out" | "unconfigured" | "loading";
@@ -33,7 +35,7 @@ const starters = [
 
 export function Workspace({ mode, userId, name, account }: Props) {
   const data = useWorkspace(userId);
-  const [view, setView] = useState<"conversation" | "connections">("conversation");
+  const [view, setView] = useState<"overview" | "conversation" | "connections">("overview");
   const signedIn = mode === "signed-in";
   const working = data.task && ["ready", "running"].includes(data.task.status);
   const state =
@@ -63,6 +65,14 @@ export function Workspace({ mode, userId, name, account }: Props) {
         <div className="sidebar-body">
           <p className="sidebar-caption">YOUR SPACE</p>
           <nav aria-label="Workspace">
+            <button
+              className={view === "overview" ? "nav-item selected" : "nav-item"}
+              onClick={() => setView("overview")}
+              aria-current={view === "overview" ? "page" : undefined}
+            >
+              <SquaresFour size={20} aria-hidden />
+              Overview
+            </button>
             <button
               className={view === "conversation" ? "nav-item selected" : "nav-item"}
               onClick={() => setView("conversation")}
@@ -103,7 +113,13 @@ export function Workspace({ mode, userId, name, account }: Props) {
         <header className="topbar">
           <span>
             Workspace <span className="crumb">/</span>{" "}
-            <strong>{view === "conversation" ? "Conversation" : "Connections"}</strong>
+            <strong>
+              {view === "overview"
+                ? "Overview"
+                : view === "conversation"
+                  ? "Conversation"
+                  : "Connections"}
+            </strong>
           </span>
           <div className="topbar-actions">
             {signedIn && data.agent ? (
@@ -137,16 +153,48 @@ export function Workspace({ mode, userId, name, account }: Props) {
               {state}
             </div>
             <h1>
-              {signedIn ? `A little breathing room, ${name}.` : "A little less on your mind."}
+              {view === "overview"
+                ? signedIn
+                  ? `Your semester, moving forward, ${name}.`
+                  : "Your semester, moving forward."
+                : view === "conversation"
+                  ? "Talk things through with Wrytely."
+                  : "Your semester, connected."}
             </h1>
             <p>
-              {signedIn
-                ? "One place to talk things through and see what’s moving forward."
-                : "Meet Wrytely. Your personal academic agent, built around your semester."}
+              {view === "overview"
+                ? "See what’s being handled, what needs attention, and what’s already done."
+                : view === "conversation"
+                  ? "Give your agent context, ask a question, or talk about the next step."
+                  : "Bring your courses and conversations into your agent’s world."}
             </p>
           </section>
 
-          {view === "connections" ? (
+          {data.error && (
+            <div className="error-banner" role="alert">
+              <WarningCircle size={20} aria-hidden />
+              <span>{data.error}</span>
+              {data.expired ? (
+                <Link href="/sign-in">Sign in again</Link>
+              ) : (
+                <button onClick={data.retry}>Reconnect</button>
+              )}
+            </div>
+          )}
+          {view === "overview" ? (
+            <Overview
+              work={data.work}
+              loaded={data.workLoaded}
+              loading={data.loading || mode === "loading"}
+              signedIn={signedIn}
+              paused={Boolean(data.agent?.paused)}
+              configured={mode === "signed-out"}
+              error={Boolean(data.error)}
+              onConversation={() => setView("conversation")}
+              onConnections={() => setView("connections")}
+              onRefresh={data.retry}
+            />
+          ) : view === "connections" ? (
             <section className="connections-panel">
               <div className="section-heading">
                 <h2>Bring your semester together</h2>
@@ -261,17 +309,6 @@ export function Workspace({ mode, userId, name, account }: Props) {
                   )}
                 </div>
                 <div className="conversation-bottom">
-                  {data.error && (
-                    <div className="error-banner" role="alert">
-                      <WarningCircle size={20} aria-hidden />
-                      <span>{data.error}</span>
-                      {data.expired ? (
-                        <Link href="/sign-in">Sign in again</Link>
-                      ) : (
-                        <button onClick={data.retry}>Reconnect</button>
-                      )}
-                    </div>
-                  )}
                   {data.task?.status === "blocked" && (
                     <p className="task-note" role="status">
                       Wrytely couldn’t finish that message. It’s saved in your conversation.

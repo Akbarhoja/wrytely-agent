@@ -15,6 +15,7 @@ afterEach(() => {
   cleanup();
   sessionStorage.clear();
   vi.unstubAllGlobals();
+  vi.useRealTimers();
 });
 const taskId = "00000000-0000-0000-0000-000000000001";
 function backend(loseFirst = false) {
@@ -29,29 +30,69 @@ function backend(loseFirst = false) {
         throw new TypeError("Network lost after accepting message");
       return Response.json({ task_id: taskId, status: "ready" }, { status: 202 });
     }
+    if (path.endsWith("tasks")) return Response.json({ tasks: [] });
     if (path.includes("tasks/")) return Response.json({ id: taskId, status: "done" });
     return Response.json({ messages: [] });
   });
 }
 describe("student workspace", () => {
+  it("refreshes saved work without opening conversation and stops while paused", async () => {
+    vi.useFakeTimers();
+    const fetch = backend();
+    vi.stubGlobal("fetch", fetch);
+    const { result } = renderHook(() => useWorkspace("user_alice"));
+    await act(async () => {});
+    expect(result.current.loading).toBe(false);
+    const taskReads = () =>
+      fetch.mock.calls.filter(([url]) => String(url).endsWith("/tasks")).length;
+    expect(taskReads()).toBe(1);
+    await act(() => vi.advanceTimersByTimeAsync(10000));
+    expect(taskReads()).toBe(2);
+    fetch.mockResolvedValue(
+      Response.json({ id: "agent_alice", user_id: "user_alice", paused: true }),
+    );
+    await act(() => result.current.togglePause());
+    await act(() => vi.advanceTimersByTimeAsync(30000));
+    expect(taskReads()).toBe(2);
+  });
   it("shows an honest public shell and makes no private requests", () => {
     const fetch = backend();
     vi.stubGlobal("fetch", fetch);
     render(<Workspace mode="unconfigured" />);
-    expect(screen.getByRole("heading", { level: 1 }).textContent).toContain("A little less");
-    expect(
-      (screen.getByRole("button", { name: "Send message" }) as HTMLButtonElement).disabled,
-    ).toBe(true);
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toContain(
+      "Your semester, moving forward",
+    );
+    expect(screen.queryByRole("textbox", { name: "Message Wrytely" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: /See connections/ }));
     expect(screen.getByText("No courses or chats are connected yet.")).toBeTruthy();
     expect(fetch).not.toHaveBeenCalled();
   });
   it("offers real auth routes when configured but signed out", () => {
     render(<Workspace mode="signed-out" />);
-    expect(screen.getByRole("link", { name: /Create your workspace/ }).getAttribute("href")).toBe(
+    expect(screen.getByRole("link", { name: /Set up your agent/ }).getAttribute("href")).toBe(
       "/sign-up",
     );
     expect(screen.getByRole("link", { name: /Sign in/ }).getAttribute("href")).toBe("/sign-in");
+  });
+  it("keeps a draft when moving between the overview and conversation", async () => {
+    vi.stubGlobal("fetch", backend());
+    render(<Workspace mode="signed-in" userId="user_alice" name="Alice" />);
+    await waitFor(() => expect(screen.getByRole("button", { name: "Pause agent" })).toBeTruthy());
+    fireEvent.click(screen.getByRole("button", { name: "Conversation" }));
+    await waitFor(() =>
+      expect(
+        (screen.getByRole("textbox", { name: "Message Wrytely" }) as HTMLTextAreaElement).disabled,
+      ).toBe(false),
+    );
+    fireEvent.change(screen.getByRole("textbox", { name: "Message Wrytely" }), {
+      target: { value: "My unsent thought" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Overview" }));
+    expect(screen.queryByRole("textbox")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Conversation" }));
+    expect(
+      (screen.getByRole("textbox", { name: "Message Wrytely" }) as HTMLTextAreaElement).value,
+    ).toBe("My unsent thought");
   });
   it("reuses a persisted key after an uncertain send and a remount", async () => {
     const fetch = backend(true);
@@ -119,6 +160,6 @@ describe("student workspace", () => {
     );
     const call = fetch.mock.calls.find(([url]) => String(url).endsWith("agent/control"));
     expect(JSON.parse(String(call?.[1]?.body))).toEqual({ paused: true });
-    expect(screen.getByText("Paused · messages will wait")).toBeTruthy();
+    expect(screen.getByText("Work stays saved while paused.")).toBeTruthy();
   });
 });
