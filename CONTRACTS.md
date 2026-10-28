@@ -263,3 +263,50 @@ support needs the next jointly agreed contract before proactive >24-hour sends
 can work. Murtazo's transport may prepare templates independently, but must not
 bypass this hold. Setup/API preference endpoints, timestamp parser wiring, delivery
 worker and signed callback assembly remain Murtazo's tasks. No live send enabled.
+
+## A3 draft artifacts and verification — issue #10 (internal, not wired)
+
+Migration 006 adds private immutable draft payloads and append-only check reports.
+Stack dependency: #9 → #7 → integration baseline. No earlier migration modified.
+
+`save_draft(lease, DraftArtifact, request_key)` is fenced to a running academic
+responsibility task. It persists title, body, structured claim/quote/source-version
+citations and disclosure as `review`, with the responsibility's memory revision.
+The same task/key/payload returns the same draft; changed payload conflicts. New
+keys create revisions as new artifact IDs. Ordinary conversation tasks cannot
+save academic artifacts. Student retrieval through `artifact(verified_user_id,id)`
+is private and reports `stale` if source memory changed. No HTTP routes or model
+drafting tools are exposed by this increment.
+
+Only `runtime.verification.verify_artifact(store, model, settings, lease, id,
+policy=CoursePolicy, rubric=list[RubricItem])` can use the internal readiness commit.
+Callers must not expose `_commit_artifact_check` to a model or API. Model responses
+alone never change state. Structural checks require current bound source versions,
+exact quotes, cited claims present in the draft, a bounded nonempty source-backed
+rubric and explicit source-backed course policy. Prohibited, limited or unknown
+policy cannot finalize this full-draft path; other permitted assistance belongs
+to its own workflow. Required disclosure must appear in the body.
+
+Next, a separate reviewer call through existing ModelClient assesses all citations
+against full current sources, all rubric items against the body, uncited claims,
+policy classification, disclosure sufficiency and completeness of the supplied
+rubric. Structured arrays must match input cardinality; every claim must be
+supported and every rubric item covered. Unsupported/uncertain/missing/invalid
+assessments cannot pass. Missing/older-than-24-hour evidence blocks before inference;
+this is a conservative starting freshness rule, not proof sources are up to date.
+The model may still misjudge support or miss requirements: this is fallible semantic
+assessment, not a guarantee of correctness or instructor approval.
+
+Each completed check persists policy/rubric evidence, errors, assessment and usage;
+pass updates state to ready, failure to needs_revision. Drafts remain readable in
+review before checks, preventing a verification deadlock. Provider failure leaves
+the draft unready and propagates to the caller for normal bounded retry handling.
+Final commit rechecks lease, pause, task ownership and memory revision; a concurrent
+source change cannot approve old work. Persisted ready state is historical evidence
+of checks at that time; consumers must check stale and revalidate current permissions
+before sharing. It is not authorization to send, submit or disclose anything.
+
+This stage supplies an internal boundary only. Draft generation tools, rubric/
+policy extraction, end-to-end worker orchestration, student review/download APIs,
+sharing and automatic change-driven revision are still pending. The existing
+internal academic worker continues producing working notes, not ready artifacts.

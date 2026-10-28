@@ -125,3 +125,18 @@ run before review. No live provider calls, source connections, production schema
 changes or app deployment. Template payload/configuration support is not implemented;
 expired-window sends stay held as approved_template_required. No M1 live milestone
 is claimed. Typed contract awaits Murtazo review before dependent assembly.
+
+October 28 — issue #10 A3 first increment: private saved draft artifacts with a
+mandatory finalization/check boundary, prepared on codex/artifact-verification.
+Migration 006 is stacked on delivery-storage #9 and memory #7. Drafts stay review
+until deterministic source/policy/citation checks and separate model-assessed
+claim/rubric/policy/disclosure checks pass. Reports and usage persist. Source
+changes and pause during assessment fence the final readiness write.
+
+Validation: 126 backend tests pass on disposable local Postgres, including twenty
+new artifact tests. Required Ruff lint/format and diff checks run before review.
+Offline scripted assessments verify gating and persistence, not live Meta judgment
+quality. No Murtazo-owned app, frontend, transport or connector files changed.
+No live inference, sends or production migrations occurred. This is not complete
+A3: generation/tool wiring, automatic policy/rubric extraction, student review APIs,
+sharing and full integrated workflows are still pending. A4 revision remains future.
