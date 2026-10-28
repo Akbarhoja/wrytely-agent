@@ -310,3 +310,30 @@ This stage supplies an internal boundary only. Draft generation tools, rubric/
 policy extraction, end-to-end worker orchestration, student review/download APIs,
 sharing and automatic change-driven revision are still pending. The existing
 internal academic worker continues producing working notes, not ready artifacts.
+
+## A3 generation helper — issue #12
+
+`runtime.drafting.generate_checked_draft(store, model, settings, lease,
+workflow_key=..., policy=CoursePolicy, rubric=list[RubricItem], max_revisions=2)`
+connects current bound evidence, source-policy preflight, generation, saved drafts,
+mandatory verification and bounded revision. This is an internal helper, not yet
+registered in normal worker dispatch or student APIs. It never sends or submits.
+
+A bounded nonempty source-backed rubric is required. Exact policy/rubric quotes
+must match current sources retrieved within 24 hours. Unknown/prohibited/limited
+policy blocks before generating assignment text. A separate structured model call
+must find the source policy permits the requested work; caller classifications
+cannot override it. This model judgment is fallible and needs live evaluation.
+
+Default maximum three drafts: initial plus two revisions (configurable 0–2).
+Failures feed the previous draft/report into revision. Policy/evidence failures
+stop rather than revise around them. Returns ready, needs_revision or blocked;
+none authorizes delivery. It does not complete the task or choose its next step.
+
+Persisted workflow keys (1–100 chars) bind policy, rubric and revision budget;
+changed payload under the same task/key conflicts. Saved preflight, draft and
+checkpoints recover across attempts under task fencing. Source changes/pause
+prevent stale writes. Committed drafts resume at review; reports are reused.
+Crashes before persisting inference can repeat model usage; no exactly-once billing
+claim. Callers must not use new keys to evade task/account execution budgets.
+Automatic source-policy extraction and end-to-end worker wiring remain pending.

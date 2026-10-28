@@ -140,3 +140,17 @@ quality. No Murtazo-owned app, frontend, transport or connector files changed.
 No live inference, sends or production migrations occurred. This is not complete
 A3: generation/tool wiring, automatic policy/rubric extraction, student review APIs,
 sharing and full integrated workflows are still pending. A4 revision remains future.
+
+October 28 — #12: internal draft-generation helper now connects source/policy
+preflight, generation, saved review drafts, mandatory verification and up to two
+revisions. Saved drafts/reports resume across attempts. No Murtazo-owned files
+changed. Unknown/limited/prohibited policy blocks before assignment generation.
+Separately published Murtazo-requested SecretStr access-token and explicit API
+version settings on #9 (bd944f8), default None, with six focused config tests.
+
+Validation: 140 backend tests pass on disposable Postgres, including eight new
+generation/recovery tests and six config tests. Ruff lint/format/diff pass. Scripted
+models prove orchestration, not live policy interpretation or drafting quality.
+No live inference/sends/production changes. Ordinary worker dispatch, automatic
+policy/rubric extraction and student-facing delegation/review remain pending.
+Full A3 is not complete. #12 remains open for review.
