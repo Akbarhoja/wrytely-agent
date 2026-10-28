@@ -14,6 +14,44 @@ number ID and WhatsApp Business Account ID. See `.env.example` for names. Supply
 secrets locally or through hosting secret controls; never paste them into chat.
 No API access token is consumed yet: outbound delivery is deliberately inactive.
 
+## Murtazo delivery transport increment — October 28
+
+`WhatsAppAdapter.send_template` prepares a single Cloud API request for a static
+template or positional body text parameters. It validates recipient/template/
+language syntax and nonblank parameters before HTTP. Parameters are conservatively
+limited to 1,024 characters each by the application. Header, button, named and
+media parameters are outside this increment. Existing text sending is preserved.
+
+The caller must choose a configured, approved and enabled template, check its
+parameter count/schema, and enforce permissions and timing. This transport alone
+does not establish those checks. Reference payload:
+https://whatsapp.github.io/WhatsApp-Nodejs-SDK/api-reference/messages/template/
+
+Both paths use the same single-attempt receipt classification: acceptance retains
+the provider message ID, explicit rejection is failed, and a lost response or
+malformed success is unknown. Injected HTTP transport must have retries disabled.
+No worker calls this adapter automatically yet; no real messages were sent.
+
+Validation on Windows/Python 3.12: 24 transport tests passed, including 14 new
+template cases. Full backend run: 46 passed and 45 setup errors, all because no
+isolated `AGENT_TEST_DATABASE_URL` is configured and macOS-only `pgserver` is
+unavailable. Full database regression validation remains outstanding. The locked
+dependencies also emit existing Starlette/httpx and short test HMAC-key warnings.
+Shared delivery state, preferences and concurrency contracts await agreement in
+issue #4; runtime/shared/schema files were not changed.
+
+Continuation: callback parsing now validates the configured business/phone envelope,
+provider reference, recipient, supported status and provider epoch time. A mixed
+batch retains valid rows while ignoring malformed rows. Original provider epoch is
+preserved; future skew above five minutes is rejected. This pure parser assumes
+raw-body authentication and does not itself mutate delivery state.
+
+Full regression validation is now unblocked: an isolated password-protected EDB
+Postgres 17 instance in a temporary ASCII Windows path listens only on loopback.
+All 118 backend tests pass (51 transport tests); Ruff lint/format/diff checks pass.
+The two existing dependency/test-key warnings remain. No production data or live
+provider was used. The earlier 45 fixture errors describe the initial setup only.
+
 Apply migrations only to the designated development database using
 `python -m app.migrate`. Set the webhook URL to an HTTPS development deployment's
 `/webhooks/whatsapp`, verify it, and subscribe to message events. GET verification
