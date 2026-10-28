@@ -142,3 +142,53 @@ independent verification, grading, delivery, or submission. Initial done without
 any work is blocked. Source/version change handling, commitment extraction,
 verified artifacts, student decision requests and blocked-duty resumption are
 future stages. This loop does not yet activate through ordinary chat messages.
+
+## A2 academic memory — draft internal contract (issue #6)
+
+Connector handoff is proposed in coordination issue #4, not yet agreed or wired.
+No new HTTP endpoints, adapters or frontend controls are part of this change.
+Trusted assembly must derive user identity from the verified session/connection;
+a source body or model may never provide the authority to access another account.
+
+`SourceObservation` contains source_key (stable connector/item key), external_revision,
+title, reference, coverage (`snapshot`, `api`, `feed`, `group`), content and a
+mandatory timezone-aware retrieved_at. Text is limited to 24,000 characters.
+References are stored as evidence only; the memory layer does not fetch URLs.
+Adapters must not pass credentials in content or references.
+
+`Store.observe_source(user_id, observation)` stores immutable version evidence and
+returns its ID and source_id. Repeated key/revision with identical evidence returns
+the original version and original retrieval time; it does not manufacture a fresh
+sync. Changed evidence under the same revision raises RequestConflict. Distinct
+versions with equal retrieval time conflict. A late observation is preserved but
+cannot displace a version with a newer retrieval timestamp. This orders recorded
+observations, not arbitrary vendor revision strings. Adapters must reconcile vendor
+ordering where necessary. Retrieval timestamps over five minutes in the future
+are rejected. Unprovisioned identities fail.
+
+`Store.bind_source(user_id, responsibility_id, source_id)` explicitly attaches one
+owned source to one owned duty, idempotently; max eight sources per responsibility.
+Before the initial plan starts, binding enriches its memory revision atomically.
+Once work starts, adding a source blocks old work as source_changed. No cross-user
+or unbound source is exposed to the planner.
+
+`Store.record_source_fact(lease, version_id, claim, quote)` is a fenced internal
+storage boundary, not a model tool or a public route in this stage. It requires a
+current source version bound to this responsibility and an exact substring quote.
+Identical fact retries deduplicate by a SHA-256 digest of claim/quote. Claim and
+quote limits are 2,000 characters each. Exact quote validation establishes text
+presence only, not that the quote supports the claim. A3 must implement that check.
+
+The planner/context now receives academic_memory: up to eight source excerpts
+(6,000 characters each, with truncation flags), version IDs/revisions, references,
+coverage and retrieval timestamps; up to 50 recent facts with current-version flags.
+A fixed 24-hour heuristic flags freshness review; it is not a provider freshness SLA
+or proof that a portal was checked. Snapshot input does not monitor later changes.
+
+Promoting a newly observed version increments attached duties' memory revision,
+blocks queued/running tasks, revokes their leases and blocks each affected duty
+with source_changed. Past facts/results remain for audit; old facts are flagged
+noncurrent and old step results stale. Task commits also check the responsibility
+revision. A stale saved model/planning turn cannot complete or spawn fresh work.
+This stage stops stale work; automatic revision/resumption belongs to A4. Existing
+step budgets are not reset. Source evidence cannot expand action permissions.

@@ -92,3 +92,20 @@ responses; autonomous planning quality and Meta tool-schema compatibility are no
 live-validated. Migrations remain local-only. API/UI delegation, course-policy
 handling, source retrieval, verified artifacts and requirement changes remain
 unfinished. DBOS is still not adopted.
+
+October 28 — issue #6 academic memory implementation prepared for review on
+codex/academic-memory. Migration 004 adds immutable source versions, explicit
+responsibility/source bindings, exact-quote evidence and memory revisions. Planner
+context now includes bounded private excerpts, provenance, source coverage,
+retrieval timestamps and stale/truncated indicators. Changed evidence invalidates
+active tasks and fences old worker writes; old evidence remains auditable.
+
+Validation: 89 backend tests pass against disposable local Postgres; Ruff lint,
+format and diff checks pass. Twelve new tests cover idempotent/conflicting/late
+observations, timestamp validation, isolation/binding limits, quote checks,
+source-change fencing, bounded excerpts, restart persistence and planner context.
+No live provider call or production migration occurred. No Murtazo-owned app,
+frontend, connector or WhatsApp files changed. The connector contract is a draft
+pending agreement in #4. Source ingestion is not exposed to students yet. Semantic
+claim verification, model-driven fact extraction and automatic requirement-change
+revision remain unimplemented. Issue #6 is awaiting review, not marked done.

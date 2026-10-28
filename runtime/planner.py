@@ -18,6 +18,8 @@ PLAN_TOOL["parameters"]["required"] = ["action", "reason", "step_key", "instruct
 
 PLANNER_INSTRUCTIONS = (
     "Plan the next useful internal academic analysis step for this delegated duty. "
+    "Read academic_memory and retain version references for evidence used. "
+    "Flag freshness concerns, partial excerpts and snapshot coverage. "
     "Use record_plan exactly once. Choose work, blocked or done. Read all previous "
     "results; do not repeat equivalent work under a new name. Use a stable descriptive "
     "step_key. Only internal analysis is authorized: no messages, submissions, external "
