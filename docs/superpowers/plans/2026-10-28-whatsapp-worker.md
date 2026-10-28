@@ -56,7 +56,7 @@ Files: integrations/whatsapp.py, app/main.py, tests/test_whatsapp_flow.py.
 - [x] Construct Store and zero-retry httpx from explicit settings; poll with bounded
   waits and stop cleanly on interrupt. No automatic database migration or live test.
 - [x] Verify lint/format/diff and full backend tests against disposable Postgres.
-- [ ] Record evidence, remaining template/live limits and dependency order in #5.
+- [x] Record evidence, remaining template/live limits and dependency order in #5.
 
 ## Execution record
 
@@ -66,6 +66,9 @@ Files: integrations/whatsapp.py, app/main.py, tests/test_whatsapp_flow.py.
   behavior before implementation. Added fault/isolation cases after those passed.
 - GREEN: 172 backend tests pass on isolated password-protected local Postgres 17;
   Ruff lint/format and diff checks pass. Two existing warnings remain.
-- Native review underway. Shared-owner issue raised in #4: orphan capacity must
-  not reject already matched callbacks. No storage fix made in Murtazo's scope.
+- Independent static review found no Murtazo-owned actionable defects. Akbar also
+  reviewed the exact PR head and independently validated offline compatibility.
+- Shared-owner orphan-capacity fix `d61217b` consumed by dependency merge `068210b`.
+  No shared code was rewritten in Murtazo's scope. Updated full suite: 175 passed,
+  two existing warnings; Ruff lint/format and diff checks pass.
 - Templates remain held outside 24 hours; live Meta/WhatsApp evidence unavailable.

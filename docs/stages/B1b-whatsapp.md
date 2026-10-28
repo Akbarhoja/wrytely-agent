@@ -115,14 +115,16 @@ alone does not authorize proactive sending. Approved template selection/payload
 configuration remains a shared-contract follow-up. A live Meta-powered round trip
 and public deployment remain unverified.
 
-Current integrated validation: 172 backend tests pass against isolated local
+Current integrated validation: 175 backend tests pass against isolated local
 Postgres, including worker concurrency/restart, post-send storage failure, signed
 callback-before-response/replay/order handling, private preferences and incorrect
 recipient isolation. Ruff lint/format and diff checks pass. Existing Starlette/httpx
 and short synthetic HMAC-key warnings remain. This is offline simulated transport
-with real storage, not real provider evidence. Review identified a shared-storage
-orphan-capacity edge case and reported it to its owner in #4; no shared fix is
-included in this integration work.
+with real storage, not real provider evidence. The shared-storage orphan-capacity
+edge case reported in #4 was fixed by Akbar's track in commit `d61217b`. This
+feature branch now consumes that fix and its three storage regressions: known
+exact-match callbacks bypass orphan-only capacity, while new unmatched/wrong-
+recipient evidence remains capped. This remains Akbar's shared-storage contribution.
 
 ## Link and ingest
 
