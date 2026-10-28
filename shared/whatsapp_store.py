@@ -85,8 +85,9 @@ class WhatsAppStore:
                 if not deleted:
                     return "ignored"
                 conn.execute(
-                    "INSERT INTO wrytely_agent.channel_links(agent_id,phone) VALUES (%s,%s)",
-                    (challenge["id"], message.sender),
+                    "INSERT INTO wrytely_agent.channel_links(agent_id,phone,generation) "
+                    "VALUES (%s,%s,%s)",
+                    (challenge["id"], message.sender, uuid4()),
                 )
                 conn.execute(
                     "INSERT INTO wrytely_agent.whatsapp_inbound(provider_id,agent_id) "

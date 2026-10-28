@@ -192,3 +192,74 @@ noncurrent and old step results stale. Task commits also check the responsibilit
 revision. A stale saved model/planning turn cannot complete or spawn fresh work.
 This stage stops stale work; automatic revision/resumption belongs to A4. Existing
 step budgets are not reset. Source evidence cannot expand action permissions.
+
+## Delivery storage, issue #8 — draft typed handoff to #5
+
+Stacked on memory PR #7; migration 005 preserves 001–004. Contract definitions:
+`contracts/delivery.py`. Store implementation: `shared/delivery_store.py` composed
+into existing Store. No network IO, transport, callback parsing or worker assembly
+is implemented here. Murtazo must review/agree this typed handoff before wiring it.
+
+- `claim_whatsapp_delivery(worker_id, lease_seconds=60)` returns DeliveryClaim or
+  None. Worker ID <=100 chars, lease 5–300 seconds. Claim contains action/agent/task
+  IDs, recipient, content, persisted link_generation, worker_id, attempt_token and
+  deadline. It atomically changes queued/due deferred to sending. Expired sending
+  becomes unknown, including attempts that may not have dispatched: conservative
+  recovery avoids blind resend. Unknown/accepted/failed/cancelled are not reclaimed.
+- `authorize_whatsapp_send(claim, business_id=..., phone_number_id=...)` returns
+  SendAuthorization: permitted with authoritative recipient/text, held with reason
+  and retry_at, or cancelled with reason. It locks agent then action, validates
+  attempt ownership/expiry, current link generation and phone, pause, completed
+  reply task, explicit consent, timezone/quiet-hour preferences, trusted inbound
+  event timestamp and text length <=4096. Internal academic/plan results are never
+  deliverable through this reply path. Source-dependent artifact delivery must use
+  a later verified-artifact contract; it is not implicitly authorized here.
+- Permitted authorization atomically stamps dispatch_at and business/number IDs.
+  Repeating authorization raises LeaseLost. Worker must send immediately using the
+  returned payload ONCE. Do not reuse authorization after restarting. There is a
+  residual database-authorization/network-dispatch race: pause/unlink after this
+  boundary cannot recall an in-flight request. Never claim stronger cancellation.
+- `record_whatsapp_result(claim, DeliveryResult)` requires the live owning attempt,
+  prior dispatch authorization and matching internal_id. Only accepted (with
+  provider_ref), failed or unknown are valid transport evidence. It reconciles
+  stored early callbacks if a reference is known. Late/stale result writes raise
+  LeaseLost, storage failures are not success, and no result path schedules resend.
+- `record_whatsapp_status(event, business_id=..., phone_number_id=...)` accepts
+  WhatsAppStatusEvent ONLY after signature validation by Murtazo's assembly.
+  Match configured account/number, provider reference AND recipient; never infer
+  account ownership from recipient alone. Record event evidence idempotently.
+  delivered/read aggregate to delivered; failed overrides sent/accepted; sent
+  cannot override failed; delivered never regresses. Read evidence remains in the
+  event record, not a fabricated aggregate read state.
+- Callback-before-response is persisted unmatched and reconciled when the exact
+  provider reference is saved. Callback and result writes serialize by reference.
+  Orphans are retained seven days, capped at 10,000 with an explicit failure when
+  full. Expired orphan cleanup occurs on callback ingestion. Without a known
+  provider reference (lost send response), an orphan stays unmatched; manual/provider
+  reconciliation is required and no automatic resend is permitted.
+
+Trusted assembly calls `record_whatsapp_inbound_time(provider_id, sender, event_at)`
+after signature validation AND successful durable inbound ingestion. It requires
+a persisted inbound ID matching the current phone/link, timezone-aware provider
+event time and at most five minutes future skew; stored time is capped to receipt
+and never moves backwards. Old signed events do not reopen an expired 24-hour
+window. Receipt-only `last_inbound_at` is not used for send eligibility. Existing
+links retain unknown event time. New link generations are random; historical reply
+rows without a proven generation are cancelled at authorization, never backfilled
+with assumed permission.
+
+`set_communication_preferences(verified_user_id, consent=bool, timezone=IANA,
+quiet_start=0..23, quiet_end=0..23)` persists explicit account-scoped preferences.
+Equal start/end explicitly disables quiet hours; overnight ranges are supported.
+No preference rows are inferred for existing students. Missing preferences,
+revoked consent, pause, unknown inbound time, quiet hours and oversized text hold
+sending for a five-minute reevaluation; ownership/result mismatch cancels. No
+model/source can set preferences by calling an untrusted interface.
+
+IMPORTANT REMAINING GAP: an expired conversation window returns held with
+`approved_template_required`. This PR intentionally does not invent an approved
+template name, parameters or permission. Approved-template configuration/payload
+support needs the next jointly agreed contract before proactive >24-hour sends
+can work. Murtazo's transport may prepare templates independently, but must not
+bypass this hold. Setup/API preference endpoints, timestamp parser wiring, delivery
+worker and signed callback assembly remain Murtazo's tasks. No live send enabled.
