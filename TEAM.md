@@ -108,3 +108,13 @@ These work items are assigned and ready, not claimed as already in progress.
 Each engineer posts the exact branch/file claim before starting implementation.
 Use `.github/ISSUE_TEMPLATE/work-item.md` for further tasks and the PR template
 for the ownership/review checklist.
+
+## Integration freeze — Akbar decision
+
+Stop adding A4 or other features until existing work is reviewed/integrated and
+M1 is demonstrated live. The tested consolidation candidate is codex/m1-integration,
+combining #16, #20 and #22; #24 remains parked. It does not bypass main protection.
+Murtazo must review its exact tested head independently. Constituent PRs are review
+history, not duplicate changes to reapply. After approved integration, use the
+shared baseline for both tracks. Existing ownership remains unchanged. Live M1
+requires development setup and explicit provider budget; see docs/M1-ACCEPTANCE.md.

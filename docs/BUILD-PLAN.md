@@ -6,6 +6,13 @@ Source: [original Claude build plan](https://claude.ai/artifact/SYcUqEpMsGYR1mAD
 
 This repository copy is the shared implementation plan. See [TEAM.md](../TEAM.md) for current ownership and branch workflow, [STATUS.md](../STATUS.md) for actual completed work and limitations, and [Murtazo’s handoff](stages/B1-murtazo.md) for the next integration tasks. Dates are planning targets, not claims of completion.
 
+## Current execution correction — October 28
+
+Akbar paused feature expansion: consolidate/review the existing branches, complete
+live M1, then demonstrate full A3 before further A4. The codex/m1-integration
+candidate contains existing work, while A4 #24 remains parked. Offline tests do not
+satisfy live gates. See [M1 acceptance](M1-ACCEPTANCE.md) and the current STATUS.md.
+
 ## 1. Product promise and proof
 
 Wrytely is one persistent personal academic agent per college student. The student delegates responsibilities; Wrytely maintains context, identifies useful work, executes within authority, communicates when needed, and follows through. It works between conversations without requiring the student to open an app or send another prompt.

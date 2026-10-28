@@ -2,6 +2,20 @@
 
 Started October 27, 2026. Supervisor: Akbar. Lead: Codex. Engineer: Murtazo.
 
+## Current integration checkpoint — October 28
+
+Feature expansion is paused by Akbar. `codex/m1-integration` combines runtime #16,
+Murtazo delivery/onboarding #20 and template contract #22; A4 #24 is excluded.
+247 backend and 44 frontend tests pass together; Ruff, Prettier, TypeScript and
+Next build pass. No live connection is verified. Current backend process has none
+of the required development credentials configured. Akbar requested help setting
+up the Meta app/test number first; no live budget authorization is assumed.
+See docs/M1-ACCEPTANCE.md. Required independent review precedes protected-main
+merge. The chronological entries below describe branch history, not completion
+of live milestones. Template worker opt-in remains pending and sends stay held
+outside the window. Existing production remains unchanged.
+
+
 | Stage | Owner | State | Evidence / remaining work |
 |---|---|---|---|
 | P0 existing-service inspection | Codex | partial | Existing product uses Clerk Next.js 7, Neon/Postgres, S3-compatible storage; no production changes. Live account configuration pending. |
