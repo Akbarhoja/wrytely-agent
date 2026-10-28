@@ -170,3 +170,18 @@ revision exhaustion, pause, source-version changes and unbound policy rejection.
 Ruff lint/format/diff checks pass. No Murtazo-owned files changed. No live inference,
 WhatsApp delivery, production migration or deployment. Student-facing delegation,
 automatic policy/rubric extraction and end-to-end live usage still pending.
+
+October 28 — #23 first A4 increment on codex/source-reassessment, stacked on #16
+runtime chain. Explicitly opted-in active/completed duties now reassess current
+observed source changes within their original work budget. Old task leases/results
+are invalidated; new planning uses current evidence and marked-stale history.
+Default hold behavior is preserved. Previously blocked duties do not auto-reopen,
+and no old policy/drafting permission is carried to a new step. Migration 008 is
+additive after 007; prior migrations unchanged.
+
+Validation: 164 backend tests pass on disposable Postgres, eleven new A4 cases.
+Ruff lint/format/diff pass. Tests cover atomic rollback, lease revocation, duplicate/
+late/multiple updates, revised step keys, current-result completion, budget, pause,
+blocked duties and identity. No live model calls or production changes. Murtazo's
+implementation files untouched. This is partial A4: internal reassessment only;
+changed-draft orchestration, decisions, sharing and follow-up remain unfinished.

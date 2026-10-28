@@ -27,6 +27,7 @@ def test_migration_repeat_is_safe(store):
             "005",
             "006",
             "007",
+            "008",
         ]
 
 

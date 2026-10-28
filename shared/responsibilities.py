@@ -82,7 +82,8 @@ class ResponsibilityStore:
         if not task["responsibility_id"]:
             return {"task_kind": "reply"}
         row = conn.execute(
-            "SELECT id,objective,status,status_reason,steps_created,max_steps,memory_revision "
+            "SELECT id,objective,status,status_reason,steps_created,max_steps, "
+            "memory_revision,reassess_source_changes "
             "FROM wrytely_agent.responsibilities WHERE id=%s AND agent_id=%s",
             (task["responsibility_id"], lease.agent_id),
         ).fetchone()
@@ -129,7 +130,8 @@ class ResponsibilityStore:
             "UPDATE wrytely_agent.responsibilities r SET status='blocked', "
             "status_reason='task_execution_failed' WHERE r.agent_id=%s AND r.status='active' "
             "AND EXISTS (SELECT 1 FROM wrytely_agent.tasks t "
-            "WHERE t.responsibility_id=r.id AND t.status='blocked')",
+            "WHERE t.responsibility_id=r.id AND t.status='blocked' "
+            "AND coalesce(t.memory_revision,0)=r.memory_revision)",
             (agent_id,),
         )
 
@@ -146,7 +148,8 @@ class ResponsibilityStore:
                 raise ValueError("Responsibility is not active")
             if decision.action == "work":
                 duplicate = any(
-                    s["step_key"] == decision.step_key for s in context["previous_steps"]
+                    s["step_key"] == decision.step_key and not s["stale"]
+                    for s in context["previous_steps"]
                 )
                 if (
                     row["steps_created"] >= row["max_steps"]
@@ -169,7 +172,9 @@ class ResponsibilityStore:
                         (row["id"],),
                     )
                     status = "active"
-            if status == "done" and not context["previous_steps"]:
+            if status == "done" and not any(
+                step["status"] == "done" and not step["stale"] for step in context["previous_steps"]
+            ):
                 status, reason = "blocked", "no_completed_work"
             conn.execute(
                 "UPDATE wrytely_agent.responsibilities SET status=%s,status_reason=%s WHERE id=%s",
