@@ -38,10 +38,10 @@ at desktop and phone widths; do not represent simulated sessions as live Clerk.
 ## Plan
 
 - [x] Allowlist existing mutations with boundary tests (independent of status read).
-- [ ] Agree status contract and public destination configuration in #4.
-- [ ] Implement status/read assembly and tests using the owner's Store method.
-- [ ] Add connection/preference UI with uncertainty, expiry and account isolation.
-- [ ] Verify actual rendered UI, component tests, build and affected backend suite.
+- [x] Agree status contract and public destination configuration in #4; integrate #19.
+- [x] Implement status/read assembly and tests using the owner's Store method.
+- [x] Add connection/preference UI with uncertainty, expiry and account isolation.
+- [ ] Finish authenticated browser/live checks; offline tests and build are verified.
 - [ ] Independent review, draft PR, and exact offline/live limits in #17.
 
 ## Prepared UI checkpoint — October 28
@@ -54,20 +54,37 @@ submission-locked. Confirmation focus is moved/restored after rendering. Saved
 preference updates refresh clean forms; dirty drafts are retained with an explicit
 choice to use saved preferences.
 
-Important: the actual signed-in workspace currently mounts the unavailable state.
-The controller/status API assembly is NOT implemented. Ready-state tests use
-controlled component props, not a live Clerk session or a fake runtime account.
-The requested Store read and public destination configuration remain unagreed in
-#4; dependent wiring is intentionally blocked. No new GET route is allowlisted.
+The shared read/configuration boundary was agreed in #4 and supplied in #19.
+After reviewing the diff, integrated it into this branch without editing shared
+owner files. Authenticated GET /v1/whatsapp uses the verified user ID and returns
+only the agreed private snapshot plus public destination/configuration readiness.
+Storage failure remains 503, not disconnected. GET success and the proxy use
+no-store. API tests cover two synthetic accounts, ignored query identity, saved
+preferences, session restoration, unlink, readiness and storage failure.
 
-Validation: 35 website tests pass, including seven panel interaction tests and
-17 proxy-boundary tests. TypeScript, Prettier and production build pass. Strict
+The actual signed-in workspace now uses the account-scoped controller after
+provisioning. Aborted/obsolete-account responses cannot update visible state.
+Challenges remain in memory, expire and clear on session/account loss. Mutations
+are locked, never automatically retried, and uncertain outcomes require a fresh
+status read. Unlink/preferences require confirming reads. Recoverable refresh
+failures preserve dirty preference drafts with actions disabled; permission errors
+show a recovery action. Account delivery is explicitly historical, including the
+distinction between provider acceptance, pending, unknown and recipient delivery.
+
+Validation: 44 website tests pass, including 15 panel/controller tests and
+18 proxy-boundary tests. All 190 backend tests pass on disposable local Postgres;
+Ruff lint and format pass (two existing test-library/synthetic-key warnings).
+TypeScript, Prettier and production build pass. Strict
 static UI audit reports no findings. DESIGN.md lint reports zero errors and six
 unused-document-token warnings (runtime CSS remains canonical). Impeccable reports
 one taste warning for the incumbent Plus Jakarta Sans font; it is deliberately
 preserved for this scoped extension, not silently replaced as a rebrand.
-Browser inspection covers the actual unavailable view at desktop and phone widths;
-ready-state interaction evidence is component-test-only. Independent review found
-three issues, each reproduced by a regression and fixed; re-review found no blocker
-for this scoped preview. No backend files, migrations, live provider calls or
-production configuration changed.
+Browser inspection covered the earlier actual unavailable view at desktop and phone
+widths. The final production browser recheck failed at the browser connection layer
+although terminal HTTP returned 200; no authenticated browser or final 320px check
+is claimed. Ready-state interaction evidence is automated-test-only. Independent
+review findings were reproduced and fixed with regressions, including preserving
+drafts on refresh failure and recovery after rejected mutations. Own backend change
+is API assembly only. No migrations, live provider calls or production configuration
+changed. Actual Clerk two-account, webhook linking and delivery checks remain open;
+template policy remains Codex-owned and expired-window sends remain held.

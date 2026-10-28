@@ -40,6 +40,52 @@ def post_signed(client, value, *, valid=True):
     )
 
 
+def test_private_connection_read_and_session_restore(store, alice):
+    client = setup(store)
+    assert client.get("/v1/whatsapp").status_code == 401
+    assert client.get("/v1/whatsapp", headers=auth("bob")).status_code == 404
+    phone = link(store)
+    preferences = {"consent": False, "timezone": "UTC", "quiet_start": 0, "quiet_end": 0}
+    client.post("/v1/whatsapp/preferences", headers=auth(), json=preferences)
+    response = client.get("/v1/whatsapp?user_id=user_bob", headers=auth())
+    assert response.status_code == 200
+    assert response.headers["cache-control"] == "no-store"
+    state = response.json()
+    assert state["linked"] and state["phone_last4"] == phone[-4:]
+    assert state["preferences"] == preferences
+    assert state["destination"] is None and state["configured"] is False
+    assert phone not in response.text and "test-secret" not in response.text
+    store.provision("user_bob")
+    bob = client.get("/v1/whatsapp", headers=auth("bob")).json()
+    assert bob["linked"] is False and bob["preferences"] is None
+    assert setup(store).get("/v1/whatsapp", headers=auth()).json() == state
+    client.post("/v1/whatsapp/unlink", headers=auth())
+    assert client.get("/v1/whatsapp", headers=auth()).json()["linked"] is False
+
+
+def test_connection_configuration_and_storage_failure_are_distinct(store, alice, monkeypatch):
+    from psycopg import OperationalError
+
+    settings = Settings(
+        whatsapp_business_number="15555550100",
+        whatsapp_app_secret="test-secret",
+        whatsapp_verify_token="test-verify",
+        whatsapp_phone_number_id="123",
+        whatsapp_business_account_id="456",
+    )
+    client = TestClient(create_app(settings, store=store, verifier=TestVerifier()))
+    state = client.get("/v1/whatsapp", headers=auth()).json()
+    assert state["configured"] is True and state["destination"] == "15555550100"
+
+    def unavailable(*args):
+        raise OperationalError("private storage error")
+
+    monkeypatch.setattr(store, "whatsapp_connection", unavailable)
+    response = client.get("/v1/whatsapp", headers=auth())
+    assert response.status_code == 503
+    assert "private storage error" not in response.text
+
+
 def test_private_preferences_validate_input_and_derive_verified_owner(store, alice):
     client = setup(store)
     preferences = {"consent": True, "timezone": "America/Denver", "quiet_start": 22, "quiet_end": 7}

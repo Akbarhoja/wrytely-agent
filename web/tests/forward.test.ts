@@ -29,6 +29,15 @@ function request(path = "messages", method = "POST", origin = "https://agent.wry
   });
 }
 describe("authenticated API boundary", () => {
+  it("forwards private WhatsApp reads with only the verified token and no cache", async () => {
+    const deps = dependencies();
+    const response = await forward(request("whatsapp", "GET"), ["whatsapp"], deps);
+    expect(response.status).toBe(202);
+    expect(deps.fetch.mock.calls[0][0]).toBe("http://agent.internal:8000/v1/whatsapp");
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    deps.session.mockResolvedValue({ userId: null as unknown as string, getToken: async () => "" });
+    expect((await forward(request("whatsapp", "GET"), ["whatsapp"], deps)).status).toBe(401);
+  });
   it.each(["link", "unlink", "preferences"])(
     "allows only the existing WhatsApp %s mutation through the verified session",
     async (action) => {

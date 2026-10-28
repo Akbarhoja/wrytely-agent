@@ -14,7 +14,8 @@ export async function forward(request: Request, path: string[], deps: Dependenci
   const route = path.join("/");
   const permitted =
     request.method === "GET"
-      ? ["me", "messages", "tasks"].includes(route) || /^tasks\/[0-9a-f-]{36}$/i.test(route)
+      ? ["me", "messages", "tasks", "whatsapp"].includes(route) ||
+        /^tasks\/[0-9a-f-]{36}$/i.test(route)
       : request.method === "POST" &&
         [
           "bootstrap",

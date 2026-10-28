@@ -21,6 +21,7 @@ import {
 import { useWorkspace } from "@/lib/use-workspace";
 import { Overview } from "./overview";
 import { WhatsAppConnection } from "./whatsapp-connection";
+import { useWhatsAppConnection } from "../lib/use-whatsapp-connection";
 
 type Props = {
   mode: "signed-in" | "signed-out" | "unconfigured" | "loading";
@@ -52,6 +53,7 @@ export function Workspace({ mode, userId, name, account }: Props) {
             ? "Ready for your message"
             : "Your academic agent";
   const ready = signedIn && Boolean(data.agent) && !data.loading && !data.expired;
+  const whatsapp = useWhatsAppConnection(ready ? userId : undefined);
 
   return (
     <div className="app-shell">
@@ -197,7 +199,11 @@ export function Workspace({ mode, userId, name, account }: Props) {
             />
           ) : view === "connections" ? (
             <div className="connections-layout">
-              <WhatsAppConnection mode={mode === "signed-in" ? "unavailable" : mode} />
+              <WhatsAppConnection
+                key={userId || "guest"}
+                {...whatsapp}
+                mode={data.expired ? "expired" : mode === "signed-in" ? whatsapp.mode : mode}
+              />
               <section className="connections-panel">
                 <div className="section-heading">
                   <h2>Bring your semester together</h2>

@@ -183,6 +183,9 @@ export function WhatsAppConnection(props: Props) {
                 </button>
               </div>
             )}
+            <button className="text-button" disabled={Boolean(busy)} onClick={props.onRefresh}>
+              Refresh connection
+            </button>
             {connection.linked ? (
               <div className="connection-summary">
                 <p>
@@ -317,16 +320,41 @@ export function WhatsAppConnection(props: Props) {
                 )}
               </div>
             )}
-            <PreferencesForm
-              preferences={connection.preferences}
-              disabled={blocked || !props.onSave}
-              onSave={props.onSave}
-            />
+            {connection.delivery && (
+              <div className="connection-notice" role="status">
+                <strong>Latest account delivery</strong>
+                <p>{deliveryDescription(connection.delivery.state)}</p>
+                <p>This is account history and may belong to a previous connection.</p>
+              </div>
+            )}
           </>
         )
       )}
+      {connection && (mode === "ready" || mode === "error") && (
+        <PreferencesForm
+          preferences={connection.preferences}
+          disabled={mode !== "ready" || blocked || !props.onSave}
+          onSave={props.onSave}
+        />
+      )}
     </section>
   );
+}
+
+function deliveryDescription(state: string) {
+  const descriptions: Record<string, string> = {
+    ready: "A reply is queued. It has not been sent yet.",
+    sending: "A send attempt is pending. Delivery has not been confirmed.",
+    accepted: "WhatsApp accepted the reply. Recipient delivery has not been confirmed.",
+    delivered: "WhatsApp reported the reply delivered.",
+    read: "WhatsApp reported the reply read.",
+    deferred: "A reply is waiting for delivery conditions to be met.",
+    held: "A reply is waiting for delivery conditions to be met.",
+    failed: "The send attempt failed. No automatic resend is promised.",
+    unknown: "The outcome of the send attempt is unknown. It will not be resent automatically.",
+    cancelled: "This reply was cancelled.",
+  };
+  return descriptions[state] ?? "Delivery status is not available. Check again later.";
 }
 
 function PreferencesForm({

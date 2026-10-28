@@ -6,7 +6,7 @@ from typing import Annotated
 from uuid import UUID
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Request
+from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -148,16 +148,31 @@ def create_app(
             raise HTTPException(404, "Task not found")
         return row
 
-    def whatsapp_configured():
-        if not all(
+    def whatsapp_ready():
+        return all(
             (
                 settings.whatsapp_app_secret,
                 settings.whatsapp_verify_token,
                 settings.whatsapp_phone_number_id,
                 settings.whatsapp_business_account_id,
             )
-        ):
+        )
+
+    def whatsapp_configured():
+        if not whatsapp_ready():
             raise HTTPException(503, "WhatsApp is not configured")
+
+    @api.get("/v1/whatsapp")
+    def whatsapp_connection(user: User, db: DB, response: Response):
+        state = db.whatsapp_connection(user.user_id)
+        if state is None:
+            raise HTTPException(404, "Complete agent setup first")
+        response.headers["Cache-Control"] = "no-store"
+        return {
+            **state,
+            "destination": settings.whatsapp_business_number,
+            "configured": bool(whatsapp_ready() and settings.whatsapp_business_number),
+        }
 
     @api.post("/v1/whatsapp/link")
     def whatsapp_link(user: User, db: DB):
