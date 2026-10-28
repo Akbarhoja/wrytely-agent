@@ -251,12 +251,18 @@ class DeliveryStore:
                 "DELETE FROM wrytely_agent.whatsapp_status_events WHERE action_id IS NULL "
                 "AND received_at<now()-interval '7 days'"
             )
+            row = conn.execute(
+                "SELECT id FROM wrytely_agent.whatsapp_outbound WHERE provider_ref=%s "
+                "AND business_id=%s AND phone_number_id=%s AND recipient=%s FOR UPDATE",
+                (event.provider_ref, business_id, phone_number_id, event.recipient),
+            ).fetchone()
             count = conn.execute(
                 "SELECT count(*) AS n FROM wrytely_agent.whatsapp_status_events "
                 "WHERE action_id IS NULL"
             ).fetchone()["n"]
             if (
-                count >= 10000
+                row is None
+                and count >= 10000
                 and not conn.execute(
                     "SELECT 1 FROM wrytely_agent.whatsapp_status_events WHERE event_hash=%s",
                     (digest,),
@@ -277,11 +283,6 @@ class DeliveryStore:
                     event.event_at,
                 ),
             )
-            row = conn.execute(
-                "SELECT id FROM wrytely_agent.whatsapp_outbound WHERE provider_ref=%s "
-                "AND business_id=%s AND phone_number_id=%s AND recipient=%s FOR UPDATE",
-                (event.provider_ref, business_id, phone_number_id, event.recipient),
-            ).fetchone()
             if row:
                 self._reconcile_delivery_events(conn, row["id"])
             return {"matched": bool(row)}
