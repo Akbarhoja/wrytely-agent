@@ -15,8 +15,19 @@ class ResponsibilityStore:
         )
         conn.execute(
             "INSERT INTO wrytely_agent.tasks "
-            "(id,agent_id,message_id,responsibility_id,kind,step_key) VALUES (%s,%s,%s,%s,%s,%s)",
-            (task_id, agent_id, message_id, responsibility_id, kind, step_key),
+            "(id,agent_id,message_id,responsibility_id,kind,step_key,memory_revision) "
+            "SELECT %s,%s,%s,%s,%s,%s,r.memory_revision FROM wrytely_agent.responsibilities r "
+            "WHERE r.id=%s AND r.agent_id=%s",
+            (
+                task_id,
+                agent_id,
+                message_id,
+                responsibility_id,
+                kind,
+                step_key,
+                responsibility_id,
+                agent_id,
+            ),
         )
         return task_id
 
@@ -71,20 +82,22 @@ class ResponsibilityStore:
         if not task["responsibility_id"]:
             return {"task_kind": "reply"}
         row = conn.execute(
-            "SELECT id,objective,status,status_reason,steps_created,max_steps "
+            "SELECT id,objective,status,status_reason,steps_created,max_steps,memory_revision "
             "FROM wrytely_agent.responsibilities WHERE id=%s AND agent_id=%s",
             (task["responsibility_id"], lease.agent_id),
         ).fetchone()
         outcomes = conn.execute(
-            "SELECT t.step_key,t.status,left(m.content,4000) AS result FROM wrytely_agent.tasks t "
+            "SELECT t.step_key,t.status,left(m.content,4000) AS result, "
+            "coalesce(t.memory_revision,0)<>%s AS stale FROM wrytely_agent.tasks t "
             "LEFT JOIN wrytely_agent.messages m ON m.source_task_id=t.id AND m.agent_id=t.agent_id "
             "WHERE t.responsibility_id=%s AND t.kind='academic' ORDER BY t.created_at,t.id",
-            (row["id"],),
+            (row["memory_revision"], row["id"]),
         ).fetchall()
         return {
             "task_kind": task["kind"],
             "responsibility": row,
             "previous_steps": outcomes,
+            "academic_memory": self._academic_memory(conn, lease.agent_id, row["id"]),
             "scope": "internal_analysis_only_no_external_actions_or_verified_artifacts",
         }
 
