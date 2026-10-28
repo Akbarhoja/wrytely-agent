@@ -50,6 +50,7 @@ def run_episode(store: Store, model: ModelClient, settings: Settings, lease: Tas
         if not internal
         else (
             "Work on this internal analysis step of a delegated academic responsibility. "
+            "Cite source version IDs for evidence used; mark gaps and stale/partial sources. "
             "Use only supplied context and saved results. Identify missing evidence explicitly. "
             "Course connectors and research retrieval are unavailable. "
             "Submission and verified drafting are unavailable. "
