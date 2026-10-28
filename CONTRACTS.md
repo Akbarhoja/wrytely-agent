@@ -56,3 +56,17 @@ Propose a small PR with new types, documented behavior and tests. No duplicate
 database client or parallel auth mechanism. Do not alter migration 001 after it
 has been deployed; add a versioned migration instead. Both engineers may inspect
 all implementation code to diagnose problems.
+
+## B1b adapter preparation — October 28
+
+`integrations/whatsapp.py` implements raw-body HMAC signature verification, configured
+business/phone filtering and text extraction, plus a single-attempt Cloud API text
+sender. HTTP clients must have transport retries disabled. Provider acceptance is
+not recipient delivery; timeouts, server failures and malformed successes remain
+`unknown`. The action ID refers to our ledger, not provider deduplication.
+
+These functions are not exposed as HTTP routes or called by the worker yet.
+Before enabling them: persist webhook IDs uniquely, verify account/number linking,
+add durable outbound intents and permission checks, enforce the conversation
+window, implement approved templates and consume status callbacks. Never route a
+phone number directly to a Clerk user ID. Media intake remains future work.

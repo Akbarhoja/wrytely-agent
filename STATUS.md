@@ -33,3 +33,15 @@ view. Its account-scoped task list reads the latest 50 real records and refreshe
 without opening chat. No sample course work or decision requests are populated.
 Current saved tasks are conversation tasks; academic responsibility ingestion,
 decision requests and autonomous course workflows remain future implementation.
+
+October 28 continuation: B1b WhatsApp adapter preparation is implemented locally:
+raw-body signature validation, business/number filtering, text extraction and a
+single-attempt sender with accepted/failed/unknown outcomes. Ten new offline tests
+pass. No live WhatsApp request was made. No webhook route or automatic sender is
+enabled; durable linking, inbound deduplication, outbound storage, status callbacks
+and template/window enforcement remain required. DBOS is still a proposed bounded
+trial, not an adopted dependency.
+
+Validation for this continuation: all 54 backend tests pass against disposable
+local Postgres; Ruff lint and formatting pass. Dependency lock updated. Existing
+24 frontend tests were not rerun because no frontend code changed.
