@@ -92,3 +92,50 @@ responses; autonomous planning quality and Meta tool-schema compatibility are no
 live-validated. Migrations remain local-only. API/UI delegation, course-policy
 handling, source retrieval, verified artifacts and requirement changes remain
 unfinished. DBOS is still not adopted.
+
+October 28 — issue #6 academic memory implementation prepared for review on
+codex/academic-memory. Migration 004 adds immutable source versions, explicit
+responsibility/source bindings, exact-quote evidence and memory revisions. Planner
+context now includes bounded private excerpts, provenance, source coverage,
+retrieval timestamps and stale/truncated indicators. Changed evidence invalidates
+active tasks and fences old worker writes; old evidence remains auditable.
+
+Validation: 89 backend tests pass against disposable local Postgres; Ruff lint,
+format and diff checks pass. Twelve new tests cover idempotent/conflicting/late
+observations, timestamp validation, isolation/binding limits, quote checks,
+source-change fencing, bounded excerpts, restart persistence and planner context.
+No live provider call or production migration occurred. No Murtazo-owned app,
+frontend, connector or WhatsApp files changed. The connector contract is a draft
+pending agreement in #4. Source ingestion is not exposed to students yet. Semantic
+claim verification, model-driven fact extraction and automatic requirement-change
+revision remain unimplemented. Issue #6 is awaiting review, not marked done.
+
+October 28 — issue #8 delivery storage prepared on codex/delivery-storage, stacked
+on academic-memory PR #7. Adds migration 005, typed fenced delivery claims,
+one-time send authorization, conservative preference/window holds, private consent
+and quiet-hour storage, current-link generations, trusted inbound event-time
+storage and replay-safe status evidence with early-callback reconciliation.
+Murtazo retains transport/parser/worker/API assembly and messaging tests.
+
+Validation: 106 backend tests pass locally against disposable Postgres; 17 new
+storage tests cover concurrent claims, one-time dispatch authorization, controls,
+expired windows, unknown attempts, relinking, wrong callback scope, callback/result
+races, orphan reconciliation and private preferences. Required Ruff/diff checks
+run before review. No live provider calls, source connections, production schema
+changes or app deployment. Template payload/configuration support is not implemented;
+expired-window sends stay held as approved_template_required. No M1 live milestone
+is claimed. Typed contract awaits Murtazo review before dependent assembly.
+
+October 28 — #18 connection read/config dependency prepared on
+codex/connection-status (based on delivery-storage #9). Adds private one-snapshot
+whatsapp_connection with masked phone, nullable preferences and latest historical
+delivery state. Adds optional validated public business-number Settings field,
+distinct from internal phone-number ID. This supplies Murtazo's requested #17
+boundary; no app/frontend files changed and no new endpoint is claimed.
+
+Validation: 128 backend tests pass on this delivery branch, including six private
+read tests and seven business-number config cases; Ruff lint/format/diff pass.
+This branch intentionally excludes downstream A3 tests; the count is not a loss
+of tests. No live provider calls, production migrations or deployment. Murtazo
+has incorporated shared fix d61217b into #14; current GitHub checks were green.
+#18 remains open awaiting interface/implementation review.

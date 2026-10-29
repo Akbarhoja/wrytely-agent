@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Any, Literal, Protocol
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validator
 
 
 @dataclass(frozen=True)
@@ -85,3 +85,23 @@ class PlannerDecision(BaseModel):
         if not value.strip():
             raise ValueError("Must contain text")
         return value.strip()
+
+
+class SourceObservation(BaseModel):
+    """Draft internal connector contract; ownership is supplied by trusted assembly."""
+
+    model_config = ConfigDict(extra="forbid")
+    source_key: str = Field(min_length=1, max_length=256)
+    external_revision: str = Field(min_length=1, max_length=256)
+    title: str = Field(min_length=1, max_length=300)
+    reference: str = Field(min_length=1, max_length=2000)
+    coverage: Literal["snapshot", "api", "feed", "group"]
+    content: str = Field(min_length=1, max_length=24000)
+    retrieved_at: AwareDatetime
+
+    @field_validator("source_key", "external_revision", "title", "reference", "content")
+    @classmethod
+    def nonblank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("Must contain text")
+        return value

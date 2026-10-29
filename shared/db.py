@@ -9,6 +9,9 @@ from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 
 from contracts.models import TaskLease
+from shared.academic_memory import AcademicMemoryStore
+from shared.connection_status import ConnectionStatusStore
+from shared.delivery_store import DeliveryStore
 from shared.responsibilities import ResponsibilityStore
 from shared.whatsapp_store import WhatsAppStore
 
@@ -25,7 +28,9 @@ class QueueFull(Exception):
     pass
 
 
-class Store(WhatsAppStore, ResponsibilityStore):
+class Store(
+    WhatsAppStore, ResponsibilityStore, AcademicMemoryStore, DeliveryStore, ConnectionStatusStore
+):
     def __init__(self, url: str):
         self._url = url
 
@@ -209,7 +214,11 @@ class Store(WhatsAppStore, ResponsibilityStore):
             "SELECT t.id,a.paused FROM wrytely_agent.tasks t "
             "JOIN wrytely_agent.agents a ON a.id=t.agent_id "
             "WHERE t.id=%s AND t.agent_id=%s AND a.user_id=%s AND t.status='running' "
-            "AND t.lease_token=%s AND t.lease_until>now() FOR UPDATE OF a,t",
+            "AND t.lease_token=%s AND t.lease_until>now() "
+            "AND (t.responsibility_id IS NULL OR EXISTS (SELECT 1 "
+            "FROM wrytely_agent.responsibilities r WHERE r.id=t.responsibility_id "
+            "AND r.agent_id=t.agent_id AND r.status='active' "
+            "AND r.memory_revision=coalesce(t.memory_revision,0))) FOR UPDATE OF a,t",
             (lease.task_id, lease.agent_id, lease.user_id, lease.lease_token),
         ).fetchone()
         if not row or row["paused"]:
@@ -243,8 +252,8 @@ class Store(WhatsAppStore, ResponsibilityStore):
             )
             conn.execute(
                 "INSERT INTO wrytely_agent.whatsapp_outbound "
-                "(id,agent_id,task_id,recipient,content) "
-                "SELECT %s,%s,%s,l.phone,%s FROM wrytely_agent.channel_links l "
+                "(id,agent_id,task_id,recipient,content,link_generation) "
+                "SELECT %s,%s,%s,l.phone,%s,l.generation FROM wrytely_agent.channel_links l "
                 "JOIN wrytely_agent.whatsapp_inbound i ON i.agent_id=l.agent_id "
                 "WHERE i.task_id=%s AND l.agent_id=%s AND l.linked_at<=i.received_at "
                 "ON CONFLICT(task_id) DO NOTHING",
