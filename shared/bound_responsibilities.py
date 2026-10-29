@@ -9,6 +9,42 @@ class BoundResponsibilityStore:
     def create_bound_responsibility(
         self, user_id, objective, key, *, source_ids, max_steps=6, pending_limit=20
     ):
+        return self._create_bound_responsibility(
+            user_id,
+            objective,
+            key,
+            source_ids=source_ids,
+            max_steps=max_steps,
+            pending_limit=pending_limit,
+            draft_revisions=None,
+        )
+
+    def create_draft_responsibility(
+        self,
+        user_id,
+        objective,
+        key,
+        *,
+        source_ids,
+        max_steps=6,
+        pending_limit=20,
+        max_revisions=2,
+    ):
+        if type(max_revisions) is not int or not 0 <= max_revisions <= 2:
+            raise ValueError("Invalid draft revision budget")
+        return self._create_bound_responsibility(
+            user_id,
+            objective,
+            key,
+            source_ids=source_ids,
+            max_steps=max_steps,
+            pending_limit=pending_limit,
+            draft_revisions=max_revisions,
+        )
+
+    def _create_bound_responsibility(
+        self, user_id, objective, key, *, source_ids, max_steps, pending_limit, draft_revisions
+    ):
         from shared.db import QueueFull, RequestConflict
 
         objective = objective.strip()
@@ -31,6 +67,8 @@ class BoundResponsibilityStore:
             raise ValueError("Duplicate sources")
         canonical = sorted(str(value) for value in identifiers)
         specification = {"source_ids": canonical, "objective": objective, "max_steps": max_steps}
+        if draft_revisions is not None:
+            specification.update(requested_mode="private_draft", max_revisions=draft_revisions)
         with self.connection() as conn:
             # Same lock as observe_source, bind_source and worker claiming.
             agent = conn.execute(
@@ -79,6 +117,13 @@ class BoundResponsibilityStore:
                     "INSERT INTO wrytely_agent.responsibility_sources "
                     "(agent_id,responsibility_id,source_id) VALUES (%s,%s,%s)",
                     (agent["id"], row["id"], source_id),
+                )
+            if draft_revisions is not None:
+                conn.execute(
+                    "INSERT INTO wrytely_agent.private_draft_intents "
+                    "(responsibility_id,agent_id,memory_revision,max_revisions) "
+                    "VALUES (%s,%s,%s,%s)",
+                    (row["id"], agent["id"], row["memory_revision"], draft_revisions),
                 )
             task_id = self._responsibility_task(conn, agent["id"], row["id"], "plan", objective)
             conn.execute(

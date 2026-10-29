@@ -1,5 +1,70 @@
 # Engineering status
 
+October 29 end-of-session handoff: Akbar asked Murtazo's Codex to rest fully and
+delete its Wrytely scheduled tasks, with work resuming October30 Denver time.
+Instruction delivered in coordination #4 comment6493618180: save current work
+without discarding unfinished UI, stop new activity, delete only its own Wrytely
+polling/build schedules and acknowledge completion. Schedule deletion is NOT
+verified; posting a GitHub instruction does not cancel a remote scheduler.
+
+Codex reviewed #28 exact5462e96 API/proxy delta from shared25f1972 and found no
+concrete blocker in that published slice. Independent read-only archive checks:
+59 frontend tests, TypeScript, focused storage-failure API test and changed-file
+Ruff pass. Exact-head CI40848239694 reports293 backend/59 frontend plus build/
+lint/type/format pass. Full local DB suite not rerun due sandbox restrictions.
+Review evidence posted on #28 comment6493640290, not a human approval or merge.
+Unpublished student-form work is outside this review. Include owned UTF-8 fix
+from #34 when combining branches. Tomorrow: inspect saved teammate checkpoint,
+review #32/#34 dependencies, integrate intake/delegation/results on the reviewed
+candidate, then live M2 only within confirmed usage scope. Meta business setup
+and remaining M1 acceptance stay open; no workers/provider calls started here.
+
+October 29 teammate handoff acknowledged: Murtazo published #28 checkpoint5462e96
+with authenticated immutable snapshot create/list/detail and proxy routes. He
+reports293 backend/59 web tests and build/lint/type/format pass on disposable
+Postgres; these are collaborator results, not independently reproduced here.
+His student intake form remains in progress. He reported our JSON fixture's
+default-encoding read failing on Windows cp1252; Codex explicitly scoped and fixed
+tests/test_academic_scenario.py to read UTF-8. No teammate tests/branch were edited.
+Review/integration of #28 remains pending; no live connector or M2 pass implied.
+
+October 29 — #33 explicit private-draft routing on codex/private-draft-routing:
+create_draft_responsibility persists one private-workflow intent atomically with
+source bindings and first plan. Original source revision/mode/revision budget are
+immutable under idempotency. Planner source-policy/rubric assessment persists
+under fencing and resumes after failure. Only explicitly opted-in duties receive
+the typed draft choice; planning attaches the immutable drafting request in the
+same transaction as the academic task, before claim. Consumed intent cannot
+create another draft workflow; done requires a completed ready artifact. Existing
+draft preflight/revision/verification remain mandatory. Controlled private
+draft_responsibility_status projection is documented exactly in CONTRACTS.md.
+Migration009 is additive;008/A4 untouched and no migration was deployed.
+
+Validation: CI40848605258 at eadb233 passes309 backend/56 web tests, build,
+TypeScript, Ruff and formatting. Thirteen new cases cover the integrated scripted
+flow, replay/mode conflicts, unknown/limited/prohibited policy, saved-assessment
+recovery, atomic request before claim, one-workflow limit, premature completion,
+rollback, pause and source changes during assessment. New acceptance tests failed
+on the preimplementation CI40848221160. Local39 non-DB tests pass; local database
+process/shared-memory restrictions remain, so no local DB pass claimed. Models
+are scripted: live interpretation/autonomy quality and Murtazo's student-facing
+consumer remain unproven. No app/web/source edits, paid calls, messages or release.
+Stacked dependencies #27 → #30 → #32 must precede integration; independent review
+pending. M1 remains incomplete; live M2 not claimed complete.
+
+October 29 — #31 first drafting-authorization increment on codex/draft-requirements:
+internal source-backed policy/rubric assessor implemented, 18 focused offline tests
+pass; local Ruff lint/format/diff pass. Rejects stale/oversized/invalid evidence,
+unbound or fabricated quotes, malformed output, missing rubric and nonpermitting
+policy. Always returns authorizes_drafting=false; no task/action/storage mutation.
+This is candidate semantic assessment with scripted test verdicts, not live model
+quality or complete automatic drafting authorization. Concrete explicit-delegation
+and atomic planner-routing contract proposed to Murtazo in coordination #4
+comment6492266670; awaiting consumer agreement before dependent storage/planner
+implementation. Existing analysis-only B2 contract unchanged. No app/web/source
+files, migration, deployment, paid model request or message. Full exact-head CI
+pending; local database fixture remains sandbox-blocked. M1 incomplete; A4 parked.
+
 October 29 — #29 shared B2 boundaries on codex/b2-shared-boundaries: implemented
 atomic create_bound_responsibility plus bounded private source/artifact/check
 reads under Murtazo's recorded agreement (coordination 6491917360). Source binding

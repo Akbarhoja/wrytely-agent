@@ -25,7 +25,9 @@ from shared.db import Store
 
 @pytest.fixture
 def academic_scenario(store, alice):
-    fixture = json.loads((Path(__file__).parent / "fixtures/m2_academic.json").read_text())
+    fixture = json.loads(
+        (Path(__file__).parent / "fixtures/m2_academic.json").read_text(encoding="utf-8")
+    )
     duty = store.create_responsibility(
         "user_alice",
         "Take responsibility for Cedar's comparison section. Read the assignment and both "

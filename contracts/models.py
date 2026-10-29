@@ -87,6 +87,12 @@ class PlannerDecision(BaseModel):
         return value.strip()
 
 
+class DraftPlannerDecision(PlannerDecision):
+    """Only offered when a trusted private-draft intent exists."""
+
+    action: Literal["work", "draft", "blocked", "done"]
+
+
 class SourceObservation(BaseModel):
     """Draft internal connector contract; ownership is supplied by trusted assembly."""
 
