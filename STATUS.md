@@ -7,8 +7,13 @@ preferences restored. Pause persisted across reload; Resume restored active
 status. This is not the queued-work pause/restart test. All 259 backend tests pass
 against disposable local Postgres (approved process access resolved the sandbox
 fixture restriction), all 56 web tests and TypeScript pass, and Ruff lint/format
-and diff checks pass. No new model call or outbound send. Two-account browser
-acceptance is waiting at a separate participant sign-in. Evidence is recorded in
+and diff checks pass. No new model call or outbound send. A second real participant
+signed in through the separate in-app browser: authenticated responses confirm
+distinct user/agent IDs, an empty private task list, no first-account phone link,
+and Task not found when requesting the first account's saved task. Pausing B
+does not pause A; B pause survives reload, and resume retains B's agent identity.
+Both accounts were restored to active. Full two-recipient round trips and queued
+work control tests remain pending. Evidence is recorded in
 docs/M1-RUN-2026-10-29.md. The synthetic shared M2 scenario is prepared in
 docs/stages/M2-ACADEMIC-SCENARIO.md, not executed or claimed complete. Existing
 implementation ownership is unchanged; PR #25 still has no independent approval.
@@ -39,7 +44,8 @@ two recorded calls is $0.00773075 within the authorized $2 test budget; the
 provider's monthly alert is not a hard cap.
 
 We remain at M1 live acceptance, partially demonstrated and blocked on outbound
-delivery. Second-account isolation, second-recipient verification, and the live
+delivery. The continuation above records second-account task/link/control isolation;
+second-recipient verification, full round trips, and queued-work live
 controls/restart acceptance checks remain pending. Independent integration review
 is also pending. Existing planner, memory and drafting/verification code has
 offline evidence, not a completed live M2/A3 academic workflow. A4 remains parked.
