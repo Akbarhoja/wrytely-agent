@@ -22,6 +22,7 @@ import { useWorkspace } from "@/lib/use-workspace";
 import { Overview } from "./overview";
 import { WhatsAppConnection } from "./whatsapp-connection";
 import { useWhatsAppConnection } from "../lib/use-whatsapp-connection";
+import { AcademicContext } from "./academic-context";
 
 type Props = {
   mode: "signed-in" | "signed-out" | "unconfigured" | "loading";
@@ -37,7 +38,9 @@ const starters = [
 
 export function Workspace({ mode, userId, name, account }: Props) {
   const data = useWorkspace(userId);
-  const [view, setView] = useState<"overview" | "conversation" | "connections">("overview");
+  const [view, setView] = useState<"overview" | "conversation" | "connections" | "context">(
+    "overview",
+  );
   const signedIn = mode === "signed-in";
   const working = data.task && ["ready", "running"].includes(data.task.status);
   const state =
@@ -85,6 +88,14 @@ export function Workspace({ mode, userId, name, account }: Props) {
               Conversation
             </button>
             <button
+              className={view === "context" ? "nav-item selected" : "nav-item"}
+              onClick={() => setView("context")}
+              aria-current={view === "context" ? "page" : undefined}
+            >
+              <BookOpen size={20} aria-hidden />
+              Academic context
+            </button>
+            <button
               className={view === "connections" ? "nav-item selected" : "nav-item"}
               onClick={() => setView("connections")}
               aria-current={view === "connections" ? "page" : undefined}
@@ -121,7 +132,9 @@ export function Workspace({ mode, userId, name, account }: Props) {
                 ? "Overview"
                 : view === "conversation"
                   ? "Conversation"
-                  : "Connections"}
+                  : view === "context"
+                    ? "Academic context"
+                    : "Connections"}
             </strong>
           </span>
           <div className="topbar-actions">
@@ -162,14 +175,18 @@ export function Workspace({ mode, userId, name, account }: Props) {
                   : "Your semester, moving forward."
                 : view === "conversation"
                   ? "Talk things through with Wrytely."
-                  : "Your semester, connected."}
+                  : view === "context"
+                    ? "The context behind your coursework."
+                    : "Your semester, connected."}
             </h1>
             <p>
               {view === "overview"
                 ? "See what’s being handled, what needs attention, and what’s already done."
                 : view === "conversation"
                   ? "Give your agent context, ask a question, or talk about the next step."
-                  : "Bring your courses and conversations into your agent’s world."}
+                  : view === "context"
+                    ? "Keep assignment instructions and source excerpts together, ready for work you choose to delegate."
+                    : "Bring your courses and conversations into your agent’s world."}
             </p>
           </section>
 
@@ -184,7 +201,13 @@ export function Workspace({ mode, userId, name, account }: Props) {
               )}
             </div>
           )}
-          {view === "overview" ? (
+          <div hidden={view !== "context"}>
+            <AcademicContext
+              userId={signedIn && !data.expired ? userId : undefined}
+              enabled={ready}
+            />
+          </div>
+          {view === "context" ? null : view === "overview" ? (
             <Overview
               work={data.work}
               loaded={data.workLoaded}

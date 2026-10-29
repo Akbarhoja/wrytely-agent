@@ -36,6 +36,33 @@ function backend(loseFirst = false) {
   });
 }
 describe("student workspace", () => {
+  it("keeps the snapshot draft when navigating away and back without submitting it", async () => {
+    const base = backend();
+    const fetcher = vi.fn<typeof fetch>(async (url, options) =>
+      String(url).endsWith("/sources")
+        ? Response.json({ sources: [], limit: 50 })
+        : base(url, options),
+    );
+    vi.stubGlobal("fetch", fetcher);
+    render(<Workspace mode="signed-in" userId="user_alice" name="Alice" />);
+    await screen.findByRole("button", { name: "Pause agent" });
+    fireEvent.click(screen.getByRole("button", { name: "Academic context" }));
+    fireEvent.change(screen.getByLabelText("Pasted text"), {
+      target: { value: "Unsaved synthetic source" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Overview" }));
+    expect(screen.queryByRole("textbox", { name: "Pasted text" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Academic context" }));
+    expect((screen.getByLabelText("Pasted text") as HTMLTextAreaElement).value).toBe(
+      "Unsaved synthetic source",
+    );
+    expect(
+      fetcher.mock.calls.filter(
+        ([, opts]) =>
+          opts?.method === "POST" && String(opts.body).includes("Unsaved synthetic source"),
+      ),
+    ).toHaveLength(0);
+  });
   it("refreshes saved work without opening conversation and stops while paused", async () => {
     vi.useFakeTimers();
     const fetch = backend();

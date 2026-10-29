@@ -133,7 +133,7 @@ The real-SDK origin regressions use synthetic test-format keys with provider
 fetches blocked. Offline production HTTP checks cover fast root/sign-in responses,
 the signed-out browser redirect and private 401; they do not prove real login.
 
-## B2 snapshot API preparation
+## Academic context snapshots
 
 The existing authenticated proxy now allows GET sources, GET sources/{uuid} and
 POST sources. Creation accepts {title, content} with a UUID Idempotency-Key; reuse
@@ -142,6 +142,14 @@ The backend records manual snapshot coverage and server retrieval time. Saving
 does not start reasoning, draft an assignment or send a message. Lists contain
 the latest 50 source summaries, with private detail available by source ID.
 
-This checkpoint adds API/proxy wiring only. The student intake form, explicit
-delegation and result presentation are subsequent B2 work. See
+The Academic context workspace view lets a signed-in student paste, save and open
+snapshots. Unsaved text survives switching workspace tabs but is kept in memory
+only; refreshing/closing clears it. Account/session changes clear private state.
+An uncertain save keeps its exact key/payload for explicit retry; source content
+is displayed as plain text. Lists are bounded to 50 current sources.
+
+All 68 web tests, TypeScript, formatting and production build pass. Offline browser
+checks cover desktop and phone layout and lost-response/keyboard recovery using
+fictional fixtures. Real authenticated backend intake still needs operator testing.
+Explicit delegation and result presentation are subsequent B2 work; see
 [the B2 work order](../docs/stages/B2-context-intake.md). No live B2 result is claimed.

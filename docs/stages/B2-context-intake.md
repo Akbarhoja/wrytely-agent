@@ -3,7 +3,8 @@
 Owner: Murtazo. Branch: codex/b2-snapshot-intake, from reviewed 6accd71.
 Coordination: #4 comments 6491647927 and 6491917360. Akbar approved the B2/A3
 workflow while M1 provider setup is deferred. M1 remains incomplete. This work
-order records the agreed direction; shared implementation is not yet delivered.
+order records the agreed direction. Shared snapshot reads are integrated; the
+separate private-draft dependency still requires exact-head review.
 
 ## Student outcome and first slice
 
@@ -28,7 +29,8 @@ Reuse the existing design tokens, typography, panels, form and session patterns.
 Murtazo owns app/main.py, optional new app/academic.py, tests/test_academic_api.py,
 web/lib/forward.ts, web/tests/forward.test.ts, new web/lib/academic.ts,
 web/components/academic-context.tsx, web/tests/academic-context.test.tsx,
-web/components/workspace.tsx, this work order and web/README.md.
+web/components/workspace.tsx, web/tests/workspace.test.tsx, web/app/globals.css,
+this work order and web/README.md.
 Akbar retains shared storage/runtime/contracts and #26/#27 internal validation.
 No shared implementation, migrations or STATUS.md edits are claimed here.
 
@@ -130,3 +132,39 @@ other-owner test was changed. Full suite passes in Python UTF-8 mode.
 The uv executable is absent from PATH; the existing .venv Python runs pytest/Ruff.
 
 Live B2 results: not run. No provider call, real academic data or deployment.
+
+## Snapshot interface checkpoint
+
+Academic context is a new view in the existing workspace; Overview remains the
+default. It saves, lists and opens private snapshots through the existing API
+client and verified proxy. The same form stays mounted across workspace tabs so
+unsaved text survives navigation. Text stays in memory only; the interface explains
+that refreshing/closing clears unsaved text. Identity changes and expired sessions
+clear the private view and ignore late requests. No user ID is sent as authority.
+
+Unconfirmed saves retain the exact immutable payload and UUID for an explicit
+check/retry; fields stay locked until resolution. A confirmed conflict or validation
+failure allows correction. A completed save clears fields, shows the saved text
+and returns keyboard focus after fields become enabled. Source HTML is rendered
+as plain text. Delayed detail/list responses cannot replace a newer selection/save.
+
+Eight component cases plus workspace navigation coverage bring the full website
+suite to 68 passing tests. TypeScript, Prettier and the production build pass.
+The final backend regression run also passes all 293 tests on disposable Postgres
+in UTF-8 mode; Ruff lint/format and diff checks pass. No backend code changed in
+this UI checkpoint.
+Tests first exposed conflict-recovery and post-save focus failures; both pass after
+their fixes. The premium static audit reports no findings; this is supplementary
+to actual component/browser checks, not proof of runtime behavior by itself.
+
+An ignored standalone browser fixture rendered the actual components and CSS with
+fictional sources and all API calls intercepted in memory. Desktop 1440px and phone
+390px/320px inspections found no horizontal overflow. Keyboard Tab reached pasted
+text; simulated lost response preserved the draft, explicit retry confirmed the
+save, and focus returned to the title. Screenshots are local verification evidence,
+not live Clerk/account/backend evidence. The temporary preview was stopped.
+
+Private-draft controls/results are not exposed by this checkpoint. A separate
+review found PlannerDecision nonblank validation moved off the base class in #34
+head3560a9; exact before/after reproduction is recorded in PR comment6509066599.
+Wait for the owner fix and exact-head review before consuming that dependency.
