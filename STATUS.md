@@ -1,5 +1,86 @@
 # Engineering status
 
+October 29 independent continuation: Akbar authorized unblocked M1 checks and M2
+scenario preparation while deferring Meta business setup. Restarted the existing
+local production frontend; first-account saved task, answer, verified link and
+preferences restored. Pause persisted across reload; Resume restored active
+status. This is not the queued-work pause/restart test. All 259 backend tests pass
+against disposable local Postgres (approved process access resolved the sandbox
+fixture restriction), all 56 web tests and TypeScript pass, and Ruff lint/format
+and diff checks pass. No new model call or outbound send. Two-account browser
+acceptance is waiting at a separate participant sign-in. Evidence is recorded in
+docs/M1-RUN-2026-10-29.md. The synthetic shared M2 scenario is prepared in
+docs/stages/M2-ACADEMIC-SCENARIO.md, not executed or claimed complete. Existing
+implementation ownership is unchanged; PR #25 still has no independent approval.
+
+## Current handoff — October 29, 2026
+
+Akbar explicitly deferred Meta legal-business setup until October 30. Resume by
+checking the current account restrictions and requesting the actual operating
+entity's legal name/country only when needed. Do not invent company information,
+submit verification documents, or change billing while this item is deferred.
+This is a saved handoff note, not a scheduled reminder.
+
+Latest live M1 evidence supersedes the historical pending-link entries below:
+real Clerk sign-in provisioned the first private agent; WhatsApp ownership linking
+succeeded; the operator's synthetic M1-A question arrived and produced a saved
+50-word answer through the real Meta model. The bounded reasoning run used 669
+input / 1,297 output tokens. One outbound attempt was accepted by Meta, then a
+signed status event reported failed with error 131031 (business account locked).
+Actual WhatsApp reply delivery has NOT passed. Do not automatically resend it.
+
+Read-only account health subsequently reported an incomplete business profile
+(legal name, country, website), incomplete business verification, and a WhatsApp
+payment-method issue. These are separate from Model API billing; completing one
+item does not establish that all restrictions are cleared. Continuous reasoning
+and delivery workers remain stopped. The temporary one-shot predeploy command
+was restored to the migration command. Estimated total model spend across the
+two recorded calls is $0.00773075 within the authorized $2 test budget; the
+provider's monthly alert is not a hard cap.
+
+We remain at M1 live acceptance, partially demonstrated and blocked on outbound
+delivery. Second-account isolation, second-recipient verification, and the live
+controls/restart acceptance checks remain pending. Independent integration review
+is also pending. Existing planner, memory and drafting/verification code has
+offline evidence, not a completed live M2/A3 academic workflow. A4 remains parked.
+Next: finish M1 acceptance, demonstrate the integrated source-backed autonomous
+drafting workflow, then requirement adaptation/follow-up and multi-user evaluation.
+Keep the WhatsApp-first persistent academic-agent vision and agreed ownership;
+do not expand feature scope while closing M1.
+
+October 29 WhatsApp subscription diagnosis: fresh operator linking message still
+produced no inbound POST. Read-only Meta account check initially failed with
+expired temporary token (OAuth 190/463); renewed the existing approved scope and
+saved the refreshed token locally and in isolated Railway configuration. The
+test WABA's subscribed_apps initially contained only Meta's built-in test-event
+app. After Akbar's explicit approval, subscribed Wrytely Agent; Meta returned
+success and a subsequent GET confirmed app 1779409246673163 is subscribed.
+Operator resend is pending; linkage and real message delivery remain unverified.
+
+October 29 Meta publishing follow-up: after Akbar's explicit approval, Meta app
+Wrytely Agent was published. Dashboard showed “Your app was successfully
+published”, Published status and an Unpublish control. The approved privacy notice
+URL is saved. The existing student session restored; connection remains unlinked.
+A fresh private ten-minute verification challenge is ready for the operator to
+send. No continuous worker or additional model call was started. Actual inbound
+linkage, delivery and two-account acceptance remain pending.
+
+October 29 inbound-link blocker: operator sent a real linking message, but the
+connection stayed unlinked and Railway HTTP history showed no inbound WhatsApp
+POST. Meta's dashboard explicitly says real incoming events are withheld while
+the app is unpublished. Akbar approved the separate pilot privacy notice;
+docs/PRIVACY.md was published in e6d6e05 and verified publicly readable (HTTP 200,
+no login). Its URL is saved in Meta app settings, and the Publish button is now
+enabled. Publishing approval is pending; no claim of inbound delivery or M1 pass.
+
+October 29 real browser follow-up: Chrome Google OAuth sign-in succeeded using
+the existing Clerk development instance. The first account's agent provisioned
+through the real web/API boundary; its empty saved-work overview and authenticated
+WhatsApp controls loaded. A private expiring link challenge was generated through
+the UI; operator inbound verification remains pending. All four CI checks pass on
+9e86d0c. This establishes one real sign-in/provisioning path, not two-account
+isolation, actual phone linkage or WhatsApp delivery. No additional model call.
+
 October 29 M1 continuation: integrated Murtazo's published 8a407c6 loopback
 origin fix and live test pack via merge 16f3232. With the actual Clerk development
 configuration, the webpack production server now returns GET / and /sign-in 200,
@@ -57,7 +138,10 @@ has progressed in the setup chat; no live provider result is claimed here.
 
 Started October 27, 2026. Supervisor: Akbar. Lead: Codex. Engineer: Murtazo.
 
-## Current integration checkpoint — October 28
+## Historical integration checkpoint — October 28
+
+The snapshot below is retained as history. The October 29 entries above and the
+dated M1 execution record supersede its configuration, test and live-status claims.
 
 Feature expansion is paused by Akbar. `codex/m1-integration` combines runtime #16,
 Murtazo delivery/onboarding #20 and template contract #22; A4 #24 is excluded.
