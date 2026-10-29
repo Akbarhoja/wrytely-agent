@@ -1,5 +1,38 @@
 # Contracts v0.1 — foundation
 
+## Draft requirement assessment — issue #31 (internal helper)
+
+`runtime.draft_requirements.assess_draft_requirements(model, sources)` accepts
+1–8 distinct current owned bound source-version records, supplied by trusted
+runtime storage (the existing drafting_sources shape: id, content, retrieved_at,
+coverage). It does not accept browser-supplied evidence as authoritative. Each
+content is nonblank and at most 24,000 characters; timestamps are aware, no older
+than 24 hours and no more than five minutes in the future. Invalid/oversized/stale
+input fails before inference rather than silently truncating policy evidence.
+
+One structured existing ModelClient call extracts a candidate nullable CoursePolicy,
+0–30 RubricItems and a bounded reason. Exact nonblank policy/rubric quotes must
+occur in their cited supplied version; malformed output or unbound/invented evidence
+raises ValueError. Only a permitting/disclosure-required policy with a nonempty
+rubric returns state=assessed; otherwise state=blocked. JSON-safe output includes
+policy, rubric, reason, input_tokens, output_tokens, limits and always
+authorizes_drafting=false. Sources' freshness is checked again after inference.
+
+This helper has no database/task/action side effects and is not connected to the
+worker yet. It does not persist authorization, classify user consent, guarantee
+policy interpretation/rubric completeness or make a draft ready. Semantic results
+are fallible even with exact quote validation; source injection resistance needs
+live evaluation, not a scripted verdict. Provider exceptions propagate to the
+runtime's normal bounded/redacted failure path. Before persisting/using results,
+the caller must recheck lease, pause and source/memory revision through existing
+fenced Store boundaries, persist reusable checkpoints, require explicit student
+draft delegation, and retain existing drafting preflight and verification.
+
+The app-facing explicit-delegation and atomic planner-routing proposal is posted
+in coordination #4 comment6492266670; consumer agreement is pending. Existing
+B2 create_bound_responsibility remains analysis-only. This internal helper does
+not expand the agreed B2 API or authorize its app consumer to bypass that gate.
+
 ## B2 atomic setup and private reads — issue #29
 
 Agreed in coordination #4 comment 6491917360. Implemented in
