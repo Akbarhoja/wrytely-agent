@@ -218,3 +218,23 @@ controls still require real Clerk setup, so their browser acceptance remains ope
 Validation: all 196 backend tests pass on this branch, with Ruff lint/format and
 diff checks passing. No application/shared/frontend implementation changed in this
 verification checkpoint; the existing two dependency/synthetic-key warnings remain.
+
+## Malformed webhook batch recovery
+
+Error-path review reproduced five text-parser failures for malformed entries and
+message collections. Because text extraction runs before status extraction, such
+a sibling could cause the API to reject a signed batch containing valid delivery
+evidence. The integration parser now filters object rows within arrays and checks
+change/value/metadata/text shapes, preserving valid members and existing exact
+business/number filtering. Raw-body signature verification still precedes parsing;
+body bounds, storage failures and callback correlation are unchanged.
+
+New regressions cover a valid text among malformed siblings, four invalid message
+collection shapes, and a signed valid status alongside malformed text with replay.
+Five unit cases failed before the fix. The focused transport/API suites pass all
+82 cases. Independent scoped review found no actionable regression. No new
+messaging capability, shared schema or live provider access was introduced.
+
+Full validation: 202 backend tests pass on the onboarding branch, with Ruff lint,
+format and diff checks passing. Two existing dependency/synthetic-key warnings
+remain. Integration candidate validation must follow incorporation by its owner.

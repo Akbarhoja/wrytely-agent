@@ -261,6 +261,29 @@ def post_signed(client, value, *, valid=True):
     )
 
 
+def test_malformed_text_sibling_does_not_block_signed_delivery_evidence(store):
+    client = setup(store)
+    value = {
+        "messages": [None, {"type": "text", "text": None}],
+        "statuses": [
+            {
+                "id": "wamid.mixed",
+                "recipient_id": "15555550123",
+                "status": "delivered",
+                "timestamp": str(int(datetime.now(UTC).timestamp())),
+            }
+        ],
+    }
+    assert post_signed(client, value, valid=False).status_code == 403
+    assert post_signed(client, value).status_code == 200
+    assert post_signed(client, value).status_code == 200
+    with store.connection() as conn:
+        events = conn.execute("SELECT * FROM wrytely_agent.whatsapp_status_events").fetchall()
+        assert len(events) == 1
+        assert events[0]["provider_ref"] == "wamid.mixed"
+        assert events[0]["action_id"] is None
+
+
 def test_private_connection_read_and_session_restore(store, alice):
     client = setup(store)
     assert client.get("/v1/whatsapp").status_code == 401

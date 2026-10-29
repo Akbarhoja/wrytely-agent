@@ -30,6 +30,33 @@ def status_payload(statuses):
     }
 
 
+def test_text_parser_preserves_valid_message_among_malformed_siblings():
+    payload = status_payload([])
+    value = payload["entry"][0]["changes"][0]["value"]
+    value["messages"] = [
+        None,
+        "invalid",
+        {"type": "text", "text": None},
+        {
+            "id": "valid-text",
+            "type": "text",
+            "from": "15555550123",
+            "text": {"body": "Keep this message"},
+        },
+    ]
+    payload["entry"].insert(0, None)
+    payload["entry"][1]["changes"].insert(0, {"field": "messages", "value": None})
+    rows = extract_texts(payload, phone_number_id="123", business_account_id="456")
+    assert [(row.provider_id, row.text) for row in rows] == [("valid-text", "Keep this message")]
+
+
+@pytest.mark.parametrize("messages", [None, "invalid", {"unexpected": []}, 7])
+def test_text_parser_ignores_nonlist_message_collections(messages):
+    payload = status_payload([])
+    payload["entry"][0]["changes"][0]["value"]["messages"] = messages
+    assert extract_texts(payload, phone_number_id="123", business_account_id="456") == []
+
+
 def test_statuses_preserve_provider_identity_and_delayed_event_time():
     from integrations.whatsapp import extract_statuses
 
