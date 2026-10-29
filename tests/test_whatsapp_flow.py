@@ -130,6 +130,109 @@ def test_offline_m1_round_trip_across_api_workers_and_callbacks(store, database_
     assert restored.get("/v1/whatsapp", headers=auth("bob")).json()["latest_delivery"] is None
 
 
+@pytest.mark.parametrize("control", ["pause_before_reasoning", "pause_before_delivery", "unlink"])
+def test_offline_m1_http_controls_preserve_work_and_gate_dispatch(store, database_url, control):
+    from integrations.whatsapp import WhatsAppAdapter
+    from integrations.whatsapp_delivery import run_once as deliver_once
+    from runtime.worker import run_once as reason_once
+
+    client = setup(store, whatsapp_business_number="15555550100")
+    assert client.post("/v1/bootstrap", headers=auth()).status_code == 200
+    phone = "15555550123"
+    challenge = client.post("/v1/whatsapp/link", headers=auth()).json()
+    for provider_id, text in [
+        ("link-control", challenge["message"]),
+        ("question-control", "Synthetic question"),
+    ]:
+        assert (
+            post_signed(
+                client,
+                {
+                    "messages": [
+                        {
+                            "id": provider_id,
+                            "type": "text",
+                            "from": phone,
+                            "text": {"body": text},
+                            "timestamp": str(int(datetime.now(UTC).timestamp())),
+                        }
+                    ]
+                },
+            ).status_code
+            == 200
+        )
+    assert (
+        client.post(
+            "/v1/whatsapp/preferences",
+            headers=auth(),
+            json={
+                "consent": True,
+                "timezone": "UTC",
+                "quiet_start": 0,
+                "quiet_end": 0,
+            },
+        ).status_code
+        == 200
+    )
+    task_id = client.get("/v1/tasks", headers=auth()).json()["tasks"][0]["id"]
+    model = ScriptedModel([answer("Saved despite control changes")])
+    if control == "pause_before_reasoning":
+        assert (
+            client.post("/v1/agent/control", headers=auth(), json={"paused": True}).status_code
+            == 200
+        )
+        assert not reason_once(Store(database_url), model, Settings())
+        assert model.histories == []
+        assert client.get(f"/v1/tasks/{task_id}", headers=auth()).json()["status"] == "ready"
+        assert (
+            client.post("/v1/agent/control", headers=auth(), json={"paused": False}).status_code
+            == 200
+        )
+    assert reason_once(Store(database_url), model, Settings())
+    assert client.get(f"/v1/tasks/{task_id}", headers=auth()).json()["status"] == "done"
+    if control == "pause_before_delivery":
+        assert (
+            client.post("/v1/agent/control", headers=auth(), json={"paused": True}).status_code
+            == 200
+        )
+    elif control == "unlink":
+        assert client.post("/v1/whatsapp/unlink", headers=auth()).status_code == 200
+
+    requests = []
+
+    def transport(request):
+        requests.append(json.loads(request.content))
+        return httpx.Response(200, json={"messages": [{"id": "wamid.control"}]})
+
+    with httpx.Client(transport=httpx.MockTransport(transport)) as http:
+        adapter = WhatsAppAdapter(
+            client=http, token="synthetic-only", phone_number_id="123", api_version="v23.0"
+        )
+        outcome = deliver_once(
+            Store(database_url),
+            adapter,
+            worker_id="control-check",
+            business_id="456",
+            phone_number_id="123",
+        )
+    state = client.get("/v1/whatsapp", headers=auth()).json()
+    if control == "pause_before_reasoning":
+        assert outcome == "accepted" and len(requests) == 1
+        assert requests[0]["to"] == phone
+    else:
+        assert requests == []
+        assert outcome == ("held" if control == "pause_before_delivery" else "idle")
+        assert state["latest_delivery"]["state"] == (
+            "deferred" if control == "pause_before_delivery" else "cancelled"
+        )
+    if control == "pause_before_delivery":
+        assert state["latest_delivery"]["reason"] == "paused"
+    elif control == "unlink":
+        assert state["linked"] is False and state["phone_last4"] is None
+    restored = setup(Store(database_url))
+    assert "Saved despite control changes" in restored.get("/v1/messages", headers=auth()).text
+
+
 def post_signed(client, value, *, valid=True):
     body = json.dumps(
         {

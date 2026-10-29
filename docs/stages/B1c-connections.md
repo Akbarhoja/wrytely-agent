@@ -198,3 +198,23 @@ Validation on this onboarding branch: 193 backend tests pass after resetting the
 verified disposable test schema to the branch's migration set; Ruff lint/format
 and diff checks pass. The schema reset removed leftover 006–007 test migrations
 from the earlier detached integration review, not a production/development store.
+
+## Remaining offline control and public layout checks
+
+Added three HTTP-to-worker regression cases for the existing controls. Pausing
+before reasoning prevents a model call, retains the ready task and allows resume
+to finish the same work. Pausing after a result is saved holds delivery with
+reason paused and makes no transport call. Unlinking cancels the queued send,
+clears the visible phone mapping and makes no transport call. A new API/Store
+instance still reads the saved result in each case. Providers are synthetic.
+
+Browser accessibility controls are available again. Inspected the built public
+Connections view at 1440x900, 390x844 and 320x844, including the course panel and
+footer by scrolling. Navigation labels fit at 320px, text wraps and panels remain
+legible without visible horizontal clipping. This supersedes the earlier failed
+public desktop/mobile recheck; no UI/CSS changes were needed. The authenticated
+controls still require real Clerk setup, so their browser acceptance remains open.
+
+Validation: all 196 backend tests pass on this branch, with Ruff lint/format and
+diff checks passing. No application/shared/frontend implementation changed in this
+verification checkpoint; the existing two dependency/synthetic-key warnings remain.
