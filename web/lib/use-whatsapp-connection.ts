@@ -132,15 +132,27 @@ export function useWhatsAppConnection(userId?: string) {
     scope.locked = true;
     setState((previous) => ({ ...previous, busy: kind, error: null }));
     try {
-      const result = await api<{ message?: string; expires_at?: string }>(`whatsapp/${kind}`, {
-        method: "POST",
-        body: JSON.stringify(preferences ?? {}),
-        signal: scope.abort.signal,
-      });
+      const requestStartedAt = Date.now();
+      const result = await api<{ message?: string; expires_in_seconds?: number }>(
+        `whatsapp/${kind}`,
+        {
+          method: "POST",
+          body: JSON.stringify(preferences ?? {}),
+          signal: scope.abort.signal,
+        },
+      );
       if (scope.abort.signal.aborted || session.current !== scope) return false;
       if (kind === "link") {
-        const expiresAt = Date.parse(result.expires_at ?? "");
-        if (!result.message || !Number.isFinite(expiresAt) || expiresAt <= Date.now())
+        const lifetime = result.expires_in_seconds;
+        const expiresAt = requestStartedAt + (typeof lifetime === "number" ? lifetime * 1000 : NaN);
+        if (
+          !result.message ||
+          typeof lifetime !== "number" ||
+          !Number.isInteger(lifetime) ||
+          lifetime <= 0 ||
+          lifetime > 600 ||
+          expiresAt <= Date.now()
+        )
           throw new Error("Invalid challenge response");
         setState((previous) => ({
           ...previous,

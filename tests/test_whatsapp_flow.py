@@ -4,12 +4,233 @@ import json
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
+import httpx
+import pytest
 from fastapi.testclient import TestClient
 from test_api import TestVerifier, auth
+from test_worker import ScriptedModel, answer, function_turn
 
 from app.main import create_app
 from integrations.whatsapp import WhatsAppText
 from shared.config import Settings
+from shared.db import Store
+
+
+@pytest.mark.parametrize("lost_response", [False, True], ids=["accepted", "unknown"])
+def test_offline_m1_round_trip_across_api_workers_and_callbacks(store, database_url, lost_response):
+    from integrations.whatsapp import WhatsAppAdapter
+    from integrations.whatsapp_delivery import run_once as deliver_once
+    from runtime.worker import run_once as reason_once
+
+    client = setup(store, whatsapp_business_number="15555550100")
+    agents = {}
+    phones = {"alice": "15555550123", "bob": "15555550999"}
+    for who, phone in phones.items():
+        agents[who] = client.post("/v1/bootstrap", headers=auth(who)).json()["id"]
+        challenge = client.post("/v1/whatsapp/link", headers=auth(who)).json()
+        assert challenge["expires_in_seconds"] == 600
+        event = {
+            "id": f"link-{who}",
+            "type": "text",
+            "from": phone,
+            "text": {"body": challenge["message"]},
+            "timestamp": str(int(datetime.now(UTC).timestamp())),
+        }
+        assert post_signed(client, {"messages": [event]}).status_code == 200
+        assert (
+            client.post(
+                "/v1/whatsapp/preferences",
+                headers=auth(who),
+                json={
+                    "consent": True,
+                    "timezone": "UTC",
+                    "quiet_start": 0,
+                    "quiet_end": 0,
+                },
+            ).status_code
+            == 200
+        )
+        state = client.get("/v1/whatsapp", headers=auth(who)).json()
+        assert state["configured"] and state["phone_last4"] == phone[-4:]
+        assert state["latest_delivery"] is None
+    assert agents["alice"] != agents["bob"]
+
+    inbound = {
+        "id": "question-alice",
+        "type": "text",
+        "from": phones["alice"],
+        "text": {"body": "Explain a synthetic study topic"},
+        "timestamp": str(int(datetime.now(UTC).timestamp())),
+    }
+    assert post_signed(client, {"messages": [inbound]}).status_code == 200
+    assert post_signed(client, {"messages": [inbound]}).status_code == 200
+    task_id = client.get("/v1/tasks", headers=auth()).json()["tasks"][0]["id"]
+    assert (
+        client.post(
+            "/v1/messages",
+            headers=auth("bob") | {"Idempotency-Key": "private-bob"},
+            json={"content": "Bob's private sentinel"},
+        ).status_code
+        == 202
+    )
+    model = ScriptedModel([function_turn(), answer("A private checked-loop response")])
+    assert reason_once(Store(database_url), model, Settings())
+    assert "Bob's private sentinel" not in str(model.histories)
+    assert "LINK " not in str(model.histories)
+    assert client.get(f"/v1/tasks/{task_id}", headers=auth()).json()["status"] == "done"
+    assert client.get(f"/v1/tasks/{task_id}", headers=auth("bob")).status_code == 404
+
+    requests = []
+
+    def transport(request):
+        requests.append(json.loads(request.content))
+        if lost_response:
+            raise httpx.ReadTimeout("Synthetic lost response", request=request)
+        return httpx.Response(200, json={"messages": [{"id": "wamid.offline-m1"}]})
+
+    expected = "unknown" if lost_response else "accepted"
+    with httpx.Client(transport=httpx.MockTransport(transport)) as http:
+        adapter = WhatsAppAdapter(
+            client=http, token="synthetic-only", phone_number_id="123", api_version="v23.0"
+        )
+        options = {"business_id": "456", "phone_number_id": "123"}
+        assert (
+            deliver_once(Store(database_url), adapter, worker_id="offline-m1", **options)
+            == expected
+        )
+        assert deliver_once(Store(database_url), adapter, worker_id="restart", **options) == "idle"
+    assert len(requests) == 1
+    assert requests[0]["to"] == phones["alice"]
+    assert requests[0]["text"]["body"] == "A private checked-loop response"
+    assert client.get("/v1/whatsapp", headers=auth()).json()["latest_delivery"]["state"] == expected
+    if not lost_response:
+        status = {
+            "id": "wamid.offline-m1",
+            "recipient_id": phones["alice"],
+            "status": "delivered",
+            "timestamp": str(int(datetime.now(UTC).timestamp())),
+        }
+        assert post_signed(client, {"statuses": [status]}).status_code == 200
+        assert post_signed(client, {"statuses": [status]}).status_code == 200
+        status["status"] = "sent"
+        assert post_signed(client, {"statuses": [status]}).status_code == 200
+        assert (
+            client.get("/v1/whatsapp", headers=auth()).json()["latest_delivery"]["state"]
+            == "delivered"
+        )
+
+    restored = setup(Store(database_url), whatsapp_business_number="15555550100")
+    assert restored.post("/v1/bootstrap", headers=auth()).json()["id"] == agents["alice"]
+    assert len(restored.get("/v1/tasks", headers=auth()).json()["tasks"]) == 1
+    assert "A private checked-loop response" in restored.get("/v1/messages", headers=auth()).text
+    assert (
+        "A private checked-loop response"
+        not in restored.get("/v1/messages", headers=auth("bob")).text
+    )
+    assert restored.get("/v1/whatsapp", headers=auth("bob")).json()["latest_delivery"] is None
+
+
+@pytest.mark.parametrize("control", ["pause_before_reasoning", "pause_before_delivery", "unlink"])
+def test_offline_m1_http_controls_preserve_work_and_gate_dispatch(store, database_url, control):
+    from integrations.whatsapp import WhatsAppAdapter
+    from integrations.whatsapp_delivery import run_once as deliver_once
+    from runtime.worker import run_once as reason_once
+
+    client = setup(store, whatsapp_business_number="15555550100")
+    assert client.post("/v1/bootstrap", headers=auth()).status_code == 200
+    phone = "15555550123"
+    challenge = client.post("/v1/whatsapp/link", headers=auth()).json()
+    for provider_id, text in [
+        ("link-control", challenge["message"]),
+        ("question-control", "Synthetic question"),
+    ]:
+        assert (
+            post_signed(
+                client,
+                {
+                    "messages": [
+                        {
+                            "id": provider_id,
+                            "type": "text",
+                            "from": phone,
+                            "text": {"body": text},
+                            "timestamp": str(int(datetime.now(UTC).timestamp())),
+                        }
+                    ]
+                },
+            ).status_code
+            == 200
+        )
+    assert (
+        client.post(
+            "/v1/whatsapp/preferences",
+            headers=auth(),
+            json={
+                "consent": True,
+                "timezone": "UTC",
+                "quiet_start": 0,
+                "quiet_end": 0,
+            },
+        ).status_code
+        == 200
+    )
+    task_id = client.get("/v1/tasks", headers=auth()).json()["tasks"][0]["id"]
+    model = ScriptedModel([answer("Saved despite control changes")])
+    if control == "pause_before_reasoning":
+        assert (
+            client.post("/v1/agent/control", headers=auth(), json={"paused": True}).status_code
+            == 200
+        )
+        assert not reason_once(Store(database_url), model, Settings())
+        assert model.histories == []
+        assert client.get(f"/v1/tasks/{task_id}", headers=auth()).json()["status"] == "ready"
+        assert (
+            client.post("/v1/agent/control", headers=auth(), json={"paused": False}).status_code
+            == 200
+        )
+    assert reason_once(Store(database_url), model, Settings())
+    assert client.get(f"/v1/tasks/{task_id}", headers=auth()).json()["status"] == "done"
+    if control == "pause_before_delivery":
+        assert (
+            client.post("/v1/agent/control", headers=auth(), json={"paused": True}).status_code
+            == 200
+        )
+    elif control == "unlink":
+        assert client.post("/v1/whatsapp/unlink", headers=auth()).status_code == 200
+
+    requests = []
+
+    def transport(request):
+        requests.append(json.loads(request.content))
+        return httpx.Response(200, json={"messages": [{"id": "wamid.control"}]})
+
+    with httpx.Client(transport=httpx.MockTransport(transport)) as http:
+        adapter = WhatsAppAdapter(
+            client=http, token="synthetic-only", phone_number_id="123", api_version="v23.0"
+        )
+        outcome = deliver_once(
+            Store(database_url),
+            adapter,
+            worker_id="control-check",
+            business_id="456",
+            phone_number_id="123",
+        )
+    state = client.get("/v1/whatsapp", headers=auth()).json()
+    if control == "pause_before_reasoning":
+        assert outcome == "accepted" and len(requests) == 1
+        assert requests[0]["to"] == phone
+    else:
+        assert requests == []
+        assert outcome == ("held" if control == "pause_before_delivery" else "idle")
+        assert state["latest_delivery"]["state"] == (
+            "deferred" if control == "pause_before_delivery" else "cancelled"
+        )
+    if control == "pause_before_delivery":
+        assert state["latest_delivery"]["reason"] == "paused"
+    elif control == "unlink":
+        assert state["linked"] is False and state["phone_last4"] is None
+    restored = setup(Store(database_url))
+    assert "Saved despite control changes" in restored.get("/v1/messages", headers=auth()).text
 
 
 def post_signed(client, value, *, valid=True):
@@ -40,6 +261,29 @@ def post_signed(client, value, *, valid=True):
     )
 
 
+def test_malformed_text_sibling_does_not_block_signed_delivery_evidence(store):
+    client = setup(store)
+    value = {
+        "messages": [None, {"type": "text", "text": None}],
+        "statuses": [
+            {
+                "id": "wamid.mixed",
+                "recipient_id": "15555550123",
+                "status": "delivered",
+                "timestamp": str(int(datetime.now(UTC).timestamp())),
+            }
+        ],
+    }
+    assert post_signed(client, value, valid=False).status_code == 403
+    assert post_signed(client, value).status_code == 200
+    assert post_signed(client, value).status_code == 200
+    with store.connection() as conn:
+        events = conn.execute("SELECT * FROM wrytely_agent.whatsapp_status_events").fetchall()
+        assert len(events) == 1
+        assert events[0]["provider_ref"] == "wamid.mixed"
+        assert events[0]["action_id"] is None
+
+
 def test_private_connection_read_and_session_restore(store, alice):
     client = setup(store)
     assert client.get("/v1/whatsapp").status_code == 401
@@ -61,6 +305,15 @@ def test_private_connection_read_and_session_restore(store, alice):
     assert setup(store).get("/v1/whatsapp", headers=auth()).json() == state
     client.post("/v1/whatsapp/unlink", headers=auth())
     assert client.get("/v1/whatsapp", headers=auth()).json()["linked"] is False
+
+
+def test_link_challenge_response_keeps_relative_expiry_contract(store, alice):
+    response = setup(store).post("/v1/whatsapp/link", headers=auth())
+    assert response.status_code == 200
+    payload = response.json()
+    assert set(payload) == {"message", "expires_in_seconds"}
+    assert payload["message"].startswith("LINK ")
+    assert payload["expires_in_seconds"] == 600
 
 
 def test_connection_configuration_and_storage_failure_are_distinct(store, alice, monkeypatch):
@@ -248,12 +501,13 @@ def test_callback_storage_rejection_is_not_acknowledged_and_replay_can_recover(
         )
 
 
-def setup(store):
+def setup(store, **overrides):
     settings = Settings(
         whatsapp_app_secret="test-secret",
         whatsapp_verify_token="test-verify",
         whatsapp_phone_number_id="123",
         whatsapp_business_account_id="456",
+        **overrides,
     )
     return TestClient(create_app(settings, store=store, verifier=TestVerifier()))
 

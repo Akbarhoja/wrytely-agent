@@ -15,6 +15,7 @@ afterEach(() => {
   cleanup();
   vi.useRealTimers();
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 const disconnected = {
@@ -35,6 +36,49 @@ const status = {
 };
 
 describe("private connection controller", () => {
+  it("starts relative expiry before the request so network time cannot extend the code", async () => {
+    let now = 1800000000000;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_url: unknown, options?: RequestInit) => {
+        if (options?.method === "POST") {
+          now += 30000;
+          return Response.json({ message: "LINK private-code", expires_in_seconds: 600 });
+        }
+        return Response.json(status);
+      }),
+    );
+    const { result } = renderHook(() => useWhatsAppConnection("alice"));
+    await waitFor(() => expect(result.current.mode).toBe("ready"));
+    vi.spyOn(Date, "now").mockImplementation(() => now);
+    const started = now;
+    await act(async () => {
+      await result.current.onLink();
+    });
+    expect(result.current.challenge?.expiresAt).toBe(started + 600000);
+  });
+  it.each([undefined, "600", 0, -1, 601, 1.5])(
+    "rejects invalid challenge lifetime %s",
+    async (lifetime) => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async (_url: unknown, options?: RequestInit) =>
+          Response.json(
+            options?.method === "POST"
+              ? { message: "LINK private-code", expires_in_seconds: lifetime }
+              : status,
+          ),
+        ),
+      );
+      const { result } = renderHook(() => useWhatsAppConnection("alice"));
+      await waitFor(() => expect(result.current.mode).toBe("ready"));
+      await act(async () => {
+        await result.current.onLink();
+      });
+      expect(result.current.challenge).toBeUndefined();
+      expect(result.current.uncertain).toBe(true);
+    },
+  );
   it.each([403, 404])("offers recovery after a mutation is rejected with %s", async (code) => {
     vi.stubGlobal(
       "fetch",
@@ -127,7 +171,7 @@ describe("private connection controller", () => {
     const fetcher = vi.fn(async (_url: unknown, options?: RequestInit) =>
       Response.json(
         options?.method === "POST"
-          ? { message: "LINK private-code", expires_at: new Date(Date.now() + 60000).toISOString() }
+          ? { message: "LINK private-code", expires_in_seconds: 600 }
           : status,
       ),
     );
@@ -138,6 +182,7 @@ describe("private connection controller", () => {
       await result.current.onLink();
     });
     expect(result.current.challenge?.message).toBe("LINK private-code");
+    expect(result.current.challenge!.expiresAt).toBeGreaterThan(Date.now() + 590000);
     act(() => result.current.onExpire());
     expect(result.current.challenge).toBeUndefined();
     fetcher.mockImplementation(async () => Response.json({ detail: "Expired" }, { status: 401 }));

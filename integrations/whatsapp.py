@@ -125,26 +125,33 @@ def extract_texts(
 
     The caller must authenticate raw bytes first and persist provider IDs uniquely.
     Media and delivery-status events are deliberately not converted into text jobs.
+    Malformed batch members must not block valid messages or delivery evidence.
     """
     if not phone_number_id or not business_account_id:
         raise ValueError("WhatsApp account and phone number IDs are required")
+
+    def objects(value):
+        return [item for item in value if isinstance(item, dict)] if isinstance(value, list) else []
+
     result = []
     if payload.get("object") != "whatsapp_business_account":
         return result
-    for entry in payload.get("entry", []):
+    for entry in objects(payload.get("entry")):
         if entry.get("id") != business_account_id:
             continue
-        for change in entry.get("changes", []):
-            value = change.get("value", {})
-            if change.get("field") != "messages":
+        for change in objects(entry.get("changes")):
+            value = change.get("value")
+            if change.get("field") != "messages" or not isinstance(value, dict):
                 continue
-            if value.get("metadata", {}).get("phone_number_id") != phone_number_id:
+            metadata = value.get("metadata")
+            if not isinstance(metadata, dict) or metadata.get("phone_number_id") != phone_number_id:
                 continue
-            for message in value.get("messages", []):
+            for message in objects(value.get("messages")):
                 if message.get("type") != "text":
                     continue
                 sender, provider_id = message.get("from"), message.get("id")
-                text = message.get("text", {}).get("body")
+                content = message.get("text")
+                text = content.get("body") if isinstance(content, dict) else None
                 if (
                     isinstance(sender, str)
                     and re.fullmatch(r"[0-9]{7,15}", sender)
