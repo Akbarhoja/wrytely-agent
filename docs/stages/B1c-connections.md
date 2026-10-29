@@ -238,3 +238,11 @@ messaging capability, shared schema or live provider access was introduced.
 Full validation: 202 backend tests pass on the onboarding branch, with Ruff lint,
 format and diff checks passing. Two existing dependency/synthetic-key warnings
 remain. Integration candidate validation must follow incorporation by its owner.
+
+## Live test preparation
+
+[M1 live test pack](M1-LIVE-TEST-PACK.md) provides two synthetic student scenarios,
+exact harmless messages, observable core/control pass criteria, a bounded usage
+proposal requiring explicit approval and a blank redacted execution record. It
+supports the integration candidate's docs/M1-ACCEPTANCE.md. Every live case is
+Not run; preparing the sheet does not configure accounts or authorize provider use.
