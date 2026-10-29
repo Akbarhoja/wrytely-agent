@@ -805,6 +805,36 @@ h1 {
   outline: 3px solid var(--focus);
   outline-offset: 4px;
 }
+.draft-source-list {
+  padding: 0;
+  border: 0;
+  margin: 24px 0;
+  min-width: 0;
+}
+.draft-source-list legend {
+  font-weight: 600;
+  padding: 0;
+}
+.academic-panel .draft-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+.academic-panel .draft-option input[type="checkbox"] {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin: 3px 0 0;
+  padding: 0;
+  accent-color: var(--green);
+}
+.draft-source-kind {
+  display: block;
+  margin-top: 4px;
+}
 .whatsapp-panel {
   padding: 32px;
   border: 1px solid var(--border);

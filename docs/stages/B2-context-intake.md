@@ -219,3 +219,25 @@ focus on the loaded review and keyboard expansion of policy evidence were checke
 Screenshots are local offline evidence. Real Clerk/backend result acceptance and
 live model quality are not established by this fixture. No live provider call,
 send, share, submission or deployment occurred.
+
+## Standalone private-draft decision preparation
+
+Prepared a callback-based consent form without mounting it in the workspace or
+adding a transport/API consumer. It requires an objective, one to eight saved
+sources and explicit private-draft consent. Editing the objective or selection
+invalidates consent. Unconfirmed saves retain the exact frozen payload and retry
+key; definite rejection requires fresh consent. Identity/session changes clear
+private input and fence late responses. Only a private-draft receipt confirms the
+request; confirmation still does not claim policy permission or work completion.
+
+Eight new component cases bring the website suite to 94 passing tests. TypeScript,
+Prettier and production build pass. Actual component/CSS browser checks at 1440,
+390 and 320px found no horizontal overflow. Keyboard consent, simulated lost
+receipt, explicit retry and focus restoration passed with an in-memory callback.
+The existing backend checkpoint remains 295 passing tests on disposable Postgres;
+this preparation changes no backend code. All evidence is offline.
+
+Claim: coordination comment6509628481. Integration still waits for the owner to
+restore base PlannerDecision nonblank validation in #34 and for exact-head review.
+This form is unconnected preparation, not an available drafting workflow. No model
+or provider call, migration, send, share, submission or deployment occurred.
