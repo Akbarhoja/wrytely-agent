@@ -1,5 +1,18 @@
 # Engineering status
 
+October 29 — #31 first drafting-authorization increment on codex/draft-requirements:
+internal source-backed policy/rubric assessor implemented, 18 focused offline tests
+pass; local Ruff lint/format/diff pass. Rejects stale/oversized/invalid evidence,
+unbound or fabricated quotes, malformed output, missing rubric and nonpermitting
+policy. Always returns authorizes_drafting=false; no task/action/storage mutation.
+This is candidate semantic assessment with scripted test verdicts, not live model
+quality or complete automatic drafting authorization. Concrete explicit-delegation
+and atomic planner-routing contract proposed to Murtazo in coordination #4
+comment6492266670; awaiting consumer agreement before dependent storage/planner
+implementation. Existing analysis-only B2 contract unchanged. No app/web/source
+files, migration, deployment, paid model request or message. Full exact-head CI
+pending; local database fixture remains sandbox-blocked. M1 incomplete; A4 parked.
+
 October 29 — #29 shared B2 boundaries on codex/b2-shared-boundaries: implemented
 atomic create_bound_responsibility plus bounded private source/artifact/check
 reads under Murtazo's recorded agreement (coordination 6491917360). Source binding
