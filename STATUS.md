@@ -1,5 +1,16 @@
 # Engineering status
 
+October 29 scope decision: Akbar explicitly approved M2/B2 implementation while
+Meta business setup is deferred. The previous feature pause is lifted only for
+the agreed B2/A3 workflow, with existing ownership unchanged. M1 remains incomplete;
+A4, optional extensions, public release and additional live usage are excluded.
+Codex posted a concrete proposed atomic create-and-bind boundary and private
+source/artifact read projections in coordination #4, plus the required direction
+for trusted responsibility-level draft intent applied before worker claim.
+Await Murtazo's explicit interface agreement and exact B2 file claim before
+dependent implementation. No new shared contract is agreed or implemented yet;
+do not use app polling or browser-provided policy as a temporary bypass.
+
 October 29 — #26 internal M2 validation on codex/m2-internal-validation: four new
 scenario tests exercise real Store/planner/worker/drafting/verification with four
 fictional observations and scripted model responses. Combined analysis → checked
