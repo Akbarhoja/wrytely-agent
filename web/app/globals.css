@@ -666,6 +666,175 @@ h1 {
 .connections-layout > .connections-panel {
   max-width: none;
 }
+.academic-panel {
+  min-width: 0;
+}
+.academic-panel .section-heading {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.academic-panel .section-heading h2 {
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+.academic-panel .subtle {
+  font-size: 12px;
+}
+.academic-panel .primary-button {
+  min-width: 12em;
+}
+.academic-panel form {
+  margin-top: 24px;
+}
+.academic-panel label {
+  display: block;
+  font-weight: 600;
+  margin: 16px 0 7px;
+}
+.academic-panel input,
+.academic-panel textarea {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 16px;
+}
+.academic-panel input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+}
+.academic-panel textarea {
+  resize: vertical;
+  min-height: 180px;
+}
+.academic-panel input:disabled,
+.academic-panel textarea:disabled {
+  background: var(--bg);
+  cursor: not-allowed;
+}
+.academic-feedback {
+  min-height: 1.6em;
+  margin-top: 12px;
+  color: var(--green);
+}
+.academic-sources {
+  list-style: none;
+  margin: 20px 0 0;
+  padding: 0;
+}
+.academic-source-button {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  border: 0;
+  border-top: 1px solid var(--border);
+  padding: 16px 8px;
+  background: var(--surface);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.academic-source-button:hover,
+.academic-source-button[aria-pressed="true"] {
+  background: var(--tint);
+}
+.academic-source-button span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.academic-detail {
+  border-top: 1px solid var(--border);
+  padding-top: 24px;
+  margin-top: 24px;
+  overflow-wrap: anywhere;
+}
+.academic-detail pre {
+  font: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 20px 0 0;
+}
+.result-review h2 {
+  font-size: 21px;
+  letter-spacing: -0.02em;
+}
+.result-review h3 {
+  margin-bottom: 12px;
+}
+.result-review pre + h3 {
+  margin-top: 24px;
+}
+.result-caution {
+  padding: 16px;
+  margin-top: 16px;
+  background: var(--bg);
+  border-left: 3px solid var(--green);
+  overflow-wrap: anywhere;
+}
+.result-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.result-evidence {
+  padding-left: 22px;
+}
+.result-evidence li + li {
+  margin-top: 18px;
+}
+.result-review blockquote {
+  padding: 12px 16px;
+  margin: 12px 0;
+  border-left: 2px solid var(--border);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.result-review summary {
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 20px;
+  min-height: 44px;
+  padding-block: 10px;
+}
+.result-review summary:hover {
+  color: var(--green);
+}
+.result-review summary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+}
+.draft-source-list {
+  padding: 0;
+  border: 0;
+  margin: 24px 0;
+  min-width: 0;
+}
+.draft-source-list legend {
+  font-weight: 600;
+  padding: 0;
+}
+.academic-panel .draft-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+.academic-panel .draft-option input[type="checkbox"] {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin: 3px 0 0;
+  padding: 0;
+  accent-color: var(--green);
+}
+.draft-source-kind {
+  display: block;
+  margin-top: 4px;
+}
 .whatsapp-panel {
   padding: 32px;
   border: 1px solid var(--border);
@@ -1074,6 +1243,7 @@ h1 {
   }
   nav {
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
   }
   .nav-item {
@@ -1587,10 +1757,10 @@ h1 {
 }
 @media (max-width: 380px) {
   .nav-item {
-    flex: 1;
+    flex: 0 1 calc(50% - 4px);
     min-width: 0;
-    flex-direction: column;
-    gap: 3px;
-    padding: 7px 3px;
+    flex-direction: row;
+    gap: 7px;
+    padding: 9px 8px;
   }
 }

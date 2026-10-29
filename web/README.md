@@ -132,3 +132,40 @@ keeps that rewrite internal; it does not disable Clerk or backend authentication
 The real-SDK origin regressions use synthetic test-format keys with provider
 fetches blocked. Offline production HTTP checks cover fast root/sign-in responses,
 the signed-out browser redirect and private 401; they do not prove real login.
+
+## Academic context snapshots
+
+The existing authenticated proxy now allows GET sources, GET sources/{uuid} and
+POST sources. Creation accepts {title, content} with a UUID Idempotency-Key; reuse
+the same key and exact payload after a lost response. Changed text needs a new key.
+The backend records manual snapshot coverage and server retrieval time. Saving
+does not start reasoning, draft an assignment or send a message. Lists contain
+the latest 50 source summaries, with private detail available by source ID.
+
+The Academic context workspace view lets a signed-in student paste, save and open
+snapshots. Unsaved text survives switching workspace tabs but is kept in memory
+only; refreshing/closing clears it. Account/session changes clear private state.
+An uncertain save keeps its exact key/payload for explicit retry; source content
+is displayed as plain text. Lists are bounded to 50 current sources.
+
+All 68 web tests, TypeScript, formatting and production build pass. Offline browser
+checks cover desktop and phone layout and lost-response/keyboard recovery using
+fictional fixtures. Real authenticated backend intake still needs operator testing.
+Explicit delegation remains subsequent B2 work; see
+[the B2 work order](../docs/stages/B2-context-intake.md). No live B2 result is claimed.
+
+## Private results
+
+The Private results view lists the account's latest 50 responsibilities and up to
+50 saved drafts per selected responsibility. Its read-only proxy paths are GET
+responsibilities, GET responsibilities/{uuid}/artifacts and GET artifacts/{uuid}.
+The API reuses existing Store projections; no readiness mutation or public link
+is exposed. Storage failures stay errors and responses use no-store.
+
+Students can read the draft, disclosure, citation evidence and stored checks.
+Current ready state plus a passed report is required for Ready for your review.
+Changed sources override historical success; failed/missing checks stay visible.
+Model assessments remain fallible. Viewing does not send, share or submit work.
+New selections, identity changes and session expiry cannot display a late result
+from another request/account. This is offline-verified presentation of existing
+artifacts; real authenticated operator acceptance remains pending.
