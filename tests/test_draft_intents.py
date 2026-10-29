@@ -40,7 +40,7 @@ def create(store, source, **kwargs):
     )
 
 
-def extracted(source, status="permitted"):
+def extracted(source, status="disclosure_required"):
     return structured(
         "assess_draft_requirements",
         {
@@ -58,7 +58,7 @@ def extracted(source, status="permitted"):
 def draft_turn(source):
     draft = DraftArtifact(
         title="Private review",
-        body="Source A reports 10 participants.",
+        body="Source A reports 10 participants.\nDraft prepared with AI; review required.",
         disclosure="Draft prepared with AI; review required.",
         citations=[
             {
@@ -195,7 +195,7 @@ def test_analysis_only_model_cannot_invent_drafting_authority(store, alice):
         assert not conn.execute("SELECT 1 FROM wrytely_agent.drafting_requests").fetchall()
 
 
-def test_consumed_intent_cannot_create_second_workflow_or_finish_without_result(store, alice):
+def test_draft_intent_cannot_finish_without_checked_result(store, alice):
     source = setup(store)
     duty = create(store, source)
     model = ScriptedModel([extracted(source), plan("work", "notes", "Analyze sources")])
@@ -206,3 +206,83 @@ def test_consumed_intent_cannot_create_second_workflow_or_finish_without_result(
     assert run_once(store, ScriptedModel([answer("Working notes")]), Settings())
     assert run_once(store, ScriptedModel([plan("done", "premature", "")]), Settings())
     assert store.draft_responsibility_status("user_alice", duty["id"])["status"] == "blocked"
+
+
+def test_first_claim_has_request_and_consumed_intent_rejects_new_draft_name(store, alice):
+    source = setup(store)
+    duty = create(store, source)
+    assert run_once(
+        store,
+        ScriptedModel([extracted(source), plan("draft", "first", "Private draft")]),
+        Settings(),
+    )
+    lease = store.claim()
+    request = store.drafting_request(lease)
+    assert request["policy"]["status"] == "disclosure_required"
+    assert request["max_revisions"] == 2
+    # Release only this disposable test lease, simulating recovery before dispatch.
+    with store.connection() as conn:
+        conn.execute(
+            "UPDATE wrytely_agent.tasks SET status='ready',lease_token=NULL,"
+            "lease_until=NULL,available_at=now() WHERE id=%s",
+            (lease.task_id,),
+        )
+    assert run_once(
+        store, ScriptedModel([permitted(), draft_turn(source), assessment()]), Settings()
+    )
+    assert run_once(store, ScriptedModel([plan("draft", "second-name", "Repeat")]), Settings())
+    state = store.draft_responsibility_status("user_alice", duty["id"])
+    assert state["status"] == "blocked"
+    with store.connection() as conn:
+        assert (
+            conn.execute("SELECT count(*) AS n FROM wrytely_agent.drafting_requests").fetchone()[
+                "n"
+            ]
+            == 1
+        )
+
+
+def test_intent_and_bindings_roll_back_if_initial_plan_fails(store, alice):
+    source = setup(store)
+
+    class FailingStore(Store):
+        def _responsibility_task(self, conn, *args, **kwargs):
+            raise RuntimeError("Synthetic setup failure")
+
+    with pytest.raises(RuntimeError):
+        create(FailingStore(store._url), source)
+    assert store.responsibilities("user_alice") == []
+    with store.connection() as conn:
+        assert not conn.execute("SELECT 1 FROM wrytely_agent.private_draft_intents").fetchall()
+        assert not conn.execute("SELECT 1 FROM wrytely_agent.responsibility_sources").fetchall()
+
+
+@pytest.mark.parametrize("control", ["pause", "source_change"])
+def test_control_change_during_extraction_prevents_assessment_commit(store, alice, control):
+    source = setup(store)
+    duty = create(store, source)
+
+    class ChangingModel:
+        def turn(self, history, tools):
+            if control == "pause":
+                store.set_paused("user_alice", True)
+            else:
+                store.observe_source(
+                    "user_alice",
+                    SourceObservation(
+                        source_key="draft-policy",
+                        external_revision="v2",
+                        title="Changed",
+                        reference="synthetic:assignment",
+                        coverage="snapshot",
+                        content=TEXT,
+                        retrieved_at=datetime.now(UTC),
+                    ),
+                )
+            return extracted(source)
+
+    assert run_once(store, ChangingModel(), Settings())
+    state = store.draft_responsibility_status("user_alice", duty["id"])
+    assert state["assessment_state"] == "pending"
+    with store.connection() as conn:
+        assert not conn.execute("SELECT 1 FROM wrytely_agent.drafting_requests").fetchall()
