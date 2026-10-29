@@ -79,18 +79,18 @@ class PlannerDecision(BaseModel):
     step_key: str = Field(min_length=1, max_length=100)
     instruction: str = Field(max_length=4000)
 
-
-class DraftPlannerDecision(PlannerDecision):
-    """Only offered when a trusted private-draft intent exists."""
-
-    action: Literal["work", "draft", "blocked", "done"]
-
     @field_validator("reason", "step_key")
     @classmethod
     def nonblank(cls, value: str) -> str:
         if not value.strip():
             raise ValueError("Must contain text")
         return value.strip()
+
+
+class DraftPlannerDecision(PlannerDecision):
+    """Only offered when a trusted private-draft intent exists."""
+
+    action: Literal["work", "draft", "blocked", "done"]
 
 
 class SourceObservation(BaseModel):
