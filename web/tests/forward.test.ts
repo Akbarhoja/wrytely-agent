@@ -29,6 +29,40 @@ function request(path = "messages", method = "POST", origin = "https://agent.wry
   });
 }
 describe("authenticated API boundary", () => {
+  it.each(["sources", "sources/00000000-0000-0000-0000-000000000000"])(
+    "forwards private snapshot read %s through verified session only",
+    async (path) => {
+      const deps = dependencies();
+      const response = await forward(request(path, "GET"), path.split("/"), deps);
+      expect(response.status).toBe(202);
+      expect(deps.fetch.mock.calls[0][0]).toBe(`http://agent.internal:8000/v1/${path}`);
+      expect(response.headers.get("cache-control")).toBe("no-store");
+      const headers = new Headers(deps.fetch.mock.calls[0][1]?.headers);
+      expect(headers.get("Authorization")).toBe("Bearer verified-session-token");
+      expect(headers.has("X-User-Id")).toBe(false);
+      deps.session.mockResolvedValue({
+        userId: null as unknown as string,
+        getToken: async () => "",
+      });
+      expect((await forward(request(path, "GET"), path.split("/"), deps)).status).toBe(401);
+    },
+  );
+  it("allows only same-origin snapshot creation with stable retry identity", async () => {
+    const deps = dependencies();
+    expect((await forward(request("sources"), ["sources"], deps)).status).toBe(202);
+    const headers = new Headers(deps.fetch.mock.calls[0][1]?.headers);
+    expect(headers.get("Idempotency-Key")).toBe("stable-key");
+    expect(headers.has("Cookie")).toBe(false);
+    deps.fetch.mockClear();
+    expect(
+      (await forward(request("sources", "POST", "https://evil.example"), ["sources"], deps)).status,
+    ).toBe(403);
+    for (const path of ["sources/not-a-uuid", "sources/admin", "sources/../../me"]) {
+      expect((await forward(request(path, "GET"), path.split("/"), deps)).status).toBe(404);
+    }
+    expect((await forward(request("sources/id"), ["sources", "id"], deps)).status).toBe(404);
+    expect(deps.fetch).not.toHaveBeenCalled();
+  });
   it("forwards private WhatsApp reads with only the verified token and no cache", async () => {
     const deps = dependencies();
     const response = await forward(request("whatsapp", "GET"), ["whatsapp"], deps);

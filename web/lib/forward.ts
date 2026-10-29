@@ -14,12 +14,14 @@ export async function forward(request: Request, path: string[], deps: Dependenci
   const route = path.join("/");
   const permitted =
     request.method === "GET"
-      ? ["me", "messages", "tasks", "whatsapp"].includes(route) ||
-        /^tasks\/[0-9a-f-]{36}$/i.test(route)
+      ? ["me", "messages", "tasks", "whatsapp", "sources"].includes(route) ||
+        /^tasks\/[0-9a-f-]{36}$/i.test(route) ||
+        /^sources\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(route)
       : request.method === "POST" &&
         [
           "bootstrap",
           "messages",
+          "sources",
           "agent/control",
           "whatsapp/link",
           "whatsapp/unlink",

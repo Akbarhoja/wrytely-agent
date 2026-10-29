@@ -132,3 +132,16 @@ keeps that rewrite internal; it does not disable Clerk or backend authentication
 The real-SDK origin regressions use synthetic test-format keys with provider
 fetches blocked. Offline production HTTP checks cover fast root/sign-in responses,
 the signed-out browser redirect and private 401; they do not prove real login.
+
+## B2 snapshot API preparation
+
+The existing authenticated proxy now allows GET sources, GET sources/{uuid} and
+POST sources. Creation accepts {title, content} with a UUID Idempotency-Key; reuse
+the same key and exact payload after a lost response. Changed text needs a new key.
+The backend records manual snapshot coverage and server retrieval time. Saving
+does not start reasoning, draft an assignment or send a message. Lists contain
+the latest 50 source summaries, with private detail available by source ID.
+
+This checkpoint adds API/proxy wiring only. The student intake form, explicit
+delegation and result presentation are subsequent B2 work. See
+[the B2 work order](../docs/stages/B2-context-intake.md). No live B2 result is claimed.

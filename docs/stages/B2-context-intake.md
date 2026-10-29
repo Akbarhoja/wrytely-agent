@@ -98,4 +98,35 @@ Saving a source must not imply that a worker, model or message send ran.
 
 No live provider calls or message budget is authorized by this work order.
 No deployment, production migration, public signup, sharing or submission.
-Current implementation/test/live results: not run for B2; design preparation only.
+## First implementation checkpoint
+
+Consumed reviewed shared dependency #30 at 25f1972 on this branch; #27 is its
+ancestor. The shared implementation is unchanged. Its contract is accepted in
+#4; private-draft intent/routing remains separate and is not exposed here.
+
+Authenticated POST /v1/sources accepts only title and content plus a UUID
+Idempotency-Key. It creates one immutable manual snapshot with server-generated
+snapshot key/reference, revision 1, coverage=snapshot and aware retrieval time.
+Replay returns the original saved version/time; changed evidence under the same
+key returns 409. No source update, inference, responsibility or send is triggered.
+
+GET /v1/sources returns {sources, limit:50}; GET /v1/sources/{uuid} returns the
+private current snapshot/content, with identical absent/not-owned 404 responses.
+Metadata matches the shared projection. Successful responses are no-store.
+The existing verified-session proxy permits only these exact paths/methods and
+retains origin, JSON, byte-bound, token-only and no-cache behavior.
+
+Fifteen focused real-Store API cases pass on isolated local Postgres, covering
+idempotency/conflict, isolation, spoofed fields, setup/authentication, Unicode byte
+bounds and storage failure. Three proxy regressions failed before allowlisting
+and pass after. All 59 web tests, TypeScript, Prettier and production build pass.
+No new UI is present yet. All 293 backend tests pass against disposable Postgres
+in Python UTF-8 mode; Ruff lint/format and diff checks also pass.
+
+Windows finding in the inherited #27 tests: fixture read_text defaults to cp1252,
+corrupting the en dash in a source-backed rubric quote; isolated scenario fails
+before drafting. Reported to the owner in #27 comment6492656206. No quote gate or
+other-owner test was changed. Full suite passes in Python UTF-8 mode.
+The uv executable is absent from PATH; the existing .venv Python runs pytest/Ruff.
+
+Live B2 results: not run. No provider call, real academic data or deployment.
