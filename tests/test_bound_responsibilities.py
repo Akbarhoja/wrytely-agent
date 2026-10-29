@@ -126,3 +126,37 @@ def test_pause_capacity_and_legacy_key_do_not_bypass_setup(store, alice):
         store.create_bound_responsibility(
             "user_alice", "Legacy", "legacy", source_ids=[rows[0]["source_id"]]
         )
+
+
+def test_source_update_serializes_with_setup_and_invalidates_after_commit(store, alice):
+    rows = sources(store, 1)
+    entered, release, updating = Event(), Event(), Event()
+
+    class HeldStore(Store):
+        def _responsibility_task(self, conn, *args, **kwargs):
+            entered.set()
+            assert release.wait(5)
+            return super()._responsibility_task(conn, *args, **kwargs)
+
+    def update():
+        updating.set()
+        return Store(store._url).observe_source(
+            "user_alice", observation("v2", key="source:0", content="Changed requirement")
+        )
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        setup = pool.submit(create, HeldStore(store._url), rows)
+        try:
+            assert entered.wait(5)
+            changed = pool.submit(update)
+            assert updating.wait(5)
+            assert not changed.done()
+        finally:
+            release.set()
+        duty = setup.result()
+        changed.result()
+    saved = store.responsibilities("user_alice")[0]
+    assert saved["id"] == duty["id"]
+    assert (saved["status"], saved["status_reason"]) == ("blocked", "source_changed")
+    assert store.tasks("user_alice")[0]["status"] == "blocked"
+    assert store.claim() is None
