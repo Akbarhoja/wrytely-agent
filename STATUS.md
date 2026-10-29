@@ -1,5 +1,24 @@
 # Engineering status
 
+October 29 — #35 combined review candidate on codex/m2-integration-review:
+reviewed Murtazo's published5473d46 snapshot/results/standalone-delegation UI and
+assembled it with our private-draft runtime at merge0d47e40. No teammate code
+rewritten. Fixed the concrete #34 PlannerDecision validator regression atdb241ab:
+base nonblank/normalization restored and inherited; seven focused regressions
+observed3 failures before fix and7 passes after. Combined exact-head CI40967993517
+foundation/web succeed; local94 web tests, type/format/webpack build, Ruff and26
+focused non-DB tests pass. Full local DB suite remains sandbox-blocked; no full
+backend count inferred from unavailable log download. Checkpoint details and
+remaining boundaries: docs/M2-INTEGRATION-CHECKPOINT.md.
+
+Akbar explicitly kept remaining delegation API/UI wiring with Murtazo. The private
+decision component is deliberately unmounted/no-transport; no end-to-end student
+draft request or live M2 pass claimed. Existing source/result screens coexist with
+runtime, not yet a complete connected workflow. Runtime fix and exact handoff
+posted in #4/#28/#34. No schedule/wakeup, business setup, provider call, retained
+migration, deployment or protected-main merge occurred. Disclosure/word-limit
+gaps and M1 live gates remain open; only Meta business setup is deferred by Akbar.
+
 October 29 end-of-session handoff: Akbar asked Murtazo's Codex to rest fully and
 delete its Wrytely scheduled tasks, with work resuming October30 Denver time.
 Instruction delivered in coordination #4 comment6493618180: save current work
