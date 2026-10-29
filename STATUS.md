@@ -1,5 +1,14 @@
 # Engineering status
 
+October 29 teammate handoff acknowledged: Murtazo published #28 checkpoint5462e96
+with authenticated immutable snapshot create/list/detail and proxy routes. He
+reports293 backend/59 web tests and build/lint/type/format pass on disposable
+Postgres; these are collaborator results, not independently reproduced here.
+His student intake form remains in progress. He reported our JSON fixture's
+default-encoding read failing on Windows cp1252; Codex explicitly scoped and fixed
+tests/test_academic_scenario.py to read UTF-8. No teammate tests/branch were edited.
+Review/integration of #28 remains pending; no live connector or M2 pass implied.
+
 October 29 — #33 explicit private-draft routing on codex/private-draft-routing:
 create_draft_responsibility persists one private-workflow intent atomically with
 source bindings and first plan. Original source revision/mode/revision budget are
