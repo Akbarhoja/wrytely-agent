@@ -1,5 +1,21 @@
 # Engineering status
 
+October 29 — #29 shared B2 boundaries on codex/b2-shared-boundaries: implemented
+atomic create_bound_responsibility plus bounded private source/artifact/check
+reads under Murtazo's recorded agreement (coordination 6491917360). Source binding
+and the initial planning task commit together under the agent lock; rollback,
+canonical idempotency, concurrent setup, pause/capacity and account isolation are
+tested. The original setup fingerprint survives later source changes without
+resetting progress. Private projections serialize UUID/time, expose stable order
+and limits, retain stale status, and propagate storage failure. CONTRACTS.md
+records exact shapes. No schema migration, app/web/source/transport change,
+deployment or provider call. Full drafting authorization/routing remains separate;
+this first path delegates analysis only. New tests were published failing before
+implementation; CI run 40844538085 passes foundation and web at 4eb5c6f. A final
+source-update concurrency test is pending the next exact-head CI. Local database
+tests are blocked by sandbox process/shared-memory restrictions; local Ruff
+lint/format/diff and the storage-failure test pass. M1 incomplete; A4 parked.
+
 October 29 scope decision: Akbar explicitly approved M2/B2 implementation while
 Meta business setup is deferred. The previous feature pause is lifted only for
 the agreed B2/A3 workflow, with existing ownership unchanged. M1 remains incomplete;

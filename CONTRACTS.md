@@ -1,5 +1,71 @@
 # Contracts v0.1 — foundation
 
+## B2 atomic setup and private reads — issue #29
+
+Agreed in coordination #4 comment 6491917360. Implemented in
+shared/bound_responsibilities.py and shared/academic_reads.py, composed into the
+existing Store. No migration, endpoint, connector or full-draft authority is added.
+App consumers derive user_id exclusively from a verified session. These methods
+do not authorize sharing, submission, automatic assignment drafting or inference
+from account creation. Existing create_responsibility remains unchanged.
+
+`create_bound_responsibility(user_id, objective, key, *, source_ids,
+max_steps=6, pending_limit=20)` returns the existing responsibility row (native
+database UUID/datetime fields, as with create_responsibility). Source IDs may be
+UUID objects or UUID strings, in a list/tuple of 1–8 distinct IDs. Objective is
+trimmed and bounded 1–12,000 characters; key is 1–128; integer max_steps is 1–12;
+integer pending_limit is 1–1,000. One transaction locks the user's agent, verifies
+every owned source has a current version, creates the duty/bindings with initial
+memory_revision equal to source count, then queues one plan at that revision.
+Agent locking serializes with source observation/binding and worker claims.
+Partial setup is not claimable; failures roll back duty, bindings, messages and
+tasks. Paused accounts may save work but workers cannot claim it.
+
+An internal attempt-0 bound_responsibility_setup event retains the canonical
+original source set/objective/step budget. Reordered identical requests return the
+same duty before capacity checks, without resetting progress or rebinding after
+later source updates. Changed payload, or reuse of a legacy unbound request key,
+raises RequestConflict. Missing, invalid UUID or other-user source IDs raise the
+same LookupError("Source not found"); invalid count/duplicates/bounds raise
+ValueError, exhausted pending capacity raises QueueFull, unprovisioned users raise
+LookupError("Complete setup first"). Apps validate UUID syntax and map source
+absence/not-owned identically. Storage failures propagate; never report them as
+empty successful reads. This creates an analysis-only duty, not a drafting request.
+
+Private reads return JSON-compatible dictionaries/lists: UUIDs are strings and
+aware timestamps are ISO 8601. Source coverage is the recorded evidence type;
+snapshots do not imply live monitoring. All lists have a hard limit of 50 and no
+cursor yet; consumers must explain this limit. Lists are stably ordered:
+
+- `source_snapshots(user_id)` returns current source summaries, ordered by
+  retrieved_at descending, source_id descending. Empty/unprovisioned account: [].
+  Fields: source_id, version_id, title, reference, coverage, retrieved_at,
+  external_revision. Historical versions are excluded.
+- `source_snapshot(user_id, source_id)` returns that summary plus full stored
+  content (bounded by SourceObservation's 24,000-character limit), or None for
+  absent/not-owned. Source body is untrusted evidence, not authority.
+- `responsibility_artifacts(user_id, responsibility_id)` returns None for
+  absent/not-owned duty; otherwise a list (possibly empty), ordered created_at
+  descending, artifact id descending. Fields: id, task_id, title, state, stale,
+  created_at. Ownership and list retrieval share a repeatable-read snapshot.
+- `artifact_review(user_id, artifact_id)` returns None for absent/not-owned;
+  otherwise {artifact, latest_check}. artifact fields: id, responsibility_id,
+  task_id, memory_revision, draft, state, created_at, stale. draft is the existing
+  DraftArtifact payload. latest_check is null before any completed check or the
+  latest stored verification report (ordered created_at descending, check id
+  descending); it includes passed/errors, assessment, policy/rubric evidence,
+  token usage and limits. No raw model histories, lease tokens, agent/user IDs,
+  operator credentials or internal request keys are projected. One SQL statement
+  reads artifact state, current memory revision and latest report coherently.
+
+stale is independent of historical readiness/check success; it means the bound
+responsibility's source memory revision changed. Neither ready nor passed grants
+external-action authority. API assembly must retain no-cache responses and private
+404 semantics. Do not expose internal readiness commits or accept browser-supplied
+CoursePolicy/verification results. Trusted responsibility-level draft intent and
+atomic pre-claim routing remain the next separately specified runtime increment;
+the app must label this first delegation path as analysis only.
+
 Status: implemented and locally tested; live provider validation remains pending.
 Boundary types: `contracts/models.py`. Database: `contracts/001_foundation.sql`.
 All private operations use the verified Clerk `sub` as `user_id`.
