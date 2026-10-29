@@ -246,3 +246,34 @@ exact harmless messages, observable core/control pass criteria, a bounded usage
 proposal requiring explicit approval and a blank redacted execution record. It
 supports the integration candidate's docs/M1-ACCEPTANCE.md. Every live case is
 Not run; preparing the sheet does not configure accounts or authorize provider use.
+
+## Configured frontend stall investigation
+
+Akbar reported a configured Next frontend stall in #4 comment6487499865 and
+requested a Murtazo web fix. Local lockfile resolves Next16.4.3, Clerk7.9.22,
+Clerk backend3.26.4 and React19.3.1; the declared ^7.4.2 is not the installed
+Clerk version. No real configuration values were read or shared.
+
+Reproduced with synthetic test-format keys and provider fetches blocked. Direct
+Clerk middleware returned in milliseconds. In a webpack production Next server,
+JSON root/sign-in/private requests timed out at10s while HTML redirects returned
+quickly. Fixed-code-only diagnostic markers exposed repeated middleware entries:
+NextRequest normalized127.0.0.1 tolocalhost, then Clerk's absolute same-page rewrite
+was treated as an external proxy and recursively re-entered the server. An
+async-only wrapper hypothesis failed and was discarded; all temporary markers
+and application instrumentation were removed.
+
+The focused fix enables documented Next skipProxyUrlNormalize to preserve the
+original request URL. Identical offline production probes then returned root and
+sign-in JSON200 in232/222ms, HTML307 in~100ms and private API401 in210ms with an
+unused dummy backend destination. Four real Clerk/NextRequest origin regressions
+failed without the flag and pass with it; a fifth preserves signed-out browser
+handshake behavior. Independent scoped review found no concrete security/routing
+blocker. Actual configured operator/browser validation remains required; no live
+Clerk login, model call or WhatsApp message is claimed.
+
+Validation: 56 web tests and all 202 backend tests pass on the own branch;
+TypeScript, Prettier, Ruff lint/format, diff checks and normal production build pass.
+Offline configured webpack build/probes also pass. Diagnostic instrumentation and
+synthetic build artifacts were removed/restored; only the config fix, tests and
+documentation remain for owner integration and real configured verification.
