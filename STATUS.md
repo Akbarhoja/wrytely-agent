@@ -1,5 +1,31 @@
 # Engineering status
 
+October 29 scope decision: Akbar explicitly approved M2/B2 implementation while
+Meta business setup is deferred. The previous feature pause is lifted only for
+the agreed B2/A3 workflow, with existing ownership unchanged. M1 remains incomplete;
+A4, optional extensions, public release and additional live usage are excluded.
+Codex posted a concrete proposed atomic create-and-bind boundary and private
+source/artifact read projections in coordination #4, plus the required direction
+for trusted responsibility-level draft intent applied before worker claim.
+Await Murtazo's explicit interface agreement and exact B2 file claim before
+dependent implementation. No new shared contract is agreed or implemented yet;
+do not use app polling or browser-provided policy as a temporary bypass.
+
+October 29 — #26 internal M2 validation on codex/m2-internal-validation: four new
+scenario tests exercise real Store/planner/worker/drafting/verification with four
+fictional observations and scripted model responses. Combined analysis → checked
+revision → planner completion, private context/artifact retrieval, interrupted
+review recovery without duplicate drafts, fabricated-quote rejection and the
+current disclosure-body gate are covered. Full backend suite: 263 passed, two
+existing warnings. No production/runtime behavior changed, paid call, real source
+connection or message. This is internal evidence, not autonomous Meta quality or
+live M2 acceptance. docs/M2-INTERNAL-VALIDATION.md records exact current interfaces
+and remaining gaps: atomic source/delegation setup before worker claims, automatic
+policy/rubric extraction and draft routing, separate-disclosure formatting versus
+the current body requirement, deterministic word-count enforcement, and private
+student artifact presentation. Cross-owner changes require agreement with Murtazo;
+no app/web/source implementation was taken over. M1 remains incomplete; A4 parked.
+
 October 29 independent continuation: Akbar authorized unblocked M1 checks and M2
 scenario preparation while deferring Meta business setup. Restarted the existing
 local production frontend; first-account saved task, answer, verified link and
