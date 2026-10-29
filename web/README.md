@@ -114,3 +114,9 @@ Current web validation: 44 tests, format check, typecheck and production build
 pass. Ready/linked/error states use simulated API responses in tests; live two-account
 Clerk, actual linking and provider delivery remain unverified. See
 `docs/stages/B1c-connections.md` and root DESIGN.md for scope and design decisions.
+
+For the ordered Clerk/Meta development setup and two-account live checklist, see
+[the setup handoff](../docs/stages/B1c-connections.md#development-setup-handoff--live-acceptance-still-pending).
+The local dev server uses http://127.0.0.1:3000; backend authorized parties must
+include the exact origin used by the browser. Authentication/status checks can run
+before enabling either model or WhatsApp delivery workers.
