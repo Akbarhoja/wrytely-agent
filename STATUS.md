@@ -1,5 +1,19 @@
 # Engineering status
 
+October 28 integration follow-up: merged Murtazo's onboarding branch through
+e1a6c30 into codex/m1-integration (merge f75c0f4), including real relative link
+expiry handling, malformed WhatsApp batch isolation and offline M1 regression
+coverage. No merge conflicts or new feature scope; A4 remains excluded.
+Local validation: 51 web tests, TypeScript, Prettier, Next production build,
+Ruff lint/format and diff checks pass. Backend run passed 105 tests; 154 database
+tests were blocked by macOS sandbox process/shared-memory restrictions during
+disposable Postgres setup. This is an environment blocker, not a passing backend
+suite. GitHub CI on the published candidate must supply combined backend evidence.
+Murtazo previously reported 259 backend/51 web passing on the same executable
+composition; that remains collaborator evidence, not this session's local result.
+Independent review and live M1 acceptance remain pending. Meta test authorization
+has progressed in the setup chat; no live provider result is claimed here.
+
 Started October 27, 2026. Supervisor: Akbar. Lead: Codex. Engineer: Murtazo.
 
 ## Current integration checkpoint — October 28
