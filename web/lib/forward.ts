@@ -1,7 +1,7 @@
 type Session = { userId: string | null; getToken: () => Promise<string | null> };
 const resourceUuid = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 const resultRead = new RegExp(
-  `^(?:artifacts/${resourceUuid}|responsibilities/${resourceUuid}/artifacts)$`,
+  `^(?:artifacts/${resourceUuid}|responsibilities/${resourceUuid}/(?:artifacts|status))$`,
   "i",
 );
 type Dependencies = {
@@ -28,6 +28,7 @@ export async function forward(request: Request, path: string[], deps: Dependenci
           "bootstrap",
           "messages",
           "sources",
+          "responsibilities",
           "agent/control",
           "whatsapp/link",
           "whatsapp/unlink",

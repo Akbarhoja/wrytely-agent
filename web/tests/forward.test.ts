@@ -29,22 +29,69 @@ function request(path = "messages", method = "POST", origin = "https://agent.wry
   });
 }
 describe("authenticated API boundary", () => {
+  it("permits only authenticated same-origin explicit delegation and private status reads", async () => {
+    const deps = dependencies();
+    expect((await forward(request("responsibilities"), ["responsibilities"], deps)).status).toBe(
+      202,
+    );
+    expect(new Headers(deps.fetch.mock.calls[0][1]?.headers).get("Authorization")).toBe(
+      "Bearer verified-session-token",
+    );
+    expect(new Headers(deps.fetch.mock.calls[0][1]?.headers).get("Idempotency-Key")).toBe(
+      "stable-key",
+    );
+    const path = "responsibilities/00000000-0000-4000-8000-000000000001/status";
+    expect((await forward(request(path, "GET"), path.split("/"), deps)).status).toBe(202);
+    deps.fetch.mockClear();
+    expect(
+      (
+        await forward(
+          request("responsibilities", "POST", "https://evil.example"),
+          ["responsibilities"],
+          deps,
+        )
+      ).status,
+    ).toBe(403);
+    expect((await forward(request(path), path.split("/"), deps)).status).toBe(404);
+    expect(
+      (
+        await forward(
+          request("responsibilities/bad/status", "GET"),
+          ["responsibilities", "bad", "status"],
+          deps,
+        )
+      ).status,
+    ).toBe(404);
+    expect(deps.fetch).not.toHaveBeenCalled();
+    deps.session.mockResolvedValue({ userId: null as unknown as string, getToken: async () => "" });
+    expect((await forward(request("responsibilities"), ["responsibilities"], deps)).status).toBe(
+      401,
+    );
+  });
   it.each([
     "responsibilities",
     "responsibilities/00000000-0000-0000-0000-000000000000/artifacts",
     "artifacts/00000000-0000-0000-0000-000000000000",
-  ])("allows verified private result read %s without broadening mutations", async (path) => {
-    const deps = dependencies();
-    const response = await forward(request(path, "GET"), path.split("/"), deps);
-    expect(response.status).toBe(202);
-    expect(response.headers.get("cache-control")).toBe("no-store");
-    expect(new Headers(deps.fetch.mock.calls[0][1]?.headers).get("Authorization")).toBe(
-      "Bearer verified-session-token",
-    );
-    expect((await forward(request(path), path.split("/"), deps)).status).toBe(404);
-    deps.session.mockResolvedValue({ userId: null as unknown as string, getToken: async () => "" });
-    expect((await forward(request(path, "GET"), path.split("/"), deps)).status).toBe(401);
-  });
+  ])(
+    "allows verified private result read %s with only the explicit create mutation",
+    async (path) => {
+      const deps = dependencies();
+      const response = await forward(request(path, "GET"), path.split("/"), deps);
+      expect(response.status).toBe(202);
+      expect(response.headers.get("cache-control")).toBe("no-store");
+      expect(new Headers(deps.fetch.mock.calls[0][1]?.headers).get("Authorization")).toBe(
+        "Bearer verified-session-token",
+      );
+      expect((await forward(request(path), path.split("/"), deps)).status).toBe(
+        path === "responsibilities" ? 202 : 404,
+      );
+      deps.session.mockResolvedValue({
+        userId: null as unknown as string,
+        getToken: async () => "",
+      });
+      expect((await forward(request(path, "GET"), path.split("/"), deps)).status).toBe(401);
+    },
+  );
   it.each([
     "artifacts/all",
     "artifacts/not-a-uuid",

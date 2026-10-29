@@ -241,3 +241,31 @@ Claim: coordination comment6509628481. Integration still waits for the owner to
 restore base PlannerDecision nonblank validation in #34 and for exact-head review.
 This form is unconnected preparation, not an available drafting workflow. No model
 or provider call, migration, send, share, submission or deployment occurred.
+
+## Reviewed dependency and authenticated delegation assembly
+
+The owner restored the base planner validator at #34 head db241ab. Independent
+exact-archive checks passed all seven planner regressions plus eighteen assessor
+cases, Ruff lint/format, and all four exact-head CI checks were green. Integrated
+that reviewed dependency into this feature branch; no edits to the owner's branch.
+
+The app now exposes explicit POST responsibilities through the existing verified
+session/proxy and atomic create_draft_responsibility boundary. Only objective,
+one to eight distinct source IDs and strict true consent are accepted. UUID retry
+identity, server-owned budgets, capacity, same-origin mutation and no-store are
+preserved. GET responsibilities/{uuid}/status uses the published controlled private
+projection; absent/other-account status and sources have matching private errors.
+No model, policy, readiness or browser owner override is introduced.
+
+Acceptance tests first failed against the missing API/proxy routes. New actual
+Store cases cover atomic save/replay/conflict, analysis-key rejection, private
+isolation, paused work remaining unclaimed, consent/type/field bounds, byte limit,
+capacity and redacted storage failure. The former read-only collection assertions
+now permit only this explicit create route; artifact/status mutations stay closed.
+The consent form remains unmounted pending the next owned UI/status integration.
+
+Integrated validation: 352 backend tests pass on disposable Postgres in UTF-8
+mode, including the new API cases; all 95 web tests pass. Ruff lint/format,
+TypeScript, Prettier, production build and diff checks pass. Migration009 ran only
+through test setup on the disposable database. No retained development/production
+migration, model/provider call, worker activation, send or deployment occurred.

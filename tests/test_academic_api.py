@@ -1,3 +1,4 @@
+import json
 from contextlib import contextmanager
 from datetime import datetime
 from uuid import uuid4
@@ -22,6 +23,141 @@ def save(client, *, who="alice", key=None, **body):
         headers=auth(who) | {"Idempotency-Key": str(key or uuid4())},
         json={"title": "Fictional assignment", "content": "Private synthetic text"} | body,
     )
+
+
+def delegate(client, sources, *, key=None, who="alice", **body):
+    return client.post(
+        "/v1/responsibilities",
+        headers=auth(who) | {"Idempotency-Key": str(key or uuid4())},
+        json={
+            "objective": "Prepare a private comparison",
+            "source_ids": sources,
+            "confirm_private_draft": True,
+        }
+        | body,
+    )
+
+
+def test_private_delegation_atomic_replay_private_status_and_pause(store, alice):
+    client = make_client(store)
+    store.provision("user_bob")
+    source = save(client).json()["source_id"]
+    store.set_paused("user_alice", True)
+    key = uuid4()
+    first = delegate(client, [source], key=key)
+    assert first.status_code == 201
+    receipt = first.json()
+    assert set(receipt) == {"responsibility_id", "requested_mode"}
+    assert receipt["requested_mode"] == "private_draft"
+    assert delegate(client, [source], key=key).json() == receipt
+    assert delegate(client, [source], key=key, objective="Changed objective").status_code == 409
+    assert len(store.tasks("user_alice")) == 1
+    assert store.claim(60) is None
+    duty = store.responsibilities("user_alice")[0]
+    assert duty["max_steps"] == 6
+    path = f"/v1/responsibilities/{receipt['responsibility_id']}/status"
+    status = client.get(path, headers=auth())
+    assert status.json() == store.draft_responsibility_status("user_alice", duty["id"])
+    assert status.json()["assessment_state"] == "pending"
+    assert status.json()["workflow_state"] == "pending"
+    assert status.json()["artifact_id"] is None
+    for response in (first, status):
+        assert response.headers["cache-control"] == "no-store"
+    other = client.get(path, headers=auth("bob"))
+    absent = client.get(f"/v1/responsibilities/{uuid4()}/status", headers=auth("bob"))
+    assert other.status_code == absent.status_code == 404
+    assert other.json() == absent.json()
+    assert other.headers["cache-control"] == "no-store"
+    assert client.get(path).status_code == 401
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        {"confirm_private_draft": False},
+        {"confirm_private_draft": "true"},
+        {"confirm_private_draft": 1},
+        {"objective": " "},
+        {"objective": "x" * 12001},
+        {"source_ids": []},
+        {"source_ids": [str(uuid4())] * 9},
+        {"source_ids": ["not-a-uuid"]},
+        {"source_ids": [str(uuid4())] * 2},
+        {"user_id": "user_bob"},
+        {"policy": {"status": "permitted"}},
+        {"ready": True},
+        {"max_steps": 12},
+        {"max_revisions": 0},
+        {"pending_limit": 1000},
+        {"task_id": str(uuid4())},
+    ],
+)
+def test_delegation_rejects_missing_consent_invalid_scope_and_browser_authority(store, alice, body):
+    client = make_client(store)
+    source = save(client).json()["source_id"]
+    assert delegate(client, [source], **body).status_code == 422
+    assert store.tasks("user_alice") == []
+    assert store.responsibilities("user_alice") == []
+
+
+def test_delegation_missing_fields_foreign_sources_and_mode_conflict(store, alice):
+    client = make_client(store)
+    store.provision("user_bob")
+    source = save(client).json()["source_id"]
+    missing = client.post(
+        "/v1/responsibilities",
+        headers=auth() | {"Idempotency-Key": str(uuid4())},
+        json={"objective": "Prepare", "source_ids": [source]},
+    )
+    assert missing.status_code == 422
+    other = delegate(client, [source], who="bob")
+    absent = delegate(client, [str(uuid4())], who="bob")
+    assert other.status_code == absent.status_code == 404
+    assert other.json() == absent.json()
+    assert store.tasks("user_bob") == []
+    key = uuid4()
+    store.create_bound_responsibility(
+        "user_alice", "Prepare a private comparison", str(key), source_ids=[source]
+    )
+    assert delegate(client, [source], key=key).status_code == 409
+    assert len(store.tasks("user_alice")) == 1
+    assert client.post("/v1/responsibilities", json={}).status_code == 401
+    assert (
+        client.post(
+            "/v1/responsibilities",
+            headers=auth(),
+            json={"objective": "Prepare", "source_ids": [source], "confirm_private_draft": True},
+        ).status_code
+        == 422
+    )
+
+
+def test_delegation_byte_limit_capacity_and_storage_errors(store, alice, monkeypatch):
+    client = TestClient(
+        create_app(Settings(pending_task_limit=1), store=store, verifier=TestVerifier())
+    )
+    source = save(client).json()["source_id"]
+    oversized = client.post(
+        "/v1/responsibilities",
+        headers=auth() | {"Idempotency-Key": str(uuid4()), "Content-Type": "application/json"},
+        content=json.dumps(
+            {"objective": "Prepare", "source_ids": [source], "confirm_private_draft": True}
+        )
+        + " " * 65536,
+    )
+    assert oversized.status_code == 413
+    assert store.tasks("user_alice") == []
+    assert delegate(client, [source]).status_code == 201
+    assert delegate(client, [source]).status_code == 429
+    monkeypatch.setattr(
+        store,
+        "draft_responsibility_status",
+        lambda *args: (_ for _ in ()).throw(OperationalError("private")),
+    )
+    failure = client.get(f"/v1/responsibilities/{uuid4()}/status", headers=auth())
+    assert failure.status_code == 503
+    assert failure.json() == {"detail": "Agent storage unavailable"}
+    assert failure.headers["cache-control"] == "no-store"
 
 
 def test_snapshot_intake_is_private_idempotent_server_scoped_and_does_not_queue(store, alice):
@@ -217,9 +353,12 @@ def test_private_results_preserve_review_failures_staleness_and_account_isolatio
 def test_result_routes_have_no_public_or_mutation_fallback(store, alice):
     client = make_client(store)
     assert client.get("/v1/responsibilities").status_code == 401
+    assert (
+        client.post("/v1/responsibilities", headers=auth(), json={"ready": True}).status_code == 422
+    )
     for path in (
-        "/v1/responsibilities",
         f"/v1/artifacts/{uuid4()}",
         f"/v1/responsibilities/{uuid4()}/artifacts",
+        f"/v1/responsibilities/{uuid4()}/status",
     ):
         assert client.post(path, headers=auth(), json={"ready": True}).status_code == 405

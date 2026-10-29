@@ -169,3 +169,20 @@ Model assessments remain fallible. Viewing does not send, share or submit work.
 New selections, identity changes and session expiry cannot display a late result
 from another request/account. This is offline-verified presentation of existing
 artifacts; real authenticated operator acceptance remains pending.
+
+## Private-draft API preparation
+
+POST responsibilities now accepts only objective, 1–8 distinct source_ids and
+confirm_private_draft=true, with a UUID Idempotency-Key. It calls the reviewed
+atomic Store boundary under the verified session. Replay preserves the original
+private intent; changed input or an analysis-only key conflicts. The server fixes
+the step/revision budgets at 6/2 and uses its configured pending-task limit.
+No browser policy, owner, readiness or budget fields are accepted. A receipt
+contains only responsibility_id and requested_mode=private_draft.
+
+GET responsibilities/{uuid}/status exposes the published controlled private status
+projection. Missing and other-account work share the same 404. Reads and writes
+use no-store; the existing proxy requires verified auth and same-origin mutation.
+The standalone consent component is still not mounted or connected to this API.
+No retained development database was migrated or worker enabled by this change.
+Live model usage still requires its separate explicit development budget.
