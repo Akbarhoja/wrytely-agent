@@ -1,5 +1,46 @@
 # Engineering status
 
+October 29 M1 continuation: integrated Murtazo's published 8a407c6 loopback
+origin fix and live test pack via merge 16f3232. With the actual Clerk development
+configuration, the webpack production server now returns GET / and /sign-in 200,
+and signed-out /api/agent/me 401. All 56 web tests, TypeScript, Prettier and the
+webpack production build pass. Backend /readyz returns 200 with database,
+authentication and model configuration present; live_connections_verified remains
+false. No additional inference was run (recorded estimate remains $0.00138225).
+Real browser login, two-account isolation, second-recipient verification and
+WhatsApp round trips remain pending. Local browser access is currently disabled
+in Work settings. M1 is not complete; human merge approval remains separate.
+
+October 28 M1 live setup follow-up: dedicated Meta development key configured;
+GET /models succeeded and Muse Spark 1.3 was available. One real Responses API
+call through MetaModelClient completed (28 input / 317 output tokens; estimated
+$0.00138225 at the published standard rates). Ignored local test-budget evidence
+reserves maximum request cost before dispatch; continuous workers remain stopped.
+Meta's saved $2 monthly alert is notification-only, not an enforced provider cap.
+A dedicated existing-instance Clerk development key is saved in ignored frontend
+configuration; a key exposed by a browser diagnostic was revoked before use and
+replaced. Clerk Backend API verification and standalone SDK authentication pass.
+Webpack production build passes, but configured browser routes stall before
+headers while a static excluded route responds. Reproduction handed to Murtazo
+in coordination issue #4; no web/auth implementation files changed. Second
+consenting WhatsApp recipient verification and all live M1 acceptance cases are
+still pending. These results do not establish a student WhatsApp round trip.
+
+October 28 M1 infrastructure checkpoint: an isolated Railway development project
+now hosts the integration candidate at be01bd1, with a separate Postgres
+service and migrations 001–007 applied. The HTTPS API health check and WhatsApp
+verification challenge passed; Meta accepted the callback and shows the `messages`
+field subscribed. The existing Wrytely Clerk development instance's public JWT
+verifier is configured on the backend. The latest Railway deployment succeeded;
+readiness reports database and authentication configured, but no Meta model key.
+This is configuration evidence, not a live student message or completed M1 round
+trip. The Meta app is unpublished. The hackathon organizer's $150 Model API credit
+claim was submitted with Akbar's confirmed application email and the configured
+Model API Team ID after his explicit terms acceptance and submission authorization.
+The form reached its confirmation page; credit allocation is not yet verified.
+The Meta billing page still shows no payment method. No model calls or production
+changes were made.
+
 October 28 integration follow-up: merged Murtazo's onboarding branch through
 e1a6c30 into codex/m1-integration (merge f75c0f4), including real relative link
 expiry handling, malformed WhatsApp batch isolation and offline M1 regression
