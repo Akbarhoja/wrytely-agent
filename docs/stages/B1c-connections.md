@@ -175,3 +175,26 @@ extend the displayed lifetime. Invalid or already-elapsed lifetimes remain
 uncertain without automatic retry. Added an actual API contract assertion and
 corrected/extended controller regressions. This is an M1 bug fix, not template
 capability wiring or new feature scope. Live M1 remains pending setup and budget.
+
+## Independent offline M1 scenario
+
+While account setup is pending, added two verification-only cross-layer cases in
+tests/test_whatsapp_flow.py. They bootstrap two synthetic accounts through the
+authenticated API, obtain actual link challenges, sign inbound linking/messages,
+save explicit preferences and run the existing reasoning worker against a
+scripted tool-call/answer model. The existing delivery worker uses an injected
+HTTP transport; all persistence uses disposable local Postgres.
+
+The accepted path checks the exact recipient/reply, signed delivered callback,
+replay and late sent callback without regression. The lost-response path remains
+unknown and a fresh worker does not resend. Both check duplicate inbound IDs,
+another account's private sentinel staying outside model context, link codes
+staying outside model context, cross-account task denial, saved result privacy and
+restored agent identity with a new API/Store instance. These are offline integration
+regressions, not proof of real Clerk login, Meta inference or WhatsApp receipt.
+No application behavior, shared contract or feature scope changed.
+
+Validation on this onboarding branch: 193 backend tests pass after resetting the
+verified disposable test schema to the branch's migration set; Ruff lint/format
+and diff checks pass. The schema reset removed leftover 006–007 test migrations
+from the earlier detached integration review, not a production/development store.
