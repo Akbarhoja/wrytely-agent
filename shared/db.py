@@ -15,6 +15,7 @@ from shared.artifacts import ArtifactStore
 from shared.bound_responsibilities import BoundResponsibilityStore
 from shared.connection_status import ConnectionStatusStore
 from shared.delivery_store import DeliveryStore
+from shared.draft_intents import DraftIntentStore
 from shared.drafting_tasks import DraftingTaskStore
 from shared.responsibilities import ResponsibilityStore
 from shared.whatsapp_store import WhatsAppStore
@@ -42,6 +43,7 @@ class Store(
     ConnectionStatusStore,
     AcademicReadStore,
     BoundResponsibilityStore,
+    DraftIntentStore,
 ):
     def __init__(self, url: str):
         self._url = url

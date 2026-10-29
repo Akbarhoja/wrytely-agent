@@ -1,5 +1,78 @@
 # Contracts v0.1 — foundation
 
+## Explicit private-draft intent and routing — issue #33
+
+Agreement: coordination #4 comment6492493685. Migration 009 adds
+private_draft_intents; 008/A4 stays excluded. No deployment/migration execution
+is implied. Apply 009 on an isolated environment before running this worker code.
+
+`create_draft_responsibility(verified_user_id, objective, key, *, source_ids,
+max_steps=6, pending_limit=20, max_revisions=2)` reuses atomic bound setup and
+returns the same native responsibility row. The authenticated app calls it only
+after explicit student confirmation: prepare one private draft, with no sharing,
+submission or sending. Pasted instructions are evidence, not that confirmation.
+Budgets are server-owned; max_revisions is an integer 0–2. Source limits/ownership,
+rollback and idempotency match create_bound_responsibility. Intent's original
+memory revision and revision budget persist in the same transaction as bindings
+and the initial plan. Original request metadata includes private_draft mode and
+revision budget. Changing either conflicts; an analysis-only key cannot upgrade,
+and a draft key cannot downgrade. The old analysis-only method is unchanged.
+
+At a planning episode with intent, the runtime assesses current owned bound
+evidence using assess_draft_requirements, then commits the result through a
+lease/pause/current-revision fence. Evidence quotes and freshness are revalidated
+in storage. A missing/nonpermitting policy or missing rubric blocks the draft duty
+and its task with draft_policy_or_rubric_blocked. Saved assessment is reused across
+attempts and planner episodes. It remains a fallible interpretation of sources,
+not a truth guarantee; the existing separate drafting preflight and mandatory
+artifact verification remain required. Provider failures use bounded normal retry.
+
+Only a duty with intent receives DraftPlannerDecision's extra action=draft. work
+remains ordinary analysis; draft creates one academic task and attaches its
+immutable policy/rubric/revision specification atomically before commit/claim.
+Stored intent, current evidence, step budget and duplicate checks constrain this
+choice. A consumed intent cannot spawn another drafting workflow under a new key.
+done before an actually completed, ready artifact is blocked as private_draft_not_ready.
+No model can grant its own consent or readiness. Model/source instructions cannot
+enable drafting on an analysis-only duty. Draft generation/checkpoint/revision
+continues through the existing worker path. No app polling upgrades are needed.
+
+Source changes revoke old task leases through existing memory invalidation;
+intent's original revision cannot be reused for new evidence. Pause fences both
+assessment commit and subsequent work. No A4 automatic reauthorization is added.
+Crash before a result is persisted may repeat model usage; saved assessment and
+drafting checkpoints avoid repeating already committed progress. This is not
+exactly-once model billing or an unbounded agent loop.
+
+`draft_responsibility_status(verified_user_id, responsibility_id)` is the exact
+private app read. None means absent/not-owned, mapped to the same private 404.
+Storage errors propagate. One SQL snapshot returns JSON-safe fields:
+
+| Field | Values / meaning |
+|---|---|
+| responsibility_id | UUID string |
+| requested_mode | analysis or private_draft |
+| status | active, blocked or done; revision mismatch reports blocked |
+| reason | null, source_changed, draft_policy_or_rubric_blocked or draft_work_blocked; never raw model prose |
+| assessment_state | not_requested for analysis; pending, assessed or blocked for draft intent |
+| workflow_state | not_requested for analysis; pending before attachment; queued/running after attachment; ready_for_review only for a completed task with a ready artifact; blocked on failure or stale revision |
+| artifact_id | latest saved draft UUID string or null; may reference an unready/stale review artifact |
+
+Assessment state is historical and can remain assessed after source change;
+status/reason/workflow and artifact stale flags take precedence. requested_mode
+does not mean policy permits drafting, and ready_for_review never means shared,
+sent, submitted or approved by an instructor. Use artifact_review to inspect
+private draft/check details; do not hide unready drafts or present stale ones as
+current. Existing no-cache/private ownership rules apply. Store.draft_intent,
+draft_intent_sources and commit_draft_assessment are fenced internal runtime
+methods, not API/model tools. Do not accept browser CoursePolicy, task IDs or
+assessment/verifier output as authority. The app/UI consumer remains Murtazo-owned.
+
+The first new planner episode may use two model turns (assessment plus planning);
+subsequent planning reuses assessment, and drafting uses its existing bounded
+preflight/generation/check/revision limits. Account/global usage gates and live
+quality evaluation remain separate; this change makes no live budget expansion.
+
 ## Draft requirement assessment — issue #31 (internal helper)
 
 `runtime.draft_requirements.assess_draft_requirements(model, sources)` accepts
