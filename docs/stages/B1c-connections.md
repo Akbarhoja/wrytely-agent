@@ -156,3 +156,22 @@ that should be retained.
 
 Record date, tested revision, provider mode, consenting account aliases, observed
 outcomes and failures in this work order/PR. Leave unchecked any unrun step.
+
+## M1 integration review correction
+
+Akbar's latest #4 instruction freezes feature expansion and requests independent
+review of candidate #25 at a78b15a. Reviewed merge composition, unchanged Murtazo
+API/transport/UI implementation, migration 001–007 inclusion and text-only worker
+compatibility with the template contract. A4 remains excluded. Independently ran
+247 backend and 44 web tests, Ruff lint/format, TypeScript and production build.
+The ordinary web format check reported only Windows CRLF in README.md; checking
+that file with end-of-line auto passed. No candidate code was edited.
+
+Found and reported a blocking integration mismatch: the actual link endpoint
+returns message/expires_in_seconds, whereas the controller and its mock expected
+expires_at. Corrected the Murtazo controller on our branch, leaving the shared API
+contract unchanged. Expiry starts before the request so network latency cannot
+extend the displayed lifetime. Invalid or already-elapsed lifetimes remain
+uncertain without automatic retry. Added an actual API contract assertion and
+corrected/extended controller regressions. This is an M1 bug fix, not template
+capability wiring or new feature scope. Live M1 remains pending setup and budget.

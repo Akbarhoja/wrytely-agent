@@ -63,6 +63,15 @@ def test_private_connection_read_and_session_restore(store, alice):
     assert client.get("/v1/whatsapp", headers=auth()).json()["linked"] is False
 
 
+def test_link_challenge_response_keeps_relative_expiry_contract(store, alice):
+    response = setup(store).post("/v1/whatsapp/link", headers=auth())
+    assert response.status_code == 200
+    payload = response.json()
+    assert set(payload) == {"message", "expires_in_seconds"}
+    assert payload["message"].startswith("LINK ")
+    assert payload["expires_in_seconds"] == 600
+
+
 def test_connection_configuration_and_storage_failure_are_distinct(store, alice, monkeypatch):
     from psycopg import OperationalError
 
