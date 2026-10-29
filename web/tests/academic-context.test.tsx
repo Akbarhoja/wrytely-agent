@@ -126,7 +126,9 @@ describe("private academic snapshots", () => {
     expect((screen.getByLabelText("Pasted text") as HTMLTextAreaElement).disabled).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "Check and retry save" }));
     await screen.findByText("Snapshot saved. No work has started.");
-    expect(document.activeElement).toBe(screen.getByLabelText("Snapshot title"));
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByLabelText("Snapshot title")),
+    );
     expect(writes).toHaveLength(2);
     expect(writes[0].body).toBe(writes[1].body);
     expect(new Headers(writes[0].headers).get("Idempotency-Key")).toBe(

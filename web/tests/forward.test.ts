@@ -29,6 +29,33 @@ function request(path = "messages", method = "POST", origin = "https://agent.wry
   });
 }
 describe("authenticated API boundary", () => {
+  it.each([
+    "responsibilities",
+    "responsibilities/00000000-0000-0000-0000-000000000000/artifacts",
+    "artifacts/00000000-0000-0000-0000-000000000000",
+  ])("allows verified private result read %s without broadening mutations", async (path) => {
+    const deps = dependencies();
+    const response = await forward(request(path, "GET"), path.split("/"), deps);
+    expect(response.status).toBe(202);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(new Headers(deps.fetch.mock.calls[0][1]?.headers).get("Authorization")).toBe(
+      "Bearer verified-session-token",
+    );
+    expect((await forward(request(path), path.split("/"), deps)).status).toBe(404);
+    deps.session.mockResolvedValue({ userId: null as unknown as string, getToken: async () => "" });
+    expect((await forward(request(path, "GET"), path.split("/"), deps)).status).toBe(401);
+  });
+  it.each([
+    "artifacts/all",
+    "artifacts/not-a-uuid",
+    "responsibilities/not-a-uuid/artifacts",
+    "responsibilities/admin",
+    "artifacts/00000000-0000-0000-0000-000000000000/approve",
+  ])("does not expose arbitrary artifact route %s", async (path) => {
+    const deps = dependencies();
+    expect((await forward(request(path, "GET"), path.split("/"), deps)).status).toBe(404);
+    expect(deps.fetch).not.toHaveBeenCalled();
+  });
   it.each(["sources", "sources/00000000-0000-0000-0000-000000000000"])(
     "forwards private snapshot read %s through verified session only",
     async (path) => {

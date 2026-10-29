@@ -151,5 +151,21 @@ is displayed as plain text. Lists are bounded to 50 current sources.
 All 68 web tests, TypeScript, formatting and production build pass. Offline browser
 checks cover desktop and phone layout and lost-response/keyboard recovery using
 fictional fixtures. Real authenticated backend intake still needs operator testing.
-Explicit delegation and result presentation are subsequent B2 work; see
+Explicit delegation remains subsequent B2 work; see
 [the B2 work order](../docs/stages/B2-context-intake.md). No live B2 result is claimed.
+
+## Private results
+
+The Private results view lists the account's latest 50 responsibilities and up to
+50 saved drafts per selected responsibility. Its read-only proxy paths are GET
+responsibilities, GET responsibilities/{uuid}/artifacts and GET artifacts/{uuid}.
+The API reuses existing Store projections; no readiness mutation or public link
+is exposed. Storage failures stay errors and responses use no-store.
+
+Students can read the draft, disclosure, citation evidence and stored checks.
+Current ready state plus a passed report is required for Ready for your review.
+Changed sources override historical success; failed/missing checks stay visible.
+Model assessments remain fallible. Viewing does not send, share or submit work.
+New selections, identity changes and session expiry cannot display a late result
+from another request/account. This is offline-verified presentation of existing
+artifacts; real authenticated operator acceptance remains pending.

@@ -1,4 +1,9 @@
 type Session = { userId: string | null; getToken: () => Promise<string | null> };
+const resourceUuid = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+const resultRead = new RegExp(
+  `^(?:artifacts/${resourceUuid}|responsibilities/${resourceUuid}/artifacts)$`,
+  "i",
+);
 type Dependencies = {
   configured: boolean;
   backend: string | undefined;
@@ -14,7 +19,8 @@ export async function forward(request: Request, path: string[], deps: Dependenci
   const route = path.join("/");
   const permitted =
     request.method === "GET"
-      ? ["me", "messages", "tasks", "whatsapp", "sources"].includes(route) ||
+      ? ["me", "messages", "tasks", "whatsapp", "sources", "responsibilities"].includes(route) ||
+        resultRead.test(route) ||
         /^tasks\/[0-9a-f-]{36}$/i.test(route) ||
         /^sources\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(route)
       : request.method === "POST" &&

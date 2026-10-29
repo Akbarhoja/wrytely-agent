@@ -34,6 +34,27 @@ this work order and web/README.md.
 Akbar retains shared storage/runtime/contracts and #26/#27 internal validation.
 No shared implementation, migrations or STATUS.md edits are claimed here.
 
+## Private result viewing slice
+
+Reuse Store.responsibilities and the delivered responsibility_artifacts/artifact_review
+reads. Add authenticated GET responsibilities (safe summary fields only),
+responsibilities/{uuid}/artifacts (latest 50), and artifacts/{uuid}; no new mutation.
+The existing workspace gets a Private results view with duty, saved draft and
+check details. This does not consume the unreviewed private-draft authorization.
+
+Owned files additionally include web/lib/results.ts, web/components/academic-results.tsx
+and web/tests/academic-results.test.tsx, plus the existing claimed API/proxy/workspace
+tests and styles. No model or database client is introduced.
+
+Show saved text, disclosure, citation claims/quotations and stored review findings.
+Ready for review requires current evidence, ready artifact state and a passed check.
+Staleness overrides historical success; missing reports stay unchecked. A model
+assessment remains fallible. Nothing is shared, sent, submitted or graded by viewing.
+Plain-text rendering, private404, no-cache, real error/empty distinction and account
+change/late-response guards remain mandatory. Verify using existing Store fixtures
+and scripted assessments, followed by component/proxy tests and synthetic browser
+checks. Real student/backend operator acceptance remains separate.
+
 ## Agreed shared dependencies
 
 Existing Store.observe_source accepts SourceObservation. Ownership comes from
@@ -168,3 +189,33 @@ Private-draft controls/results are not exposed by this checkpoint. A separate
 review found PlannerDecision nonblank validation moved off the base class in #34
 head3560a9; exact before/after reproduction is recorded in PR comment6509066599.
 Wait for the owner fix and exact-head review before consuming that dependency.
+
+## Private results implementation evidence
+
+Added safe responsibility summaries, private bounded artifact lists and private
+artifact/latest-check reads through the authenticated API/proxy. Only GET is
+allowed for result routes. Actual Store tests cover other-account404, empty duty,
+failed then passed reports and source-change staleness with historical checks
+preserved. A failing regression also exposed a missing no-store header on storage
+errors; the common redacted storage-error response now supplies it.
+
+The existing workspace's Private results view shows saved drafts, disclosure,
+citation claims/quotes, policy/rubric evidence and check findings as plain text.
+Stale, missing and failed checks cannot be presented as a current passed draft.
+Malformed responses remain unavailable; late responses and account/session
+changes clear or ignore private state. No artifact readiness or draft permission
+is changed by this read-only view. Private-draft authorization remains unwired.
+
+Verification: 86 web tests pass, including new result/proxy cases; TypeScript,
+Prettier and production build pass. The snapshot focus assertion now waits for its
+post-render effect instead of racing it. All 295 backend tests pass again after
+the storage-error no-cache fix, against disposable Postgres in UTF-8 mode. Ruff
+lint/format pass. No new shared dependency or migration was consumed.
+
+An ignored standalone fixture rendered actual result components/styles with
+fictional in-memory records. Desktop1440 and phone390/320 have no horizontal
+overflow; the narrowest navigation uses two columns. Ready and stale presentations,
+focus on the loaded review and keyboard expansion of policy evidence were checked.
+Screenshots are local offline evidence. Real Clerk/backend result acceptance and
+live model quality are not established by this fixture. No live provider call,
+send, share, submission or deployment occurred.

@@ -96,7 +96,11 @@ def create_app(
     @api.exception_handler(DatabaseError)
     async def database_error(request, exc):
         log.error("database_unavailable path=%s", request.url.path)
-        return JSONResponse(status_code=503, content={"detail": "Agent storage unavailable"})
+        return JSONResponse(
+            status_code=503,
+            content={"detail": "Agent storage unavailable"},
+            headers={"Cache-Control": "no-store"},
+        )
 
     @api.get("/healthz")
     def health():
@@ -221,6 +225,33 @@ def create_app(
                 )
             },
         }
+
+    @api.get("/v1/responsibilities")
+    def responsibilities(user: User, db: DB, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        fields = ("id", "objective", "status", "steps_created", "max_steps", "created_at")
+        return {
+            "responsibilities": [
+                {name: row[name] for name in fields} for row in db.responsibilities(user.user_id)
+            ],
+            "limit": 50,
+        }
+
+    @api.get("/v1/responsibilities/{responsibility_id}/artifacts")
+    def responsibility_artifacts(responsibility_id: UUID, user: User, db: DB, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        rows = db.responsibility_artifacts(user.user_id, responsibility_id)
+        if rows is None:
+            raise HTTPException(404, "Work not found", headers={"Cache-Control": "no-store"})
+        return {"artifacts": rows, "limit": 50}
+
+    @api.get("/v1/artifacts/{artifact_id}")
+    def artifact_review(artifact_id: UUID, user: User, db: DB, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        result = db.artifact_review(user.user_id, artifact_id)
+        if result is None:
+            raise HTTPException(404, "Draft not found", headers={"Cache-Control": "no-store"})
+        return result
 
     def whatsapp_ready():
         return all(
