@@ -113,7 +113,11 @@ def test_pause_blocks_current_attempt_and_new_claims(store, alice):
     with pytest.raises(LeaseLost):
         store.complete(lease, "Should not be delivered")
     store.set_paused("user_alice", False)
-    store.complete(lease, "Resumed")
+    with pytest.raises(LeaseLost):
+        store.complete(lease, "Old worker cannot resume")
+    resumed = store.claim()
+    assert resumed.attempt > lease.attempt
+    store.complete(resumed, "Resumed")
 
 
 def test_retry_after_completion_cannot_duplicate_response(store, alice):
@@ -123,3 +127,112 @@ def test_retry_after_completion_cannot_duplicate_response(store, alice):
     with pytest.raises(LeaseLost):
         store.complete(lease, "Duplicate")
     assert store.claim() is None
+
+
+def test_pause_final_claim_can_resume_with_new_fence(store, alice):
+    task = store.enqueue("user_alice", "Question", "pause-final")
+    old = store.claim(max_attempts=1)
+    store.set_paused("user_alice", True)
+    assert store.claim(max_attempts=1) is None
+    store.set_paused("user_alice", False)
+    expire(store, task["task_id"])
+    resumed = store.claim(max_attempts=1)
+    assert resumed is not None
+    assert resumed.attempt > old.attempt
+    assert resumed.lease_token != old.lease_token
+    with pytest.raises(LeaseLost):
+        store.complete(old, "Old worker cannot complete")
+    store.complete(resumed, "Resumed work")
+    assert store.task("user_alice", task["task_id"])["status"] == "done"
+
+
+def test_resume_does_not_revive_pre_pause_lease(store, alice):
+    store.enqueue("user_alice", "Question", "pause-revocation")
+    old = store.claim()
+    store.set_paused("user_alice", True)
+    store.set_paused("user_alice", False)
+    with pytest.raises(LeaseLost):
+        store.complete(old, "Stale worker result")
+
+
+def test_pause_interruptions_do_not_forgive_later_execution_failure(store, alice):
+    task = store.enqueue("user_alice", "Question", "pause-then-fail")
+    store.claim(max_attempts=1)
+    store.set_paused("user_alice", True)
+    store.set_paused("user_alice", True)
+    store.set_paused("user_alice", False)
+    expire(store, task["task_id"])
+    resumed = store.claim(max_attempts=1)
+    assert resumed is not None
+    store.retry(resumed, "execution_failed", max_attempts=1)
+    assert store.task("user_alice", task["task_id"])["status"] == "blocked"
+    assert store.claim(max_attempts=1) is None
+
+
+def test_expired_crash_is_not_reclassified_by_pause(store, alice):
+    task = store.enqueue("user_alice", "Question", "expired-before-pause")
+    lease = store.claim(max_attempts=1)
+    expire(store, lease.task_id)
+    store.set_paused("user_alice", True)
+    store.set_paused("user_alice", False)
+    assert store.claim(max_attempts=1) is None
+    assert store.task("user_alice", task["task_id"])["status"] == "blocked"
+
+
+def test_repeated_pause_preserves_monotonic_claims_and_prior_failure(store, alice):
+    task = store.enqueue("user_alice", "Question", "pause-counts")
+    first = store.claim(max_attempts=2)
+    store.retry(first, "execution_failed", max_attempts=2)
+    with store.connection() as conn:
+        conn.execute(
+            "UPDATE wrytely_agent.tasks SET available_at=now() WHERE id=%s", (first.task_id,)
+        )
+    previous = first
+    for _ in range(3):
+        current = store.claim(max_attempts=2)
+        assert current.attempt > previous.attempt
+        store.set_paused("user_alice", True)
+        store.set_paused("user_alice", True)
+        store.set_paused("user_alice", False)
+        with pytest.raises(LeaseLost):
+            store.complete(current, "Late result")
+        previous = current
+    final = store.claim(max_attempts=2)
+    assert final.attempt == 5
+    store.retry(final, "execution_failed", max_attempts=2)
+    assert store.task("user_alice", task["task_id"])["status"] == "blocked"
+    with store.connection() as conn:
+        count = conn.execute(
+            "SELECT count(*) AS n FROM wrytely_agent.episode_events "
+            "WHERE task_id=%s AND kind='control_interrupted'",
+            (final.task_id,),
+        ).fetchone()["n"]
+    assert count == 3
+
+
+def test_pausing_one_student_preserves_other_live_claim(store, alice):
+    store.enqueue("user_alice", "Alice question", "pause-isolation")
+    alice_lease = store.claim(max_attempts=1)
+    store.provision("user_bob")
+    store.enqueue("user_bob", "Bob question", "pause-isolation")
+    bob_lease = store.claim(max_attempts=1)
+    assert bob_lease.user_id == "user_bob"
+    store.set_paused("user_alice", True)
+    store.complete(bob_lease, "Bob answer")
+    store.set_paused("user_alice", False)
+    with pytest.raises(LeaseLost):
+        store.complete(alice_lease, "Late Alice answer")
+    assert store.claim(max_attempts=1).user_id == "user_alice"
+
+
+def test_interrupted_responsibility_stays_active_until_real_failure(store, alice):
+    duty = store.create_responsibility("user_alice", "Analyze supplied evidence", "paused-duty")
+    store.claim(max_attempts=1)
+    store.set_paused("user_alice", True)
+    store.set_paused("user_alice", False)
+    resumed = store.claim(max_attempts=1)
+    assert resumed is not None
+    assert store.responsibilities("user_alice")[0]["id"] == duty["id"]
+    assert store.responsibilities("user_alice")[0]["status"] == "active"
+    store.retry(resumed, "execution_failed", max_attempts=1)
+    assert store.responsibilities("user_alice")[0]["status"] == "blocked"

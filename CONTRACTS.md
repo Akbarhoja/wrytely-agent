@@ -657,3 +657,26 @@ unchanged. This is no new migration. Existing send/network cancellation race and
 unknown-outcome rules still apply. Murtazo owns passing Settings values/capability,
 dispatching payload to the existing adapter once, and adding worker/API tests after
 agreement. No transport/worker/app code was changed by Codex in this increment.
+
+## Pause recovery and execution-failure allowance — issue #41
+
+Store.set_paused keeps its verified-user/boolean interface and agent-row return.
+Pausing atomically revokes each live running task lease, records one trusted private
+control_interrupted event per interrupted claim, and returns that task to ready.
+The paused agent cannot be claimed. Resuming never restores the old token; a fresh
+claim has a new token and monotonically larger attempt number. Existing committed
+model/tool/draft checkpoints remain available under the fresh fence.
+
+max_attempts bounds execution/crash attempts separately from recorded control
+interruptions. Claim and retry subtract distinct interrupted claim numbers; repeated
+Pause while already paused does not grant extra allowance. An already expired
+claim remains an ordinary crash, and subsequent real failure still exhausts the
+configured allowance. No attempt number is decremented or reused. Source-revision
+and responsibility fences remain mandatory. No schema or HTTP payload change.
+
+Pause cannot cancel a provider call already in flight. Its late result cannot
+commit through the revoked lease. Unknown/billable interrupted usage must retain
+its operator reservation; this recovery mechanism is not a billing cap. Repeated
+user controls may cause more claims, so cumulative per-account/global inference
+budgets remain a separate M4 gate before public pilot. Nothing starts a worker,
+resumes outbound sends or changes consent by itself.
