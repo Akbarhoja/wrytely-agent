@@ -1,5 +1,28 @@
 # Engineering status
 
+October 29 — final #28 checkpoint061c389 reviewed and integrated into the #36
+candidate at cc91f8e. Explicit private-draft confirmation is now mounted and wired
+to authenticated POST/status GET; source intake, status and private results are
+connected. This supersedes earlier unmounted/no-transport status. No teammate
+implementation rewritten. Murtazo's actual API→Store→scripted worker→checked
+artifact test is included, with account denial and no outbound action. Integrated
+candidate CI40995183663 succeeds; no live operator/Meta acceptance claimed.
+
+Issue #37 on codex/draft-format-checks adds deterministic quoted word-range and
+source-required disclosure placement checks. Default body disclosure gate remains;
+the explicit M2 separate-disclosure requirement is honored. Unsupported numeric
+word-limit syntax blocks honestly. Optional report evidence and errors persist
+through existing check/revision flow; no API/model-schema/migration changes or
+teammate edits. CI40995513163 at f995c9a passes376 backend/107 frontend tests plus
+lint/type/format/build;43 focused non-DB tests and107 frontend tests pass locally.
+Full local DB suite remains sandbox-blocked, not claimed passing. Narrow language
+support and fallible policy/rubric completeness remain explicit limitations.
+
+Next gate is counterpart review and a bounded real synthetic M2 run through the
+student path; live spend/scope approval required before calls. Business setup
+remains deferred, M1 delivery/control gates remain open, and no retained-dev
+migration/deployment/provider call/worker activation or protected merge occurred.
+
 October 29 — #35 combined review candidate on codex/m2-integration-review:
 reviewed Murtazo's published5473d46 snapshot/results/standalone-delegation UI and
 assembled it with our private-draft runtime at merge0d47e40. No teammate code
