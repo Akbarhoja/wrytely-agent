@@ -1,5 +1,21 @@
 # Engineering status
 
+October 29 further continuation — pause recovery #41/#42 is now a concrete
+runtime/store candidate, not only regression preparation. Executablea7db006 passes
+385 backend/113 web in CI41000663097/41000715908; nine new regressions cover control
+recovery and retained failure/fencing bounds. Final documentation head224bc96.
+Diagnostics#40 remains ready with381 backend tests. Both await counterpart review
+before integration/deployment; no teammate implementation edited or approval
+inferred. No retained migration, deployment, model call or send in this continuation.
+
+Completed a separate real read-only M2 privacy subset using existing first/second
+student sessions: owner lists four fictional snapshots and its blocked duty;
+second account sees no snapshots and direct known-owner source/status reads return
+not found; owner's own status remains readable. No artifact exists, so live artifact
+isolation/checked-draft/continuation gates remain open. Actual run report updated;
+previous absence-of-second-tab note is superseded. Failed-call reservation and
+original request/spend ceilings remain unchanged despite active $150 credits.
+
 October 29 continuation — checked Murtazo coordination first and verified $150
 active free credits in the existing Meta team's Billing UI; $2 email alert remains
 an alert, not a cap. Provider Usage still reports the two earlier successful calls
