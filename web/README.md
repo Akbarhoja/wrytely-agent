@@ -132,3 +132,76 @@ keeps that rewrite internal; it does not disable Clerk or backend authentication
 The real-SDK origin regressions use synthetic test-format keys with provider
 fetches blocked. Offline production HTTP checks cover fast root/sign-in responses,
 the signed-out browser redirect and private 401; they do not prove real login.
+
+## Academic context snapshots
+
+The existing authenticated proxy now allows GET sources, GET sources/{uuid} and
+POST sources. Creation accepts {title, content} with a UUID Idempotency-Key; reuse
+the same key and exact payload after a lost response. Changed text needs a new key.
+The backend records manual snapshot coverage and server retrieval time. Saving
+does not start reasoning, draft an assignment or send a message. Lists contain
+the latest 50 source summaries, with private detail available by source ID.
+
+The Academic context workspace view lets a signed-in student paste, save and open
+snapshots. Unsaved text survives switching workspace tabs but is kept in memory
+only; refreshing/closing clears it. Account/session changes clear private state.
+An uncertain save keeps its exact key/payload for explicit retry; source content
+is displayed as plain text. Lists are bounded to 50 current sources.
+
+All 68 web tests, TypeScript, formatting and production build pass. Offline browser
+checks cover desktop and phone layout and lost-response/keyboard recovery using
+fictional fixtures. Real authenticated backend intake still needs operator testing.
+Explicit delegation remains subsequent B2 work; see
+[the B2 work order](../docs/stages/B2-context-intake.md). No live B2 result is claimed.
+
+## Private results
+
+The Private results view lists the account's latest 50 responsibilities and up to
+50 saved drafts per selected responsibility. Its read-only proxy paths are GET
+responsibilities, GET responsibilities/{uuid}/artifacts and GET artifacts/{uuid}.
+The API reuses existing Store projections; no readiness mutation or public link
+is exposed. Storage failures stay errors and responses use no-store.
+
+Students can read the draft, disclosure, citation evidence and stored checks.
+Current ready state plus a passed report is required for Ready for your review.
+Changed sources override historical success; failed/missing checks stay visible.
+Model assessments remain fallible. Viewing does not send, share or submit work.
+New selections, identity changes and session expiry cannot display a late result
+from another request/account. This is offline-verified presentation of existing
+artifacts; real authenticated operator acceptance remains pending.
+
+## Private-draft API preparation
+
+POST responsibilities now accepts only objective, 1–8 distinct source_ids and
+confirm_private_draft=true, with a UUID Idempotency-Key. It calls the reviewed
+atomic Store boundary under the verified session. Replay preserves the original
+private intent; changed input or an analysis-only key conflicts. The server fixes
+the step/revision budgets at 6/2 and uses its configured pending-task limit.
+No browser policy, owner, readiness or budget fields are accepted. A receipt
+contains only responsibility_id and requested_mode=private_draft.
+
+GET responsibilities/{uuid}/status exposes the published controlled private status
+projection. Missing and other-account work share the same 404. Reads and writes
+use no-store; the existing proxy requires verified auth and same-origin mutation.
+Academic context now mounts the private-draft consent form using its existing
+loaded snapshots. Confirming sends only the objective, selected source IDs and
+explicit private-only intent. An uncertain save keeps its exact key/payload for
+manual retry. Definite rejection clears consent for review; a saved receipt shows
+the controlled status and a path to Private results. Status refreshes are GET-only
+and never start or retry work. Selected responsibilities also show that status in
+Private results. Account changes and session expiry clear private views, including
+hidden context inputs; delayed responses are ignored.
+No retained development database was migrated or worker enabled by this change.
+Live model usage still requires its separate explicit development budget.
+
+Private results also explains saved deterministic format failures and exposes
+optional saved word-count, range/source-quote and disclosure-placement evidence.
+Only the backend's documented narrow syntax is represented; unsupported numeric
+wording is a failed check, not a guessed limit. The count is saved evidence, not
+a grade or proof of complete rubric extraction. Older reports remain readable;
+malformed or internally contradictory format evidence stays unavailable.
+
+The next operator gate is documented in
+[M2 development student-path acceptance](../docs/stages/M2-LIVE-ACCEPTANCE.md).
+All live cases and setup/budget approvals remain pending; the sheet does not
+authorize provider calls or retained database changes.

@@ -4,6 +4,7 @@ import json
 from datetime import UTC, datetime, timedelta
 
 from contracts.artifacts import Assessment, CoursePolicy, DraftArtifact, RubricItem
+from runtime.draft_format import check_draft_format
 from shared.db import json_text
 
 ASSESS_TOOL = {
@@ -52,10 +53,11 @@ def verify_artifact(
         errors.append("policy_evidence_missing_or_stale")
     if policy.status not in ("permitted", "disclosure_required"):
         errors.append("course_policy_not_permitting_draft")
-    if policy.status == "disclosure_required" and (
-        not draft.disclosure.strip() or draft.disclosure not in draft.body
-    ):
-        errors.append("disclosure_missing_from_body")
+    policy_source = indexed.get(str(policy.version_id))
+    format_checks = check_draft_format(
+        draft, policy, policy_source["content"] if policy_source else "", rubric
+    )
+    errors.extend(format_checks["errors"])
     if not draft.citations:
         errors.append("citations_missing")
     for citation in draft.citations:
@@ -124,6 +126,7 @@ def verify_artifact(
         "rubric": [item.model_dump(mode="json") for item in rubric],
         "input_tokens": input_tokens,
         "output_tokens": output_tokens,
+        "deterministic_checks": format_checks,
         "limits": (
             "Model-assessed support is fallible. Ready means checks passed, "
             "not submitted or approved."

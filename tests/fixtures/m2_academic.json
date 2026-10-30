@@ -1,0 +1,22 @@
+{
+  "sources": [
+    {
+      "key": "assignment",
+      "content": "FICTIONAL COURSE: Introduction to Learning Research, DEMO 101.\nAssignment: Compare two supplied fictional studies of study habits.\nWrite a 250–300 word draft comparing recall outcomes and one limitation.\nUse only Source A and Source B supplied with this assignment.\nCompare both studies using their participant counts and reported recall outcomes.\nExplain that these results cannot establish which method works best for everyone.\nInclude at least one exact quotation from each source with its source label.\nEnd with one practical recommendation that acknowledges uncertainty.\nAI drafting is permitted with disclosure. The student must review all claims.\nInclude this disclosure separately from the word-counted body:\nDraft prepared with Wrytely AI; student review is required.\nThe assigned group section is due October 30, 2026 at 18:00 America/Denver."
+    },
+    {
+      "key": "source-a",
+      "content": "FICTIONAL DEMONSTRATION DATA — not a published study.\nSource A: A small study of spaced practice.\nSource A included 20 participants.\nParticipants practiced vocabulary in three sessions across one week.\nMean recall on the study quiz was 75 percent.\nThe study had no randomized comparison group.\nThe findings describe this sample and do not establish a universal benefit."
+    },
+    {
+      "key": "source-b",
+      "content": "FICTIONAL DEMONSTRATION DATA — not a published study.\nSource B: A small study of a single review session.\nSource B included 18 participants.\nParticipants practiced different vocabulary in one session before the quiz.\nMean recall on the study quiz was 68 percent.\nThe studies used different vocabulary and different participants.\nThe difference in quiz scores cannot establish a causal advantage for either method."
+    },
+    {
+      "key": "group-message",
+      "content": "FICTIONAL GROUP CONVERSATION — use consenting participants for a live connector run.\nTeammate: Cedar, please take the comparison section for DEMO 101. Use the two\nprovided sources and the assignment rubric. We need your draft by Friday,\nOctober 30 at 6 pm Denver time. I will handle the introduction.\nCedar: Yes, I will take the comparison section."
+    }
+  ],
+  "body": "These fictional studies describe different approaches to vocabulary practice, but their results should be compared cautiously. Source A examined practice spread across one week, while Source B examined one review session before a quiz. Their reported outcomes offer a useful starting point for discussion rather than a reliable ranking of study methods.\n\nSource A states, \"Source A included 20 participants.\" It reports mean recall of 75 percent after three practice sessions across one week. That pattern is consistent with successful recall in this particular sample, but the study had no randomized comparison group. We cannot isolate the effect of spacing from other differences, such as prior knowledge or how participants approached the vocabulary.\n\nSource B states, \"Source B included 18 participants.\" Its participants reviewed different vocabulary in a single session, with mean recall of 68 percent. The reported score is lower than Source A's score, but the studies used different participants and different materials. Comparing these percentages directly therefore does not demonstrate that spaced practice caused better recall or that a single session is ineffective.\n\nBoth sources describe small samples, and neither comparison establishes which method works best for everyone. The evidence also does not tell us whether the groups started with similar vocabulary knowledge or faced equally difficult quizzes. Those missing comparisons limit what a student can conclude from the apparent difference.\n\nA practical recommendation is to try spaced sessions and track personal recall on comparable material. Treat this as a tentative study experiment, checking whether the approach helps before making it a fixed routine. These fictional findings support cautious reflection, not a universal promise.",
+  "disclosure": "Draft prepared with Wrytely AI; student review is required."
+}

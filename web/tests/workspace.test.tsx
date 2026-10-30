@@ -36,6 +36,81 @@ function backend(loseFirst = false) {
   });
 }
 describe("student workspace", () => {
+  it("clears hidden context and the whole workspace on a result-status session expiry", async () => {
+    const base = backend();
+    const source = {
+      source_id: taskId,
+      version_id: taskId,
+      title: "Fictional policy",
+      reference: "demo",
+      coverage: "snapshot",
+      retrieved_at: "2026-10-29T00:00:00Z",
+      external_revision: "1",
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn<typeof fetch>(async (url, options) => {
+        const path = String(url);
+        if (path.endsWith("/sources")) return Response.json({ sources: [source], limit: 50 });
+        if (path.endsWith("/responsibilities"))
+          return Response.json({
+            responsibilities: [
+              {
+                id: taskId,
+                objective: "Private comparison",
+                status: "active",
+                steps_created: 1,
+                max_steps: 6,
+                created_at: source.retrieved_at,
+              },
+            ],
+            limit: 50,
+          });
+        if (path.endsWith("/status")) return Response.json({ detail: "Expired" }, { status: 401 });
+        if (path.endsWith("/artifacts")) return Response.json({ artifacts: [], limit: 50 });
+        return base(url, options);
+      }),
+    );
+    render(<Workspace mode="signed-in" userId="user_alice" />);
+    await screen.findByRole("button", { name: "Pause agent" });
+    fireEvent.click(screen.getByRole("button", { name: "Academic context" }));
+    fireEvent.change(screen.getByLabelText("Pasted text"), {
+      target: { value: "Unsaved private text" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Private results" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Open work: Private comparison" }));
+    await screen.findByRole("heading", { name: "Your session expired" });
+    expect(screen.queryByRole("button", { name: "Academic context" })).toBeNull();
+    expect(screen.queryByLabelText("Pasted text")).toBeNull();
+    expect(screen.queryByText("Private comparison")).toBeNull();
+  });
+  it("keeps the snapshot draft when navigating away and back without submitting it", async () => {
+    const base = backend();
+    const fetcher = vi.fn<typeof fetch>(async (url, options) =>
+      String(url).endsWith("/sources")
+        ? Response.json({ sources: [], limit: 50 })
+        : base(url, options),
+    );
+    vi.stubGlobal("fetch", fetcher);
+    render(<Workspace mode="signed-in" userId="user_alice" name="Alice" />);
+    await screen.findByRole("button", { name: "Pause agent" });
+    fireEvent.click(screen.getByRole("button", { name: "Academic context" }));
+    fireEvent.change(screen.getByLabelText("Pasted text"), {
+      target: { value: "Unsaved synthetic source" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Overview" }));
+    expect(screen.queryByRole("textbox", { name: "Pasted text" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Academic context" }));
+    expect((screen.getByLabelText("Pasted text") as HTMLTextAreaElement).value).toBe(
+      "Unsaved synthetic source",
+    );
+    expect(
+      fetcher.mock.calls.filter(
+        ([, opts]) =>
+          opts?.method === "POST" && String(opts.body).includes("Unsaved synthetic source"),
+      ),
+    ).toHaveLength(0);
+  });
   it("refreshes saved work without opening conversation and stops while paused", async () => {
     vi.useFakeTimers();
     const fetch = backend();

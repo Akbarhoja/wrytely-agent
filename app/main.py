@@ -15,7 +15,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from starlette.concurrency import run_in_threadpool
 
 from contracts.delivery import WhatsAppStatusEvent
-from contracts.models import AgentControl, Identity, MessageIn, SessionVerifier
+from contracts.models import AgentControl, Identity, MessageIn, SessionVerifier, SourceObservation
 from integrations.whatsapp import extract_statuses, extract_texts, verify_signature
 from shared.auth import AuthenticationError, ClerkSessionVerifier
 from shared.config import Settings
@@ -38,6 +38,48 @@ class CommunicationPreferences(BaseModel):
             ZoneInfo(value)
         except (ZoneInfoNotFoundError, ValueError):
             raise ValueError("Use a valid IANA timezone") from None
+        return value
+
+
+class SnapshotIn(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    title: str = Field(min_length=1, max_length=300)
+    content: str = Field(min_length=1, max_length=24000)
+
+    @field_validator("title", "content")
+    @classmethod
+    def nonblank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("Must contain text")
+        return value
+
+
+class PrivateDraftIn(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    objective: str = Field(min_length=1, max_length=12000)
+    source_ids: list[str] = Field(min_length=1, max_length=8)
+    confirm_private_draft: bool
+
+    @field_validator("objective")
+    @classmethod
+    def nonblank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("Must contain text")
+        return value.strip()
+
+    @field_validator("source_ids")
+    @classmethod
+    def unique_sources(cls, values: list[str]) -> list[str]:
+        canonical = [str(UUID(value)) for value in values]
+        if len(set(canonical)) != len(canonical):
+            raise ValueError("Choose distinct sources")
+        return sorted(canonical)
+
+    @field_validator("confirm_private_draft")
+    @classmethod
+    def confirmed(cls, value: bool) -> bool:
+        if not value:
+            raise ValueError("Explicit private-draft confirmation required")
         return value
 
 
@@ -83,7 +125,11 @@ def create_app(
     @api.exception_handler(DatabaseError)
     async def database_error(request, exc):
         log.error("database_unavailable path=%s", request.url.path)
-        return JSONResponse(status_code=503, content={"detail": "Agent storage unavailable"})
+        return JSONResponse(
+            status_code=503,
+            content={"detail": "Agent storage unavailable"},
+            headers={"Cache-Control": "no-store"},
+        )
 
     @api.get("/healthz")
     def health():
@@ -147,6 +193,142 @@ def create_app(
         if not row:
             raise HTTPException(404, "Task not found")
         return row
+
+    @api.get("/v1/sources")
+    def sources(user: User, db: DB, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return {"sources": db.source_snapshots(user.user_id), "limit": 50}
+
+    @api.get("/v1/sources/{source_id}")
+    def source_snapshot(source_id: UUID, user: User, db: DB, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        row = db.source_snapshot(user.user_id, source_id)
+        if row is None:
+            raise HTTPException(404, "Source not found", headers={"Cache-Control": "no-store"})
+        return row
+
+    @api.post("/v1/sources", status_code=201)
+    async def save_snapshot(
+        body: SnapshotIn,
+        request: Request,
+        user: User,
+        db: DB,
+        response: Response,
+        idempotency_key: Annotated[UUID, Header()],
+    ):
+        if len(await request.body()) > 65536:
+            raise HTTPException(413, "Snapshot is too large")
+        # A request key identifies one immutable manual snapshot. It is scoped by
+        # verified identity in Store, never a browser-provided owner/source ID.
+        observation = SourceObservation(
+            source_key=f"snapshot:{idempotency_key}",
+            external_revision="1",
+            title=body.title,
+            reference=f"snapshot:{idempotency_key}",
+            coverage="snapshot",
+            content=body.content,
+            retrieved_at=datetime.now(UTC),
+        )
+        try:
+            row = await run_in_threadpool(db.observe_source, user.user_id, observation)
+        except RequestConflict:
+            raise HTTPException(
+                409, "Snapshot request changed. Save new text separately."
+            ) from None
+        except LookupError:
+            raise HTTPException(409, "Complete agent setup first") from None
+        response.headers["Cache-Control"] = "no-store"
+        # Return the saved version, including its original retrieval time on replay.
+        return {
+            "source_id": row["source_id"],
+            "version_id": row["id"],
+            **{
+                name: row[name]
+                for name in (
+                    "title",
+                    "reference",
+                    "coverage",
+                    "retrieved_at",
+                    "external_revision",
+                    "content",
+                )
+            },
+        }
+
+    @api.post("/v1/responsibilities", status_code=201)
+    async def delegate_private_draft(
+        body: PrivateDraftIn,
+        request: Request,
+        user: User,
+        db: DB,
+        response: Response,
+        idempotency_key: Annotated[UUID, Header()],
+    ):
+        response.headers["Cache-Control"] = "no-store"
+        private_headers = {"Cache-Control": "no-store"}
+        if len(await request.body()) > 65536:
+            raise HTTPException(413, "Request is too large", headers=private_headers)
+        try:
+            # Consent authorizes one bounded private intent only. Source policy,
+            # readiness, task routing and budgets remain trusted server decisions.
+            row = await run_in_threadpool(
+                db.create_draft_responsibility,
+                user.user_id,
+                body.objective,
+                str(idempotency_key),
+                source_ids=body.source_ids,
+                max_steps=6,
+                max_revisions=2,
+                pending_limit=settings.pending_task_limit,
+            )
+        except RequestConflict:
+            raise HTTPException(
+                409, "Request changed. Review and confirm again.", headers=private_headers
+            ) from None
+        except QueueFull:
+            raise HTTPException(
+                429, "Too much pending work. Try again shortly.", headers=private_headers
+            ) from None
+        except LookupError:
+            raise HTTPException(
+                404, "Sources or agent setup unavailable", headers=private_headers
+            ) from None
+        return {"responsibility_id": str(row["id"]), "requested_mode": "private_draft"}
+
+    @api.get("/v1/responsibilities/{responsibility_id}/status")
+    def private_draft_status(responsibility_id: UUID, user: User, db: DB, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        result = db.draft_responsibility_status(user.user_id, responsibility_id)
+        if result is None:
+            raise HTTPException(404, "Work not found", headers={"Cache-Control": "no-store"})
+        return result
+
+    @api.get("/v1/responsibilities")
+    def responsibilities(user: User, db: DB, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        fields = ("id", "objective", "status", "steps_created", "max_steps", "created_at")
+        return {
+            "responsibilities": [
+                {name: row[name] for name in fields} for row in db.responsibilities(user.user_id)
+            ],
+            "limit": 50,
+        }
+
+    @api.get("/v1/responsibilities/{responsibility_id}/artifacts")
+    def responsibility_artifacts(responsibility_id: UUID, user: User, db: DB, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        rows = db.responsibility_artifacts(user.user_id, responsibility_id)
+        if rows is None:
+            raise HTTPException(404, "Work not found", headers={"Cache-Control": "no-store"})
+        return {"artifacts": rows, "limit": 50}
+
+    @api.get("/v1/artifacts/{artifact_id}")
+    def artifact_review(artifact_id: UUID, user: User, db: DB, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        result = db.artifact_review(user.user_id, artifact_id)
+        if result is None:
+            raise HTTPException(404, "Draft not found", headers={"Cache-Control": "no-store"})
+        return result
 
     def whatsapp_ready():
         return all(
