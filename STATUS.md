@@ -18,22 +18,22 @@ Historical M1/M2 live gates remain incomplete; renumbering the plan does not pas
 
 ## Current work and evidence
 
-| Step/component           | Owner             | State and evidence                                                                         | Next action/blocker                                                 |
-| ------------------------ | ----------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------- |
-| Revision7 planning / #44 | A                 | Code/PR audit and ordered work orders prepared; docs only                                  | Counterpart review; new interfaces still proposals                  |
-| P0-A1 baseline           | A                 | codex/p0-baseline combines #40/#42, revision7 and M Canvas proposal; main not consolidated | Combined CI and counterpart review pending; see docs/P0-BASELINE.md |
-| Diagnostics #40          | A                 | ddd5ab1, scoped counterpart review;381 backend/113 web CI reported                         | Incorporate, not claim already deployed                             |
-| Pause recovery #42       | A                 | 224bc96 (code a7db006), scoped review;385 backend/113 web CI reported                      | Incorporate; fresh combined result required                         |
-| Murtazo #28              | M                 | a344642 UI; latest a383782 Canvas proposal;114 local web reported                          | Reuse proposal findings; extension supersedes initial OAuth path    |
-| P0-A2 Meta               | A                 | Basic M1 response worked; last live M2 failed NotFoundError before draft                   | Reconcile usage, diagnose with safe metadata; no blind retry        |
-| P0-M1 Canvas             | M                 | Proposal only; extension/same-session access untested                                      | Claim feasibility step; consenting course scope                     |
-| P0-M2 Outlook            | M                 | Required now; no implementation/live access                                                | Claim Microsoft authorization feasibility                           |
-| P0-M3 WhatsApp           | M                 | Linking/inbound worked; last delivery failed131031                                         | Business/account resolution and delivered-reply proof               |
-| P0-A3 interfaces         | A                 | C1/C2 detailed proposal in docs/contracts/CONNECTION-SYNC-v1.md (#47); C3–C7 remain queued | Agree with M before dependent coding                                |
-| P1 collection/memory     | A/M by work order | Existing versioned snapshots; automatic collectors absent                                  | Connection/sync/freshness contracts and source readers              |
-| P2 always-on ownership   | A/M by work order | Existing task worker; continuous workers stopped                                           | Supervisor, schedule, hard budgets and bounded deployment           |
-| P3/P4 work/adaptation    | A/M by work order | Private drafting/checks scripted; live artifact not produced; A4 parked                    | Real accepted work/delivery, revisions and follow-through           |
-| P5/P6 pilot/release      | A/M by work order | Not started                                                                                | Reliability, live evidence and release approval                     |
+| Step/component           | Owner             | State and evidence                                                                         | Next action/blocker                                                          |
+| ------------------------ | ----------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| Revision7 planning / #44 | A                 | Code/PR audit and ordered work orders prepared; docs only                                  | Counterpart review; new interfaces still proposals                           |
+| P0-A1 baseline           | A                 | codex/p0-baseline combines #40/#42, revision7 and M Canvas proposal; main not consolidated | CI391 backend/114 web passed at9bbea97; #46 counterpart/human review pending |
+| Diagnostics #40          | A                 | ddd5ab1, scoped counterpart review;381 backend/113 web CI reported                         | Incorporate, not claim already deployed                                      |
+| Pause recovery #42       | A                 | 224bc96 (code a7db006), scoped review;385 backend/113 web CI reported                      | Incorporate; fresh combined result required                                  |
+| Murtazo #28              | M                 | a344642 UI; latest a383782 Canvas proposal;114 local web reported                          | Reuse proposal findings; extension supersedes initial OAuth path             |
+| P0-A2 Meta               | A                 | Basic M1 response worked; last live M2 failed NotFoundError before draft                   | Reconcile usage, diagnose with safe metadata; no blind retry                 |
+| P0-M1 Canvas             | M                 | Proposal only; extension/same-session access untested                                      | Claim feasibility step; consenting course scope                              |
+| P0-M2 Outlook            | M                 | Required now; no implementation/live access                                                | Claim Microsoft authorization feasibility                                    |
+| P0-M3 WhatsApp           | M                 | Linking/inbound worked; last delivery failed131031                                         | Business/account resolution and delivered-reply proof                        |
+| P0-A3 interfaces         | A                 | C1/C2 v1 proposal published (#47/#48); C3–C7 remain queued                                 | Agree with M before dependent coding                                         |
+| P1 collection/memory     | A/M by work order | Existing versioned snapshots; automatic collectors absent                                  | Connection/sync/freshness contracts and source readers                       |
+| P2 always-on ownership   | A/M by work order | Existing task worker; continuous workers stopped                                           | Supervisor, schedule, hard budgets and bounded deployment                    |
+| P3/P4 work/adaptation    | A/M by work order | Private drafting/checks scripted; live artifact not produced; A4 parked                    | Real accepted work/delivery, revisions and follow-through                    |
+| P5/P6 pilot/release      | A/M by work order | Not started                                                                                | Reliability, live evidence and release approval                              |
 
 Counts above belong to their cited commits and historical runs, not a fresh full
 suite on the revised planning branch. Current source/status two-account live denial
