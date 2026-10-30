@@ -7,6 +7,12 @@
 > action, freshness relaxation or proactive send permission exists merely because
 > the plan names it. Existing private-draft and policy gates remain effective.
 
+## Pending connection and sync agreement
+
+[C1/C2 v1 proposal](docs/contracts/CONNECTION-SYNC-v1.md) (#47) defines pairing,
+connection identity, sync receipts/coverage and last_checked semantics for owner review.
+It is not an implemented route/model or a relaxed freshness/permission gate.
+
 ## Deterministic draft format checks — issue #37
 
 verify_artifact now checks supported formatting before semantic review and stores
