@@ -208,3 +208,31 @@ def test_repeated_pause_preserves_monotonic_claims_and_prior_failure(store, alic
             (final.task_id,),
         ).fetchone()["n"]
     assert count == 3
+
+
+def test_pausing_one_student_preserves_other_live_claim(store, alice):
+    store.enqueue("user_alice", "Alice question", "pause-isolation")
+    alice_lease = store.claim(max_attempts=1)
+    store.provision("user_bob")
+    store.enqueue("user_bob", "Bob question", "pause-isolation")
+    bob_lease = store.claim(max_attempts=1)
+    assert bob_lease.user_id == "user_bob"
+    store.set_paused("user_alice", True)
+    store.complete(bob_lease, "Bob answer")
+    store.set_paused("user_alice", False)
+    with pytest.raises(LeaseLost):
+        store.complete(alice_lease, "Late Alice answer")
+    assert store.claim(max_attempts=1).user_id == "user_alice"
+
+
+def test_interrupted_responsibility_stays_active_until_real_failure(store, alice):
+    duty = store.create_responsibility("user_alice", "Analyze supplied evidence", "paused-duty")
+    store.claim(max_attempts=1)
+    store.set_paused("user_alice", True)
+    store.set_paused("user_alice", False)
+    resumed = store.claim(max_attempts=1)
+    assert resumed is not None
+    assert store.responsibilities("user_alice")[0]["id"] == duty["id"]
+    assert store.responsibilities("user_alice")[0]["status"] == "active"
+    store.retry(resumed, "execution_failed", max_attempts=1)
+    assert store.responsibilities("user_alice")[0]["status"] == "blocked"

@@ -111,3 +111,24 @@ def test_pause_during_model_call_revokes_attempt_and_resume_reclaims(store, alic
     assert run_once(store, ScriptedModel([answer("Fresh claim result")]), Settings(max_attempts=1))
     assert store.messages("user_alice")[-1]["content"] == "Fresh claim result"
     assert store.task("user_alice", task["task_id"])["status"] == "done"
+
+
+def test_pause_resume_replays_committed_tool_checkpoint(store, alice):
+    store.enqueue("user_alice", "Read my context", "pause-after-tool")
+
+    class InterruptedModel(ScriptedModel):
+        def turn(self, history, tools):
+            if self.histories:
+                store.set_paused("user_alice", True)
+            return super().turn(history, tools)
+
+    interrupted = InterruptedModel([function_turn(), answer("Uncommitted old result")])
+    assert run_once(store, interrupted, Settings(max_attempts=1))
+    assert len(store.messages("user_alice")) == 1
+    store.set_paused("user_alice", False)
+    resumed = ScriptedModel([answer("Answer after resumed checkpoint")])
+    assert run_once(store, resumed, Settings(max_attempts=1))
+    history = resumed.histories[0]
+    assert any(item.get("type") == "function_call_output" for item in history)
+    assert "Uncommitted old result" not in str(history)
+    assert store.messages("user_alice")[-1]["content"] == "Answer after resumed checkpoint"
