@@ -57,6 +57,15 @@ const result = {
     limits: "Model assessments are fallible.",
   },
 };
+const formatEvidence = {
+  errors: ["word_count_out_of_range"],
+  word_count: 301,
+  disclosure_placement: "separate_field",
+  word_ranges: [
+    { version_id: id, quote: "Write a 250–300 word comparison.", minimum: 250, maximum: 300 },
+  ],
+  limits: "Only explicit quoted ranges are counted; other requirements need review.",
+};
 function fixture(detail: unknown = result) {
   return vi.fn(async (url: unknown) => {
     const path = String(url);
@@ -83,6 +92,92 @@ async function choose() {
 }
 
 describe("private saved results", () => {
+  it("does not invent a disclosure requirement for a permitted policy", async () => {
+    vi.stubGlobal(
+      "fetch",
+      fixture({
+        ...result,
+        latest_check: {
+          ...result.latest_check,
+          policy: { ...result.latest_check.policy, status: "permitted" },
+          deterministic_checks: {
+            ...formatEvidence,
+            errors: [],
+            disclosure_placement: "body_and_field",
+          },
+        },
+      }),
+    );
+    render(<AcademicResults userId="alice" />);
+    await choose();
+    await screen.findByRole("heading", { name: "Ready for your review" });
+    expect(screen.queryByText(/Disclosure is required in the body/)).toBeNull();
+  });
+  it("rejects formatting failures that contradict an overall passing report", async () => {
+    vi.stubGlobal(
+      "fetch",
+      fixture({
+        ...result,
+        latest_check: { ...result.latest_check, deterministic_checks: formatEvidence },
+      }),
+    );
+    render(<AcademicResults userId="alice" />);
+    await choose();
+    await screen.findByText(/Draft could not be opened/);
+    expect(screen.queryByRole("heading", { name: "Ready for your review" })).toBeNull();
+  });
+  it("explains saved format failures and counts without promoting an unready draft", async () => {
+    vi.stubGlobal(
+      "fetch",
+      fixture({
+        ...result,
+        artifact: { ...result.artifact, state: "needs_revision" },
+        latest_check: {
+          ...result.latest_check,
+          passed: false,
+          errors: ["word_count_out_of_range", "disclosure_text_mismatch"],
+          assessment: null,
+          deterministic_checks: formatEvidence,
+        },
+      }),
+    );
+    render(<AcademicResults userId="alice" />);
+    await choose();
+    await screen.findByRole("heading", { name: "Checks need attention" });
+    expect(screen.getByText("The saved draft body is outside a required word range.")).toBeTruthy();
+    expect(
+      screen.getByText(
+        "The disclosure does not match the exact text required by the cited policy.",
+      ),
+    ).toBeTruthy();
+    expect(screen.getByText("Saved body count: 301 whitespace-delimited words.")).toBeTruthy();
+    expect(screen.getByText("Required range: 250–300 words (inclusive).")).toBeTruthy();
+    expect(
+      screen.getByText("When required, disclosure is checked separately from the body."),
+    ).toBeTruthy();
+    expect(screen.getByText(formatEvidence.word_ranges[0].quote)).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Ready for your review" })).toBeNull();
+  });
+  it.each([
+    { ...formatEvidence, word_count: "301" },
+    { ...formatEvidence, disclosure_placement: "approved" },
+    {
+      ...formatEvidence,
+      word_ranges: [{ ...formatEvidence.word_ranges[0], minimum: 400, maximum: 300 }],
+    },
+  ])("rejects malformed optional format evidence", async (checks) => {
+    vi.stubGlobal(
+      "fetch",
+      fixture({
+        ...result,
+        latest_check: { ...result.latest_check, deterministic_checks: checks },
+      }),
+    );
+    render(<AcademicResults userId="alice" />);
+    await choose();
+    await screen.findByText(/Draft could not be opened/);
+    expect(screen.queryByRole("heading", { name: "Ready for your review" })).toBeNull();
+  });
   it("invalidates an open cached ready review when status refresh reports a source change", async () => {
     let changed = false;
     const base = fixture();

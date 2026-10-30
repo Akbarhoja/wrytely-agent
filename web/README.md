@@ -193,3 +193,10 @@ Private results. Account changes and session expiry clear private views, includi
 hidden context inputs; delayed responses are ignored.
 No retained development database was migrated or worker enabled by this change.
 Live model usage still requires its separate explicit development budget.
+
+Private results also explains saved deterministic format failures and exposes
+optional saved word-count, range/source-quote and disclosure-placement evidence.
+Only the backend's documented narrow syntax is represented; unsupported numeric
+wording is a failed check, not a guessed limit. The count is saved evidence, not
+a grade or proof of complete rubric extraction. Older reports remain readable;
+malformed or internally contradictory format evidence stays unavailable.

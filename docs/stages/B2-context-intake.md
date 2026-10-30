@@ -310,3 +310,26 @@ source_changed status now invalidates the open cached ready presentation and dra
 list, retaining passed reports only as historical evidence. Focused regressions
 and the full107-test web suite pass after the fixes; browser recheck confirms the
 ready-to-stale transition. No runtime/shared behavior was changed for either fix.
+
+## Saved deterministic format findings
+
+Reviewed and integrated #38 exact fab095f:43 independent format/assessor/planner
+tests pass and four exact-head CI checks succeed. This dependency adds narrowly
+supported source-backed word ranges and separate-disclosure rules; it does not
+claim general natural-language enforcement or live model quality.
+
+Private results now explains all seven delivered format failures and optionally
+shows the saved whitespace-word count, quoted inclusive ranges/source versions,
+disclosure-check mode and parser limits. Old reports without this evidence remain
+readable. Evidence is validated before display; invalid IDs/bounds/types and nested
+format errors contradicting the overall report cannot appear ready. Range display
+is bounded to the first30 with an explicit total. Wording makes disclosure
+conditional on policy rather than inferring permission from a saved format mode.
+
+Six new viewer regressions bring the website suite to113 passing tests. The fresh
+review's two findings (unconditional disclosure wording and contradictory nested
+failure/readiness) both failed before correction and pass afterward. All376
+integrated backend tests pass on disposable Postgres; Ruff lint/format, TypeScript,
+Prettier, production build and diff checks pass. Actual-component synthetic browser
+checks verify keyboard expansion and desktop/320px no overflow. No live provider,
+retained migration, worker activation, sharing, send, submission or deployment.
