@@ -4,6 +4,11 @@ Status: **Prepared; every live case is Not run.** This is an operator checklist,
 not authorization to use a provider or migrate retained data. Murtazo owns the
 student path/evidence; Akbar owns existing development setup/runtime operation.
 Prepared against #28 `8268e27344f3bbad1571f0e8f7959e6f4f49052c`.
+Combined candidate1dcb4d3 has the same executable tree and four passing CI checks.
+Coordination comment6514301699 reports Akbar approved one isolated Railway
+development agent-api run, migration009, at most10 Meta requests and $1.50 within
+the existing $2 aggregate allowance. Akbar owns that operator action; no live
+execution result is claimed here.
 
 Use the four fictional inputs and content criteria in
 [M2-ACADEMIC-SCENARIO.md](M2-ACADEMIC-SCENARIO.md). The controlled run uses manual
@@ -29,35 +34,35 @@ in this sheet, chat or issues. Record aliases and redacted outcomes. Configurati
 presence is not acceptance. Setup/migration and real model usage are separate
 actions; this sheet does not grant their approval.
 
-## Concrete proposed run — approval and owner bound review pending
+## Reported approved run — execution evidence pending
 
-One fictional private duty, four snapshots, one authorizing account and one
-read-only isolation account. No classmates/instructors, external messages, uploads
-to third-party course systems, sharing or submission. Outbound dispatch budget:0.
+The owner-reported scope in coordination comment6514301699 is one fictional
+student workflow on the isolated Railway development agent-api, at most10 Meta
+requests and $1.50 within the existing $2 aggregate allowance, migration009 only.
+No WhatsApp sends or continuous workers; production/business setup stays untouched.
+This supersedes the earlier unapproved35-request/five-invocation proposal; that
+proposal is not available allowance. Account consent, exact deployed revision,
+operator cap enforcement and actual execution results must still be recorded.
 
-Proposed ceiling:35 logical model requests and at most5 explicit single-claim
-worker invocations. Proposed worker settings: max_episode_turns=6, max_attempts=1;
-the existing API owns max_steps=6 and max_revisions=2. These are proposals, not
-current approval or a new global spending limiter. Stop earlier on failure or a
-ready result; reaching the ceiling without completion is a stopped/incomplete run.
-
-The source-code bound to confirm with the runtime owner before approval is:
-planning at most2 model calls (initial requirement assessment plus planning),
-ordinary analysis at most6, and one drafting claim at most7 (one preflight plus
-three generation/review pairs). The SDK has max_retries=0. Thus reserve7 calls
-before each invocation; at most5 invocations would permit at most35 requests
-under these exact assumptions. A changed model client, retry/turn/revision setting
-or worker implementation invalidates that calculation. Persisted usage may omit
-a response lost before recording; never treat the event count as a billing cap.
+Use the four snapshots and one explicit private-duty authorization. A second
+consenting account performs only private-read isolation checks; no extra model
+workflow or external recipient is implied. Outbound dispatch budget:0.
 
 The existing command is `python -m runtime.worker --once` in the configured
 development environment. It is a real provider action, may consume multiple
 requests, and claims the next eligible task rather than a browser-selected ID.
-Do not run the continuous loop or WhatsApp worker for this acceptance. Inspect
-the saved transitions and remaining reservation after each explicit invocation;
-do not invoke again without enough approved allowance. No command is run by
-preparing this document. Obtain owner confirmation of the bound/invocation and
-human approval of the concrete usage/setup scope before execution.
+Source inspection suggests a planner claim may consume2 calls, ordinary analysis
+up to its episode-turn setting, and drafting up to7 with two revisions. These are
+not a total budget mechanism. Akbar has claimed ignored operator/budget files;
+record how that operator enforces the approved10-request and monetary limits
+before a live invocation. Do not infer remaining spend from persisted usage alone:
+a lost response may not have been recorded locally.
+
+No worker command is run by preparing this document. Do not add retries, extra
+claims or a second workflow to complete a failed run. Stop on exhausted or uncertain
+allowance and record an incomplete result. Setup/migration authorization is scoped
+to Akbar's stated isolated operation, not blanket permission for this assistant to
+deploy, migrate retained data or call providers.
 
 ## Student flow and observable evidence
 
@@ -97,7 +102,7 @@ No ready artifact means instructor approval, external delivery or submission.
 
 - Approved exact revision, date and operator: Pending.
 - Existing environment/account aliases and approved setup scope: Pending.
-- Approved numerical request/invocation/spend ceilings: Pending.
+- Reported approved ceiling:10 Meta requests/$1.50 within existing$2 aggregate; actual remaining usage and cap enforcement: Pending.
 - Runtime-owner bound confirmation and approval references: Pending.
 - Duty/source/version/artifact aliases: Not run.
 - Observed worker claims/model requests, provider usage uncertainty: Not run.
