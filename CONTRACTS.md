@@ -657,3 +657,19 @@ unchanged. This is no new migration. Existing send/network cancellation race and
 unknown-outcome rules still apply. Murtazo owns passing Settings values/capability,
 dispatching payload to the existing adapter once, and adding worker/API tests after
 agreement. No transport/worker/app code was changed by Codex in this increment.
+
+## Unsuccessful Meta call evidence — issue #39
+
+MetaModelClient raises ModelCallFailed (a RuntimeError) for received non-completed
+responses and HTTP status failures. evidence() returns only controlled status,
+HTTP400–599 or null, allowlisted provider code/unknown/null and nonnegative known
+input/output token counts or null. No output, provider message/body, response ID,
+credentials or source text is included. Null usage is unknown, never zero cost.
+Incomplete responses remain unsuccessful and cannot be replayed as final answers.
+No transport retry or model/token limit is changed.
+
+The runtime worker saves this metadata as a private fenced model_failure event
+before its existing bounded retry/block behavior. These events are excluded from
+model-turn replay. If fencing is lost (for example pause), no event is committed;
+operator reservations must remain until reconciliation. This is failure evidence,
+not a cumulative billing cap, and does not release any reservation automatically.

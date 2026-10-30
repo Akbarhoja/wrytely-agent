@@ -9,7 +9,7 @@ from runtime.drafting import generate_checked_draft
 from runtime.planner import run_planning_episode
 from shared.config import Settings
 from shared.db import LeaseLost, Store, json_text
-from shared.model_client import MetaModelClient
+from shared.model_client import MetaModelClient, ModelCallFailed
 
 log = logging.getLogger(__name__)
 TOOLS = [
@@ -177,6 +177,8 @@ def run_once(store: Store, model: ModelClient, settings: Settings) -> bool:
         # No exception messages: provider errors may echo secrets or source content.
         code = "episode_limit" if isinstance(exc, EpisodeLimit) else "execution_failed"
         try:
+            if isinstance(exc, ModelCallFailed):
+                store.event(lease, "model_failure", exc.evidence())
             store.retry(lease, code, settings.max_attempts)
         except LeaseLost:
             pass
