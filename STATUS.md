@@ -1,5 +1,26 @@
 # Engineering status
 
+October 29 — approved bounded live M2 attempt, candidate1dcb4d3. Reviewed and
+integrated Murtazo's optional saved-format evidence viewer8268e27;113 local web
+tests and webpack build pass. Exact candidate CI40998132458/40998137577 green.
+Deployed only isolated development agent-api; migration ledger confirms001–007
+and009, no008. Four fictional snapshots and one explicit delegation saved through
+the signed-in student UI. First real Meta requirements-assessment request failed
+with NotFoundError; task/responsibility blocked, zero workflow outbound rows and
+no draft. One request attempted, no usage returned: retain $1.32 reservation,
+not claimed actual spend, alongside prior $0.00773075 known usage. No blind retry.
+
+Non-inference catalog lookup succeeds and lists configured muse-spark-1.3; remote
+and dedicated local development keys match. Failure cause remains unresolved;
+not evidence of missing LLC information or a proven model retirement. Normal
+predeploy migration command restored/read back, API-only start unchanged and
+restored deployment9765a5ae healthy/SUCCESS. No continuous worker or WhatsApp send.
+M2 live acceptance remains incomplete; no live artifact/isolation/continuation
+pass claimed. See docs/M2-RUN-2026-10-29.md. Main, production and business setup
+untouched. Next: diagnose provider404 with safe error metadata, reconcile reserved
+usage before another bounded attempt, then finish live M2 acceptance. M1 remains
+incomplete and A4 excluded. Earlier unmounted/undeployed notes are historical.
+
 October 29 — final #28 checkpoint061c389 reviewed and integrated into the #36
 candidate at cc91f8e. Explicit private-draft confirmation is now mounted and wired
 to authenticated POST/status GET; source intake, status and private results are
