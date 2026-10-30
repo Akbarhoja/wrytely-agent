@@ -21,11 +21,15 @@ snapshots/delegation, then failed on its first Meta assessment call with NotFoun
 no live checked draft was produced. Development workers remain stopped outside
 explicitly bounded tests. No assignment submission or classmate-sharing tool exists.
 
-Canvas/Teams connectors, automatic commitment discovery from live channels,
+Canvas extension and Outlook email connectors, automatic commitment discovery,
 requirement adaptation acceptance and public pilot are still pending. Manual
 snapshots do not monitor course changes. This candidate is on
 `codex/m2-integration-review`; protected main has not received the combined baseline.
-See [STATUS.md](STATUS.md), [the shared plan](docs/BUILD-PLAN.md),
+The required first version uses our own Meta-powered runtime with Canvas, Outlook
+and WhatsApp. Teams, handwriting and Hermes adoption are outside its current build
+scope. See [ordered work orders](docs/WORK-ORDERS.md),
+[the reuse/gap audit](docs/IMPLEMENTATION-AUDIT.md),
+[STATUS.md](STATUS.md), [the shared plan](docs/BUILD-PLAN.md),
 [the M2 checkpoint](docs/M2-INTEGRATION-CHECKPOINT.md) and
 [the live attempt](docs/M2-RUN-2026-10-29.md) for evidence and limits.
 
