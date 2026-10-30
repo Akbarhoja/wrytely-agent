@@ -200,3 +200,8 @@ Only the backend's documented narrow syntax is represented; unsupported numeric
 wording is a failed check, not a guessed limit. The count is saved evidence, not
 a grade or proof of complete rubric extraction. Older reports remain readable;
 malformed or internally contradictory format evidence stays unavailable.
+
+The next operator gate is documented in
+[M2 development student-path acceptance](../docs/stages/M2-LIVE-ACCEPTANCE.md).
+All live cases and setup/budget approvals remain pending; the sheet does not
+authorize provider calls or retained database changes.
