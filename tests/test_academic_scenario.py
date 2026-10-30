@@ -67,9 +67,7 @@ def academic_scenario(store, alice):
     ]
     draft = DraftArtifact(
         title="Cedar's fictional study comparison",
-        # Current verifier requires disclosure in the body. The scenario's
-        # separate-disclosure formatting is an integration gap, not a passed check.
-        body=fixture["body"] + "\n\n" + fixture["disclosure"],
+        body=fixture["body"],
         disclosure=fixture["disclosure"],
         citations=[
             {
@@ -258,12 +256,10 @@ def test_scenario_fabricated_quote_blocks_readiness_and_continuation(store, acad
         assert all("citation_missing_or_stale" in r["report"]["errors"] for r in reports)
 
 
-def test_separate_disclosure_field_does_not_satisfy_current_body_gate(store, academic_scenario):
+def test_missing_required_separate_disclosure_blocks_readiness(store, academic_scenario):
     _, _, policy, rubric, draft = academic_scenario
     task = prepare_draft_task(store, policy, rubric)
-    without_body_disclosure = draft.model_copy(
-        update={"body": draft.body.removesuffix("\n\n" + draft.disclosure)}
-    )
+    without_body_disclosure = draft.model_copy(update={"disclosure": ""})
     scripted_draft = structured(
         "save_review_draft", without_body_disclosure.model_dump(mode="json")
     )
@@ -272,4 +268,4 @@ def test_separate_disclosure_field_does_not_satisfy_current_body_gate(store, aca
     with store.connection() as conn:
         reports = conn.execute("SELECT report FROM wrytely_agent.artifact_checks").fetchall()
         assert len(reports) == 2
-        assert all("disclosure_missing_from_body" in row["report"]["errors"] for row in reports)
+        assert all("disclosure_text_mismatch" in row["report"]["errors"] for row in reports)

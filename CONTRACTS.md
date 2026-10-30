@@ -1,5 +1,47 @@
 # Contracts v0.1 — foundation
 
+## Deterministic draft format checks — issue #37
+
+verify_artifact now checks supported formatting before semantic review and stores
+optional deterministic_checks in its existing report: errors, word_count,
+disclosure_placement, word_ranges and limits. No mandatory API/model field or
+schema changes. Report consumers may ignore this additive evidence; new error
+strings must remain visible through their generic finding fallback.
+
+Word count is len(body.split()): whitespace-delimited tokens; a hyphenated token
+or number counts once. Title, citations and separate disclosure are excluded.
+If default policy requires disclosure inside body, those body tokens are counted.
+Supported numeric rubric syntax is an exact quoted instruction beginning
+“Write [a] N–M word[s]”, optionally with a hyphen before word; hyphen/en dash/em
+dash ranges are recognized case-insensitively. Each bound is 1–10,000, inclusive.
+All recognized whole-draft ranges apply; incompatible ranges report
+word_count_bounds_conflict. Too-short/long reports word_count_out_of_range.
+Numeric word requirements not parsed by this narrow syntax report
+word_count_requirement_unparsed; invalid bounds report word_count_requirement_invalid.
+No unsupported numeric limit is silently called deterministically verified.
+This does not interpret section-specific counts or all natural language. Only
+supplied exact rubric quotes are scanned; completeness of extraction still needs
+semantic review. Unsupported constraints require clarified source evidence.
+
+Disclosure-required policy retains the existing body-and-field gate by default.
+Only the cited policy source's explicit standalone line
+“Include this disclosure separately from the word-counted body:” followed by a
+nonempty required text line selects separate_field. The disclosure must equal
+that exact line and be absent from body. Missing/different text reports
+disclosure_text_mismatch; duplicate body insertion reports disclosure_must_be_separate;
+conflicting instructions report disclosure_format_ambiguous. This honors the
+existing M2 assignment, not a new permission policy. No researcher/group source
+may relax placement unless it is the cited policy source; evidence/provenance
+checks remain mandatory. Other wording retains the existing conservative body
+gate and requires review. Generation prompts request matching placement; semantic
+review still assesses actual disclosure/policy adequacy.
+
+Format failures persist needs_revision and reach bounded revision feedback before
+a separate semantic call; a model cannot override failed deterministic checks.
+Review drafts remain privately inspectable. This does not grant consent, final
+readiness on its own, sharing, submission or sending. Default policy tests remain
+unchanged; the M2 fixture now correctly uses its required separate disclosure.
+
 ## Explicit private-draft intent and routing — issue #33
 
 Agreement: coordination #4 comment6492493685. Migration 009 adds
