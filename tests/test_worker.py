@@ -93,3 +93,21 @@ def test_paused_student_does_not_trigger_model_call(store, alice):
     store.enqueue("user_alice", "Question", "one")
     store.set_paused("user_alice", True)
     assert not run_once(store, ScriptedModel([]), Settings())
+
+
+def test_pause_during_model_call_revokes_attempt_and_resume_reclaims(store, alice):
+    task = store.enqueue("user_alice", "Question", "pause-in-model")
+
+    class PauseWhileRunning:
+        def turn(self, history, tools):
+            store.set_paused("user_alice", True)
+            return answer("This interrupted result must not be saved")
+
+    assert run_once(store, PauseWhileRunning(), Settings(max_attempts=1))
+    assert len(store.messages("user_alice")) == 1
+    assert store.task("user_alice", task["task_id"])["status"] == "ready"
+    assert not run_once(store, ScriptedModel([]), Settings(max_attempts=1))
+    store.set_paused("user_alice", False)
+    assert run_once(store, ScriptedModel([answer("Fresh claim result")]), Settings(max_attempts=1))
+    assert store.messages("user_alice")[-1]["content"] == "Fresh claim result"
+    assert store.task("user_alice", task["task_id"])["status"] == "done"

@@ -113,7 +113,11 @@ def test_pause_blocks_current_attempt_and_new_claims(store, alice):
     with pytest.raises(LeaseLost):
         store.complete(lease, "Should not be delivered")
     store.set_paused("user_alice", False)
-    store.complete(lease, "Resumed")
+    with pytest.raises(LeaseLost):
+        store.complete(lease, "Old worker cannot resume")
+    resumed = store.claim()
+    assert resumed.attempt > lease.attempt
+    store.complete(resumed, "Resumed")
 
 
 def test_retry_after_completion_cannot_duplicate_response(store, alice):
@@ -163,3 +167,44 @@ def test_pause_interruptions_do_not_forgive_later_execution_failure(store, alice
     store.retry(resumed, "execution_failed", max_attempts=1)
     assert store.task("user_alice", task["task_id"])["status"] == "blocked"
     assert store.claim(max_attempts=1) is None
+
+
+def test_expired_crash_is_not_reclassified_by_pause(store, alice):
+    task = store.enqueue("user_alice", "Question", "expired-before-pause")
+    lease = store.claim(max_attempts=1)
+    expire(store, lease.task_id)
+    store.set_paused("user_alice", True)
+    store.set_paused("user_alice", False)
+    assert store.claim(max_attempts=1) is None
+    assert store.task("user_alice", task["task_id"])["status"] == "blocked"
+
+
+def test_repeated_pause_preserves_monotonic_claims_and_prior_failure(store, alice):
+    task = store.enqueue("user_alice", "Question", "pause-counts")
+    first = store.claim(max_attempts=2)
+    store.retry(first, "execution_failed", max_attempts=2)
+    with store.connection() as conn:
+        conn.execute(
+            "UPDATE wrytely_agent.tasks SET available_at=now() WHERE id=%s", (first.task_id,)
+        )
+    previous = first
+    for _ in range(3):
+        current = store.claim(max_attempts=2)
+        assert current.attempt > previous.attempt
+        store.set_paused("user_alice", True)
+        store.set_paused("user_alice", True)
+        store.set_paused("user_alice", False)
+        with pytest.raises(LeaseLost):
+            store.complete(current, "Late result")
+        previous = current
+    final = store.claim(max_attempts=2)
+    assert final.attempt == 5
+    store.retry(final, "execution_failed", max_attempts=2)
+    assert store.task("user_alice", task["task_id"])["status"] == "blocked"
+    with store.connection() as conn:
+        count = conn.execute(
+            "SELECT count(*) AS n FROM wrytely_agent.episode_events "
+            "WHERE task_id=%s AND kind='control_interrupted'",
+            (final.task_id,),
+        ).fetchone()["n"]
+    assert count == 3
