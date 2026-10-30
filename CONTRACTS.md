@@ -1,4 +1,11 @@
-# Contracts v0.1 — foundation
+# Contracts — implemented boundaries and historical increments
+
+> Revision7 planning note (October 30): this file describes implemented contracts
+> and their historical increments. New C1–C7 interfaces in
+> [WORK-ORDERS.md](docs/WORK-ORDERS.md#shared-interface-checklist-proposed-not-executable-yet)
+> are proposals until both owners agree a version. No sync endpoint, supervisor
+> action, freshness relaxation or proactive send permission exists merely because
+> the plan names it. Existing private-draft and policy gates remain effective.
 
 ## Deterministic draft format checks — issue #37
 
@@ -90,15 +97,15 @@ exactly-once model billing or an unbounded agent loop.
 private app read. None means absent/not-owned, mapped to the same private 404.
 Storage errors propagate. One SQL snapshot returns JSON-safe fields:
 
-| Field | Values / meaning |
-|---|---|
-| responsibility_id | UUID string |
-| requested_mode | analysis or private_draft |
-| status | active, blocked or done; revision mismatch reports blocked |
-| reason | null, source_changed, draft_policy_or_rubric_blocked or draft_work_blocked; never raw model prose |
-| assessment_state | not_requested for analysis; pending, assessed or blocked for draft intent |
-| workflow_state | not_requested for analysis; pending before attachment; queued/running after attachment; ready_for_review only for a completed task with a ready artifact; blocked on failure or stale revision |
-| artifact_id | latest saved draft UUID string or null; may reference an unready/stale review artifact |
+| Field             | Values / meaning                                                                                                                                                                               |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| responsibility_id | UUID string                                                                                                                                                                                    |
+| requested_mode    | analysis or private_draft                                                                                                                                                                      |
+| status            | active, blocked or done; revision mismatch reports blocked                                                                                                                                     |
+| reason            | null, source_changed, draft_policy_or_rubric_blocked or draft_work_blocked; never raw model prose                                                                                              |
+| assessment_state  | not_requested for analysis; pending, assessed or blocked for draft intent                                                                                                                      |
+| workflow_state    | not_requested for analysis; pending before attachment; queued/running after attachment; ready_for_review only for a completed task with a ready artifact; blocked on failure or stale revision |
+| artifact_id       | latest saved draft UUID string or null; may reference an unready/stale review artifact                                                                                                         |
 
 Assessment state is historical and can remain assessed after source change;
 status/reason/workflow and artifact stale flags take precedence. requested_mode
@@ -227,17 +234,17 @@ not accepted by this backend. CORS origins and JWT authorized parties must be
 configured for the actual frontend. No credentials go into browser storage code
 or source control.
 
-| Method/path | Input | Output / semantics |
-|---|---|---|
-| GET /healthz | none | Process liveness only |
-| GET /readyz | none | Configuration flags; never a claim that live services were tested |
-| POST /v1/bootstrap | authenticated, no body | Existing or newly provisioned agent for this user |
-| GET /v1/me | authenticated | Agent ID, own user ID, paused flag; 404 before bootstrap |
-| POST /v1/messages | `{content}` and `Idempotency-Key` | 202 `{task_id,status}`; durable queueing, not a completed answer |
-| GET /v1/messages | authenticated | Own recent messages in chronological order, at most 100 |
-| GET /v1/tasks/{id} | authenticated | Own task state; 404 also for another user's task |
-| GET /v1/tasks | authenticated | `{tasks}`: own latest 50 tasks, newest first; includes status, attempts, controlled error, creation time and a title clipped to 180 characters from the source message |
-| POST /v1/agent/control | `{paused: true/false}` | Own agent state |
+| Method/path            | Input                             | Output / semantics                                                                                                                                                     |
+| ---------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET /healthz           | none                              | Process liveness only                                                                                                                                                  |
+| GET /readyz            | none                              | Configuration flags; never a claim that live services were tested                                                                                                      |
+| POST /v1/bootstrap     | authenticated, no body            | Existing or newly provisioned agent for this user                                                                                                                      |
+| GET /v1/me             | authenticated                     | Agent ID, own user ID, paused flag; 404 before bootstrap                                                                                                               |
+| POST /v1/messages      | `{content}` and `Idempotency-Key` | 202 `{task_id,status}`; durable queueing, not a completed answer                                                                                                       |
+| GET /v1/messages       | authenticated                     | Own recent messages in chronological order, at most 100                                                                                                                |
+| GET /v1/tasks/{id}     | authenticated                     | Own task state; 404 also for another user's task                                                                                                                       |
+| GET /v1/tasks          | authenticated                     | `{tasks}`: own latest 50 tasks, newest first; includes status, attempts, controlled error, creation time and a title clipped to 180 characters from the source message |
+| POST /v1/agent/control | `{paused: true/false}`            | Own agent state                                                                                                                                                        |
 
 Repeat a message request with the same key and identical content to safely retrieve
 the original task. Reusing its key for different content returns 409. Missing key
@@ -583,6 +590,7 @@ use existing bounded retries and redacted error codes. Source-change revocation
 prevents old drafts/tasks from completing. Trusted API/connector assembly must still
 coordinate how delegation, policy evidence and rubric extraction reach this boundary;
 Murtazo owns that assembly. Automatic task selection for drafting remains future.
+
 ## Private WhatsApp connection read — issue #18, requested by #17
 
 `Store.whatsapp_connection(verified_user_id)` returns None before provisioning;

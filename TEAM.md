@@ -1,120 +1,94 @@
 # Wrytely team agreement
 
-Updated October 28, 2026. Shared plan: [docs/BUILD-PLAN.md](docs/BUILD-PLAN.md).
-Actual evidence: [STATUS.md](STATUS.md). Shared interfaces: [CONTRACTS.md](CONTRACTS.md).
+Updated October 30, 2026. Active scope/order: [revision 7](docs/BUILD-PLAN.md).
+Read [work orders](docs/WORK-ORDERS.md), [status](STATUS.md), [contracts](CONTRACTS.md)
+and [coordination issue #4](https://github.com/Akbarhoja/wrytely-agent/issues/4) before work.
 
-| Owner | Responsibility |
-|---|---|
-| Akbar | Product decisions, supervision, account access and release approval |
-| Codex, supporting Akbar | Agent runtime, memory, planner, verification, shared contracts, integration review |
-| Murtazo (`murtazokhon-tech`) | WhatsApp delivery, course/group source connections, onboarding, student website and deployment preparation |
+## Exact ownership
 
-GitHub write access for Murtazo was verified October 28. Existing scaffolds are
-his starting point; Codex does not continue his implementation scope by default.
-Shared-file fixes are welcome after coordinating the interface and edit scope.
+Akbar is product supervisor and owns account/legal/budget/release decisions. Akbar's
+engineering track is implemented with Codex. Murtazo (`murtazokhon-tech`) owns the
+integration track. No task is jointly implemented in the same files by default.
 
-## Shared baseline and branches
+| Surface                                                                | Implementation owner           | Boundary                                                                                                       |
+| ---------------------------------------------------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| runtime/                                                               | Akbar/Codex                    | Supervisor, task planner, tools, reasoning, draft/check/revision, rendering, grade math                        |
+| shared/                                                                | Akbar/Codex                    | All stores, identity abstractions, model client, memory, schedules, credentials, budgets, action authorization |
+| contracts/ including SQL                                               | Akbar/Codex                    | Typed shared interfaces and additive migrations; Murtazo agrees consumer changes before coding                 |
+| extension/ (new)                                                       | Murtazo                        | Canvas session reads, pairing client, collection, resumable local checkpoints                                  |
+| integrations/                                                          | Murtazo                        | Canvas/Outlook/WhatsApp network adapters, document extraction and file delivery IO                             |
+| app/                                                                   | Murtazo                        | HTTP/OAuth/webhook assembly, private reads, process entrypoints, WhatsApp worker; no duplicate shared store    |
+| web/                                                                   | Murtazo                        | Signup, connections, course coverage, controls and private results                                             |
+| deploy/ and service configuration                                      | Murtazo                        | Continuous process deployment, health and operational recovery within approved scope                           |
+| tests/                                                                 | Owner of tested implementation | A owns store/runtime/model/schema tests; M owns API/provider/extension/transport tests                         |
+| tests/fixtures/ and cross-layer acceptance                             | Akbar coordinates              | Name one file editor per fixture/scenario; M reviews provider realism and supplies scoped data                 |
+| .github/ CI and review policy                                          | Akbar/Codex                    | M reviews changes; extension/connector checks requested through a scoped claim                                 |
+| BUILD-PLAN, WORK-ORDERS, IMPLEMENTATION-AUDIT, AGENTS, TEAM, CONTRACTS | Akbar/Codex                    | Shared plan/interface editor; M reviews and requests changes                                                   |
+| STATUS and operational evidence                                        | Claim-specific editor          | One short row per completed/current step; serialize conflicting edits                                          |
 
-`codex/team-integration` contains all current implementation and the shared plan.
-Until the reviewed integration baseline lands on `main`, both engineers branch
-from `codex/team-integration` and target it with their feature PRs. Do not start
-from the current minimal `main`, which does not yet contain the implementation.
-The integration-to-main PR is the canonical combined baseline review; older PRs
-1 and 2 are constituent reviews, not additional changes to merge on top of it.
-After that baseline is merged, use `main` as the normal feature branch base.
+A implements private artifact rendering and storage contracts; M implements concrete
+file upload/download/delivery assembly. A implements connection/sync persistence;
+M implements provider identity verification and ingestion assembly. M does not put
+provider IO into shared/; A does not reimplement M's collector inside runtime/.
+Each new PR lists exact files, including tests and any temporary shared-file claim.
 
-- Murtazo: `murtazo/whatsapp-delivery`, then separate onboarding/source branches.
-- Codex: `codex/academic-memory`, then separate verification/adaptation branches.
-- Never push directly into the other engineer’s branch or rewrite shared history.
-- Keep one coherent task per PR. Open a draft early and state files/interfaces
-  being changed. Coordinate before editing shared contracts, schema or assembly.
-- Pull the latest baseline before starting. Rebase/merge baseline updates into
-  your own feature branch before final integration checks; do not force-push a
-  shared integration branch.
+## Base branch and consolidation
 
-## Review and integration
+Last recorded integration base: codex/m2-integration-review at a8cac79. #40/#42 are
+separate reviewed fixes, not integrated there; #44 carries this plan. M's #28 latest
+proposal is a383782. Check fresh heads in #4/STATUS before implementation.
 
-Codex reviews Murtazo’s diff for scope, ownership checks, tests and actual integrated
-behavior, then reports findings to Akbar. Murtazo reviews Codex’s runtime PRs.
-Codex uses Akbar’s GitHub account and cannot supply an independent approval of
-Akbar’s own PR; Murtazo supplies that human approval after his review. Akbar
-approves product or release decisions. Do not bypass protections to claim review.
+P0-A1 consolidates accepted changes and requests independent review/CI before the
+protected main merge. Until then, branch from the explicitly recorded candidate.
+Never assume old codex/team-integration or minimal main contains the implementation.
+After consolidation lands, use main as the normal base. Do not mass-merge constituent
+PRs or delete branches automatically. Keep parked #24/A4 out until P4 review.
 
-Every PR states what changed, validation performed and remaining limitations.
-Require relevant CI and an up-to-date integrated path before recommending merge.
-For live integration, record redacted evidence and account isolation checks;
-offline simulated responses do not prove the real provider works. Security or
-permission-sensitive changes require focused review. No production migrations,
-connector authorization or release is implied by an item existing in the plan.
+Use codex/<step>-<description> for Codex branches; Murtazo uses his own scoped branch.
+One coherent slice per PR; split large work orders into sequential small PRs. Never
+push to the other engineer's branch, force shared history, or bypass main protection.
 
-Main protection was previously verified: required `foundation`, strict up-to-date
-status, one approval and resolved conversations; force pushes/deletion disabled.
-The `web` check should also be made required once its workflow lands. Akbar retains
-the existing administrator override. The integration branch has no newly promised
-protection; use PRs and the review procedure above.
+## Mandatory coordination and review
 
-## Lightweight daily coordination
+Before implementation, claim the work order in an issue with owner, branch/base,
+files, dependency contracts and acceptance. Read existing claims first. Nobody
+inherits work because the other engineer is absent, blocked or slow. Only Akbar
+can reassign it; record that decision before crossing ownership.
 
-Each engineer updates their task/PR with: completed work, next work, blockers and
-any contract changes. STATUS.md records validated milestones, not aspirations.
-Review one full end-to-end scenario together each day. Escalate missing provider
-access early; continue independent code and tests while setup is pending.
+An unresolved shared interface blocks dependent edits, not unrelated owned work.
+A proposes payloads, identity/error/replay/migration semantics; M agrees the consumer
+boundary in #4/PR before dependent implementation. CONTRACTS.md then records the
+agreed version. A plan's proposed operation is not an existing API.
 
-Akbar can paste Murtazo’s PR URL into the Codex chat with “review this PR.” Codex
-can inspect repository state when asked to continue, but does not monitor GitHub
-between turns automatically. No scheduled monitoring or external messages have
-been configured.
+The opposite engineer reviews implementation and evidence. Codex and Murtazo's
+assistant may both post through Akbarhoja: those comments do not create independent
+human GitHub approval. Required human approval and configured CI remain mandatory.
+CODEOWNERS routes review; it is not permission to edit another person's files.
 
-## Mandatory non-overlap rule
+At session end update STATUS and #4 with completed work, exact tested commit,
+next eligible step, blockers and interface changes. GitHub is the shared record,
+not separate chats. Akbar has authorized project communication in issues/PRs;
+that authorization does not extend to email/Discord or unrelated channels.
+Do not create a duplicate scheduled monitor. Check GitHub during active work sessions.
 
-Each implementation task has exactly one owner and a GitHub issue claim BEFORE
-coding: owner, branch, files, acceptance checks and dependencies. Other engineers
-must read active claims before starting and cannot modify claimed files. Shared
-files require an explicit agreement recorded in the coordination issue. Source
-and messaging tests belong to Murtazo; runtime/store/planner tests belong to Codex.
-The integration owner coordinates cross-layer smoke tests rather than creating a
-second implementation. If a test touches both domains, agree its owner first.
+## Evidence and operation
 
-Nobody takes over another's task due to delay or missing access. Only Akbar can
-reassign scope, and his approval must be recorded in the issue before edits. A
-request for review is not permission to rewrite the other engineer's branch.
-Review feedback goes on the PR; its author implements fixes unless reassigned.
+Mark code/scripted/live evidence separately. Fixture success cannot pass Canvas,
+Outlook, Meta or WhatsApp live gates. A reviewed PR is not a deployed service.
+Three demo runs do not establish long-term reliability; use P5 recovery/soak evidence.
 
-GitHub is the shared record, not separate chat histories. Use the coordination
-issue for interface questions, blockers and handoffs; task issues for claims and
-progress; PR comments for code review. At the start of each work session, check
-new coordination comments, open PRs and active claims. At the end, post completed
-work, next step, blockers, contract changes and exact validated evidence. Notify
-@Akbarhoja or @murtazokhon-tech when their input is required. Codex may communicate
-about this project through those GitHub issues/PRs under Akbar's authorization.
-Do not expand that authorization to email, Discord or unrelated channels.
+The current plan permits independent source and runtime work alongside provider
+blockers, superseding the old M1-only implementation freeze. It does not expand
+paid usage, authorize connector grants, activate continuous workers or change
+existing Wrytely production. Keep existing development approvals within their
+original bounds. Akbar decides new operating budgets and public releases.
 
-An unresolved contract change blocks dependent edits. Record a proposed payload,
-ownership, error behavior and migration plan; obtain the affected owner's agreement,
-update CONTRACTS.md, then implement. Resolve disagreements with Akbar.
+## Next assignments
 
-CODEOWNERS routes review to the opposite engineer. It does not prevent writes;
-strict scope is a repository rule enforced by each contributor/assistant and review.
-Existing write access and main protection are unchanged. These rules do not create
-an autonomous background watcher: Codex reads GitHub during active work sessions.
+- Akbar/Codex: P0-A1 integration; P0-A2 Meta diagnosis; P0-A3 interfaces.
+- Murtazo: P0-M1 extension access, P0-M2 Outlook access, P0-M3 WhatsApp recovery.
 
-## Active GitHub coordination
-
-- [Pinned team coordination thread — #4](https://github.com/Akbarhoja/wrytely-agent/issues/4)
-- [Murtazo: WhatsApp delivery — #5](https://github.com/Akbarhoja/wrytely-agent/issues/5)
-- [Codex: academic memory — #6](https://github.com/Akbarhoja/wrytely-agent/issues/6)
-
-These work items are assigned and ready, not claimed as already in progress.
-Each engineer posts the exact branch/file claim before starting implementation.
-Use `.github/ISSUE_TEMPLATE/work-item.md` for further tasks and the PR template
-for the ownership/review checklist.
-
-## Integration freeze — Akbar decision
-
-Stop adding A4 or other features until existing work is reviewed/integrated and
-M1 is demonstrated live. The tested consolidation candidate is codex/m1-integration,
-combining #16, #20 and #22; #24 remains parked. It does not bypass main protection.
-Murtazo must review its exact tested head independently. Constituent PRs are review
-history, not duplicate changes to reapply. After approved integration, use the
-shared baseline for both tracks. Existing ownership remains unchanged. Live M1
-requires development setup and explicit provider budget; see docs/M1-ACCEPTANCE.md.
+These are queued responsibilities, not claims that anyone has started them. Old
+B1/B2 documents remain historical implementation context; revision7 work orders
+supersede their conflicting product/access instructions. M's Canvas proposal is
+credited and retained; he can update his document in his next scoped task.

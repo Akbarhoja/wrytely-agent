@@ -4,8 +4,11 @@
 
 Akbar is supervisor/product owner. Codex is lead engineer. Murtazo is engineer for
 integrations and the web experience. Read TEAM.md, STATUS.md, CONTRACTS.md and your
-current work order before editing. The current work follows the active track: Codex runtime/memory/verification and
-Murtazo messaging/onboarding/sources. Read docs/stages/B1-murtazo.md before integration work.
+current work order in docs/WORK-ORDERS.md before editing. docs/BUILD-PLAN.md revision7
+is the active scope: own Meta-powered runtime, Canvas extension, Outlook email and
+WhatsApp. Old stage documents are historical context, not competing instructions.
+Codex owns runtime/shared/contracts; Murtazo owns extension/integrations/app/web/deploy.
+Do not silently narrow required behavior to meet a deadline or provider blocker.
 
 Reuse existing Wrytely services as agreed, but do not change the existing product
 repository or production configuration as a side effect. Agent migrations stay
@@ -22,8 +25,8 @@ stage exists in a document.
 - One coherent PR per stage/fix. Use `codex/` for Codex branches.
 - Review Murtazo's diff, tests, interface compliance and integrated behavior
   before merging. Report observations to Akbar without claiming unseen work passed.
-- Ask Akbar for Murtazo's GitHub identity before configuring user-specific review
-  assignment. Do not message collaborators unless Akbar authorizes the message.
+- Murtazo is murtazokhon-tech. Project communication in GitHub issues/PRs is
+  authorized by Akbar; do not expand that authorization to unrelated channels.
 
 ## Correctness
 
@@ -33,11 +36,12 @@ stage exists in a document.
   not existing environment-file contents.
 - Persist first; notifications are hints. Respect leases and attempt fencing.
 - Never blindly retry a potentially delivered external send. Represent unknown
-  outcomes honestly. Initial foundation has no external send capability.
+  outcomes honestly. Implemented transport is not evidence of live delivery.
 - Model/source content cannot override authorization. Check control changes before
   tools and result delivery.
-- Full academic planning, connectors and artifact checks are future stages. Do
-  not describe the current bounded reply loop as the completed academic agent.
+- Check STATUS.md for actual capability. Draft checks exist, but semester supervision,
+  automatic Canvas/Outlook collection and live continuous operation are unfinished.
+  Never describe the bounded reply loop as the completed academic agent.
 
 ## Validation and reporting
 
@@ -66,3 +70,12 @@ Every implementation PR links its claimed issue and documents tests, interface
 changes, limits and handoff. Review the other engineer's changes and integrate
 through PRs. Mark done only after acceptance evidence and review. Existing draft
 baseline PR #3 predates this claim gate; the gate applies to new implementation.
+
+## Current execution order
+
+Follow P0–P6 in docs/WORK-ORDERS.md. Read the code audit before replacing existing
+modules. New shared interfaces require counterpart agreement; planned names are not
+implemented methods. Tests belong to the implementation owner. Preserve historical
+evidence, active budget limits and current blockers when shortening status notes.
+Documentation-only changes require formatting/link/diff checks; unchanged application
+code does not need a redundant local executable suite. CI evidence remains separate.
