@@ -93,3 +93,35 @@ def test_paused_student_does_not_trigger_model_call(store, alice):
     store.enqueue("user_alice", "Question", "one")
     store.set_paused("user_alice", True)
     assert not run_once(store, ScriptedModel([]), Settings())
+
+
+def test_unsuccessful_model_usage_is_private_evidence_not_an_answer(store, alice):
+    from types import SimpleNamespace
+
+    from shared.model_client import ModelCallFailed
+
+    task = store.enqueue("user_alice", "Question", "failed-model-usage")
+    failure = ModelCallFailed(
+        status="incomplete", usage=SimpleNamespace(input_tokens=120, output_tokens=2048)
+    )
+    run_once(store, ScriptedModel([failure]), Settings(max_attempts=1))
+    assert store.task("user_alice", task["task_id"])["status"] == "blocked"
+    assert len(store.messages("user_alice")) == 1
+    with store.connection() as conn:
+        rows = conn.execute(
+            "SELECT kind,data FROM wrytely_agent.episode_events WHERE task_id=%s",
+            (task["task_id"],),
+        ).fetchall()
+    assert [(r["kind"], r["data"]) for r in rows if r["kind"] == "model_failure"] == [
+        (
+            "model_failure",
+            {
+                "status": "incomplete",
+                "http_status": None,
+                "code": None,
+                "input_tokens": 120,
+                "output_tokens": 2048,
+            },
+        )
+    ]
+    assert not any(r["kind"] == "model_turn" for r in rows)

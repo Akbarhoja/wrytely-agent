@@ -1,5 +1,19 @@
 # Engineering status
 
+October 29 — #39 provider failure evidence on codex/meta-failure-evidence:
+Murtazo reported incomplete responses discarded known usage. Four new adapter
+regressions fail before implementation and pass afterward; safe HTTP status/code
+and incomplete-response token counts now survive in ModelCallFailed. Worker saves
+private fenced model_failure evidence before existing retry/block; no failed output
+can become an answer. Six local adapter tests, Ruff lint/format pass. Full local DB
+suite attempted but blocked by sandbox cache permission; exact CI pending. No
+provider call, deployment, quota increase or release of the M2 reservation.
+Existing Meta team's Billing UI confirms $150 active credits and $2 email alert;
+usage UI shows two prior requests/697 input tokens but warns up to one-hour lag.
+That view does not yet reconcile the failed call. Murtazo's final-attempt pause
+recovery audit remains a separate runtime follow-up; his result refresh work stays
+with him. Live M2 remains incomplete.
+
 October 29 — approved bounded live M2 attempt, candidate1dcb4d3. Reviewed and
 integrated Murtazo's optional saved-format evidence viewer8268e27;113 local web
 tests and webpack build pass. Exact candidate CI40998132458/40998137577 green.
