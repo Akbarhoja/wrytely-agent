@@ -17,6 +17,13 @@ export type SavedDraft = {
   created_at: string;
 };
 type Evidence = { version_id: string; quote: string };
+type FormatChecks = {
+  errors: string[];
+  word_count: number;
+  disclosure_placement: "separate_field" | "body_and_field";
+  word_ranges: (Evidence & { minimum: number; maximum: number })[];
+  limits: string;
+};
 type Assessment = {
   reason: string;
   claim_support: string[];
@@ -49,6 +56,7 @@ export type DraftReview = {
     policy: Evidence & { status: string };
     rubric: Evidence[];
     limits: string;
+    deterministic_checks?: FormatChecks;
   };
 };
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -155,6 +163,32 @@ export async function loadReview(id: string, signal: AbortSignal): Promise<Draft
     )
       invalid();
     const assessment = report.assessment;
+    const format = report.deterministic_checks;
+    if (
+      format !== undefined &&
+      (!format ||
+        !Number.isInteger(format.word_count) ||
+        format.word_count < 0 ||
+        format.word_count > 24000 ||
+        !["separate_field", "body_and_field"].includes(format.disclosure_placement) ||
+        !Array.isArray(format.errors) ||
+        format.errors.length > 100 ||
+        !format.errors.every((e) => text(e, 200)) ||
+        !format.errors.every((e) => report.errors.includes(e)) ||
+        !Array.isArray(format.word_ranges) ||
+        format.word_ranges.length > 6000 ||
+        !format.word_ranges.every(
+          (r) =>
+            evidence(r) &&
+            Number.isInteger(r.minimum) &&
+            Number.isInteger(r.maximum) &&
+            r.minimum >= 1 &&
+            r.maximum >= r.minimum &&
+            r.maximum <= 10000,
+        ) ||
+        !text(format.limits, 4000))
+    )
+      invalid();
     if (assessment !== null) {
       if (
         !assessment ||

@@ -17,6 +17,18 @@ const findings: Record<string, string> = {
   policy_evidence_missing_or_stale: "Policy evidence is missing or needs a freshness review.",
   course_policy_not_permitting_draft: "The recorded policy does not permit this draft.",
   disclosure_missing_from_body: "The required disclosure is missing from the draft body.",
+  disclosure_text_mismatch:
+    "The disclosure does not match the exact text required by the cited policy.",
+  disclosure_must_be_separate:
+    "The cited policy requires the disclosure separately from the draft body.",
+  disclosure_format_ambiguous:
+    "The cited policy contains conflicting disclosure instructions. Review its source.",
+  word_count_out_of_range: "The saved draft body is outside a required word range.",
+  word_count_requirement_unparsed:
+    "A numeric word requirement could not be checked. Review and clarify the source instruction.",
+  word_count_requirement_invalid:
+    "A quoted word range has invalid bounds. Review the source instruction.",
+  word_count_bounds_conflict: "The quoted word ranges conflict. Review the source requirements.",
   citations_missing: "The draft has no citations.",
   citation_missing_or_stale: "A quotation is missing from its source or needs a freshness review.",
   cited_claim_not_in_draft: "A cited claim does not appear in the draft.",
@@ -325,6 +337,51 @@ function ResultSession({
                   Model assessments are fallible. A passed check does not mean this work was
                   submitted or approved.
                 </p>
+                {review.latest_check.deterministic_checks && (
+                  <details>
+                    <summary>Saved formatting evidence</summary>
+                    <p>
+                      Saved body count: {review.latest_check.deterministic_checks.word_count}{" "}
+                      whitespace-delimited words.
+                    </p>
+                    <p>
+                      {review.latest_check.deterministic_checks.disclosure_placement ===
+                      "separate_field"
+                        ? "When required, disclosure is checked separately from the body."
+                        : "When required, disclosure is checked in both the body and disclosure field. Any disclosure inside the body counts toward its total."}
+                    </p>
+                    <p className="subtle">
+                      This is a count of the saved body, not a grade or proof that every assignment
+                      requirement was checked.
+                    </p>
+                    {review.latest_check.deterministic_checks.word_ranges.length === 0 && (
+                      <p>
+                        No supported numeric word range was recorded. This does not establish that
+                        the assignment has no word limit.
+                      </p>
+                    )}
+                    <ol className="result-evidence">
+                      {review.latest_check.deterministic_checks.word_ranges
+                        .slice(0, 30)
+                        .map((range, index) => (
+                          <li key={index}>
+                            <p>
+                              Required range: {range.minimum}–{range.maximum} words (inclusive).
+                            </p>
+                            <blockquote>{range.quote}</blockquote>
+                            <p className="subtle">Stored source version: {range.version_id}</p>
+                          </li>
+                        ))}
+                    </ol>
+                    {review.latest_check.deterministic_checks.word_ranges.length > 30 && (
+                      <p>
+                        Showing the first 30 of{" "}
+                        {review.latest_check.deterministic_checks.word_ranges.length} saved ranges.
+                      </p>
+                    )}
+                    <p className="subtle">{review.latest_check.deterministic_checks.limits}</p>
+                  </details>
+                )}
                 <details>
                   <summary>Policy and requirement evidence</summary>
                   <p>Recorded policy: {review.latest_check.policy.status.replaceAll("_", " ")}</p>
