@@ -103,9 +103,33 @@ class Store(
 
     def set_paused(self, user_id: str, paused: bool):
         with self.connection() as conn:
+            agent = conn.execute(
+                "SELECT * FROM wrytely_agent.agents WHERE user_id=%s FOR UPDATE", (user_id,)
+            ).fetchone()
+            if agent is None:
+                return None
+            if paused and not agent["paused"]:
+                # Only a live claim is a control interruption. An already expired
+                # claim remains an ordinary crash and keeps its failed allowance.
+                rows = conn.execute(
+                    "SELECT id,attempts FROM wrytely_agent.tasks WHERE agent_id=%s "
+                    "AND status='running' AND lease_until>now() FOR UPDATE",
+                    (agent["id"],),
+                ).fetchall()
+                for row in rows:
+                    conn.execute(
+                        "INSERT INTO wrytely_agent.episode_events(task_id,attempt,kind,data) "
+                        "VALUES (%s,%s,'control_interrupted',%s)",
+                        (row["id"], row["attempts"], Jsonb({"reason": "student_pause"})),
+                    )
+                    conn.execute(
+                        "UPDATE wrytely_agent.tasks SET status='ready',lease_token=NULL, "
+                        "lease_until=NULL,available_at=now() WHERE id=%s",
+                        (row["id"],),
+                    )
             return conn.execute(
-                "UPDATE wrytely_agent.agents SET paused=%s WHERE user_id=%s RETURNING *",
-                (paused, user_id),
+                "UPDATE wrytely_agent.agents SET paused=%s WHERE id=%s RETURNING *",
+                (paused, agent["id"]),
             ).fetchone()
 
     def enqueue(self, user_id: str, content: str, key: str, limit: int = 20):
@@ -201,8 +225,10 @@ class Store(
             ).fetchone():
                 return None
             conn.execute(
-                "UPDATE wrytely_agent.tasks SET status='blocked',last_error='attempt_limit', "
-                "lease_token=NULL,lease_until=NULL WHERE agent_id=%s AND attempts>=%s "
+                "UPDATE wrytely_agent.tasks AS t SET status='blocked',last_error='attempt_limit', "
+                "lease_token=NULL,lease_until=NULL WHERE agent_id=%s AND "
+                "attempts-(SELECT count(DISTINCT e.attempt) FROM wrytely_agent.episode_events e "
+                "WHERE e.task_id=t.id AND e.kind='control_interrupted')>=%s "
                 "AND (status='ready' OR (status='running' AND lease_until<=now()))",
                 (agent["id"], max_attempts),
             )
@@ -211,8 +237,11 @@ class Store(
             row = conn.execute(
                 "UPDATE wrytely_agent.tasks SET status='running',attempts=attempts+1, "
                 "lease_token=%s,lease_until=now()+(%s * interval '1 second') "
-                "WHERE id=(SELECT id FROM wrytely_agent.tasks WHERE agent_id=%s "
-                "AND attempts<%s AND ((status='ready' AND available_at<=now()) "
+                "WHERE id=(SELECT id FROM wrytely_agent.tasks t WHERE agent_id=%s "
+                "AND attempts-(SELECT count(DISTINCT e.attempt) "
+                "FROM wrytely_agent.episode_events e "
+                "WHERE e.task_id=t.id AND e.kind='control_interrupted')<%s "
+                "AND ((status='ready' AND available_at<=now()) "
                 "OR (status='running' AND lease_until<=now())) ORDER BY created_at,id LIMIT 1) "
                 "RETURNING *",
                 (token, lease_seconds, agent["id"], max_attempts),
@@ -283,19 +312,25 @@ class Store(
     def retry(self, lease: TaskLease, code: str, max_attempts: int = 3):
         with self.connection() as conn:
             self._fence(conn, lease)
+            interrupted = conn.execute(
+                "SELECT count(DISTINCT attempt) AS n FROM wrytely_agent.episode_events "
+                "WHERE task_id=%s AND kind='control_interrupted'",
+                (lease.task_id,),
+            ).fetchone()["n"]
+            failed_attempts = lease.attempt - interrupted
             # Store controlled error codes only, never provider exception bodies/credentials.
             conn.execute(
                 "UPDATE wrytely_agent.tasks SET status=%s,last_error=%s,lease_token=NULL, "
                 "lease_until=NULL,available_at=now()+(%s * interval '1 second') WHERE id=%s",
                 (
-                    "blocked" if lease.attempt >= max_attempts else "ready",
+                    "blocked" if failed_attempts >= max_attempts else "ready",
                     code,
-                    min(2**lease.attempt, 60),
+                    min(2 ** min(failed_attempts, 6), 60),
                     lease.task_id,
                 ),
             )
 
-            if lease.attempt >= max_attempts:
+            if failed_attempts >= max_attempts:
                 self._block_failed_responsibilities(conn, lease.agent_id)
 
     def context(self, lease: TaskLease):
