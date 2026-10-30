@@ -1,5 +1,12 @@
 # B2 — private academic snapshots
 
+Scope correction: founder issue#43 now requires real Canvas course/content
+discovery, ongoing monitoring and proactive ownership offers. The snapshot work
+below is implemented groundwork, not completed connector acceptance. The earlier
+no-Canvas slice describes its historical boundary and is superseded for the full
+milestone by [the Canvas access/interface proposal](B2-CANVAS-PROPOSAL.md).
+Proposal publication does not authorize OAuth, institutional reads or deployment.
+
 Owner: Murtazo. Branch: codex/b2-snapshot-intake, from reviewed 6accd71.
 Coordination: #4 comments 6491647927 and 6491917360. Akbar approved the B2/A3
 workflow while M1 provider setup is deferred. M1 remains incomplete. This work
@@ -92,8 +99,7 @@ and authority fields supplied by a browser. Preserve stable snapshot identity
 and revision on a retry; conflicting reuse must not silently overwrite evidence.
 
 No public route, automatic fetch, rich HTML rendering or browser storage of
-academic content. Return no-store responses. Absent/not-owned detail is the same
-404. Storage errors remain errors; they cannot become successful empty lists.
+academic content. Return no-store responses. Absent/not-owned detail is the same 404. Storage errors remain errors; they cannot become successful empty lists.
 Enforce the existing proxy origin, JSON and byte limits and backend field bounds.
 
 The form has visible labels, honest snapshot coverage, a separate save action,
@@ -121,6 +127,7 @@ Saving a source must not imply that a worker, model or message send ran.
 
 No live provider calls or message budget is authorized by this work order.
 No deployment, production migration, public signup, sharing or submission.
+
 ## First implementation checkpoint
 
 Consumed reviewed shared dependency #30 at 25f1972 on this branch; #27 is its
