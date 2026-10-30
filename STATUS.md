@@ -1,5 +1,21 @@
 # Engineering status
 
+October 29 — #41/#42 pause recovery candidate a7db006: live task leases revoke
+atomically on pause; resume requires a fresh token and monotonically larger claim
+number. Distinct trusted control interruptions do not consume execution-failure
+allowance, while expired crashes and subsequent real failures still do. Checkpoint
+history remains fenced and replayable. No schema/API payload change or teammate
+implementation. Nine added regressions plus updated original pause test cover
+recovery, stale lease denial, failure bounds, repeated Pause, expired crash,
+account isolation, duty blocking, in-flight interruption and checkpoint replay.
+Original three regressions fail on f1f4713 (CI40999920955); CI41000663097 and
+41000715908 at a7db006 pass385 backend/113 web plus lint/format/type/build.
+Local Ruff/diff pass; full local DB fixture remains sandbox-blocked. Counterpart
+review is requested before integration/deployment; no agreement inferred from
+silence. This is a concrete candidate in Codex's owned store/runtime scope.
+Interrupted provider usage may remain unknown/reserved; cumulative usage budgets
+are still a separate M4 gate. No paid call, retained migration, worker or send.
+
 October 29 — approved bounded live M2 attempt, candidate1dcb4d3. Reviewed and
 integrated Murtazo's optional saved-format evidence viewer8268e27;113 local web
 tests and webpack build pass. Exact candidate CI40998132458/40998137577 green.
