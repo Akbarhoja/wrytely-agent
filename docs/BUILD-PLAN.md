@@ -1,21 +1,43 @@
 # Wrytely academic agent — shared build plan
 
-Revision 5 · October 28, 2026 · Implementation started; see ../STATUS.md for evidence
+Revision 6 · October 29, 2026 · Implementation started; see ../STATUS.md for evidence
 
 Source: [original Claude build plan](https://claude.ai/artifact/SYcUqEpMsGYR1mADTgTL5N#461f6ac1-7203). This revision preserves the two-builder structure, autonomous agent loop, concrete work orders, and submission buffer. It changes sequencing and resolves conflicting requirements.
 
 This repository copy is the shared implementation plan. See [TEAM.md](../TEAM.md) for current ownership and branch workflow, [STATUS.md](../STATUS.md) for actual completed work and limitations, and [Murtazo’s handoff](stages/B1-murtazo.md) for the next integration tasks. Dates are planning targets, not claims of completion.
 
-## Current execution correction — October 28
+## Founder correction — October 29: automatic discovery is required
 
-Akbar paused feature expansion: consolidate/review the existing branches, complete
-live M1, then demonstrate full A3 before further A4. The codex/m1-integration
-candidate contains existing work, while A4 #24 remains parked. Offline tests do not
-satisfy live gates. See [M1 acceptance](M1-ACCEPTANCE.md) and the current STATUS.md.
+Akbar reaffirmed the original product requirement: after the student connects
+Canvas, Wrytely discovers their courses, reads syllabi, assignments and discussions,
+keeps checking for new/changed material, and proactively offers to take work on.
+The student must not copy each assignment or prompt each monitoring cycle.
+Manual snapshots and replay fixtures are development/fallback tools, not acceptance
+of this connected autonomous experience. Earlier optional-connection/four-hour-cutoff
+wording is superseded by this correction.
+
+Required sequence: connect Canvas and WhatsApp → discover courses and coursework →
+identify a responsibility and offer help → receive delegation → independently select
+and execute useful steps → check and deliver the result → detect changes and follow
+through. These activities continue with the website closed. Monitoring permission
+is separate from permission to draft, share or submit; reuse student preferences
+and recorded standing delegation rather than asking about every internal step.
+
+Current evidence remains limited: manual snapshot intake and runtime/tests exist,
+but live automatic Canvas discovery/monitoring is not implemented or demonstrated.
+Institutional access restrictions must be reported as concrete blockers; they cannot
+be hidden by substituting a paste workflow and marking B2/M2 complete.
+
+Review/integrate existing correctness fixes and finish live M1, while defining and
+building the required Canvas B2 path with the existing owners. A4 adaptation remains
+behind the connected M2 gate. This correction does not authorize new account access,
+paid calls, deployment or changes to existing Wrytely production.
 
 ## 1. Product promise and proof
 
 Wrytely is one persistent personal academic agent per college student. The student delegates responsibilities; Wrytely maintains context, identifies useful work, executes within authority, communicates when needed, and follows through. It works between conversations without requiring the student to open an app or send another prompt.
+
+The deployed service must remain available 24/7: course synchronization and responsibility workers continue while the student is offline, recover after restart, and communicate through WhatsApp. Current test workers being stopped is a development limitation, not the required final behavior.
 
 The agent's standing goals and unfinished responsibilities are sufficient to select another action. New messages, assignment changes, and timers add information; they are not prerequisites for continuing useful work. After completing a task, it evaluates the result and chooses the next step. Waiting for a student answer on one task does not stop independent work.
 
@@ -31,7 +53,7 @@ Three durable concepts make this practical:
 
 The hackathon must show this complete experience:
 
-**Discover a commitment → ask for delegation → work independently → adapt to a changed requirement → deliver a checked result → manage the follow-up.**
+**Connect Canvas → discover courses and coursework → identify a commitment and offer help → receive delegation → work independently → adapt to a changed requirement → deliver a checked result → manage the follow-up.**
 
 Acceptance: after delegation, freeze incoming external inputs and observe multiple useful steps, at least one useful agent-created task, and continuity across an episode boundary. Also prove it can adapt when a later input changes the requirements. These are separate phases of the demonstration.
 
@@ -47,11 +69,11 @@ Plan for two builders. Confirm actual available hours in P0; dates below are tar
 
 Akbar remains the integration lead. The teammate can propose and implement a small shared-code change with review; work does not have to wait for Akbar to write every database helper or interface field. Either builder may assemble a focused cross-component fix with explicit coordination.
 
-**Required demo:** one synthetic student; one synthetic course permitting the demonstrated AI assistance; one group chat; one student channel; one assignment; source-backed drafting; requirement adaptation; persistent progress; authorized sharing; follow-up; visible provenance and status.
+**Required demo:** one test student; actual Canvas connection to controlled synthetic course data; course discovery, syllabus/assignment/discussion reads and ongoing change detection; one controlled group input; WhatsApp; one assignment carried through autonomous drafting, adaptation, checked delivery and follow-up. Test course discovery across at least two accessible controlled courses to catch a hardcoded single-course implementation; the detailed assignment demonstration can focus on one course.
 
-**Required usable product:** people can sign up, log in, receive their own persistent agent, add their own academic context, delegate work, and return to their saved results. This is working access, not a waitlist or a shared demo account. The recorded demonstration still uses synthetic course data.
+**Required usable product:** students can sign up, receive a private persistent agent, connect Canvas and WhatsApp, have courses/coursework discovered without per-assignment copying, receive proactive offers and delegate work. They can return to saved results while monitoring and delegated progress continue with the website closed. The recorded demonstration uses controlled synthetic course content, never real classmates’ private data.
 
-**Optional:** voice notes, real Canvas notification ingestion, calendar integration, natural-language permission editing, handwriting, second messaging channel, sophisticated console, public crash demonstration. Select optional work only after the required experience runs.
+**Optional:** voice notes, additional Canvas notification/email paths beyond the required Canvas connection, calendar integration, natural-language permission editing, handwriting, second messaging channel, sophisticated console, public crash demonstration. Select optional work only after the required experience runs.
 
 **First release after the event:** expand the initial usable pilot to more college students and courses, broaden source coverage, coordination, tutoring/office-hours discovery, and workload support. Signup and one agent per user are included in the hackathon build. Handwriting remains part of the wider Wrytely vision. The hackathon's narrower implementation does not redefine the product.
 
@@ -59,10 +81,10 @@ Akbar remains the integration lead. The teammate can propose and implement a sma
 
 1. The student signs up or logs in through Wrytely's existing Clerk application, configured for the agent subdomain. Existing Wrytely users use their existing identity; new users can create an account. Inspect current sign-in methods and environment configuration in P0 and reuse supported settings. Use Clerk's verified identity and session handling rather than building a password system from scratch.
 2. On first entry to the agent product after verified signup or login, provision a student profile and one default academic agent linked to the existing Clerk user ID. Provisioning is idempotent: repeated callbacks, login, or page refresh do not create duplicate agents or reset memory. Existing handwriting-only users do not all receive background agents automatically. If provisioning fails, show a recoverable setup state and retry safely.
-3. Onboarding collects timezone, communication preferences, initial academic context, and one responsibility. The student can upload or paste a syllabus/assignment and delegate useful work immediately; institutional connections are optional where access is unavailable. Clearly show that uploaded snapshots do not automatically track later portal changes.
+3. Onboarding collects timezone/preferences and connects Canvas. Wrytely discovers accessible courses, reads available syllabi/assignments/discussions, identifies relevant obligations and offers help through WhatsApp. Students do not paste each assignment or manually select sources for routine connected work. Upload/paste remains a clearly labeled supplemental fallback; if account access is unavailable, report that blocker without claiming connected acceptance.
 4. The student can link their messaging identity through a short-lived verification challenge. Typing a phone number or sending a student ID is not sufficient proof of ownership. Link inbound messages only to a verified account/channel mapping.
 5. The agent begins permitted work after the student gives it a responsibility. Account creation alone does not grant access to Canvas, Teams, messages, files, or other accounts. Connections and action permissions are established explicitly.
-6. Logging out or closing the website does not stop delegated work. Logging back in restores the same agent, memory, tasks, artifacts and controls. The web interface provides an authenticated conversation and results view so basic use is possible before optional messaging setup succeeds.
+6. Logging out or closing the website does not stop delegated work. Logging back in restores the same agent, memory, tasks, artifacts and controls. The web interface provides an authenticated conversation and results view so basic use is possible while required WhatsApp setup is being completed; it does not replace WhatsApp acceptance.
 
 Each student gets a distinct logical agent with private state. Shared servers, workers and Meta models can serve many students; a signup does not require a dedicated model or server. The first version uses one default academic agent per account.
 
@@ -80,7 +102,7 @@ All times are Denver local time. Confirm the submission deadline against current
 |---|---|---|
 | M0 | Wed Oct 28, noon | Existing Clerk/database/storage setup inspected; subdomain and one channel confirmed; user/agent identity model agreed; scoped schema and CI work; access limitations recorded |
 | M1 | Thu Oct 29, noon | Deployed signup/login provisions one private agent; authenticated web message and verified phone path reach real model work with restart persistence |
-| M2 | Fri Oct 30, evening | New users can onboard, add context and delegate useful private work; controlled-group scenario produces an autonomous source-backed draft |
+| M2 | Fri Oct 30, evening | Canvas connection discovers courses, syllabi, assignments and discussions; background monitoring identifies work and offers help through WhatsApp; one delegation produces an autonomous checked private draft |
 | M3 | Sat Oct 31, evening | Changed requirement invalidates old work; agent revises, delivers, shares when authorized, and schedules follow-up |
 | M4 | Sun Nov 1, evening | Multi-user isolation, signup/onboarding, usage limits, recovery and agent evaluations pass; pilot feedback and costs recorded |
 | Freeze | Mon Nov 2, noon | Core behavior frozen; rehearsals and justified fixes only |
@@ -225,7 +247,7 @@ Interrupt checks run between tool steps and immediately before external actions.
 
 WhatsApp is the primary student channel, as decided by the founder. Use the official Cloud API, subject to verified access and applicable platform terms. The website supports signup, connections, controls and results; web conversation is secondary. Any channel fallback requires an explicit product decision. Do not build a second adapter before the WhatsApp workflow works. Account linking, consent, conversation-window rules and approved templates must be enforced before proactive delivery.
 
-Choose one course source for the demo: a real Canvas sandbox if it works within four hours, otherwise a transparently labeled fixture/replay service. The group connector uses a controlled group and consenting participants. The primary demonstration uses synthetic student/course information.
+Canvas is the required course connection. Validate authorization and institution access early; use a real controlled Canvas environment containing synthetic courses for connector acceptance. Discover all active courses visible to that authorized connection rather than hardcoding one course, and show exactly which course/item reads fail or are incomplete. Read syllabi, assignments and discussions, retain versions, and run recurring incremental checks independently of student messages. Set and measure sync freshness/latency before acceptance; 24/7 service availability is not a promise of instantaneous updates. Fixtures remain useful for tests but cannot replace real connector acceptance. Group ingestion uses a controlled conversation with consenting participants; its concrete platform/access work order must be recorded, not assumed.
 
 | Source | What it may establish | Limitation to display |
 |---|---|---|
@@ -237,7 +259,7 @@ Choose one course source for the demo: a real Canvas sandbox if it works within 
 
 Keep last successful sync and source coverage visible. A stale or inaccessible source prevents a blanket claim that the agent has checked everything. Manual uploads are optional fallback evidence, not proof of independent monitoring.
 
-Real Canvas email/feed experiments are optional feasibility checks, not M0 blockers. Use separate student identities and storage if attempted; do not route both builders' academic records into an undifferentiated shared demo inbox. Confirm actual school support rather than assuming the alternative contact method works.
+Canvas authorization/access feasibility is a required dependency, not an optional experiment. Additional email/feed paths may supplement it but cannot establish full syllabus/assignment/discussion coverage by themselves. Keep student connections and data separate. Teams and Outlook still require concrete integration work orders and verified permissions; neither is automatically implemented by connecting Canvas or WhatsApp.
 
 Communication should reduce student effort. Batch low-urgency questions, honor quiet hours, and avoid repeating ineffective reminders. A daily unsolicited-message budget is a starting preference, not a rule that delays an urgent required decision until tomorrow. Requested replies, results, and urgent decisions need explicit treatment. Explain what the agent will do without a reply; silence does not create new external-action authority.
 
@@ -269,7 +291,7 @@ Each order specifies owner, dependency, scope, output, and observable acceptance
 
 ### P0 — feasibility and decisions (both, Oct 27–28)
 
-Akbar confirms team hours, model access, per-user runtime scope, existing database/schema and handwriting execution shape without copying existing product code. Teammate inspects the current Clerk application, storage and hosting setup, verifies agent-subdomain sign-in/session compatibility, and tests one channel, a controlled group bot, deployment connectivity, and the timeboxed course-source option. Keep short notes with evidence, limitations, and any compatibility issue; do not create replacement production services by default.
+Akbar confirms team hours, model access, per-user runtime scope, existing database/schema and handwriting execution shape without copying existing product code. Teammate inspects the current Clerk application, storage and hosting setup, verifies agent-subdomain sign-in/session compatibility, and tests WhatsApp, a controlled group connection, deployment connectivity, and required Canvas authorization/discovery. Keep short notes with evidence, limitations, and any compatibility issue; do not create replacement production services by default.
 
 Done when: existing-service reuse is mapped and compatibility checked; one channel and a source path are selected; Clerk-user-to-agent provisioning and verified messaging-link semantics are agreed; a model tool call works; scoped credentials can be supplied securely; unknowns have owners and defaults. Optional dependencies stay off the critical path.
 
@@ -299,9 +321,9 @@ Done when: with outside inputs frozen, one responsibility yields multiple useful
 
 ### B2 — controlled group and course context (teammate, B1 → M2)
 
-Complete onboarding for timezone, preferences, first responsibility and permitted source connections. Support student-owned syllabus/assignment upload or paste for the first useful workflow, with appropriate file limits and private storage. Implement the selected course connector, group-message ingestion, versioned observations, and commitment/fact extraction with evidence. Seed synthetic demonstration data separately from real accounts. Keep institutional-access experiments optional.
+Complete Canvas authorization and onboarding for timezone/preferences. Discover the connected student’s active courses, read syllabi, assignments and discussions, and persist private versioned observations. Maintain background incremental synchronization with restart recovery, deduplication, coverage and visible freshness. Supply evidence-backed observations to Codex’s discovery/planning boundary so Wrytely proactively identifies work and offers help through WhatsApp. Implement controlled group-message ingestion under a concrete platform/access work order. Upload/paste is supplemental; keep synthetic test data separate from real accounts.
 
-Done when: a newly registered student can supply academic context, delegate work and receive a private result without needing a seeded persona or institutional API key. An actual controlled-group message becomes one evidence-linked commitment; a source update is recorded once; the agent reads the assignment and rubric; stale or missing coverage is represented accurately. Repeated polling and webhook delivery are harmless. Snapshot input is not described as continuous portal monitoring.
+Done when: after one account connection, course enumeration and syllabus/assignment/discussion reads happen without per-item student copying. A new or changed item is discovered with the website closed and without a fresh student prompt; Wrytely offers relevant work, receives delegation and supplies the correct context for a private checked draft. At least two controlled courses are discovered; new items and edits are synchronized without duplicates, failures/coverage are explicit, and a controlled group message becomes an evidence-linked commitment. A manual snapshot or replay alone cannot pass B2/M2.
 
 ### A3 — drafting, authorization, and checks (Akbar, A2 + B2 contracts → M2)
 
@@ -388,7 +410,7 @@ WhatsApp's Business Platform and third-party-agent route have different terms an
 | Signup and private agent | Confirmed by founder, October 27 | Required for hackathon: self-service signup, usable onboarding and one persistent agent per student |
 | Initial pilot capacity and usage | Both, before public access | Modest explicit limits, per-user metering and global cost cap; preserve saved work when a limit is reached |
 | Student channel | Teammate, M0 | One verified working channel; Telegram fallback; no second adapter yet |
-| Course source | Teammate, four-hour spike | Labeled synthetic/replay service if sandbox is not working |
+| Course source | Murtazo, required B2 dependency | Actual Canvas authorization, course discovery and ongoing syllabus/assignment/discussion synchronization; institutional access failures remain blockers |
 | Real academic data | Both, before any connection | Synthetic demo; real experiments isolated and optional |
 | Existing handwriting dependency | Founder decision, October 27 | Build the agent from scratch in a separate repository; existing Wrytely is an optional external tool with prior-work disclosure |
 | Course-policy behavior | Akbar, before A3 | Section 8; changes require explicit product decision |
@@ -402,9 +424,9 @@ Organizer questions are prepared by the team; this plan does not itself authoriz
 - https://discord.com/channels/1557169028080869426/1564043204725182484/threads/1564174134462779493
 - https://discord.com/channels/1557169028080869426/1564174134462779493/1564674642260529303
 
-If a gate slips, cut in this order: second channel and optional real-source experiments; calendar; extra model integrations; plain-language rule editing; console polish; optional voice/photo/handwriting beats; public crash demonstration. Keep basic recovery tests even when the crash is not shown in the video.
+If a gate slips, cut in this order: second channel and additional source experiments beyond Canvas; calendar; extra model integrations; plain-language rule editing; console polish; optional voice/photo/handwriting beats; public crash demonstration. Keep basic recovery tests even when the crash is not shown in the video.
 
-Protect: working signup/login, private agent provisioning and isolation, useful onboarding, self-directed continuation, useful requirement adaptation, source evidence, permission enforcement, honest delivery state, a legible student outcome, and recording/submission buffer. If those cannot fit, narrow the assignment and source set rather than replacing real user access with a waitlist or shared demo.
+Protect: working signup/login, private agent provisioning and isolation, automatic Canvas course discovery and ongoing coursework monitoring, proactive offers, useful onboarding, self-directed continuation, useful requirement adaptation, source evidence, permission enforcement, honest delivery state, a legible student outcome, and recording/submission buffer. If those cannot fit, narrow the assignment and source set rather than replacing real user access with a waitlist or shared demo.
 
 ## 13. Freeze, demonstration, and submission
 

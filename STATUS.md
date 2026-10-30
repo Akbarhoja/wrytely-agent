@@ -1,5 +1,25 @@
 # Engineering status
 
+October 29 founder scope correction — #43, codex/restore-autonomous-scope:
+Akbar reaffirmed the original autonomous academic-agent requirement. Canvas
+connection must discover the student's courses, read syllabi/assignments/
+discussions, keep monitoring changes with the website closed, and proactively
+offer work. Manual per-assignment paste/upload is fallback/testing, not completion.
+BUILD-PLAN revision6 restores this in required product/M2/B2/source acceptance
+and removes conflicting optional-connection/four-hour-to-fixture wording. No claim
+that this connector or 24/7 operation already exists. Snapshot/runtime work remains
+useful groundwork; live discovery, monitoring and proactive offers remain missing.
+
+Murtazo notified in #4 comment6515094526 to prepare the concrete Canvas access/
+integration/interface work order under existing ownership; Codex owns the
+observation-to-responsibility/runtime side. Institutional access failures must be
+explicit blockers, never a silent replacement by manual intake. No source/app/web
+code, connection authorization, deployment, paid call or production change here.
+Existing M1/M2 live gaps remain. Latest Murtazo #4 update reviews #40 ddd5ab1 and
+#42 224bc96 with no concrete blocker in scoped review; agreement/independent focused
+checks recorded on PRs. These fixes can next be integrated and combined-head
+reviewed; this documentation change does not falsely claim they already were.
+
 October 29 further continuation — pause recovery #41/#42 is now a concrete
 runtime/store candidate, not only regression preparation. Executablea7db006 passes
 385 backend/113 web in CI41000663097/41000715908; nine new regressions cover control
