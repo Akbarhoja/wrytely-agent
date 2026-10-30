@@ -333,3 +333,14 @@ integrated backend tests pass on disposable Postgres; Ruff lint/format, TypeScri
 Prettier, production build and diff checks pass. Actual-component synthetic browser
 checks verify keyboard expansion and desktop/320px no overflow. No live provider,
 retained migration, worker activation, sharing, send, submission or deployment.
+
+## Selected draft-list refresh correction
+
+An open duty could retain an empty draft list after its status became ready.
+Added an explicit read-only Refresh drafts action on selected work, reusing the
+existing private list/session/selection fences. Empty text now describes the last
+list read and directs students to refresh after status changes. This does not
+queue work or repeat consent. A regression first failed for the missing action,
+then verified pending/empty → ready status → refreshed artifact → private review,
+with GET-only requests. All114 website tests, TypeScript, Prettier and production
+build pass. Backend executable is unchanged; prior376-test evidence is separate.

@@ -221,6 +221,13 @@ function ResultSession({
         <section className="connections-panel academic-panel" aria-labelledby="saved-drafts-title">
           <div className="section-heading">
             <h2 id="saved-drafts-title">Saved drafts</h2>
+            <button
+              className="quiet-button"
+              disabled={Boolean(busy) || !enabled}
+              onClick={() => void openWork(selected)}
+            >
+              Refresh drafts
+            </button>
             <span>{workState[selected.status]}</span>
           </div>
           <p className="body-copy">{selected.objective}</p>
@@ -233,7 +240,10 @@ function ResultSession({
             }}
           />
           {drafts?.length === 0 && (
-            <p>No saved drafts yet. Work may still be in progress or blocked.</p>
+            <p>
+              No saved drafts were found in the last refresh. Refresh drafts after work status
+              changes.
+            </p>
           )}
           <ul className="academic-sources">
             {drafts?.map((row) => (
