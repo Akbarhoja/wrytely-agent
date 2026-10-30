@@ -123,3 +123,43 @@ def test_retry_after_completion_cannot_duplicate_response(store, alice):
     with pytest.raises(LeaseLost):
         store.complete(lease, "Duplicate")
     assert store.claim() is None
+
+
+def test_pause_final_claim_can_resume_with_new_fence(store, alice):
+    task = store.enqueue("user_alice", "Question", "pause-final")
+    old = store.claim(max_attempts=1)
+    store.set_paused("user_alice", True)
+    assert store.claim(max_attempts=1) is None
+    store.set_paused("user_alice", False)
+    expire(store, task["task_id"])
+    resumed = store.claim(max_attempts=1)
+    assert resumed is not None
+    assert resumed.attempt > old.attempt
+    assert resumed.lease_token != old.lease_token
+    with pytest.raises(LeaseLost):
+        store.complete(old, "Old worker cannot complete")
+    store.complete(resumed, "Resumed work")
+    assert store.task("user_alice", task["task_id"])["status"] == "done"
+
+
+def test_resume_does_not_revive_pre_pause_lease(store, alice):
+    store.enqueue("user_alice", "Question", "pause-revocation")
+    old = store.claim()
+    store.set_paused("user_alice", True)
+    store.set_paused("user_alice", False)
+    with pytest.raises(LeaseLost):
+        store.complete(old, "Stale worker result")
+
+
+def test_pause_interruptions_do_not_forgive_later_execution_failure(store, alice):
+    task = store.enqueue("user_alice", "Question", "pause-then-fail")
+    store.claim(max_attempts=1)
+    store.set_paused("user_alice", True)
+    store.set_paused("user_alice", True)
+    store.set_paused("user_alice", False)
+    expire(store, task["task_id"])
+    resumed = store.claim(max_attempts=1)
+    assert resumed is not None
+    store.retry(resumed, "execution_failed", max_attempts=1)
+    assert store.task("user_alice", task["task_id"])["status"] == "blocked"
+    assert store.claim(max_attempts=1) is None
