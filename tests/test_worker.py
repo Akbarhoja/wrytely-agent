@@ -164,3 +164,33 @@ def test_pause_resume_replays_committed_tool_checkpoint(store, alice):
     assert any(item.get("type") == "function_call_output" for item in history)
     assert "Uncommitted old result" not in str(history)
     assert store.messages("user_alice")[-1]["content"] == "Answer after resumed checkpoint"
+
+
+def test_model_failure_after_pause_cannot_commit_or_exhaust_resumed_work(store, alice):
+    from shared.model_client import ModelCallFailed
+
+    task = store.enqueue("user_alice", "Question", "pause-with-provider-failure")
+
+    class FailAfterPause:
+        def turn(self, history, tools):
+            store.set_paused("user_alice", True)
+            raise ModelCallFailed(status="http_error", http_status=503, code="server_error")
+
+    assert run_once(store, FailAfterPause(), Settings(max_attempts=1))
+    with store.connection() as conn:
+        events = conn.execute(
+            "SELECT kind FROM wrytely_agent.episode_events WHERE task_id=%s",
+            (task["task_id"],),
+        ).fetchall()
+    assert [event["kind"] for event in events] == ["control_interrupted"]
+    assert store.task("user_alice", task["task_id"])["status"] == "ready"
+    assert len(store.messages("user_alice")) == 1
+    store.set_paused("user_alice", False)
+    resumed = ScriptedModel([answer("Recovered after interrupted provider failure")])
+    assert run_once(store, resumed, Settings(max_attempts=1))
+    row = store.task("user_alice", task["task_id"])
+    assert row["status"] == "done"
+    assert row["attempts"] == 2
+    assert store.messages("user_alice")[-1]["content"] == (
+        "Recovered after interrupted provider failure"
+    )

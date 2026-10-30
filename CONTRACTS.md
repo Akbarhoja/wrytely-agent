@@ -682,7 +682,6 @@ model-turn replay. If fencing is lost (for example pause), no event is committed
 operator reservations must remain until reconciliation. This is failure evidence,
 not a cumulative billing cap, and does not release any reservation automatically.
 
-
 ## Pause recovery and execution-failure allowance — issue #41
 
 Store.set_paused keeps its verified-user/boolean interface and agent-row return.

@@ -34,9 +34,10 @@ Each new PR lists exact files, including tests and any temporary shared-file cla
 
 ## Base branch and consolidation
 
-Last recorded integration base: codex/m2-integration-review at a8cac79. #40/#42 are
-separate reviewed fixes, not integrated there; #44 carries this plan. M's #28 latest
-proposal is a383782. Check fresh heads in #4/STATUS before implementation.
+Current consolidation candidate: codex/p0-baseline (#45 work order), combining
+a8cac79, reviewed #40/#42, revision7 from #44, and M's a383782 Canvas proposal.
+It awaits combined CI and counterpart review; main is not yet consolidated.
+Check fresh heads and review state in #4/STATUS before implementation.
 
 P0-A1 consolidates accepted changes and requests independent review/CI before the
 protected main merge. Until then, branch from the explicitly recorded candidate.
