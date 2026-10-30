@@ -92,6 +92,43 @@ async function choose() {
 }
 
 describe("private saved results", () => {
+  it("refreshes selected drafts after status becomes ready without starting new work", async () => {
+    let ready = false;
+    const base = fixture();
+    const fetcher = vi.fn(async (url: unknown, _options?: RequestInit) => {
+      const path = String(url);
+      if (path.endsWith("/status"))
+        return Response.json({
+          responsibility_id: id,
+          requested_mode: "private_draft",
+          status: "active",
+          reason: null,
+          assessment_state: ready ? "assessed" : "pending",
+          workflow_state: ready ? "ready_for_review" : "pending",
+          artifact_id: ready ? id : null,
+        });
+      if (path.endsWith("/artifacts"))
+        return Response.json({ artifacts: ready ? [summary] : [], limit: 50 });
+      return base(url);
+    });
+    vi.stubGlobal("fetch", fetcher);
+    render(<AcademicResults userId="alice" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Open work: Comparison section" }));
+    await screen.findByText(/No saved drafts/);
+    ready = true;
+    fireEvent.click(screen.getByRole("button", { name: "Refresh work status" }));
+    await screen.findByRole("heading", { name: "Draft ready for your review" });
+    fireEvent.click(screen.getByRole("button", { name: "Refresh drafts" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Open draft: Private comparison" }));
+    await screen.findByRole("heading", { name: "Ready for your review" });
+    expect(fetcher.mock.calls.every(([url]) => String(url).startsWith("/api/agent/"))).toBe(true);
+    expect(
+      fetcher.mock.calls.every(([, options]) => !options?.method || options.method === "GET"),
+    ).toBe(true);
+    expect(fetcher.mock.calls.filter(([url]) => String(url).endsWith("/artifacts"))).toHaveLength(
+      2,
+    );
+  });
   it("does not invent a disclosure requirement for a permitted policy", async () => {
     vi.stubGlobal(
       "fetch",
@@ -237,11 +274,11 @@ describe("private saved results", () => {
     vi.stubGlobal("fetch", fetcher);
     render(<AcademicResults userId="alice" />);
     fireEvent.click(await screen.findByRole("button", { name: "Open work: Comparison section" }));
-    await screen.findByText(/No saved drafts yet/);
+    await screen.findByText(/No saved drafts were found/);
     fetcher.mockResolvedValue(Response.json({ detail: "Unavailable" }, { status: 503 }));
     fireEvent.click(screen.getByRole("button", { name: "Open work: Comparison section" }));
     await screen.findByText(/Saved drafts could not be loaded/);
-    expect(screen.queryByText(/No saved drafts yet/)).toBeNull();
+    expect(screen.queryByText(/No saved drafts were found/)).toBeNull();
   });
   it("shows private draft, citation and stored checks without executing source HTML", async () => {
     const fetcher = fixture();
