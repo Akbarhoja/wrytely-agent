@@ -1,5 +1,219 @@
 # Contracts v0.1 — foundation
 
+## Deterministic draft format checks — issue #37
+
+verify_artifact now checks supported formatting before semantic review and stores
+optional deterministic_checks in its existing report: errors, word_count,
+disclosure_placement, word_ranges and limits. No mandatory API/model field or
+schema changes. Report consumers may ignore this additive evidence; new error
+strings must remain visible through their generic finding fallback.
+
+Word count is len(body.split()): whitespace-delimited tokens; a hyphenated token
+or number counts once. Title, citations and separate disclosure are excluded.
+If default policy requires disclosure inside body, those body tokens are counted.
+Supported numeric rubric syntax is an exact quoted instruction beginning
+“Write [a] N–M word[s]”, optionally with a hyphen before word; hyphen/en dash/em
+dash ranges are recognized case-insensitively. Each bound is 1–10,000, inclusive.
+All recognized whole-draft ranges apply; incompatible ranges report
+word_count_bounds_conflict. Too-short/long reports word_count_out_of_range.
+Numeric word requirements not parsed by this narrow syntax report
+word_count_requirement_unparsed; invalid bounds report word_count_requirement_invalid.
+No unsupported numeric limit is silently called deterministically verified.
+This does not interpret section-specific counts or all natural language. Only
+supplied exact rubric quotes are scanned; completeness of extraction still needs
+semantic review. Unsupported constraints require clarified source evidence.
+
+Disclosure-required policy retains the existing body-and-field gate by default.
+Only the cited policy source's explicit standalone line
+“Include this disclosure separately from the word-counted body:” followed by a
+nonempty required text line selects separate_field. The disclosure must equal
+that exact line and be absent from body. Missing/different text reports
+disclosure_text_mismatch; duplicate body insertion reports disclosure_must_be_separate;
+conflicting instructions report disclosure_format_ambiguous. This honors the
+existing M2 assignment, not a new permission policy. No researcher/group source
+may relax placement unless it is the cited policy source; evidence/provenance
+checks remain mandatory. Other wording retains the existing conservative body
+gate and requires review. Generation prompts request matching placement; semantic
+review still assesses actual disclosure/policy adequacy.
+
+Format failures persist needs_revision and reach bounded revision feedback before
+a separate semantic call; a model cannot override failed deterministic checks.
+Review drafts remain privately inspectable. This does not grant consent, final
+readiness on its own, sharing, submission or sending. Default policy tests remain
+unchanged; the M2 fixture now correctly uses its required separate disclosure.
+
+## Explicit private-draft intent and routing — issue #33
+
+Agreement: coordination #4 comment6492493685. Migration 009 adds
+private_draft_intents; 008/A4 stays excluded. No deployment/migration execution
+is implied. Apply 009 on an isolated environment before running this worker code.
+
+`create_draft_responsibility(verified_user_id, objective, key, *, source_ids,
+max_steps=6, pending_limit=20, max_revisions=2)` reuses atomic bound setup and
+returns the same native responsibility row. The authenticated app calls it only
+after explicit student confirmation: prepare one private draft, with no sharing,
+submission or sending. Pasted instructions are evidence, not that confirmation.
+Budgets are server-owned; max_revisions is an integer 0–2. Source limits/ownership,
+rollback and idempotency match create_bound_responsibility. Intent's original
+memory revision and revision budget persist in the same transaction as bindings
+and the initial plan. Original request metadata includes private_draft mode and
+revision budget. Changing either conflicts; an analysis-only key cannot upgrade,
+and a draft key cannot downgrade. The old analysis-only method is unchanged.
+
+At a planning episode with intent, the runtime assesses current owned bound
+evidence using assess_draft_requirements, then commits the result through a
+lease/pause/current-revision fence. Evidence quotes and freshness are revalidated
+in storage. A missing/nonpermitting policy or missing rubric blocks the draft duty
+and its task with draft_policy_or_rubric_blocked. Saved assessment is reused across
+attempts and planner episodes. It remains a fallible interpretation of sources,
+not a truth guarantee; the existing separate drafting preflight and mandatory
+artifact verification remain required. Provider failures use bounded normal retry.
+
+Only a duty with intent receives DraftPlannerDecision's extra action=draft. work
+remains ordinary analysis; draft creates one academic task and attaches its
+immutable policy/rubric/revision specification atomically before commit/claim.
+Stored intent, current evidence, step budget and duplicate checks constrain this
+choice. A consumed intent cannot spawn another drafting workflow under a new key.
+done before an actually completed, ready artifact is blocked as private_draft_not_ready.
+No model can grant its own consent or readiness. Model/source instructions cannot
+enable drafting on an analysis-only duty. Draft generation/checkpoint/revision
+continues through the existing worker path. No app polling upgrades are needed.
+
+Source changes revoke old task leases through existing memory invalidation;
+intent's original revision cannot be reused for new evidence. Pause fences both
+assessment commit and subsequent work. No A4 automatic reauthorization is added.
+Crash before a result is persisted may repeat model usage; saved assessment and
+drafting checkpoints avoid repeating already committed progress. This is not
+exactly-once model billing or an unbounded agent loop.
+
+`draft_responsibility_status(verified_user_id, responsibility_id)` is the exact
+private app read. None means absent/not-owned, mapped to the same private 404.
+Storage errors propagate. One SQL snapshot returns JSON-safe fields:
+
+| Field | Values / meaning |
+|---|---|
+| responsibility_id | UUID string |
+| requested_mode | analysis or private_draft |
+| status | active, blocked or done; revision mismatch reports blocked |
+| reason | null, source_changed, draft_policy_or_rubric_blocked or draft_work_blocked; never raw model prose |
+| assessment_state | not_requested for analysis; pending, assessed or blocked for draft intent |
+| workflow_state | not_requested for analysis; pending before attachment; queued/running after attachment; ready_for_review only for a completed task with a ready artifact; blocked on failure or stale revision |
+| artifact_id | latest saved draft UUID string or null; may reference an unready/stale review artifact |
+
+Assessment state is historical and can remain assessed after source change;
+status/reason/workflow and artifact stale flags take precedence. requested_mode
+does not mean policy permits drafting, and ready_for_review never means shared,
+sent, submitted or approved by an instructor. Use artifact_review to inspect
+private draft/check details; do not hide unready drafts or present stale ones as
+current. Existing no-cache/private ownership rules apply. Store.draft_intent,
+draft_intent_sources and commit_draft_assessment are fenced internal runtime
+methods, not API/model tools. Do not accept browser CoursePolicy, task IDs or
+assessment/verifier output as authority. The app/UI consumer remains Murtazo-owned.
+
+The first new planner episode may use two model turns (assessment plus planning);
+subsequent planning reuses assessment, and drafting uses its existing bounded
+preflight/generation/check/revision limits. Account/global usage gates and live
+quality evaluation remain separate; this change makes no live budget expansion.
+
+## Draft requirement assessment — issue #31 (internal helper)
+
+`runtime.draft_requirements.assess_draft_requirements(model, sources)` accepts
+1–8 distinct current owned bound source-version records, supplied by trusted
+runtime storage (the existing drafting_sources shape: id, content, retrieved_at,
+coverage). It does not accept browser-supplied evidence as authoritative. Each
+content is nonblank and at most 24,000 characters; timestamps are aware, no older
+than 24 hours and no more than five minutes in the future. Invalid/oversized/stale
+input fails before inference rather than silently truncating policy evidence.
+
+One structured existing ModelClient call extracts a candidate nullable CoursePolicy,
+0–30 RubricItems and a bounded reason. Exact nonblank policy/rubric quotes must
+occur in their cited supplied version; malformed output or unbound/invented evidence
+raises ValueError. Only a permitting/disclosure-required policy with a nonempty
+rubric returns state=assessed; otherwise state=blocked. JSON-safe output includes
+policy, rubric, reason, input_tokens, output_tokens, limits and always
+authorizes_drafting=false. Sources' freshness is checked again after inference.
+
+This helper has no database/task/action side effects and is not connected to the
+worker yet. It does not persist authorization, classify user consent, guarantee
+policy interpretation/rubric completeness or make a draft ready. Semantic results
+are fallible even with exact quote validation; source injection resistance needs
+live evaluation, not a scripted verdict. Provider exceptions propagate to the
+runtime's normal bounded/redacted failure path. Before persisting/using results,
+the caller must recheck lease, pause and source/memory revision through existing
+fenced Store boundaries, persist reusable checkpoints, require explicit student
+draft delegation, and retain existing drafting preflight and verification.
+
+The app-facing explicit-delegation and atomic planner-routing proposal is posted
+in coordination #4 comment6492266670; consumer agreement is pending. Existing
+B2 create_bound_responsibility remains analysis-only. This internal helper does
+not expand the agreed B2 API or authorize its app consumer to bypass that gate.
+
+## B2 atomic setup and private reads — issue #29
+
+Agreed in coordination #4 comment 6491917360. Implemented in
+shared/bound_responsibilities.py and shared/academic_reads.py, composed into the
+existing Store. No migration, endpoint, connector or full-draft authority is added.
+App consumers derive user_id exclusively from a verified session. These methods
+do not authorize sharing, submission, automatic assignment drafting or inference
+from account creation. Existing create_responsibility remains unchanged.
+
+`create_bound_responsibility(user_id, objective, key, *, source_ids,
+max_steps=6, pending_limit=20)` returns the existing responsibility row (native
+database UUID/datetime fields, as with create_responsibility). Source IDs may be
+UUID objects or UUID strings, in a list/tuple of 1–8 distinct IDs. Objective is
+trimmed and bounded 1–12,000 characters; key is 1–128; integer max_steps is 1–12;
+integer pending_limit is 1–1,000. One transaction locks the user's agent, verifies
+every owned source has a current version, creates the duty/bindings with initial
+memory_revision equal to source count, then queues one plan at that revision.
+Agent locking serializes with source observation/binding and worker claims.
+Partial setup is not claimable; failures roll back duty, bindings, messages and
+tasks. Paused accounts may save work but workers cannot claim it.
+
+An internal attempt-0 bound_responsibility_setup event retains the canonical
+original source set/objective/step budget. Reordered identical requests return the
+same duty before capacity checks, without resetting progress or rebinding after
+later source updates. Changed payload, or reuse of a legacy unbound request key,
+raises RequestConflict. Missing, invalid UUID or other-user source IDs raise the
+same LookupError("Source not found"); invalid count/duplicates/bounds raise
+ValueError, exhausted pending capacity raises QueueFull, unprovisioned users raise
+LookupError("Complete setup first"). Apps validate UUID syntax and map source
+absence/not-owned identically. Storage failures propagate; never report them as
+empty successful reads. This creates an analysis-only duty, not a drafting request.
+
+Private reads return JSON-compatible dictionaries/lists: UUIDs are strings and
+aware timestamps are ISO 8601. Source coverage is the recorded evidence type;
+snapshots do not imply live monitoring. All lists have a hard limit of 50 and no
+cursor yet; consumers must explain this limit. Lists are stably ordered:
+
+- `source_snapshots(user_id)` returns current source summaries, ordered by
+  retrieved_at descending, source_id descending. Empty/unprovisioned account: [].
+  Fields: source_id, version_id, title, reference, coverage, retrieved_at,
+  external_revision. Historical versions are excluded.
+- `source_snapshot(user_id, source_id)` returns that summary plus full stored
+  content (bounded by SourceObservation's 24,000-character limit), or None for
+  absent/not-owned. Source body is untrusted evidence, not authority.
+- `responsibility_artifacts(user_id, responsibility_id)` returns None for
+  absent/not-owned duty; otherwise a list (possibly empty), ordered created_at
+  descending, artifact id descending. Fields: id, task_id, title, state, stale,
+  created_at. Ownership and list retrieval share a repeatable-read snapshot.
+- `artifact_review(user_id, artifact_id)` returns None for absent/not-owned;
+  otherwise {artifact, latest_check}. artifact fields: id, responsibility_id,
+  task_id, memory_revision, draft, state, created_at, stale. draft is the existing
+  DraftArtifact payload. latest_check is null before any completed check or the
+  latest stored verification report (ordered created_at descending, check id
+  descending); it includes passed/errors, assessment, policy/rubric evidence,
+  token usage and limits. No raw model histories, lease tokens, agent/user IDs,
+  operator credentials or internal request keys are projected. One SQL statement
+  reads artifact state, current memory revision and latest report coherently.
+
+stale is independent of historical readiness/check success; it means the bound
+responsibility's source memory revision changed. Neither ready nor passed grants
+external-action authority. API assembly must retain no-cache responses and private
+404 semantics. Do not expose internal readiness commits or accept browser-supplied
+CoursePolicy/verification results. Trusted responsibility-level draft intent and
+atomic pre-claim routing remain the next separately specified runtime increment;
+the app must label this first delegation path as analysis only.
+
 Status: implemented and locally tested; live provider validation remains pending.
 Boundary types: `contracts/models.py`. Database: `contracts/001_foundation.sql`.
 All private operations use the verified Clerk `sub` as `user_id`.

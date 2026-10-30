@@ -144,6 +144,9 @@ class ResponsibilityStore:
             status, reason = decision.action, decision.reason
             if row["status"] != "active":
                 raise ValueError("Responsibility is not active")
+            if decision.action == "draft":
+                error = self._queue_private_draft(conn, lease, decision, context)
+                status, reason = ("blocked", error) if error else ("active", decision.reason)
             if decision.action == "work":
                 duplicate = any(
                     s["step_key"] == decision.step_key for s in context["previous_steps"]
@@ -169,6 +172,8 @@ class ResponsibilityStore:
                         (row["id"],),
                     )
                     status = "active"
+            if status == "done" and not self._private_draft_ready(conn, lease):
+                status, reason = "blocked", "private_draft_not_ready"
             if status == "done" and not context["previous_steps"]:
                 status, reason = "blocked", "no_completed_work"
             conn.execute(

@@ -5,17 +5,29 @@ existing Wrytely handwriting product for the Meta Global AI Developer Hackathon.
 
 ## Current implementation
 
-Foundation milestone: Python/FastAPI API, Clerk session verification, one private
-agent per verified user, scoped Postgres storage, durable message/task queue,
-bounded Meta Responses tool loop, pause/resume checks, attempt fencing and retries.
+The reviewed M2 integration candidate includes a Python/FastAPI API, real Clerk
+sign-in, one private agent per verified user, scoped Postgres storage, a durable
+bounded Meta task loop, academic responsibilities and versioned source memory.
+Students can save manual academic snapshots, explicitly delegate one private draft,
+and inspect saved artifacts, source citations and verification findings. The
+planner chooses internal steps; policy/rubric assessment and mandatory draft checks
+constrain readiness. Supported quoted word ranges and disclosure placement have
+deterministic checks; semantic model assessments remain fallible.
 
-The academic planner, course connectors, messaging adapters,
-artifacts and public pilot are **not implemented yet**. The new `web/` app adds the
-student interface and Clerk integration code; live authentication is still pending.
-See STATUS.md for evidence
-and TEAM.md for ownership. No external message sends or assignment submissions are
-possible in this foundation. Test results do not imply live Meta/Clerk integration
-has been verified.
+Official WhatsApp linking, webhook handling and delivery controls are implemented.
+Partial live M1 evidence exists, but reply delivery/business requirements and other
+acceptance checks remain open. The bounded live M2 attempt saved real authenticated
+snapshots/delegation, then failed on its first Meta assessment call with NotFoundError;
+no live checked draft was produced. Development workers remain stopped outside
+explicitly bounded tests. No assignment submission or classmate-sharing tool exists.
+
+Canvas/Teams connectors, automatic commitment discovery from live channels,
+requirement adaptation acceptance and public pilot are still pending. Manual
+snapshots do not monitor course changes. This candidate is on
+`codex/m2-integration-review`; protected main has not received the combined baseline.
+See [STATUS.md](STATUS.md), [the shared plan](docs/BUILD-PLAN.md),
+[the M2 checkpoint](docs/M2-INTEGRATION-CHECKPOINT.md) and
+[the live attempt](docs/M2-RUN-2026-10-29.md) for evidence and limits.
 
 ## Setup
 
@@ -70,11 +82,12 @@ The source repository is public at https://github.com/Akbarhoja/wrytely-agent.
 The MIT license covers this repository's code. Connected services and any future
 model weights remain subject to their own terms.
 
-The lead has started the B1a web scaffold; Murtazo's integration work order is
-`docs/stages/B1-murtazo.md`. All feature changes use
-PRs, contract checks and integrated review. Akbar will invite him. Main requires
-passing foundation checks and one approving review; Akbar retains administrator
-override. See TEAM.md for the verified review settings.
+Murtazo is the integration/web/source owner and an existing contributor. Codex
+owns runtime/shared contracts and integration review. All feature changes use
+scoped claims, PRs, contract checks and counterpart review; see TEAM.md and the
+pinned coordination issue. Independent human review is required for protected-main
+integration. Do not treat assistant review through the same GitHub account as
+that approval.
 
 ## Prior work and shared services
 
@@ -90,9 +103,10 @@ does not mean those services were created during the hackathon.
 - https://clerk.com/docs/guides/sessions/manual-jwt-verification
 - https://neon.com/docs/connect/connection-pooling
 
-Public pilot launch requires additional usage budgets, authentication/frontend
-smoke tests, per-user connectors, artifact ownership, delivery controls and live
-integration evidence. This foundation is not a production launch.
+Public pilot launch still requires cumulative usage reservation/limits, live
+acceptance evidence, connector permissions and operational validation. Existing
+authentication, private artifact reads and delivery controls have code/test evidence;
+that does not establish production readiness or successful live delivery.
 
 ## Web development
 

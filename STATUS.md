@@ -1,5 +1,214 @@
 # Engineering status
 
+October 29 further continuation — pause recovery #41/#42 is now a concrete
+runtime/store candidate, not only regression preparation. Executablea7db006 passes
+385 backend/113 web in CI41000663097/41000715908; nine new regressions cover control
+recovery and retained failure/fencing bounds. Final documentation head224bc96.
+Diagnostics#40 remains ready with381 backend tests. Both await counterpart review
+before integration/deployment; no teammate implementation edited or approval
+inferred. No retained migration, deployment, model call or send in this continuation.
+
+Completed a separate real read-only M2 privacy subset using existing first/second
+student sessions: owner lists four fictional snapshots and its blocked duty;
+second account sees no snapshots and direct known-owner source/status reads return
+not found; owner's own status remains readable. No artifact exists, so live artifact
+isolation/checked-draft/continuation gates remain open. Actual run report updated;
+previous absence-of-second-tab note is superseded. Failed-call reservation and
+original request/spend ceilings remain unchanged despite active $150 credits.
+
+October 29 continuation — checked Murtazo coordination first and verified $150
+active free credits in the existing Meta team's Billing UI; $2 email alert remains
+an alert, not a cap. Provider Usage still reports the two earlier successful calls
+and warns of reporting lag, so failed M2 reservation remains unchanged. Meta's
+status page says operational; the404 cause remains unresolved. No inference retry.
+
+Reviewed and integrated Murtazo's a344642 private selected-draft-list refresh at
+fa565d1;114 local frontend tests pass and teammate's exact checks green. It reuses
+GET-only reads and session/selection fencing; no new AI request/consent is issued.
+README now describes actual implementation and live limits. Prepared acceptance
+checklist remains a template; the attempted run report is the current evidence.
+
+Runtime diagnostics #39/#40 at ddd5ab1 (separate branch, not integrated) passes
+CI40999712704/40999746927:381 backend/113 web, lint/type/format/build. It preserves
+safe failure metadata and known incomplete-response usage in private fenced events;
+no response content or unknown-usage discount. Await counterpart review before
+integration/deployment. Three regression-only #41 tests at f1f4713 reproduce the
+pause-final-attempt exhaustion and pre-pause lease revival in CI40999920955;376
+baseline tests pass. Proposed monotonic-fence/control-interruption semantics await
+Murtazo's agreement before implementation. No app/web takeover, new deployment,
+provider call, worker, WhatsApp send or quota increase in this continuation.
+M2 live and remaining M1 gates remain incomplete.
+
+October 29 — approved bounded live M2 attempt, candidate1dcb4d3. Reviewed and
+integrated Murtazo's optional saved-format evidence viewer8268e27;113 local web
+tests and webpack build pass. Exact candidate CI40998132458/40998137577 green.
+Deployed only isolated development agent-api; migration ledger confirms001–007
+and009, no008. Four fictional snapshots and one explicit delegation saved through
+the signed-in student UI. First real Meta requirements-assessment request failed
+with NotFoundError; task/responsibility blocked, zero workflow outbound rows and
+no draft. One request attempted, no usage returned: retain $1.32 reservation,
+not claimed actual spend, alongside prior $0.00773075 known usage. No blind retry.
+
+Non-inference catalog lookup succeeds and lists configured muse-spark-1.3; remote
+and dedicated local development keys match. Failure cause remains unresolved;
+not evidence of missing LLC information or a proven model retirement. Normal
+predeploy migration command restored/read back, API-only start unchanged and
+restored deployment9765a5ae healthy/SUCCESS. No continuous worker or WhatsApp send.
+M2 live acceptance remains incomplete; no live artifact/isolation/continuation
+pass claimed. See docs/M2-RUN-2026-10-29.md. Main, production and business setup
+untouched. Next: diagnose provider404 with safe error metadata, reconcile reserved
+usage before another bounded attempt, then finish live M2 acceptance. M1 remains
+incomplete and A4 excluded. Earlier unmounted/undeployed notes are historical.
+
+October 29 — final #28 checkpoint061c389 reviewed and integrated into the #36
+candidate at cc91f8e. Explicit private-draft confirmation is now mounted and wired
+to authenticated POST/status GET; source intake, status and private results are
+connected. This supersedes earlier unmounted/no-transport status. No teammate
+implementation rewritten. Murtazo's actual API→Store→scripted worker→checked
+artifact test is included, with account denial and no outbound action. Integrated
+candidate CI40995183663 succeeds; no live operator/Meta acceptance claimed.
+
+Issue #37 on codex/draft-format-checks adds deterministic quoted word-range and
+source-required disclosure placement checks. Default body disclosure gate remains;
+the explicit M2 separate-disclosure requirement is honored. Unsupported numeric
+word-limit syntax blocks honestly. Optional report evidence and errors persist
+through existing check/revision flow; no API/model-schema/migration changes or
+teammate edits. CI40995513163 at f995c9a passes376 backend/107 frontend tests plus
+lint/type/format/build;43 focused non-DB tests and107 frontend tests pass locally.
+Full local DB suite remains sandbox-blocked, not claimed passing. Narrow language
+support and fallible policy/rubric completeness remain explicit limitations.
+
+Next gate is counterpart review and a bounded real synthetic M2 run through the
+student path; live spend/scope approval required before calls. Business setup
+remains deferred, M1 delivery/control gates remain open, and no retained-dev
+migration/deployment/provider call/worker activation or protected merge occurred.
+
+October 29 — #35 combined review candidate on codex/m2-integration-review:
+reviewed Murtazo's published5473d46 snapshot/results/standalone-delegation UI and
+assembled it with our private-draft runtime at merge0d47e40. No teammate code
+rewritten. Fixed the concrete #34 PlannerDecision validator regression atdb241ab:
+base nonblank/normalization restored and inherited; seven focused regressions
+observed3 failures before fix and7 passes after. Combined exact-head CI40967993517
+foundation/web succeed; local94 web tests, type/format/webpack build, Ruff and26
+focused non-DB tests pass. Full local DB suite remains sandbox-blocked; no full
+backend count inferred from unavailable log download. Checkpoint details and
+remaining boundaries: docs/M2-INTEGRATION-CHECKPOINT.md.
+
+Akbar explicitly kept remaining delegation API/UI wiring with Murtazo. The private
+decision component is deliberately unmounted/no-transport; no end-to-end student
+draft request or live M2 pass claimed. Existing source/result screens coexist with
+runtime, not yet a complete connected workflow. Runtime fix and exact handoff
+posted in #4/#28/#34. No schedule/wakeup, business setup, provider call, retained
+migration, deployment or protected-main merge occurred. Disclosure/word-limit
+gaps and M1 live gates remain open; only Meta business setup is deferred by Akbar.
+
+October 29 end-of-session handoff: Akbar asked Murtazo's Codex to rest fully and
+delete its Wrytely scheduled tasks, with work resuming October30 Denver time.
+Instruction delivered in coordination #4 comment6493618180: save current work
+without discarding unfinished UI, stop new activity, delete only its own Wrytely
+polling/build schedules and acknowledge completion. Schedule deletion is NOT
+verified; posting a GitHub instruction does not cancel a remote scheduler.
+
+Codex reviewed #28 exact5462e96 API/proxy delta from shared25f1972 and found no
+concrete blocker in that published slice. Independent read-only archive checks:
+59 frontend tests, TypeScript, focused storage-failure API test and changed-file
+Ruff pass. Exact-head CI40848239694 reports293 backend/59 frontend plus build/
+lint/type/format pass. Full local DB suite not rerun due sandbox restrictions.
+Review evidence posted on #28 comment6493640290, not a human approval or merge.
+Unpublished student-form work is outside this review. Include owned UTF-8 fix
+from #34 when combining branches. Tomorrow: inspect saved teammate checkpoint,
+review #32/#34 dependencies, integrate intake/delegation/results on the reviewed
+candidate, then live M2 only within confirmed usage scope. Meta business setup
+and remaining M1 acceptance stay open; no workers/provider calls started here.
+
+October 29 teammate handoff acknowledged: Murtazo published #28 checkpoint5462e96
+with authenticated immutable snapshot create/list/detail and proxy routes. He
+reports293 backend/59 web tests and build/lint/type/format pass on disposable
+Postgres; these are collaborator results, not independently reproduced here.
+His student intake form remains in progress. He reported our JSON fixture's
+default-encoding read failing on Windows cp1252; Codex explicitly scoped and fixed
+tests/test_academic_scenario.py to read UTF-8. No teammate tests/branch were edited.
+Review/integration of #28 remains pending; no live connector or M2 pass implied.
+
+October 29 — #33 explicit private-draft routing on codex/private-draft-routing:
+create_draft_responsibility persists one private-workflow intent atomically with
+source bindings and first plan. Original source revision/mode/revision budget are
+immutable under idempotency. Planner source-policy/rubric assessment persists
+under fencing and resumes after failure. Only explicitly opted-in duties receive
+the typed draft choice; planning attaches the immutable drafting request in the
+same transaction as the academic task, before claim. Consumed intent cannot
+create another draft workflow; done requires a completed ready artifact. Existing
+draft preflight/revision/verification remain mandatory. Controlled private
+draft_responsibility_status projection is documented exactly in CONTRACTS.md.
+Migration009 is additive;008/A4 untouched and no migration was deployed.
+
+Validation: CI40848605258 at eadb233 passes309 backend/56 web tests, build,
+TypeScript, Ruff and formatting. Thirteen new cases cover the integrated scripted
+flow, replay/mode conflicts, unknown/limited/prohibited policy, saved-assessment
+recovery, atomic request before claim, one-workflow limit, premature completion,
+rollback, pause and source changes during assessment. New acceptance tests failed
+on the preimplementation CI40848221160. Local39 non-DB tests pass; local database
+process/shared-memory restrictions remain, so no local DB pass claimed. Models
+are scripted: live interpretation/autonomy quality and Murtazo's student-facing
+consumer remain unproven. No app/web/source edits, paid calls, messages or release.
+Stacked dependencies #27 → #30 → #32 must precede integration; independent review
+pending. M1 remains incomplete; live M2 not claimed complete.
+
+October 29 — #31 first drafting-authorization increment on codex/draft-requirements:
+internal source-backed policy/rubric assessor implemented, 18 focused offline tests
+pass; local Ruff lint/format/diff pass. Rejects stale/oversized/invalid evidence,
+unbound or fabricated quotes, malformed output, missing rubric and nonpermitting
+policy. Always returns authorizes_drafting=false; no task/action/storage mutation.
+This is candidate semantic assessment with scripted test verdicts, not live model
+quality or complete automatic drafting authorization. Concrete explicit-delegation
+and atomic planner-routing contract proposed to Murtazo in coordination #4
+comment6492266670; awaiting consumer agreement before dependent storage/planner
+implementation. Existing analysis-only B2 contract unchanged. No app/web/source
+files, migration, deployment, paid model request or message. Full exact-head CI
+pending; local database fixture remains sandbox-blocked. M1 incomplete; A4 parked.
+
+October 29 — #29 shared B2 boundaries on codex/b2-shared-boundaries: implemented
+atomic create_bound_responsibility plus bounded private source/artifact/check
+reads under Murtazo's recorded agreement (coordination 6491917360). Source binding
+and the initial planning task commit together under the agent lock; rollback,
+canonical idempotency, concurrent setup, pause/capacity and account isolation are
+tested. The original setup fingerprint survives later source changes without
+resetting progress. Private projections serialize UUID/time, expose stable order
+and limits, retain stale status, and propagate storage failure. CONTRACTS.md
+records exact shapes. No schema migration, app/web/source/transport change,
+deployment or provider call. Full drafting authorization/routing remains separate;
+this first path delegates analysis only. New tests were published failing before
+implementation; CI run 40844538085 passes foundation and web at 4eb5c6f. A final
+source-update concurrency test is pending the next exact-head CI. Local database
+tests are blocked by sandbox process/shared-memory restrictions; local Ruff
+lint/format/diff and the storage-failure test pass. M1 incomplete; A4 parked.
+
+October 29 scope decision: Akbar explicitly approved M2/B2 implementation while
+Meta business setup is deferred. The previous feature pause is lifted only for
+the agreed B2/A3 workflow, with existing ownership unchanged. M1 remains incomplete;
+A4, optional extensions, public release and additional live usage are excluded.
+Codex posted a concrete proposed atomic create-and-bind boundary and private
+source/artifact read projections in coordination #4, plus the required direction
+for trusted responsibility-level draft intent applied before worker claim.
+Await Murtazo's explicit interface agreement and exact B2 file claim before
+dependent implementation. No new shared contract is agreed or implemented yet;
+do not use app polling or browser-provided policy as a temporary bypass.
+
+October 29 — #26 internal M2 validation on codex/m2-internal-validation: four new
+scenario tests exercise real Store/planner/worker/drafting/verification with four
+fictional observations and scripted model responses. Combined analysis → checked
+revision → planner completion, private context/artifact retrieval, interrupted
+review recovery without duplicate drafts, fabricated-quote rejection and the
+current disclosure-body gate are covered. Full backend suite: 263 passed, two
+existing warnings. No production/runtime behavior changed, paid call, real source
+connection or message. This is internal evidence, not autonomous Meta quality or
+live M2 acceptance. docs/M2-INTERNAL-VALIDATION.md records exact current interfaces
+and remaining gaps: atomic source/delegation setup before worker claims, automatic
+policy/rubric extraction and draft routing, separate-disclosure formatting versus
+the current body requirement, deterministic word-count enforcement, and private
+student artifact presentation. Cross-owner changes require agreement with Murtazo;
+no app/web/source implementation was taken over. M1 remains incomplete; A4 parked.
+
 October 29 independent continuation: Akbar authorized unblocked M1 checks and M2
 scenario preparation while deferring Meta business setup. Restarted the existing
 local production frontend; first-account saved task, answer, verified link and
