@@ -56,3 +56,18 @@ no draft was generated. Migration009 is confirmed applied, zero workflow outboun
 rows, $1.32 retained reservation with unknown usage. Ordinary migration command
 restored; deployment9765a5ae healthy. See [run evidence](M2-RUN-2026-10-29.md).
 Live M2 remains incomplete.
+
+
+## Later review continuation
+
+Murtazo's selected-draft refresha344642 was reviewed and integrated atfa565d1;
+114 local web tests pass. The prepared M2-LIVE-ACCEPTANCE checklist is a template;
+the run report above remains the actual attempted/blocked evidence. README's
+outdated foundation-only description was corrected.
+
+Meta Billing now confirms $150 active credits in the existing team. Existing test
+ceilings remain unchanged and the failed-call reservation remains retained while
+usage reporting may lag. Diagnostics#40 separately passes381 backend/113 web and
+awaits counterpart review before integration. Pause recovery#41 has three reproduced
+regressions; behavior change awaits the integration-owner agreement. Neither branch
+is deployed. Credit availability is not evidence that live M2 has passed.

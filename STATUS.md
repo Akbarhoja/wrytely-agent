@@ -1,5 +1,28 @@
 # Engineering status
 
+October 29 continuation — checked Murtazo coordination first and verified $150
+active free credits in the existing Meta team's Billing UI; $2 email alert remains
+an alert, not a cap. Provider Usage still reports the two earlier successful calls
+and warns of reporting lag, so failed M2 reservation remains unchanged. Meta's
+status page says operational; the404 cause remains unresolved. No inference retry.
+
+Reviewed and integrated Murtazo's a344642 private selected-draft-list refresh at
+fa565d1;114 local frontend tests pass and teammate's exact checks green. It reuses
+GET-only reads and session/selection fencing; no new AI request/consent is issued.
+README now describes actual implementation and live limits. Prepared acceptance
+checklist remains a template; the attempted run report is the current evidence.
+
+Runtime diagnostics #39/#40 at ddd5ab1 (separate branch, not integrated) passes
+CI40999712704/40999746927:381 backend/113 web, lint/type/format/build. It preserves
+safe failure metadata and known incomplete-response usage in private fenced events;
+no response content or unknown-usage discount. Await counterpart review before
+integration/deployment. Three regression-only #41 tests at f1f4713 reproduce the
+pause-final-attempt exhaustion and pre-pause lease revival in CI40999920955;376
+baseline tests pass. Proposed monotonic-fence/control-interruption semantics await
+Murtazo's agreement before implementation. No app/web takeover, new deployment,
+provider call, worker, WhatsApp send or quota increase in this continuation.
+M2 live and remaining M1 gates remain incomplete.
+
 October 29 — approved bounded live M2 attempt, candidate1dcb4d3. Reviewed and
 integrated Murtazo's optional saved-format evidence viewer8268e27;113 local web
 tests and webpack build pass. Exact candidate CI40998132458/40998137577 green.
