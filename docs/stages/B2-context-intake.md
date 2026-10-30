@@ -269,3 +269,44 @@ mode, including the new API cases; all 95 web tests pass. Ruff lint/format,
 TypeScript, Prettier, production build and diff checks pass. Migration009 ran only
 through test setup on the disposable database. No retained development/production
 migration, model/provider call, worker activation, send or deployment occurred.
+
+## Connected student decision and status
+
+Academic context now reuses its loaded private source list in the existing
+private-draft consent form. The existing request client sends the explicit
+objective/source/consent payload and stable UUID retry key to the authenticated
+API. No request is sent by loading, selecting a source or refreshing status.
+Confirmed receipts show the controlled work status and a route to Private results.
+Selected responsibilities in Private results show the same shared status view.
+
+Manual status refresh uses only the published GET projection. Mismatched IDs,
+unknown states/reasons and malformed responses stay unavailable. Source-change,
+blocked assessment and blocked workflow states override historical assessed/ready
+values; status never grants sharing, sending, submission or instructor approval.
+Definite missing-source rejection returns the form to review with fresh consent.
+Unknown outcomes keep the immutable original request. Account-keyed workspace
+lifetimes and a shared session-expiry boundary clear hidden context/decision data
+as well as visible results and abort outstanding requests.
+
+Verification: 107 website tests pass, including ten connected transport/status
+cases and a cross-view session-expiry regression observed failing before its fix.
+TypeScript, Prettier and production build pass. The real-Store API acceptance test
+saves a fictional snapshot, confirms private intent, runs the existing worker with
+scripted assessments, then reads the ready draft/citations/disclosure/checks and
+proves second-account denial with no outbound message. Full backend suite passes
+353 tests on disposable Postgres. These scripted results do not prove real model
+quality, Clerk/browser/backend acceptance or actual WhatsApp delivery.
+
+An ignored fixture rendered actual context/results components and request client
+with only fictional in-memory responses. Browser checks at1440/390/320px found no
+horizontal overflow and exercised keyboard consent, lost receipt/exact retry,
+pending/ready status, private result navigation and focus on the loaded review.
+No retained development/production database migration or worker/provider activation
+was performed. M1 and live M2 remain incomplete.
+
+Fresh code review found two recovery defects, both reproduced before fixes:
+definite capacity429 now unlocks the form for review and fresh consent; a
+source_changed status now invalidates the open cached ready presentation and draft
+list, retaining passed reports only as historical evidence. Focused regressions
+and the full107-test web suite pass after the fixes; browser recheck confirms the
+ready-to-stale transition. No runtime/shared behavior was changed for either fix.

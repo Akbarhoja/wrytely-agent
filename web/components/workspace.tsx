@@ -38,6 +38,35 @@ const starters = [
 ];
 
 export function Workspace({ mode, userId, name, account }: Props) {
+  return (
+    <WorkspaceIdentity
+      key={userId || mode}
+      mode={mode}
+      userId={userId}
+      name={name}
+      account={account}
+    />
+  );
+}
+function WorkspaceIdentity(props: Props) {
+  const [expired, setExpired] = useState(false);
+  if (expired)
+    return (
+      <main className="connections-panel academic-panel">
+        <h1>Your session expired</h1>
+        <p>Private workspace input and results have been cleared. Sign in again to continue.</p>
+        <Link href="/sign-in">Sign in again</Link>
+      </main>
+    );
+  return <WorkspaceSession {...props} onSessionExpired={() => setExpired(true)} />;
+}
+function WorkspaceSession({
+  mode,
+  userId,
+  name,
+  account,
+  onSessionExpired,
+}: Props & { onSessionExpired: () => void }) {
   const data = useWorkspace(userId);
   const [view, setView] = useState<
     "overview" | "conversation" | "connections" | "context" | "results"
@@ -220,12 +249,15 @@ export function Workspace({ mode, userId, name, account }: Props) {
             <AcademicContext
               userId={signedIn && !data.expired ? userId : undefined}
               enabled={ready}
+              onViewResults={() => setView("results")}
+              onSessionExpired={onSessionExpired}
             />
           </div>
           {view === "results" && (
             <AcademicResults
               userId={signedIn && !data.expired ? userId : undefined}
               enabled={ready}
+              onSessionExpired={onSessionExpired}
             />
           )}
           {view === "context" || view === "results" ? null : view === "overview" ? (

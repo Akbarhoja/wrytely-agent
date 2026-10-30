@@ -8,11 +8,15 @@ from fastapi.testclient import TestClient
 from psycopg import OperationalError
 from test_academic_memory import observation
 from test_api import TestVerifier, auth, make_client
-from test_artifacts import assessment, prepare
+from test_artifacts import TEXT, assessment, prepare
+from test_draft_intents import draft_turn, extracted
+from test_drafting import permitted
+from test_planner import plan
 from test_worker import ScriptedModel
 
 from app.main import create_app
 from runtime.verification import verify_artifact
+from runtime.worker import run_once
 from shared.config import Settings
 from shared.db import Store
 
@@ -36,6 +40,40 @@ def delegate(client, sources, *, key=None, who="alice", **body):
         }
         | body,
     )
+
+
+def test_student_api_snapshot_delegation_scripted_work_and_private_review(store, alice):
+    client = make_client(store)
+    store.provision("user_bob")
+    saved = save(client, content=TEXT).json()
+    source = {"id": saved["version_id"]}
+    receipt = delegate(client, [saved["source_id"]]).json()
+    path = f"/v1/responsibilities/{receipt['responsibility_id']}/status"
+    assert client.get(path, headers=auth()).json()["workflow_state"] == "pending"
+    model = ScriptedModel(
+        [
+            extracted(source),
+            plan("draft", "comparison", "Prepare private draft"),
+            permitted(),
+            draft_turn(source),
+            assessment(),
+            plan("done", "review-ready", ""),
+        ]
+    )
+    for _ in range(3):
+        assert run_once(Store(store._url), model, Settings())
+    status = client.get(path, headers=auth()).json()
+    assert (status["status"], status["workflow_state"]) == ("done", "ready_for_review")
+    review_path = f"/v1/artifacts/{status['artifact_id']}"
+    review = client.get(review_path, headers=auth()).json()
+    assert review["latest_check"]["passed"] is True
+    assert review["artifact"]["draft"]["citations"]
+    assert review["artifact"]["draft"]["disclosure"]
+    assert review["artifact"]["stale"] is False
+    assert client.get(review_path, headers=auth("bob")).status_code == 404
+    assert client.get(path, headers=auth("bob")).status_code == 404
+    with store.connection() as conn:
+        assert not conn.execute("SELECT 1 FROM wrytely_agent.whatsapp_outbound").fetchall()
 
 
 def test_private_delegation_atomic_replay_private_status_and_pause(store, alice):

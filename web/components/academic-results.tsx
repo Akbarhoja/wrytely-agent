@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ApiError } from "../lib/client";
+import { PrivateDraftStatus } from "./private-draft-status";
 import {
   listWork,
   listDrafts,
@@ -34,9 +35,11 @@ const workState = { active: "Work in progress", blocked: "Work blocked", done: "
 export function AcademicResults({
   userId,
   enabled = true,
+  onSessionExpired,
 }: {
   userId?: string;
   enabled?: boolean;
+  onSessionExpired?: () => void;
 }) {
   if (!userId)
     return (
@@ -45,10 +48,16 @@ export function AcademicResults({
         <p>Sign in to inspect your saved drafts and checks.</p>
       </section>
     );
-  return <ResultSession key={userId} enabled={enabled} />;
+  return <ResultSession key={userId} enabled={enabled} onSessionExpired={onSessionExpired} />;
 }
 
-function ResultSession({ enabled }: { enabled: boolean }) {
+function ResultSession({
+  enabled,
+  onSessionExpired,
+}: {
+  enabled: boolean;
+  onSessionExpired?: () => void;
+}) {
   const [work, setWork] = useState<Responsibility[] | null>(null);
   const [selected, setSelected] = useState<Responsibility | null>(null);
   const [drafts, setDrafts] = useState<SavedDraft[] | null>(null);
@@ -56,6 +65,7 @@ function ResultSession({ enabled }: { enabled: boolean }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [expired, setExpired] = useState(false);
+  const [sourceChanged, setSourceChanged] = useState(false);
   const controller = useRef<AbortController | null>(null);
   const sequence = useRef(0);
   const reviewHeading = useRef<HTMLHeadingElement>(null);
@@ -68,6 +78,7 @@ function ResultSession({ enabled }: { enabled: boolean }) {
       setDrafts(null);
       setReview(null);
       setExpired(true);
+      onSessionExpired?.();
     } else setError(message);
   }
   async function refresh() {
@@ -103,6 +114,7 @@ function ResultSession({ enabled }: { enabled: boolean }) {
   }, [review]);
 
   async function openWork(row: Responsibility) {
+    if (selected?.id !== row.id) setSourceChanged(false);
     const request = ++sequence.current;
     setSelected(row);
     setDrafts(null);
@@ -200,6 +212,14 @@ function ResultSession({ enabled }: { enabled: boolean }) {
             <span>{workState[selected.status]}</span>
           </div>
           <p className="body-copy">{selected.objective}</p>
+          <PrivateDraftStatus
+            responsibilityId={selected.id}
+            enabled={enabled}
+            onSessionExpired={() => failed(new ApiError(401, "Expired"), "")}
+            onStatus={(status) => {
+              if (status.reason === "source_changed") setSourceChanged(true);
+            }}
+          />
           {drafts?.length === 0 && (
             <p>No saved drafts yet. Work may still be in progress or blocked.</p>
           )}
@@ -215,7 +235,7 @@ function ResultSession({ enabled }: { enabled: boolean }) {
                 >
                   <strong>{row.title}</strong>
                   <span>
-                    {row.stale
+                    {row.stale || sourceChanged
                       ? "Source context changed"
                       : row.state === "needs_revision"
                         ? "Needs revision"
@@ -236,9 +256,11 @@ function ResultSession({ enabled }: { enabled: boolean }) {
           aria-label="Private draft and checks"
         >
           <h2 ref={reviewHeading} tabIndex={-1}>
-            {reviewState(review)}
+            {reviewState(
+              sourceChanged ? { ...review, artifact: { ...review.artifact, stale: true } } : review,
+            )}
           </h2>
-          {review.artifact.stale && (
+          {(review.artifact.stale || sourceChanged) && (
             <p className="result-caution">
               The source context changed after this draft was saved. Inspect the current
               requirements before using it.
@@ -246,7 +268,7 @@ function ResultSession({ enabled }: { enabled: boolean }) {
           )}
           <p className="subtle">
             {review.latest_check?.passed
-              ? review.artifact.stale
+              ? review.artifact.stale || sourceChanged
                 ? "Historical checks passed; this draft is no longer current."
                 : "Stored checks passed. Student review is still required."
               : review.latest_check

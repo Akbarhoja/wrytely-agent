@@ -99,7 +99,7 @@ describe("private academic snapshots", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Open Fictional rubric" }));
     expect(await screen.findByText("<script>untrusted evidence</script>")).toBeTruthy();
     expect(document.querySelector("script")).toBeNull();
-    expect(screen.getByText(/does not monitor later changes/)).toBeTruthy();
+    expect(screen.getAllByText(/does not monitor later changes/).length).toBeGreaterThan(0);
     expect(fetcher.mock.calls.every(([url]) => String(url).includes("/sources"))).toBe(true);
   });
   it("retains uncertain text and uses the exact same key/payload for explicit retry", async () => {
