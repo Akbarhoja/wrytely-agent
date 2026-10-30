@@ -12,6 +12,9 @@
 [C1/C2 v1 proposal](docs/contracts/CONNECTION-SYNC-v1.md) (#47) defines pairing,
 connection identity, sync receipts/coverage and last_checked semantics for owner review.
 It is not an implemented route/model or a relaxed freshness/permission gate.
+[C3–C7 v1 proposal](docs/contracts/AGENT-ACTIONS-v1.md) adds retrieval, student
+decisions, typed delivery, private files and operational accounting for the same
+owner review. All seven boundaries remain proposed until explicit agreement.
 
 ## Deterministic draft format checks — issue #37
 
