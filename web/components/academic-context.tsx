@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ApiError } from "../lib/client";
+import { createPrivateDraft } from "../lib/delegation";
+import { PrivateDraftDelegation } from "./private-draft-delegation";
+import { PrivateDraftStatus } from "./private-draft-status";
 import {
   listSnapshots,
   loadSnapshot,
@@ -14,9 +17,13 @@ import {
 export function AcademicContext({
   userId,
   enabled = true,
+  onViewResults,
+  onSessionExpired,
 }: {
   userId?: string;
   enabled?: boolean;
+  onViewResults?: () => void;
+  onSessionExpired?: () => void;
 }) {
   if (!userId)
     return (
@@ -26,10 +33,29 @@ export function AcademicContext({
       </section>
     );
   // A changed identity destroys the entire private state before its next paint.
-  return <SnapshotSession key={userId} enabled={enabled} />;
+  return (
+    <SnapshotSession
+      key={userId}
+      userId={userId}
+      enabled={enabled}
+      onViewResults={onViewResults}
+      onSessionExpired={onSessionExpired}
+    />
+  );
 }
 
-function SnapshotSession({ enabled }: { enabled: boolean }) {
+function SnapshotSession({
+  enabled,
+  userId,
+  onViewResults,
+  onSessionExpired,
+}: {
+  enabled: boolean;
+  userId: string;
+  onViewResults?: () => void;
+  onSessionExpired?: () => void;
+}) {
+  const [responsibilityId, setResponsibilityId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [rows, setRows] = useState<Snapshot[] | null>(null);
@@ -64,6 +90,7 @@ function SnapshotSession({ enabled }: { enabled: boolean }) {
       setSelected(null);
       setPending(null);
       setExpired(true);
+      onSessionExpired?.();
       return true;
     }
     return false;
@@ -304,6 +331,30 @@ function SnapshotSession({ enabled }: { enabled: boolean }) {
           </article>
         )}
       </section>
+      <div className="academic-delegation">
+        <PrivateDraftDelegation
+          userId={userId}
+          sources={rows || []}
+          enabled={enabled && rows !== null && !loading && !listError}
+          onConfirm={async (value, signal) => {
+            try {
+              return await createPrivateDraft(value, signal);
+            } catch (failure) {
+              if (active()) sessionFailure(failure);
+              throw failure;
+            }
+          }}
+          onSaved={(receipt) => setResponsibilityId(receipt.responsibility_id)}
+        />
+        {responsibilityId && (
+          <PrivateDraftStatus
+            responsibilityId={responsibilityId}
+            enabled={enabled}
+            onSessionExpired={() => sessionFailure(new ApiError(401, "Expired"))}
+            onViewResults={onViewResults}
+          />
+        )}
+      </div>
     </div>
   );
 }

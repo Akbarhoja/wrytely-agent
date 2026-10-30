@@ -62,6 +62,16 @@ function fixture(detail: unknown = result) {
     const path = String(url);
     if (path.endsWith("/responsibilities"))
       return Response.json({ responsibilities: [duty], limit: 50 });
+    if (path.endsWith("/status"))
+      return Response.json({
+        responsibility_id: id,
+        requested_mode: "private_draft",
+        status: "active",
+        reason: null,
+        assessment_state: "assessed",
+        workflow_state: "ready_for_review",
+        artifact_id: id,
+      });
     if (path.includes("/responsibilities/"))
       return Response.json({ artifacts: [summary], limit: 50 });
     return Response.json(detail);
@@ -73,6 +83,34 @@ async function choose() {
 }
 
 describe("private saved results", () => {
+  it("invalidates an open cached ready review when status refresh reports a source change", async () => {
+    let changed = false;
+    const base = fixture();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: unknown) =>
+        String(url).endsWith("/status") && changed
+          ? Response.json({
+              responsibility_id: id,
+              requested_mode: "private_draft",
+              status: "blocked",
+              reason: "source_changed",
+              assessment_state: "assessed",
+              workflow_state: "blocked",
+              artifact_id: id,
+            })
+          : base(url),
+      ),
+    );
+    render(<AcademicResults userId="alice" />);
+    await choose();
+    await screen.findByRole("heading", { name: "Ready for your review" });
+    changed = true;
+    fireEvent.click(screen.getByRole("button", { name: "Refresh work status" }));
+    await screen.findByRole("heading", { name: "Source context changed", level: 3 });
+    expect(screen.queryByRole("heading", { name: "Ready for your review" })).toBeNull();
+    expect(screen.getByText(/Historical checks passed/)).toBeTruthy();
+  });
   it("ignores old-account draft content that arrives after identity changes", async () => {
     let finish: (value: Response) => void = () => {};
     const base = fixture();
@@ -121,7 +159,7 @@ describe("private saved results", () => {
     expect(screen.getAllByText(evidence.quote).length).toBeGreaterThan(0);
     expect(screen.getByText("Student review required.")).toBeTruthy();
     expect(screen.getByText(/Nothing is shared, sent or submitted/)).toBeTruthy();
-    expect(fetcher.mock.calls).toHaveLength(3);
+    expect(fetcher.mock.calls).toHaveLength(4);
   });
   it.each([
     [true, true, "Source context changed"],

@@ -241,3 +241,72 @@ Claim: coordination comment6509628481. Integration still waits for the owner to
 restore base PlannerDecision nonblank validation in #34 and for exact-head review.
 This form is unconnected preparation, not an available drafting workflow. No model
 or provider call, migration, send, share, submission or deployment occurred.
+
+## Reviewed dependency and authenticated delegation assembly
+
+The owner restored the base planner validator at #34 head db241ab. Independent
+exact-archive checks passed all seven planner regressions plus eighteen assessor
+cases, Ruff lint/format, and all four exact-head CI checks were green. Integrated
+that reviewed dependency into this feature branch; no edits to the owner's branch.
+
+The app now exposes explicit POST responsibilities through the existing verified
+session/proxy and atomic create_draft_responsibility boundary. Only objective,
+one to eight distinct source IDs and strict true consent are accepted. UUID retry
+identity, server-owned budgets, capacity, same-origin mutation and no-store are
+preserved. GET responsibilities/{uuid}/status uses the published controlled private
+projection; absent/other-account status and sources have matching private errors.
+No model, policy, readiness or browser owner override is introduced.
+
+Acceptance tests first failed against the missing API/proxy routes. New actual
+Store cases cover atomic save/replay/conflict, analysis-key rejection, private
+isolation, paused work remaining unclaimed, consent/type/field bounds, byte limit,
+capacity and redacted storage failure. The former read-only collection assertions
+now permit only this explicit create route; artifact/status mutations stay closed.
+The consent form remains unmounted pending the next owned UI/status integration.
+
+Integrated validation: 352 backend tests pass on disposable Postgres in UTF-8
+mode, including the new API cases; all 95 web tests pass. Ruff lint/format,
+TypeScript, Prettier, production build and diff checks pass. Migration009 ran only
+through test setup on the disposable database. No retained development/production
+migration, model/provider call, worker activation, send or deployment occurred.
+
+## Connected student decision and status
+
+Academic context now reuses its loaded private source list in the existing
+private-draft consent form. The existing request client sends the explicit
+objective/source/consent payload and stable UUID retry key to the authenticated
+API. No request is sent by loading, selecting a source or refreshing status.
+Confirmed receipts show the controlled work status and a route to Private results.
+Selected responsibilities in Private results show the same shared status view.
+
+Manual status refresh uses only the published GET projection. Mismatched IDs,
+unknown states/reasons and malformed responses stay unavailable. Source-change,
+blocked assessment and blocked workflow states override historical assessed/ready
+values; status never grants sharing, sending, submission or instructor approval.
+Definite missing-source rejection returns the form to review with fresh consent.
+Unknown outcomes keep the immutable original request. Account-keyed workspace
+lifetimes and a shared session-expiry boundary clear hidden context/decision data
+as well as visible results and abort outstanding requests.
+
+Verification: 107 website tests pass, including ten connected transport/status
+cases and a cross-view session-expiry regression observed failing before its fix.
+TypeScript, Prettier and production build pass. The real-Store API acceptance test
+saves a fictional snapshot, confirms private intent, runs the existing worker with
+scripted assessments, then reads the ready draft/citations/disclosure/checks and
+proves second-account denial with no outbound message. Full backend suite passes
+353 tests on disposable Postgres. These scripted results do not prove real model
+quality, Clerk/browser/backend acceptance or actual WhatsApp delivery.
+
+An ignored fixture rendered actual context/results components and request client
+with only fictional in-memory responses. Browser checks at1440/390/320px found no
+horizontal overflow and exercised keyboard consent, lost receipt/exact retry,
+pending/ready status, private result navigation and focus on the loaded review.
+No retained development/production database migration or worker/provider activation
+was performed. M1 and live M2 remain incomplete.
+
+Fresh code review found two recovery defects, both reproduced before fixes:
+definite capacity429 now unlocks the form for review and fresh consent; a
+source_changed status now invalidates the open cached ready presentation and draft
+list, retaining passed reports only as historical evidence. Focused regressions
+and the full107-test web suite pass after the fixes; browser recheck confirms the
+ready-to-stale transition. No runtime/shared behavior was changed for either fix.

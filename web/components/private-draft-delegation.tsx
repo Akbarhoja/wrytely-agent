@@ -3,21 +3,18 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import type { Snapshot } from "../lib/academic";
 import { ApiError } from "../lib/client";
+import type { PrivateDraftDecision, PrivateDraftReceipt } from "../lib/delegation";
 
-export type PrivateDraftDecision = Readonly<{
-  key: string;
-  objective: string;
-  source_ids: readonly string[];
-  confirm_private_draft: true;
-}>;
+export type { PrivateDraftDecision } from "../lib/delegation";
 type Props = {
   userId?: string;
   sources: Snapshot[];
   enabled?: boolean;
   onConfirm: (request: PrivateDraftDecision, signal: AbortSignal) => Promise<unknown>;
+  onSaved?: (receipt: PrivateDraftReceipt) => void;
 };
 
-/** Prepared decision UI only. No transport, worker control or backend authority. */
+/** Explicit private intent only; transport is supplied by the authenticated parent. */
 export function PrivateDraftDelegation({ userId, ...props }: Props) {
   if (!userId)
     return (
@@ -29,7 +26,7 @@ export function PrivateDraftDelegation({ userId, ...props }: Props) {
   return <DecisionForm key={userId} {...props} />;
 }
 
-function DecisionForm({ sources, enabled = true, onConfirm }: Omit<Props, "userId">) {
+function DecisionForm({ sources, enabled = true, onConfirm, onSaved }: Omit<Props, "userId">) {
   const prefix = useId();
   const [objective, setObjective] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
@@ -120,6 +117,7 @@ function DecisionForm({ sources, enabled = true, onConfirm }: Omit<Props, "userI
       setConsent(false);
       setPending(null);
       setSaved(true);
+      onSaved?.({ responsibility_id: value.responsibility_id, requested_mode: "private_draft" });
     } catch (failure) {
       if (!active()) return;
       if (failure instanceof ApiError && failure.status === 401) {
@@ -129,7 +127,10 @@ function DecisionForm({ sources, enabled = true, onConfirm }: Omit<Props, "userI
         setConsent(false);
         setPending(null);
         setExpired(true);
-      } else if (failure instanceof ApiError && [409, 413, 422].includes(failure.status)) {
+      } else if (
+        failure instanceof ApiError &&
+        [404, 409, 413, 422, 429].includes(failure.status)
+      ) {
         setPending(null);
         setConsent(false);
         setError(

@@ -669,6 +669,10 @@ h1 {
 .academic-panel {
   min-width: 0;
 }
+.academic-delegation {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
 .academic-panel .section-heading {
   flex-wrap: wrap;
   gap: 12px;
