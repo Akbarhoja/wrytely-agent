@@ -22,7 +22,9 @@ access completion under #104; M acknowledged and paused duplicate live runs.
 [Local access check](docs/P0-LOCAL-ACCESS-2026-10-31.md): initial discovery found no company Microsoft setup; the owner subsequently
 created a company-controlled directory and approved the development app registration.
 Delegated User.Read/Mail.Read are configured, but publisher/actual school consent and
-the local PKCE/Graph access test remain pending. Billing protection is unverified.
+the actual CSU sign-in attempt is blocked by AADSTS90095/admin consent.
+The local PKCE harness has 20 synthetic cases; Graph access remains untested.
+Billing protection is unverified.
 This does not close the Outlook access gate.
 
 ## Current work and evidence

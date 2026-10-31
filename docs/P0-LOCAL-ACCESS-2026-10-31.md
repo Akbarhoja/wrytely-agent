@@ -53,6 +53,62 @@ must be resolved through supported flows; the actual CSU consent outcome is unte
 Local PKCE acquisition harness, identity-bound Graph test and full Outlook access
 acceptance are still pending. Registration alone does not complete P0-M2.
 
+## Actual CSU consent test and operator harness
+
+A built `scripts/p0_outlook_signin.py` under #104 and reused M's exact #54
+`integrations/outlook/read_probe.py` and its 32 mocked tests unchanged. The operator
+SDK requirements are isolated in `scripts/requirements-outlook-probe.txt`; deployed
+runtime dependencies and services were not changed.
+
+The probe binds exclusively to 127.0.0.1:8765 before requesting a URL. MSAL 1.39.0
+creates authorization-code/PKCE S256 state with a five-minute deadline. The callback
+checks host/path/state/duplicates/expiry and accepts one response; tokens remain in
+memory, no broker/cache persistence or client secret. The private ignored URL file
+contains temporary request state only and is removed when the run ends. Logging is
+suppressed; only fixed classifications/counts are returned. The default run performs
+no Graph mailbox read. `--read-inbox` is a separately authorized one-page read mode;
+verified tenant/subject/scope checks precede the reused identity-bound Graph probe.
+No background access or refresh grant is requested; `offline_access` is excluded.
+
+Operator setup from repository root (ignored isolated environment):
+
+```sh
+.venv/bin/uv venv --python .venv/bin/python .local/outlook-signin-venv
+.venv/bin/uv pip install --python .local/outlook-signin-venv/bin/python -r scripts/requirements-outlook-probe.txt
+.local/outlook-signin-venv/bin/python -m scripts.p0_outlook_signin --client-id APP_CLIENT_ID --expected-tenant SCHOOL_TENANT_ID --url-file .local/outlook-authorization-request.json
+```
+
+Identifiers come from the approved app and verified school directory; no IDs or
+secrets belong in public reports. Open the generated HTTPS Microsoft authorization
+URL through approved browser controls; never copy callback codes/tokens into chat.
+If consent is blocked, record the UI classification without treating it as success.
+The issuer can retain an approved consent grant even though the probe clears local
+tokens; memory-only operation is not automatic permission revocation.
+
+**Live result:** selecting the consenting CSU account for this exact app returned
+`AADSTS90095`: administrator consent required. Microsoft's page displays **Approval
+required**, app **unverified**, and a justification/request-approval form. No request
+was submitted, authorization callback/token acquired or mailbox read performed.
+
+The visible admin request additionally lists **Maintain access to data you have given
+it access to**, although the generated SDK request excluded offline_access and the app
+configured only User.Read/Mail.Read. This discrepancy is recorded for administrator/
+publisher review; do not silently approve ongoing access or enable refresh to bypass it.
+No raw request/correlation/session IDs, account identifiers or screenshots are published.
+
+Synthetic evidence: 20 new sign-in cases + 32 reused probe cases pass; full disposable
+local Postgres backend **685 passed** on the final listener hardening, Ruff lint/format
+and diff checks pass. Real token exchange, Graph reads, attachments, delta completion,
+subscriptions and refresh remain unproved. The operator harness needs counterpart review.
+
+Suggested administrator request (not sent):
+
+> Please review Wrytely Agent Development for a controlled student Outlook integration
+> test. The app requests delegated User.Read and Mail.Read to sign in and read my mail;
+> it does not request sending, editing or deleting email. The publisher is currently
+> unverified. Please review the listed permissions, including the displayed Maintain
+> access permission, and advise what verification or restrictions CSU requires.
+
 ## Canvas handoff and limits
 
 M reports the installed diagnostic corresponds to reviewed #52 f1e0d9b, but the
