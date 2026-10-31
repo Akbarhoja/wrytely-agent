@@ -6,7 +6,9 @@ import pytest
 
 from contracts.source_digest import canonical_source_bytes, source_digest
 
-VECTORS = json.loads((Path(__file__).parent / "fixtures/source_digest_v1.json").read_text())
+VECTORS = json.loads(
+    (Path(__file__).parent / "fixtures/source_digest_v1.json").read_text(encoding="utf-8")
+)
 
 
 @pytest.mark.parametrize("vector", VECTORS, ids=lambda row: row["name"])

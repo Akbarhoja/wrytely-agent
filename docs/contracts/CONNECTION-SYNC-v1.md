@@ -166,7 +166,7 @@ Actual file download/extraction limits and supported types need M's confirmation
 
 Coverage: complete, partial, restricted or unsupported. Controlled reasons include
 more_pages, login_required, permission_denied, initial_post_required, rate_limited,
-provider_unavailable, extraction_failed and size_limit. Resource coverage is separate
+provider_unavailable, extraction_failed, size_limit, cursor_invalid and unsupported_format. Resource coverage is separate
 from item coverage and accessible-course enumeration coverage. No raw provider error
 body is returned to a student. Unknown course/file contents remain unknown.
 
@@ -190,13 +190,60 @@ verified identity/credential context; no route is implemented by this document.
   content_digest. Checkpoint includes resource key, next_cursor, committed batch sequence
   and scope_revision. Batches serialize on scan; no parallel cursor advances.
 - finish_resource(actor, scan_id, generation, lease_token, resource_key, finish_key,
-  expected_checkpoint) returns a durable resource receipt with coverage, seen_count,
-  finished_at and source_manifest_digest. Requires no remaining page and all expected
-  segments; empty complete enumeration is valid. Matching key/body replays its receipt.
+  expected_checkpoint, *, outcome, reason) returns a durable resource receipt with
+  coverage=outcome, reason, seen_count, finished_at, checkpoint and
+  source_manifest_digest (null unless a complete manifest is verified). outcome is
+  complete, partial, restricted or unsupported. Complete requires reason=null, no
+  remaining page and every expected segment; empty complete enumeration is valid.
+  Other outcomes require a controlled reason and explicitly terminalize incomplete
+  collection without promoting a manifest. Matching key/body replays its receipt.
 - finish_sync(actor, scan_id, generation, lease_token, finish_key) returns scan summary,
   discovery coverage and separate per-course/resource coverage. All selected resources
   must have terminal receipts, including controlled partial/restricted/unsupported
   receipts; aggregate state is partial if any required resource is not complete.
+
+### Terminal resource receipts and abandoned scans
+
+A resource is open until finish_resource commits its terminal receipt. A collector
+that cannot finish a page or segment calls it with outcome=partial and a reason such
+as cursor_invalid, extraction_failed, size_limit, rate_limited or provider_unavailable.
+For permission_denied/initial_post_required use restricted; for an unsupported content
+format use unsupported/unsupported_format. login_required requires relinking when the
+connection no longer authenticates; it cannot override generation or credential fences.
+These are enumerated codes, never raw provider messages. A retryable failure may instead
+leave the resource open and resume within the scan lifetime; retry is not required to
+record an honest terminal partial outcome.
+
+All finish calls authenticate the current actor/generation/scope before receipt lookup.
+An exact committed finish_key/body replays the original receipt after lease expiry or
+renewal, with no timestamp changes. Body includes resource, expected checkpoint, outcome
+and reason but excludes lease_token. Changed body with that key conflicts. An unseen
+finish requires the current live lease and exact durable checkpoint, even for partial
+outcomes. Incomplete complete requests return incomplete_segments or remaining_pages;
+they cannot silently downgrade to partial. Termination and receipt persist atomically.
+A terminal resource rejects further batches or a different terminal outcome in that
+scan (resource_terminal); collect again in a new scan rather than reopen/promote it.
+
+Example: after committing page1 of a document with three expected segments, segment2
+extraction fails. finish_resource(..., outcome=partial, reason=extraction_failed)
+retains page1 as staged historical evidence, records its checkpoint/count and null
+source_manifest_digest, and leaves the previous complete parent unchanged. No pending
+cursor is fetched or counted as completed. This receipt allows finish_sync to close
+once every other selected resource has a terminal receipt; its aggregate remains
+partial. Successfully committed independent complete items keep their own check records;
+the failed resource/parent does not advance last_successful_check or last_complete_scan.
+Termination finished_at records the attempt, not freshness. Partial enumeration never
+supplies deletion evidence. Normal draft freshness/coverage gates still apply to all
+retained evidence, including the earlier complete version.
+
+If the client disappears entirely, the server does not invent a client finish receipt.
+Instead a trusted expiry operation marks the scan expired at its24-hour deadline,
+fences new commits and records each still-open resource as aborted/scan_expired in
+internal scan history (student coverage=partial). No manifest promotion, new successful
+check, deletion or model authority follows. aborted is an internal scan termination
+state, not a fifth collector outcome; finish_sync cannot turn an expired scan into a
+success. A disconnected/replaced generation is similarly aborted by lifecycle handling
+with reason=connection_changed. Completed receipts remain historical and private.
 
 ### Selected-course consent
 
