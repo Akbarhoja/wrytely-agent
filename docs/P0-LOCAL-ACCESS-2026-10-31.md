@@ -244,3 +244,20 @@ Canvas access. An active-session tab-closed read is distinct from restart persis
 The diagnostic fails closed as login_required rather than claiming successful empty data.
 Future ingestion must preserve stored evidence and report stale/reconnect-needed status;
 no automatic refresh while logged out is proved. No application behavior was changed.
+
+## Post-login recovery confirmed by operator report
+
+After completing the official NetID flow, A independently observed the signed-in
+Canvas dashboard with 7 published courses. The operator then reran the installed
+diagnostic and supplied the full resource summary: 7 discovered/1 selected; assignments
+read22/instruction bodies12/rubrics0; syllabus read/inline body present/linked documents
+not read/partial; discussion list21, one sampled view read, 1 top-level entry.
+
+This passes the bounded operator-reported recovery sequence: browser restart ->
+login_required -> explicit student sign-in -> sampled extension reads recover. It does
+not pass seamless authentication persistence across restart, unattended scheduling,
+separately induced timeout expiry, account switching or extension-side document reading.
+No requirement to sign in after every restart for all students is inferred from one test.
+The required product behavior is to expose reconnect-needed/stale evidence and resume
+sync after login, never report a logged-out scan as empty success. That collector/runtime
+behavior still requires its own integrated implementation/acceptance.
