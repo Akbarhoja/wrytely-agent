@@ -4,6 +4,21 @@ Updated October 30, 2026. Active scope/order: [revision 7](docs/BUILD-PLAN.md).
 Read [work orders](docs/WORK-ORDERS.md), [status](STATUS.md), [contracts](CONTRACTS.md)
 and [coordination issue #4](https://github.com/Akbarhoja/wrytely-agent/issues/4) before work.
 
+## Current P0 ownership — October 31, 2026
+
+Akbar's latest instruction returns P0-M1 Canvas (#51) and P0-M2 Outlook (#53)
+completion to Murtazo, superseding the temporary reassignment to Akbar/Codex in #79.
+[Supervisor record and safe handoff](https://github.com/Akbarhoja/wrytely-agent/issues/4#issuecomment-6541259696).
+P0-M3 WhatsApp remains Murtazo's. Akbar/Codex stops duplicate Canvas/Outlook live runs
+and retains P0-A1/A2/A3, shared store/contract fixes and agreed source-reader work.
+Murtazo should checkpoint active #80 work, then prioritize P0 access evidence or
+precise blockers before expanding P1. P1+ ownership below is unchanged.
+
+[Redacted access handoff](docs/P0-ACCESS-2026-10-31.md) distinguishes UI observations
+from extension/API proof. Preserve Chrome-open instructions; coordinate disruptive
+session/restart tests. No ownership change supplies login/admin consent, human GitHub
+approval, new paid-call allowance or permission to publish private source evidence.
+
 ## Exact ownership
 
 Akbar is product supervisor and owns account/legal/budget/release decisions. Akbar's

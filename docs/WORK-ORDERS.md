@@ -20,6 +20,12 @@ technical ownership. No item grants new live permissions or spending automatical
 6. Update one status row and post a concise handoff in #4: interface, commit, evidence,
    remaining blocker and next eligible item. Never take over because the other person waits.
 
+October31 latest supervisor decision returns P0-M1 and P0-M2 to Murtazo; the
+intermediate #79 reassignment to A is superseded. P0-M3 also remains M. A retains
+P0-A1/A2/A3 and owned runtime/shared work. See [current ownership](../TEAM.md#current-p0-ownership--october-31-2026)
+and [safe handoff](P0-ACCESS-2026-10-31.md). Checkpoint active P1 work, then prioritize
+P0 access evidence/explicit blockers. P1+ implementation owners are unchanged.
+
 ## P0 — Establish the baseline and prove access
 
 ### P0-A1 — Consolidate reviewed work (A)
