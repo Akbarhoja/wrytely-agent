@@ -224,3 +224,23 @@ that file's download/redirect chain, extract documents, or synchronize them. The
 second course is a manual UI sample, not automatic two-course collector acceptance.
 A still needs coordinated browser-restart/session-expiry testing; the standing
 instruction to keep Chrome open is preserved until the supervisor explicitly changes it.
+
+## Restart test: login required; recovery pending
+
+The supervisor approved a brief Chrome restart and Canvas sign-out/in test window.
+Native controls were unavailable, so the operator performed the requested full quit/
+reopen and reported diagnostic `{state: blocked, reason: login_required}` before
+reopening Canvas. Restored-tab behavior was not specified; do not infer it.
+
+A independently observed a new Chrome connection after restart. Opening the normal
+Canvas origin redirected to the public university landing page; choosing NetID Login
+opened the official NetID username/password form. No existing signed-in dashboard or
+seamless SSO restoration was observed. The operator was asked to sign in/complete Duo.
+No credentials/codes are collected or exported. Post-login extension recovery remains
+pending; this is not an account-switch test or a separately induced timeout-expiry test.
+
+Observed limitation: this installation's tested browser restart did not preserve usable
+Canvas access. An active-session tab-closed read is distinct from restart persistence.
+The diagnostic fails closed as login_required rather than claiming successful empty data.
+Future ingestion must preserve stored evidence and report stale/reconnect-needed status;
+no automatic refresh while logged out is proved. No application behavior was changed.

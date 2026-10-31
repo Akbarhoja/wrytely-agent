@@ -119,7 +119,9 @@ and one discussion view readable. No positive rubric proof. One syllabus PDF man
 extension document reading remains unverified.
 A second operator report returned the same reads after closing Canvas tabs with Chrome
 and the worker Console open. Manual tab-closed access is supported by that report;
-unattended worker/restart/expiry/account-switch checks remain untested. Browser controls
+after operator-performed Chrome restart, diagnostic reported login_required and A
+observed the official NetID login form. Post-login recovery is pending; unattended worker,
+separately induced expiry and account-switch checks remain untested. Browser controls
 cannot open extension management. No restart/logout was
 performed. Outlook is optional/paused and not a core blocker. M retains WhatsApp delivery.
 Baseline #46 exact9bbea97 still has no formal review and is merge-blocked; a human review
