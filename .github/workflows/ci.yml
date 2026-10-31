@@ -49,3 +49,15 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+  canvas-extension:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: >-
+          node --test
+          extension/canvas-pairing/discovery.test.mjs
+          extension/canvas-pairing/client.test.mjs
+          extension/canvas-feasibility/probe.test.mjs
