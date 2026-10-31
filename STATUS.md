@@ -56,6 +56,13 @@ are staged atomically with checks/events/checkpoints and receipts. Immutable sou
 is reused; no legacy latest source pointer/model activation. Migration012 was test-only.
 No extraction/provider collection, document segments, new API or live worker is claimed.
 
+Internal P1-A2 freshness increment #73 adds37 tests; full disposable backend
+**585 passed**. Legacy timestamp checks share one policy; final ready commit, cached
+successful report recovery and private-draft completion recheck current owned evidence.
+Staged Canvas policy boundaries are tested but unwired. C3 retrieval and document
+segments remain pending agreement; P1-A2 is not complete. No deployment, migration,
+paid call, source activation or continuous worker change occurred.
+
 Other counts above belong to their cited commits and historical runs. Current source/status two-account live denial
 checks passed previously; live artifact isolation remains untested because no live
 artifact exists. Read the [actual M2 run](docs/M2-RUN-2026-10-29.md).
@@ -75,7 +82,7 @@ increase spending authorization. Original M2 scope remains one synthetic workflo
 
 ## Next actions
 
-A: #58 academic persistence review; then document segments and unified owned freshness/readiness.
+A: #71/#72 storage review and #73 freshness review; agree C3 retrieval/segments, then implement owned readers.
 M: assemble accepted lifecycle/context consumers; source extraction and Canvas/Outlook live evidence; WhatsApp recovery.
 Claims must be posted in #4 before implementation. Nobody takes over the other's files.
 

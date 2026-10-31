@@ -6,6 +6,7 @@ from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 from contracts.models import SourceObservation
+from shared.freshness import legacy_freshness
 
 
 class AcademicMemoryStore:
@@ -195,14 +196,18 @@ class AcademicMemoryStore:
         sources = conn.execute(
             "SELECT s.id AS source_id,v.id AS version_id,v.external_revision,v.title,v.reference, "
             "v.coverage,v.retrieved_at,left(v.content,6000) AS excerpt, "
-            "length(v.content)>6000 AS excerpt_truncated, "
-            "v.retrieved_at < now()-interval '24 hours' AS freshness_review_needed "
+            "length(v.content)>6000 AS excerpt_truncated "
             "FROM wrytely_agent.responsibility_sources b JOIN wrytely_agent.academic_sources s "
             "ON s.id=b.source_id AND s.agent_id=b.agent_id JOIN wrytely_agent.source_versions v "
             "ON v.id=s.latest_version_id AND v.agent_id=s.agent_id "
             "WHERE b.agent_id=%s AND b.responsibility_id=%s ORDER BY s.id LIMIT 8",
             (agent_id, responsibility_id),
         ).fetchall()
+        now = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
+        for source in sources:
+            source["freshness_review_needed"] = not legacy_freshness(
+                source["retrieved_at"], now=now
+            ).usable
         facts = conn.execute(
             "SELECT f.id,f.claim,f.quote,f.version_id,s.latest_version_id=f.version_id AS current "
             "FROM wrytely_agent.source_facts f JOIN wrytely_agent.source_versions v "

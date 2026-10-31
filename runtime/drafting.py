@@ -1,12 +1,13 @@
 """Bounded internal draft workflow; no sending, submission or implicit delegation."""
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from contracts.artifacts import CoursePolicy, DraftArtifact, RubricItem
 from runtime.verification import verify_artifact
 from shared.db import RequestConflict, json_text
+from shared.freshness import legacy_freshness
 
 
 class DraftingPermission(BaseModel):
@@ -59,7 +60,7 @@ def generate_checked_draft(
         source = indexed.get(str(item.version_id))
         if not source or not item.quote.strip() or item.quote not in source["content"]:
             raise ValueError("Required policy/rubric evidence unavailable")
-        if source["retrieved_at"] < datetime.now(UTC) - timedelta(hours=24):
+        if not legacy_freshness(source["retrieved_at"], now=datetime.now(UTC)).usable:
             raise ValueError("Evidence requires freshness review")
     if policy.status not in ("permitted", "disclosure_required"):
         raise ValueError("Course policy does not permit full drafting")
@@ -182,6 +183,8 @@ def generate_checked_draft(
             "policy_evidence_missing_or_stale",
             "policy_assessment_failed",
             "rubric_evidence_missing_or_stale",
+            "evidence_freshness_failed_at_commit",
+            "evidence_unavailable_at_commit",
         }:
             return {"state": "blocked", "artifact_id": artifact["id"], "report": report}
     return {"state": "needs_revision", "artifact_id": artifact["id"], "report": report}

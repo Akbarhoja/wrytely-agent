@@ -286,3 +286,27 @@ def test_control_change_during_extraction_prevents_assessment_commit(store, alic
     assert state["assessment_state"] == "pending"
     with store.connection() as conn:
         assert not conn.execute("SELECT 1 FROM wrytely_agent.drafting_requests").fetchall()
+
+
+def test_private_intent_cannot_complete_after_checked_evidence_expires(store, alice):
+    source = setup(store)
+    duty = create(store, source)
+    model = ScriptedModel(
+        [
+            extracted(source),
+            plan("draft", "comparison", "Prepare private draft"),
+            permitted(),
+            draft_turn(source),
+            assessment(),
+        ]
+    )
+    assert run_once(store, model, Settings())
+    assert run_once(store, model, Settings())
+    with store.connection() as conn:
+        conn.execute(
+            "UPDATE wrytely_agent.source_versions "
+            "SET retrieved_at=clock_timestamp()-interval '2 days' WHERE id=%s",
+            (source["id"],),
+        )
+    assert run_once(store, ScriptedModel([plan("done", "review-ready", "")]), Settings())
+    assert store.draft_responsibility_status("user_alice", duty["id"])["status"] == "blocked"

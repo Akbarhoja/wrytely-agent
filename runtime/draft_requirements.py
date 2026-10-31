@@ -1,7 +1,7 @@
 """Candidate policy/rubric assessment; never student authorization or readiness."""
 
 import json
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from typing import Literal
 from uuid import UUID
 
@@ -9,6 +9,7 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
 from contracts.artifacts import CoursePolicy, RubricItem
 from runtime.drafting import structured_turn
+from shared.freshness import legacy_freshness
 
 
 class BoundEvidence(BaseModel):
@@ -42,10 +43,7 @@ INSTRUCTIONS = (
 
 def _check_freshness(sources):
     now = datetime.now(UTC)
-    if any(
-        s.retrieved_at < now - timedelta(hours=24) or s.retrieved_at > now + timedelta(minutes=5)
-        for s in sources
-    ):
+    if any(not legacy_freshness(s.retrieved_at, now=now).usable for s in sources):
         raise ValueError("Bound evidence requires freshness review")
 
 
