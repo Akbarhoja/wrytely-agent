@@ -45,8 +45,14 @@ the fixed child environment was supplied. Windows focused checks:17 passed,14 Li
 checks skipped. Read-only independent review found no remaining scoped code blocker.
 Final locked Ruff/format pass. Full Windows backend verification:659 passed,
 14 Linux skips and two existing test-library warnings in681.84 seconds, against
-disposable Postgres. Actual Linux CI evidence remains required; Windows skips cannot
-establish Linux cap/pipe/parser acceptance. No WSL installation was attempted.
+disposable Postgres. No WSL installation was attempted.
+
+Code checkpoint2c2e2ca has actual [Linux CI evidence](https://github.com/Akbarhoja/wrytely-agent/actions/runs/41201265440):
+Ubuntu24.04/CPython3.12.3 foundation job124537375618 reports673 passed, two existing
+warnings,89.14 seconds and no skips. All14 Linux-only parser, memory/CPU, pipe,
+timeout/reaping and cap-order tests executed. Web job124537375620 also succeeded.
+These are synthetic process-boundary results. Akbar's counterpart review remains
+pending; no live file, source activation or deployment is established.
 
 Fixtures are synthetic generated text, encrypted, blank, image and mixed-page PDFs.
 Linux tests exercise actual memory/CPU failure, wall timeout with a full stdin pipe,

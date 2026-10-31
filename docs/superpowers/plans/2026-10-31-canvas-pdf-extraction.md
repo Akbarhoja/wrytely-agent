@@ -21,8 +21,9 @@
 - [x] Implement integrations/canvas/pdf_extract.py parent, immutable local result/limit types and fixed subprocess supervisor; no pypdf import.
 - [x] Implement integrations/canvas/_pdf_child.py: verified OS caps before parser import; no logging/raw errors; normalized page text and honest gaps.
 - [x] Run focused Windows checks and full locked backend/lint/format on disposable Postgres.
-- [ ] Obtain actual Linux CI results; Windows skips cannot establish Linux acceptance.
-- [ ] Independent review, handoff doc and draft PR linked to #87; no completed P1/live capability claim.
+- [x] Obtain actual Linux CI results; code2c2e2ca CI41201265440 reports673 passed/no skips, including all14 Linux-only checks.
+- [x] Independent read-only review, handoff doc and draft PR #88 linked to #87; no completed P1/live capability claim.
+- [ ] Akbar counterpart review and integration acceptance; protected-main approval and activation remain separate.
 
 ## Review focus
 
