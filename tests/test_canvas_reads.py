@@ -336,3 +336,62 @@ def test_lease_expiring_inside_read_cannot_pass_on_transaction_start_time(device
     monkeypatch.setattr(db, "_evidence_projection", expiring)
     with pytest.raises(LeaseLost):
         db.read_canvas_evidence_for_task(lease, obj["id"])
+
+
+def test_previously_staged_expanded_text_can_follow_every_returned_continuation(device):
+    import unicodedata
+
+    obj = collected(device)[0]
+    text = unicodedata.normalize("NFC", "\u0344" * 24000)
+    # Simulate a record admitted by the old partial/no-title path; no live data/migration.
+    with device[0].connection() as conn:
+        conn.execute(
+            "UPDATE wrytely_agent.canvas_evidence_observations SET payload="
+            "jsonb_set(jsonb_set(payload,'{content}',to_jsonb(%s::text)),'{title}','\"\"'),"
+            "coverage='partial',version_id=NULL WHERE id=%s",
+            (text, obj["latest_observation_id"]),
+        )
+    offset = 0
+    pieces = []
+    while True:
+        read = device[0].read_canvas_evidence(
+            "user_alice", obj["id"], observation_id=obj["latest_observation_id"], offset=offset
+        )
+        pieces.append(read["section"]["text"])
+        assert read["section"]["total_characters"] == 48000
+        assert not read["freshness"]["usable"]
+        offset = read["section"]["next_offset"]
+        if offset is None:
+            break
+    assert "".join(pieces) == text and len(pieces) == 4
+    assert (
+        device[0].read_canvas_evidence(
+            "user_alice", obj["id"], observation_id=obj["latest_observation_id"], offset=len(text)
+        )["section"]["text"]
+        == ""
+    )
+    with pytest.raises(ValueError):
+        device[0].read_canvas_evidence(
+            "user_alice",
+            obj["id"],
+            observation_id=obj["latest_observation_id"],
+            offset=len(text) + 1,
+        )
+
+
+def test_accepted_normalized_boundary_is_fully_retrievable(device):
+    import unicodedata
+
+    text = "\u0344" * 12000
+    obj = collected(device, text=text)[0]
+    first = device[0].read_canvas_evidence("user_alice", obj["id"])
+    second = device[0].read_canvas_evidence(
+        "user_alice",
+        obj["id"],
+        observation_id=first["observation_id"],
+        offset=first["section"]["next_offset"],
+    )
+    assert first["section"]["text"] + second["section"]["text"] == unicodedata.normalize(
+        "NFC", text
+    )
+    assert second["section"]["next_offset"] is None

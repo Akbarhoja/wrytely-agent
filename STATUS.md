@@ -19,22 +19,22 @@ Historical M1/M2 live gates remain incomplete; renumbering the plan does not pas
 
 ## Current work and evidence
 
-| Step/component           | Owner             | State and evidence                                                                         | Next action/blocker                                                                 |
-| ------------------------ | ----------------- | ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
-| Revision7 planning / #44 | A                 | Code/PR audit and ordered work orders prepared; docs only                                  | Counterpart review; new interfaces still proposals                                  |
-| P0-A1 baseline           | A                 | codex/p0-baseline combines #40/#42, revision7 and M Canvas proposal; main not consolidated | CI391/114 plus M independent local391/114 pass; human approval still needed         |
-| Diagnostics #40          | A                 | ddd5ab1, scoped counterpart review;381 backend/113 web CI reported                         | Included in #46; not deployed                                                       |
-| Pause recovery #42       | A                 | 224bc96 (code a7db006), scoped review;385 backend/113 web CI reported                      | Included in #46; combined CI391/114 passed, review pending                          |
-| Murtazo #28              | M                 | a344642 UI; latest a383782 Canvas proposal;114 local web reported                          | Reuse proposal findings; extension supersedes initial OAuth path                    |
-| P0-A2 Meta               | A                 | Basic M1 response worked; last live M2 failed NotFoundError before draft                   | Two-call probe passed (see #50); failed-call reservation retained                   |
-| P0-M1 Canvas             | M                 | M #64 lifecycle API reviewed/21 cases pass; local diagnostic work reported                 | Full redacted access/session/content acceptance evidence not yet reviewed           |
-| P0-M2 Outlook            | M                 | M #54 at4aadc91 offline Graph probe;32 cases independently pass                            | Real consent, email/attachment and notification evidence pending                    |
-| P0-M3 WhatsApp           | M                 | Linking/inbound worked; last delivery failed131031                                         | Business/account resolution and delivered-reply proof                               |
-| P0-A3 interfaces         | A                 | C1/C2 agreed atccf84dc; RFC3339 offset fix10b8625; C3–C7 still proposals                   | M agreed scope/actor6537874178; context/discovery implementation under review       |
-| P1 collection/memory     | A/M by work order | P1-A1 #58 adds staged academic text/check/event transactions; collectors not assembled     | 548 local backend pass; counterpart review + fresh retrieval/segments still pending |
-| P2 always-on ownership   | A/M by work order | Existing task worker; continuous workers stopped                                           | Supervisor, schedule, hard budgets and bounded deployment                           |
-| P3/P4 work/adaptation    | A/M by work order | Private drafting/checks scripted; live artifact not produced; A4 parked                    | Real accepted work/delivery, revisions and follow-through                           |
-| P5/P6 pilot/release      | A/M by work order | Not started                                                                                | Reliability, live evidence and release approval                                     |
+| Step/component           | Owner             | State and evidence                                                                         | Next action/blocker                                                                         |
+| ------------------------ | ----------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| Revision7 planning / #44 | A                 | Code/PR audit and ordered work orders prepared; docs only                                  | Counterpart review; new interfaces still proposals                                          |
+| P0-A1 baseline           | A                 | codex/p0-baseline combines #40/#42, revision7 and M Canvas proposal; main not consolidated | CI391/114 plus M independent local391/114 pass; human approval still needed                 |
+| Diagnostics #40          | A                 | ddd5ab1, scoped counterpart review;381 backend/113 web CI reported                         | Included in #46; not deployed                                                               |
+| Pause recovery #42       | A                 | 224bc96 (code a7db006), scoped review;385 backend/113 web CI reported                      | Included in #46; combined CI391/114 passed, review pending                                  |
+| Murtazo #28              | M                 | a344642 UI; latest a383782 Canvas proposal;114 local web reported                          | Reuse proposal findings; extension supersedes initial OAuth path                            |
+| P0-A2 Meta               | A                 | P0 real tool/saved-result/continuation proof passed in #50; academic M2 remains open       | Two-call probe passed (see #50); failed-call reservation retained                           |
+| P0-M1 Canvas             | M                 | M #64 lifecycle API reviewed/21 cases pass; local diagnostic work reported                 | Full redacted access/session/content acceptance evidence not yet reviewed                   |
+| P0-M2 Outlook            | M                 | M #54 at4aadc91 offline Graph probe;32 cases independently pass                            | Real consent, email/attachment and notification evidence pending                            |
+| P0-M3 WhatsApp           | M                 | Linking/inbound worked; last delivery failed131031                                         | Business/account resolution and delivered-reply proof                                       |
+| P0-A3 interfaces         | A                 | C1/C2 and C3 short-text design agreed; remaining C4–C7/precise document wire gates open    | Reader #86 Unicode fix #97 under review; document/schema2 details remain separate           |
+| P1 collection/memory     | A/M by work order | P1-A1 #58 adds staged academic text/check/event transactions; collectors not assembled     | 633 A backend pass; M transport/journal separately reviewed; live assembly/segments pending |
+| P2 always-on ownership   | A/M by work order | Existing task worker; continuous workers stopped                                           | Supervisor, schedule, hard budgets and bounded deployment                                   |
+| P3/P4 work/adaptation    | A/M by work order | Private drafting/checks scripted; live artifact not produced; A4 parked                    | Real accepted work/delivery, revisions and follow-through                                   |
+| P5/P6 pilot/release      | A/M by work order | Not started                                                                                | Reliability, live evidence and release approval                                             |
 
 P1-A1 first slice: full disposable-local-Postgres suite **459 passed**, including38
 connection-lifecycle cases and30 digest cases; Ruff lint/format and doc/diff checks pass.
@@ -87,6 +87,26 @@ publication. Documentation only; no reader, upload, schema2 batch or source acti
 implemented. Fresh #4/comments/formal-review check found no new M reply on
 #71/#72/#74/#76; agreement remains the dependent implementation gate.
 
+Current reviewed/corrected checkpoints (separate branch evidence): M accepted #84
+ordering/canonicalization fix581a9f5 after independent597 tests and original repro.
+Reader #86 c464ecd had623 passing tests but a newly reproduced NFC-expansion paging
+defect; #97 fixes canonical size on every staged path and legacy continuation without
+truncation. Current A full backend **633 passed** (10 new cases, six initially RED).
+New reader implementation remains under review, unwired and undeployed.
+
+M #94 exact8bc90b0 discovery HTTP received A review and independently **68 API cases
+passed**. M #96 exact95c38cb journal received A review and independently **119 Node
+cases passed**. These do not establish actual extension/server compatibility or live
+Chrome collection. M is approved as single editor for the proposed cross-layer
+HTTP interoperability test/harness after a scoped claim. Conservative54001 retained
+resource rows/8MiB journal-finish reply accepted as a bound, not a proved6000-course run.
+CI coverage for the journal is a separate A-owned follow-up; no missing-file skips.
+
+P0 remains open: Canvas returned a READ badge but detailed coverage/session matrix is
+not verified; Outlook needs an approved Wrytely app/home-tenant/consent route; WhatsApp
+business/account clearance and delivered-reply proof remain. M owns all three access
+tracks; A does not duplicate live runs. Baseline human approval is still separate.
+
 Other counts above belong to their cited commits and historical runs. Current source/status two-account live denial
 checks passed previously; live artifact isolation remains untested because no live
 artifact exists. Read the [actual M2 run](docs/M2-RUN-2026-10-29.md).
@@ -106,9 +126,10 @@ increase spending authorization. Original M2 scope remains one synthetic workflo
 
 ## Next actions
 
-A: request M agreement on #77 C3/segments; after agreement implement owned short-text readers first.
-M: pending #71/#72/#74/#76 reviews and #65 PDF-boundary agreement.
-M: assemble accepted lifecycle/context consumers; source extraction and Canvas/Outlook live evidence; WhatsApp recovery.
+A: obtain #97 Unicode fix review, review/integrate agreed components and add discovery
+Node CI on a branch containing the actual extension. Complete reader/long-document
+and supervisor work in their ordered reviewed slices; no live source activation yet.
+M: P0 access evidence/blockers; claimed integration work and agreed cross-layer tests.
 Claims must be posted in #4 before implementation. Nobody takes over the other's files.
 
 [Historical detailed status](docs/archive/STATUS-through-2026-10-29.md) preserves

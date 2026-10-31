@@ -574,3 +574,49 @@ def test_identifier_order_is_decided_by_canonical_values(field):
     else:
         value["fields"][field] = ["f", "e\u0301"]
     assert EvidenceItem.model_validate(value).payload(kind)["fields"][field] == ["f", "\u00e9"]
+
+
+@pytest.mark.parametrize("coverage", ["partial", "restricted", "unsupported", "complete"])
+def test_nfc_expansion_cannot_bypass_normalized_short_text_bound(device, coverage):
+    scan = prepare(device)
+    first = assignment()
+    invalid = assignment()
+    invalid.update(provider_id="18", content="\u0344" * 24000, coverage=coverage)
+    if coverage != "complete":
+        invalid.update(title="", missing=["title_unavailable"])
+    with pytest.raises(ValueError):
+        upload(device, scan, body(device, scan, [first, invalid]))
+    for table in [
+        "source_versions",
+        "canvas_evidence_objects",
+        "canvas_evidence_observations",
+        "canvas_evidence_events",
+    ]:
+        assert rows(device, table) == []
+    with device[0].connection() as conn:
+        saved = conn.execute(
+            "SELECT checkpoint FROM wrytely_agent.canvas_scans WHERE id=%s", (scan["scan_id"],)
+        ).fetchone()
+    assert saved["checkpoint"] == scan["checkpoint"]
+
+
+@pytest.mark.parametrize(
+    "field,raw,accepted",
+    [
+        ("content", "\u0344" * 12000, True),
+        ("content", "\u0344" * 12001, False),
+        ("title", "\u0344" * 150, True),
+        ("title", "\u0344" * 151, False),
+    ],
+)
+def test_normalized_short_text_boundaries_apply_before_storage(field, raw, accepted):
+    from contracts.canvas_evidence import EvidenceItem
+
+    value = assignment()
+    value[field] = raw
+    if accepted:
+        payload = EvidenceItem.model_validate(value).payload("assignment")
+        assert len(payload[field]) == (24000 if field == "content" else 300)
+    else:
+        with pytest.raises(ValueError):
+            EvidenceItem.model_validate(value).payload("assignment")
