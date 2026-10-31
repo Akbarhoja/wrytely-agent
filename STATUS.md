@@ -17,6 +17,12 @@ task/draft foundations. No completed
 24/7 academic agent, Canvas extension, Outlook connection or semester supervisor yet.
 Historical M1/M2 live gates remain incomplete; renumbering the plan does not pass them.
 
+Latest P0 ownership is recorded in [TEAM.md](TEAM.md): A resumes Canvas/Outlook
+access completion under #104; M acknowledged and paused duplicate live runs.
+[Local access check](docs/P0-LOCAL-ACCESS-2026-10-31.md): no company Microsoft
+organization/admin setup found in the checked directory/company-mailbox records;
+account selection/setup is pending. This does not close the Outlook access gate.
+
 ## Current work and evidence
 
 | Step/component           | Owner             | State and evidence                                                                         | Next action/blocker                                                                         |
@@ -27,8 +33,8 @@ Historical M1/M2 live gates remain incomplete; renumbering the plan does not pas
 | Pause recovery #42       | A                 | 224bc96 (code a7db006), scoped review;385 backend/113 web CI reported                      | Included in #46; combined CI391/114 passed, review pending                                  |
 | Murtazo #28              | M                 | a344642 UI; latest a383782 Canvas proposal;114 local web reported                          | Reuse proposal findings; extension supersedes initial OAuth path                            |
 | P0-A2 Meta               | A                 | P0 real tool/saved-result/continuation proof passed in #50; academic M2 remains open       | Two-call probe passed (see #50); failed-call reservation retained                           |
-| P0-M1 Canvas             | M                 | M #64 lifecycle API reviewed/21 cases pass; local diagnostic work reported                 | Full redacted access/session/content acceptance evidence not yet reviewed                   |
-| P0-M2 Outlook            | M                 | M #54 at4aadc91 offline Graph probe;32 cases independently pass                            | Real consent, email/attachment and notification evidence pending                            |
+| P0-M1 Canvas             | A (reassigned)    | M #64 lifecycle API reviewed/21 cases pass; local diagnostic work reported                 | Full redacted access/session/content acceptance evidence not yet reviewed                   |
+| P0-M2 Outlook            | A (reassigned)    | M #54 at4aadc91 offline Graph probe;32 cases independently pass                            | Real consent, email/attachment and notification evidence pending                            |
 | P0-M3 WhatsApp           | M                 | Linking/inbound worked; last delivery failed131031                                         | Business/account resolution and delivered-reply proof                                       |
 | P0-A3 interfaces         | A                 | C1/C2 and C3 short-text design agreed; remaining C4–C7/precise document wire gates open    | Reader #86 Unicode fix #97 under review; document/schema2 details remain separate           |
 | P1 collection/memory     | A/M by work order | P1-A1 #58 adds staged academic text/check/event transactions; collectors not assembled     | 633 A backend pass; M transport/journal separately reviewed; live assembly/segments pending |
