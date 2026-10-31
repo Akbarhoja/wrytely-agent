@@ -19,22 +19,22 @@ Historical M1/M2 live gates remain incomplete; renumbering the plan does not pas
 
 ## Current work and evidence
 
-| Step/component           | Owner             | State and evidence                                                                         | Next action/blocker                                                               |
-| ------------------------ | ----------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
-| Revision7 planning / #44 | A                 | Code/PR audit and ordered work orders prepared; docs only                                  | Counterpart review; new interfaces still proposals                                |
-| P0-A1 baseline           | A                 | codex/p0-baseline combines #40/#42, revision7 and M Canvas proposal; main not consolidated | CI391/114 plus M independent local391/114 pass; human approval still needed       |
-| Diagnostics #40          | A                 | ddd5ab1, scoped counterpart review;381 backend/113 web CI reported                         | Included in #46; not deployed                                                     |
-| Pause recovery #42       | A                 | 224bc96 (code a7db006), scoped review;385 backend/113 web CI reported                      | Included in #46; combined CI391/114 passed, review pending                        |
-| Murtazo #28              | M                 | a344642 UI; latest a383782 Canvas proposal;114 local web reported                          | Reuse proposal findings; extension supersedes initial OAuth path                  |
-| P0-A2 Meta               | A                 | Basic M1 response worked; last live M2 failed NotFoundError before draft                   | Two-call probe passed (see #50); failed-call reservation retained                 |
-| P0-M1 Canvas             | M                 | M started #51 offline Canvas feasibility; live same-session access pending                 | Consenting exact CSU origin/course scope and install authorization requested by M |
-| P0-M2 Outlook            | M                 | M #54 at4aadc91 offline Graph probe;32 cases independently pass                            | Real consent, email/attachment and notification evidence pending                  |
-| P0-M3 WhatsApp           | M                 | Linking/inbound worked; last delivery failed131031                                         | Business/account resolution and delivered-reply proof                             |
-| P0-A3 interfaces         | A                 | C1/C2 agreed atccf84dc; RFC3339 offset fix10b8625; C3–C7 still proposals                   | M accepted lifecycle6537714125; scope/actor extension agreement still pending     |
-| P1 collection/memory     | A/M by work order | P1-A1 #58 Canvas lifecycle storage implemented; automatic collectors absent                | M accepted #59/68 independent cases; #61 operator config484 local pass            |
-| P2 always-on ownership   | A/M by work order | Existing task worker; continuous workers stopped                                           | Supervisor, schedule, hard budgets and bounded deployment                         |
-| P3/P4 work/adaptation    | A/M by work order | Private drafting/checks scripted; live artifact not produced; A4 parked                    | Real accepted work/delivery, revisions and follow-through                         |
-| P5/P6 pilot/release      | A/M by work order | Not started                                                                                | Reliability, live evidence and release approval                                   |
+| Step/component           | Owner             | State and evidence                                                                            | Next action/blocker                                                           |
+| ------------------------ | ----------------- | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Revision7 planning / #44 | A                 | Code/PR audit and ordered work orders prepared; docs only                                     | Counterpart review; new interfaces still proposals                            |
+| P0-A1 baseline           | A                 | codex/p0-baseline combines #40/#42, revision7 and M Canvas proposal; main not consolidated    | CI391/114 plus M independent local391/114 pass; human approval still needed   |
+| Diagnostics #40          | A                 | ddd5ab1, scoped counterpart review;381 backend/113 web CI reported                            | Included in #46; not deployed                                                 |
+| Pause recovery #42       | A                 | 224bc96 (code a7db006), scoped review;385 backend/113 web CI reported                         | Included in #46; combined CI391/114 passed, review pending                    |
+| Murtazo #28              | M                 | a344642 UI; latest a383782 Canvas proposal;114 local web reported                             | Reuse proposal findings; extension supersedes initial OAuth path              |
+| P0-A2 Meta               | A                 | Basic M1 response worked; last live M2 failed NotFoundError before draft                      | Two-call probe passed (see #50); failed-call reservation retained             |
+| P0-M1 Canvas             | M                 | M #64 lifecycle API reviewed/21 cases pass; local diagnostic work reported                    | Full redacted access/session/content acceptance evidence not yet reviewed     |
+| P0-M2 Outlook            | M                 | M #54 at4aadc91 offline Graph probe;32 cases independently pass                               | Real consent, email/attachment and notification evidence pending              |
+| P0-M3 WhatsApp           | M                 | Linking/inbound worked; last delivery failed131031                                            | Business/account resolution and delivered-reply proof                         |
+| P0-A3 interfaces         | A                 | C1/C2 agreed atccf84dc; RFC3339 offset fix10b8625; C3–C7 still proposals                      | M agreed scope/actor6537874178; context/discovery implementation under review |
+| P1 collection/memory     | A/M by work order | P1-A1 #58 lifecycle + discovery sync/context/scope/list implemented; collectors not assembled | 520 local backend pass; M counterpart review before C2 consumers              |
+| P2 always-on ownership   | A/M by work order | Existing task worker; continuous workers stopped                                              | Supervisor, schedule, hard budgets and bounded deployment                     |
+| P3/P4 work/adaptation    | A/M by work order | Private drafting/checks scripted; live artifact not produced; A4 parked                       | Real accepted work/delivery, revisions and follow-through                     |
+| P5/P6 pilot/release      | A/M by work order | Not started                                                                                   | Reliability, live evidence and release approval                               |
 
 P1-A1 first slice: full disposable-local-Postgres suite **459 passed**, including38
 connection-lifecycle cases and30 digest cases; Ruff lint/format and doc/diff checks pass.
@@ -42,6 +42,13 @@ Migration010 was applied only to disposable tests, not Railway. No route or coll
 Requested operator config #61 adds25 tests; combined local backend **484 passed**.
 M #60 assignment mapping independently reviewed/tested:32 mapper +28 digest cases pass
 oncc5d793 in an ignored archive; no actual source/provider access proved.
+
+Discovery/context/scope/list slice adds36 tests; full fresh disposable backend **520 passed**.
+Migration011 and lifecycle reset hooks were tested only locally; no API or provider collector
+was added to this branch. Catalog pages and receipts are atomic; academic source versions,
+checks/events/segments and Outlook credentials remain unfinished. M #64 exact57ca6ea
+received independent read-only review with21 API tests passing in an isolated archive.
+Its implementation is on M's branch, not included in the520 backend count.
 
 Other counts above belong to their cited commits and historical runs. Current source/status two-account live denial
 checks passed previously; live artifact isolation remains untested because no live
@@ -62,8 +69,8 @@ increase spending authorization. Original M2 scope remains one synthetic workflo
 
 ## Next actions
 
-A: #59 lifecycle accepted; #62 operator config review; #58 scope/actor agreement before sync transactions.
-M: #56 offline digest helper independently28 pass; Canvas/Outlook live access and WhatsApp recovery.
+A: #58 discovery/context/scope/list counterpart review, then academic source/check/event transactions.
+M: assemble accepted lifecycle/context consumers; source extraction and Canvas/Outlook live evidence; WhatsApp recovery.
 Claims must be posted in #4 before implementation. Nobody takes over the other's files.
 
 [Historical detailed status](docs/archive/STATUS-through-2026-10-29.md) preserves
