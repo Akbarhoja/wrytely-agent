@@ -7,7 +7,7 @@ Updated October 31, 2026. [Plan revision7](docs/BUILD-PLAN.md) ·
 ## Product decision and actual stage
 
 Own Wrytely runtime + Meta primary intelligence. Required first version: Canvas
-extension + Outlook email + WhatsApp, automatic discovery and semester supervision,
+extension + WhatsApp, with optional Outlook email, automatic discovery and semester supervision,
 checked delegated work, revisions and follow-through. Hermes deferred. Cloud agent
 must stay available while laptop is off; Canvas collection still depends on browser
 and session availability. No manual-paste substitute for connector completion.
@@ -16,6 +16,17 @@ We are at **P0: live access gates open; P1 storage implementation started**, wit
 task/draft foundations. No completed
 24/7 academic agent, Canvas extension, Outlook connection or semester supervisor yet.
 Historical M1/M2 live gates remain incomplete; renumbering the plan does not pass them.
+
+Latest P0 ownership is recorded in [TEAM.md](TEAM.md): A resumes Canvas/Outlook
+access completion under #104; M acknowledged and paused duplicate live runs.
+[Local access check](docs/P0-LOCAL-ACCESS-2026-10-31.md): initial discovery found no company Microsoft setup; the owner subsequently
+created a company-controlled directory and approved the development app registration.
+Delegated User.Read/Mail.Read are configured, but publisher/actual school consent and
+the actual CSU sign-in attempt is blocked by AADSTS90095/admin consent.
+The local PKCE harness has 20 synthetic cases; Graph access remains untested.
+Billing protection is unverified.
+Outlook remains unverified but is now optional and paused by explicit supervisor decision;
+it no longer gates the core product. No new/duplicate CSU approval request will be submitted.
 
 ## Current work and evidence
 
@@ -27,10 +38,10 @@ Historical M1/M2 live gates remain incomplete; renumbering the plan does not pas
 | Pause recovery #42       | A                 | 224bc96 (code a7db006), scoped review;385 backend/113 web CI reported                      | Included in #46; combined CI391/114 passed, review pending                                  |
 | Murtazo #28              | M                 | a344642 UI; latest a383782 Canvas proposal;114 local web reported                          | Reuse proposal findings; extension supersedes initial OAuth path                            |
 | P0-A2 Meta               | A                 | P0 real tool/saved-result/continuation proof passed in #50; academic M2 remains open       | Two-call probe passed (see #50); failed-call reservation retained                           |
-| P0-M1 Canvas             | M                 | M #64 lifecycle API reviewed/21 cases pass; local diagnostic work reported                 | Full redacted access/session/content acceptance evidence not yet reviewed                   |
-| P0-M2 Outlook            | M                 | M #54 at4aadc91 offline Graph probe;32 cases independently pass                            | Real consent, email/attachment and notification evidence pending                            |
+| P0-M1 Canvas             | A (reassigned)    | M #64 lifecycle API reviewed/21 cases pass; local diagnostic work reported                 | Current-session operator report received; linked files/rubric/session matrix pending        |
+| P0-M2 Outlook            | A (reassigned)    | M #54 at4aadc91 offline Graph probe;32 cases independently pass                            | Optional/paused: CSU admin consent required; not a core stage blocker                       |
 | P0-M3 WhatsApp           | M                 | Linking/inbound worked; last delivery failed131031                                         | Business/account resolution and delivered-reply proof                                       |
-| P0-A3 interfaces         | A                 | C1/C2 and C3 short-text design agreed; remaining C4–C7/precise document wire gates open    | Reader #86 Unicode fix #97 under review; document/schema2 details remain separate           |
+| P0-A3 interfaces         | A                 | C1/C2 and C3 short-text design agreed; remaining C4–C7/precise document wire gates open    | Reader fix #98 accepted by M; document/schema2 wire details remain separate                 |
 | P1 collection/memory     | A/M by work order | P1-A1 #58 adds staged academic text/check/event transactions; collectors not assembled     | 633 A backend pass; M transport/journal separately reviewed; live assembly/segments pending |
 | P2 always-on ownership   | A/M by work order | Existing task worker; continuous workers stopped                                           | Supervisor, schedule, hard budgets and bounded deployment                                   |
 | P3/P4 work/adaptation    | A/M by work order | Private drafting/checks scripted; live artifact not produced; A4 parked                    | Real accepted work/delivery, revisions and follow-through                                   |
@@ -92,7 +103,7 @@ ordering/canonicalization fix581a9f5 after independent597 tests and original rep
 Reader #86 c464ecd had623 passing tests but a newly reproduced NFC-expansion paging
 defect; #97 fixes canonical size on every staged path and legacy continuation without
 truncation. Current A full backend **633 passed** (10 new cases, six initially RED).
-New reader implementation remains under review, unwired and undeployed.
+M independently accepted #98 exact59c074e focused Unicode cases; the reader remains unwired and undeployed.
 
 M #94 exact8bc90b0 discovery HTTP received A review and independently **68 API cases
 passed**. M #96 exact95c38cb journal received A review and independently **119 Node
@@ -102,10 +113,27 @@ HTTP interoperability test/harness after a scoped claim. Conservative54001 retai
 resource rows/8MiB journal-finish reply accepted as a bound, not a proved6000-course run.
 CI coverage for the journal is a separate A-owned follow-up; no missing-file skips.
 
-P0 remains open: Canvas returned a READ badge but detailed coverage/session matrix is
-not verified; Outlook needs an approved Wrytely app/home-tenant/consent route; WhatsApp
-business/account clearance and delivered-reply proof remain. M owns all three access
-tracks; A does not duplicate live runs. Baseline human approval is still separate.
+P0 core checkpoint: Meta access proof passed. A owns Canvas feasibility; the operator supplied a new current-session report after local installation:
+7 courses discovered/1 selected; 22 assignments/12 instruction bodies; inline syllabus
+and one discussion view readable. No positive rubric proof. One syllabus PDF manually downloaded and locally text-readable;
+extension document reading remains unverified.
+A second operator report returned the same reads after closing Canvas tabs with Chrome
+and the worker Console open. Manual tab-closed access is supported by that report;
+after operator-performed Chrome restart, diagnostic reported login_required and A
+observed the official NetID login form. Post-login dashboard and operator-reported sampled extension reads recovered; unattended worker,
+explicit Canvas sign-out also returned login_required in the operator probe. Natural
+timed expiry and account-switch checks remain untested. Browser controls
+cannot open extension management. No restart/logout was
+performed. Outlook is optional/paused and not a core blocker. M retains WhatsApp delivery.
+Baseline #46 exact9bbea97 still has no formal review and is merge-blocked; a human review
+was formally requested from murtazokhon-tech. C4–C7 and the exact document-wire decisions
+await counterpart agreement; no protection/interface gate was bypassed.
+
+A independently checked M #107 exact4106dc88 in an ignored archive: **233 Node tests
+passed, zero skips** across all six requested suites. Read collector, client injection
+and discovery lock/journal changes; scoped review posted on #107. This is course metadata
+only, with academic resources honestly open; not installed/live Canvas or collector-driven
+HTTP/Store proof. M owns active #108 for that next cross-layer acceptance scenario.
 
 Other counts above belong to their cited commits and historical runs. Current source/status two-account live denial
 checks passed previously; live artifact isolation remains untested because no live

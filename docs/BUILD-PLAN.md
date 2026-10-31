@@ -1,6 +1,6 @@
 # Wrytely academic agent — build plan
 
-Revision 7 · October 30, 2026 · Product owner: Akbar
+Revision 7 · October 30, 2026 · Optional-email amendment October 31 · Product owner: Akbar
 
 This is the authoritative product scope and delivery order. It incorporates the
 founder's Canvas-extension/Outlook decision and review of Claude's October 30 plan.
@@ -23,13 +23,14 @@ working plan, offers useful help, carries out delegated work, checks results, an
 follows through. WhatsApp is the everyday conversation. The website handles signup,
 connections, controls, course coverage and private results.
 
-The student connects Canvas through our browser extension and connects Outlook email.
+The student connects Canvas through our browser extension. Outlook email is an optional
+connection where the institution permits access; students can skip it and use the agent.
 They do not paste each assignment or tell the agent every task. Meta models perform
 the primary reasoning, investigation, planning, drafting and semantic review.
 We keep our own Python runtime. Hermes replacement is deferred pending verified
 rule compatibility and measured engineering benefit. We are not training a new model.
 
-The completed first version must:
+The completed first version must (item 3 is the optional Outlook track):
 
 1. Discover accessible active Canvas courses without manual course IDs or a hard-coded
    course count. Prove competing priorities across at least two courses. Resource/rate
@@ -37,8 +38,9 @@ The completed first version must:
 2. Read accessible syllabus, modules/pages, assignment instructions and rubrics,
    effective student-specific due dates, announcements, discussion threads/replies,
    relevant files, grades and submission state. Report inaccessible/unsupported content.
-3. Read authorized Outlook email and relevant attachments, associate academic evidence
-   with its source, and detect email updates while the student's laptop is closed.
+3. When Outlook is enabled and authorized, read email and relevant attachments, associate
+   academic evidence with its source, and detect email updates while the laptop is closed.
+   This optional capability has its own acceptance; missing consent does not block the core.
 4. Find commitments, investigate missing details, prioritize across courses, create
    goals and next steps, and revise plans after new evidence or student replies.
 5. Proactively offer help and report relevant changes through WhatsApp. Class reminders
@@ -58,7 +60,7 @@ later sync resumes on browser startup and targets roughly every 30 minutes while
 available, with bounded batches and backoff. This is not a browser scheduling guarantee.
 Weekly refresh is a fallback. If a Canvas tab must be open, report that requirement.
 
-Outlook's authorized server connection is an independent update path, not proof that
+When connected, Outlook's optional server connection is an independent update path, not proof that
 all Canvas changes arrived. Store last attempt, last successful check and coverage per
 resource. The agent requests a refresh when a decision needs newer information. It
 must never invent unseen changes or claim the browser was available when it was not.
@@ -67,17 +69,28 @@ must never invent unseen changes or claim the browser was available when it was 
 
 | Required first version                                           | Later expansion                                 |
 | ---------------------------------------------------------------- | ----------------------------------------------- |
-| Canvas extension, Outlook email, official WhatsApp Cloud API     | Teams and group chats                           |
+| Canvas extension, official WhatsApp Cloud API                    | Teams and group chats                           |
 | Automatic collection, semester supervisor, persistent goals      | Calendar authorization/free-time integration    |
 | Investigation tools, adaptive scheduling and follow-through      | Wrytely handwriting service as an external tool |
 | Checked drafts, Word/PDF files, revisions, study/lab preparation | Sandboxed code execution, iMessage, desktop app |
 | Private signup, controls, account isolation, cost limits         | Institution-approved Canvas cloud OAuth         |
 
-Outlook cannot silently move to later. Manual snapshots, Telegram and mock sources
-cannot complete the required connectors/channel. They may assist development only
-with an explicit product decision. Physical labs, in-person work and inaccessible
-external course systems require honest partial assistance; never invent experiment
-results, references, grades or submission evidence.
+**Explicit supervisor decision, October 31:** Outlook is optional for this version.
+Keep the existing registration, read-only probe and future connection path; pause live
+CSU authorization work and duplicate approval requests. Email unavailability must not
+block Canvas onboarding, core P0–P6 acceptance, agent reasoning or WhatsApp workflows.
+Do not invent email evidence or treat an unconnected mailbox as missing coursework.
+
+Outlook remains an optional integration, not a removed feature. Until its complete
+connection flow and live access pass, describe it as planned/preview, with university
+approval possibly required. Once validated, suitable wording is: “Optional Outlook
+connection, subject to your university's permissions.” App registration alone is not
+availability. Publisher verification does not guarantee institutional approval.
+
+Manual snapshots, Telegram and mock sources cannot complete required Canvas/WhatsApp
+acceptance. Physical labs, in-person work and inaccessible external course systems
+require honest partial assistance; never invent experiment results, references, grades
+or submission evidence.
 
 Automatic Canvas submission, discussion posting, email sending and classmate messaging
 are outside this version. Reading Outlook does not authorize sending. Existing
@@ -89,7 +102,7 @@ Claude's warning-only course-policy suggestion is not silently adopted.
 ```mermaid
 flowchart TD
     C[Canvas extension: resumable collection] --> I[Authenticated ingestion]
-    O[Outlook: cloud email updates] --> I
+    O[Optional authorized Outlook updates] -.-> I
     I --> D[Private source versions, coverage, freshness and events]
     D --> S[Meta semester supervisor and persistent goals]
     T[Durable next-check schedule] --> S
@@ -110,10 +123,11 @@ blocked. Goals and waiting reasons survive process restarts. Time-based reviews 
 it opportunities to reassess; they do not prescribe every student's work. No useful
 action means idle with a reason and optional next check, not invented busywork.
 
-Example: Outlook receives an extension notice; the agent identifies its assignment,
+Example: the next Canvas sync observes a deadline extension; the agent identifies its assignment,
 checks conflicting dates, reprioritizes other work, cancels obsolete reminders,
 explains the change, then carries an accepted draft through checks and delivery.
 Uncertain source matching stays uncertain rather than overwriting another course.
+An authorized Outlook update can trigger the same flow when that optional connector exists.
 
 ## 4. Delivery order
 
@@ -121,21 +135,23 @@ Each [work order](WORK-ORDERS.md) has one accountable engineer, explicit depende
 file boundaries and observable acceptance. Independent tasks within a phase can run
 in parallel after interface agreement. Akbar's engineering work is performed with Codex.
 
-| Phase                  | Akbar + Codex                                                | Murtazo                                                            | Exit evidence                                                                                     |
-| ---------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
-| P0: baseline/access    | Consolidate runtime, diagnose Meta, agree contracts/budgets  | Canvas feasibility, Outlook consent feasibility, WhatsApp delivery | Reviewed baseline and documented access results                                                   |
-| P1: collect/remember   | Connection/sync storage, freshness, retrieval, change events | Pairing, Canvas collector, Outlook connector, connections UI       | Two-course automatic discovery plus Outlook ingestion; repeated/partial/restarted sync verified   |
-| P2: autonomous service | Commitments, supervisor, schedules and action ledger         | Continuous processes, health and proactive offer transport         | Bounded laptop-closed live test; update causes agent-chosen offer; restart without duplicate work |
-| P3: delegated work     | Intent, orchestration, checks, rendering, revision           | Buttons/free text, private file delivery, results UI               | WhatsApp acceptance → real Meta work → checked file → revision                                    |
-| P4: adaptation         | Replanning, follow-through, progress/grade reasoning         | Submission/grade refresh, source status and controls               | Changes alter plans/drafts; observed submission ends correct reminders                            |
-| P5: reliability/pilot  | Isolation/cost/adversarial/recovery evaluation               | Provider failure tests, deployment recovery and onboarding         | 72-hour bounded soak, three full runs, two-account isolation, student feedback                    |
-| P6: release            | Evidence/model provenance and release recommendation         | Setup guide, demonstration assets, release preparation             | Reviewed release decision and truthful event submission if still eligible                         |
+| Phase                  | Akbar + Codex                                                | Murtazo                                                           | Exit evidence                                                                                         |
+| ---------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| P0: baseline/access    | Consolidate runtime, diagnose Meta, agree contracts/budgets  | Canvas feasibility, optional Outlook status, WhatsApp delivery    | Reviewed baseline and documented access results                                                       |
+| P1: collect/remember   | Connection/sync storage, freshness, retrieval, change events | Pairing, Canvas collector, connections UI; optional Outlook track | Two-course automatic discovery; repeated/partial/restarted sync verified; Outlook separately optional |
+| P2: autonomous service | Commitments, supervisor, schedules and action ledger         | Continuous processes, health and proactive offer transport        | Laptop-closed persisted-condition test; agent-chosen offer; restart without duplicate work            |
+| P3: delegated work     | Intent, orchestration, checks, rendering, revision           | Buttons/free text, private file delivery, results UI              | WhatsApp acceptance → real Meta work → checked file → revision                                        |
+| P4: adaptation         | Replanning, follow-through, progress/grade reasoning         | Submission/grade refresh, source status and controls              | Changes alter plans/drafts; observed submission ends correct reminders                                |
+| P5: reliability/pilot  | Isolation/cost/adversarial/recovery evaluation               | Provider failure tests, deployment recovery and onboarding        | 72-hour bounded soak, three full runs, two-account isolation, student feedback                        |
+| P6: release            | Evidence/model provenance and release recommendation         | Setup guide, demonstration assets, release preparation            | Reviewed release decision and truthful event submission if still eligible                             |
 
 P0 access tests proceed alongside baseline review. Meta/WhatsApp failures block live
 end-to-end gates, not independent source implementation. P2 can be developed against
 fixtures but cannot pass without real collection and delivery. P3/P4 are required,
 not optional deadline cuts. No calendar deadline changes this product definition.
 Hackathon submission follows the event's actual rules/dates separately.
+Outlook consent remains an open connector-specific blocker, not a core P0 gate.
+The rest of P0 (baseline review, Canvas evidence, Meta, interfaces, WhatsApp) is unchanged.
 
 ## 5. Data and control requirements
 
@@ -182,14 +198,22 @@ Hackathon submission follows the event's actual rules/dates separately.
 
 ## 6. End-to-end proof
 
-Use at least two controlled Canvas courses and an Outlook mailbox. Sign in, pair the
-extension/WhatsApp and authorize email. Discover courses and actual syllabus/assignment
-contents without manual IDs or paste. The agent chooses an important item and offers
-help with a sourced reason. Accept; the agent independently creates/checks a draft and
-delivers a file. Receive an Outlook update while the laptop is off; the agent changes
-its plan and informs the student. Later Canvas sync confirms or conflicts with it.
-Change a rubric; invalidate affected work, revise within consent, cancel old reminders.
-Observe submission on a later sync and stop reminders for that assignment only.
+Use at least two controlled Canvas courses. Sign in and pair the extension/WhatsApp;
+no email connection is required. Discover courses and actual syllabus/assignment contents
+without manual IDs or paste. The agent chooses an important item and offers help with a
+sourced reason. Accept; the agent independently creates/checks a draft and delivers a file.
+
+Close the laptop after a successful real Canvas sync. A persisted deadline/next-check
+condition must cause the cloud supervisor to reassess the stored evidence and send an
+actual WhatsApp offer without a new inbound message or website visit. Restart the service
+and preserve that work without duplicates. This proves cloud availability and initiative;
+it does not prove unseen Canvas changes arrive while the browser is unavailable.
+
+On the next browser sync, change a deadline/rubric; reassess priorities, invalidate affected
+work, revise within consent and cancel old reminders. Observe submission on a later sync
+and stop reminders for that assignment only. Separately, when Outlook access is approved
+and its connector passes, demonstrate a real email update with the laptop off. Keep that
+optional acceptance separate; synthetic email cannot prove university mailbox access.
 
 Repeat with restarted services, paused/revoked access, duplicate events/buttons,
 incomplete sync, expired login, overdue work and a second student. No manual message
@@ -217,15 +241,15 @@ be labeled proposals. Old stage documents are context, not competing instruction
 
 ## 8. External dependencies
 
-| Gate                                                                 | Responsible person                              | Independent work                                                 |
-| -------------------------------------------------------------------- | ----------------------------------------------- | ---------------------------------------------------------------- |
-| Canvas extension permissions, consenting course scope, access result | Murtazo; Akbar provides access/consent          | Storage/events/fixtures                                          |
-| Outlook consent or institutional approval                            | Murtazo; Akbar handles account/admin decisions  | Adapter and email fixtures; no claim of connection               |
-| Meta failure and usage reconciliation                                | Akbar/Codex                                     | Source work and offline supervisor                               |
-| WhatsApp business lock/templates/test recipients                     | Murtazo; Akbar handles legal/business decisions | Mock transport/status/intent tests                               |
-| Continuous-run budget and deployment/release scope                   | Akbar                                           | Implement limits and recovery without activation                 |
-| Interface agreement and independent review                           | Opposite engineer                               | Other owned unblocked steps                                      |
-| Exact event model/framework/provenance rules                         | Akbar                                           | Keep Meta primary and log usage; no unsupported compliance claim |
+| Gate                                                                 | Responsible person                                  | Independent work                                                 |
+| -------------------------------------------------------------------- | --------------------------------------------------- | ---------------------------------------------------------------- |
+| Canvas extension permissions, consenting course scope, access result | Murtazo; Akbar provides access/consent              | Storage/events/fixtures                                          |
+| Optional Outlook consent or institutional approval                   | Akbar/Codex P0; Murtazo P1; Akbar account decisions | Core Canvas/agent work proceeds; no claim of email connection    |
+| Meta failure and usage reconciliation                                | Akbar/Codex                                         | Source work and offline supervisor                               |
+| WhatsApp business lock/templates/test recipients                     | Murtazo; Akbar handles legal/business decisions     | Mock transport/status/intent tests                               |
+| Continuous-run budget and deployment/release scope                   | Akbar                                               | Implement limits and recovery without activation                 |
+| Interface agreement and independent review                           | Opposite engineer                                   | Other owned unblocked steps                                      |
+| Exact event model/framework/provenance rules                         | Akbar                                               | Keep Meta primary and log usage; no unsupported compliance claim |
 
 Existing bounded approvals retain their original scope. P0 does not imply a new model
 call allowance, a new credential, or a continuous worker release. New extension

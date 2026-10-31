@@ -20,11 +20,22 @@ technical ownership. No item grants new live permissions or spending automatical
 6. Update one status row and post a concise handoff in #4: interface, commit, evidence,
    remaining blocker and next eligible item. Never take over because the other person waits.
 
-October31 latest supervisor decision returns P0-M1 and P0-M2 to Murtazo; the
-intermediate #79 reassignment to A is superseded. P0-M3 also remains M. A retains
-P0-A1/A2/A3 and owned runtime/shared work. See [current ownership](../TEAM.md#current-p0-ownership--october-31-2026)
-and [safe handoff](P0-ACCESS-2026-10-31.md). Checkpoint active P1 work, then prioritize
-P0 access evidence/explicit blockers. P1+ implementation owners are unchanged.
+October31 latest supervisor decision reassigns P0-M1 and P0-M2 access completion
+to A under #104, superseding the prior return to M. M acknowledged and paused duplicate
+live runs. P0-M3 remains M under the earlier WhatsApp exclusion. A retains P0-A1/A2/A3.
+See [current ownership](../TEAM.md#current-p0-ownership--october-31-2026) and
+[current access evidence](P0-LOCAL-ACCESS-2026-10-31.md). The M1/M2 work-order labels
+below are stable identifiers; their current P0 accountable engineer is A. P1+
+implementation owners are unchanged.
+
+## October 31 optional-email amendment
+
+Akbar explicitly makes Outlook optional. Preserve its registration/probe and connection
+work orders, but pause live CSU consent requests/access work. P0-M2 and P1-M2 remain
+unfinished optional-track items, not gates for core P0/P1 or P2–P6. Canvas discovery/full
+reading, own Meta runtime, WhatsApp, all other review/access/reliability gates remain.
+No email connection is needed to onboard or use the core agent. Never infer unseen email
+commitments or promise availability before the connector is implemented/live verified.
 
 ## P0 — Establish the baseline and prove access
 
@@ -78,7 +89,7 @@ new extension/ feasibility slice, owned tests, docs/spikes/canvas-extension.md.
 Done when: redacted evidence classifies access as background/tab-required/blocked and
 identifies content gaps. A successful course-list request alone is insufficient.
 
-### P0-M2 — Outlook feasibility (M)
+### P0-M2 — Outlook feasibility (A reassigned; optional, paused)
 
 Depends: consenting mailbox and Microsoft app/consent access. Files: integrations/outlook/
 spike and docs/spikes/outlook-access.md; shared storage is not implemented here.
@@ -91,7 +102,8 @@ spike and docs/spikes/outlook-access.md; shared storage is not implemented here.
    contents. Design delta recovery for missed events and expired cursors.
 
 Done when: exact consent/access results and minimal requested scopes are recorded.
-Unavailable consent stays an Outlook blocker; fixture work proceeds without claiming access.
+Unavailable consent stays an optional Outlook blocker, not a core P0 blocker. Fixture
+work may proceed, but live access/duplicate CSU requests are paused by supervisor decision.
 
 ### P0-M3 — WhatsApp live delivery (M)
 
@@ -171,7 +183,7 @@ sync creates no new content/events; changed item appears once; session expiry an
 browser restart resume accurately. Real CSU validation and synthetic fixture tests
 are separately labeled. Requested scopes/content must match consenting access.
 
-### P1-M2 — Outlook cloud ingestion (M)
+### P1-M2 — Outlook cloud ingestion (M; optional track)
 
 Depends: P0-M2; P1-A1 C1/C2. Files: integrations/outlook/, app/ OAuth/webhook/poll assembly,
 owned tests. A implements any newly needed shared method first.
@@ -203,10 +215,12 @@ final-commit consumers agree; long-file citation retrieval and cross-account den
 
 ### P1-M3 — Connections and course coverage UI (M)
 
-Depends: P1-A1/A2 projections and P1-M1/M2. Files: web/, app/ private read assembly.
+Depends: P1-A1/A2 projections and P1-M1. P1-M2 only for optional Outlook UI. Files: web/, app/ private read assembly.
 
-Build install/link/unlink, Outlook connect/reconnect, course discovery and per-resource
-coverage/freshness views. Explain tab-required collection if applicable. Keep manual
+Build install/link/unlink, optional Outlook connect/reconnect, course discovery and per-resource
+coverage/freshness views. Allow skipping email without blocking the core workspace.
+Show optional email as disconnected, pending approval or connected according to evidence;
+no false live availability. Explain tab-required collection if applicable. Keep manual
 snapshots as explicit troubleshooting, remove manual assignment entry as normal onboarding.
 
 Done when: a student can connect, see actual discovered courses and gaps, reconnect and
@@ -259,7 +273,8 @@ approved template after >24 hours without inbound messages; delivery evidence is
 
 ### P2-M2 — Continuous development service (M)
 
-Depends: P0 baseline, P1-M2, P2-A1/A2/M1, explicit bounded activation budget/scope.
+Depends: P0 baseline, P1-M1, P2-A1/A2/M1, explicit bounded activation budget/scope.
+P1-M2 is required only for optional live email-triggered scenarios.
 Files: deploy/, app/ process entrypoints/health, operational runbook and owned tests.
 
 Run separate API, reasoning worker, connector scheduler and WhatsApp delivery processes
@@ -267,8 +282,10 @@ as needed, reusing services rather than introducing another runtime. Configure r
 queue-age/last-success health, provider outage reporting and a stop mechanism. A supplies
 runtime/budget semantics; M owns deployment assembly. Start on isolated development only.
 
-Done when: laptop-closed Outlook update produces supervisor decision and real WhatsApp
-offer with no website visit; service restart preserves work. Record duration/cost/results,
+Done when: after real Canvas collection, a persisted deadline/next-check condition
+produces a cloud supervisor decision and real WhatsApp offer with the laptop closed,
+no new inbound message and no website visit; service restart preserves work. This uses
+stored evidence and does not claim collection of unseen Canvas updates while offline. Record duration/cost/results,
 then stop at the authorized bound. This early proof is required before calling it always-on.
 
 ## P3 — Complete delegated work
@@ -406,7 +423,8 @@ web/ production configuration and distribution instructions within approved scop
 
 Prepare reproducible extension installation/distribution, web/domain/auth configuration,
 private storage and continuous services; record configuration without secrets. Demonstrate
-controlled course discovery, email update, offer, checked work, revision and follow-through.
+controlled course discovery, Canvas update, offer, checked work, revision and follow-through.
+Demonstrate email separately only if the optional connector is authorized and live verified.
 Label synthetic course data. Do not claim real university deployment from a sandbox demo.
 
 Done when: approved release is reproducible and verifiable. Event submission happens only

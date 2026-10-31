@@ -6,18 +6,24 @@ and [coordination issue #4](https://github.com/Akbarhoja/wrytely-agent/issues/4)
 
 ## Current P0 ownership — October 31, 2026
 
-Akbar's latest instruction returns P0-M1 Canvas (#51) and P0-M2 Outlook (#53)
-completion to Murtazo, superseding the temporary reassignment to Akbar/Codex in #79.
-[Supervisor record and safe handoff](https://github.com/Akbarhoja/wrytely-agent/issues/4#issuecomment-6541259696).
-P0-M3 WhatsApp remains Murtazo's. Akbar/Codex stops duplicate Canvas/Outlook live runs
-and retains P0-A1/A2/A3, shared store/contract fixes and agreed source-reader work.
-Murtazo should checkpoint active #80 work, then prioritize P0 access evidence or
-precise blockers before expanding P1. P1+ ownership below is unchanged.
+Akbar's latest instruction reassigns P0-M1 Canvas (#51) and P0-M2 Outlook (#53)
+completion to Akbar/Codex under #104, superseding the prior return to Murtazo.
+[Supervisor record](https://github.com/Akbarhoja/wrytely-agent/issues/4#issuecomment-6548991501)
+and [Murtazo acknowledgment/handoff](https://github.com/Akbarhoja/wrytely-agent/issues/4#issuecomment-6549014013).
+Murtazo has paused duplicate P0 Canvas/Outlook live runs. P0-M3 WhatsApp remains
+Murtazo's under the earlier explicit exclusion. A retains P0-A1/A2/A3. P1+
+implementation owners below are unchanged; this is a P0 access exception only.
 
-[Redacted access handoff](docs/P0-ACCESS-2026-10-31.md) distinguishes UI observations
+[Current local access record](docs/P0-LOCAL-ACCESS-2026-10-31.md) and the
+[earlier redacted handoff](docs/P0-ACCESS-2026-10-31.md) distinguish UI observations
 from extension/API proof. Preserve Chrome-open instructions; coordinate disruptive
 session/restart tests. No ownership change supplies login/admin consent, human GitHub
 approval, new paid-call allowance or permission to publish private source evidence.
+
+October31 product amendment: Outlook is optional; A's P0 Outlook access work and
+new/duplicate CSU approval requests are paused. Preserve the existing app/probe and
+M's optional P1 connector ownership. Canvas/core-agent work proceeds without email.
+Do not call the blocked optional connector completed or advertise unverified live access.
 
 ## Exact ownership
 
@@ -101,8 +107,8 @@ original bounds. Akbar decides new operating budgets and public releases.
 
 ## Next assignments
 
-- Akbar/Codex: P0-A1 integration; P0-A2 Meta diagnosis; P0-A3 interfaces.
-- Murtazo: P0-M1 extension access, P0-M2 Outlook access, P0-M3 WhatsApp recovery.
+- Akbar/Codex: P0-A1 integration; P0-A2 Meta diagnosis; P0-A3 interfaces; reassigned P0-M1/M2 access completion (#104).
+- Murtazo: P0-M3 WhatsApp recovery and existing P1 integration claims; P0-M1/M2 live runs paused.
 
 These are queued responsibilities, not claims that anyone has started them. Old
 B1/B2 documents remain historical implementation context; revision7 work orders

@@ -1,0 +1,4 @@
+# Operator-only environment; not installed into the runtime/deployed application.
+msal==1.39.0
+httpx==0.28.1
+pydantic>=2,<3
