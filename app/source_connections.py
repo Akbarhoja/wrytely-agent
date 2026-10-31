@@ -18,6 +18,8 @@ BODY_LIMIT = 16 * 1024
 
 
 class CanvasRoute(APIRoute):
+    body_limit = BODY_LIMIT
+
     def get_route_handler(self):
         handler = super().get_route_handler()
 
@@ -25,7 +27,7 @@ class CanvasRoute(APIRoute):
             try:
                 body = bytearray()
                 async for chunk in request.stream():
-                    if len(body) + len(chunk) > BODY_LIMIT:
+                    if len(body) + len(chunk) > self.body_limit:
                         raise HTTPException(413, "Canvas request too large")
                     body.extend(chunk)
                 if (
