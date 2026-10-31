@@ -317,6 +317,23 @@ authorized environment before a reviewed consumer; roll back consumers first, pr
 additive evidence for review. Remaining: full document/segment manifests, unified private
 retrieval/freshness/readiness, Outlook credentials/actor and assembled/live collection tests.
 
+## Canvas absence ordering and canonical ID fix — issue #83
+
+A complete enumeration may mark an unseen course/object missing-pending only when
+its latest positive observed_at is strictly before the scan's persisted server
+started_at. Equal/newer observations are preserved. This existing server timestamp
+is a conservative enumeration lower bound; collector future-clock tolerance, later
+pages, finish time and receipt replay cannot manufacture a newer absence observation.
+Partial enumeration still cannot infer absence, and no evidence is deleted. A
+clock-ahead positive observation can delay a missing flag until a later scan, which
+is preferable to contradicting newer evidence. No new timestamp field/wire contract
+or migration is introduced.
+
+module_ids and submission_types retain input bounds but validate sorted/unique values
+after canonical NFC/newline normalization. Canonical collisions or reordered arrays
+are rejected; canonically ordered decomposed text is accepted and stored normalized.
+No new source/model activation or broader collection permission is introduced.
+
 ## Deterministic draft format checks — issue #37
 
 verify_artifact now checks supported formatting before semantic review and stores

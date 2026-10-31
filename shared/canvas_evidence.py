@@ -309,9 +309,11 @@ class CanvasEvidenceStore:
             (scan["id"], resource_key),
         ).fetchall()
         subject_digest = hashlib.sha256(row["provider_subject"].encode()).hexdigest()
+        # Preserve positive observations at/after the persisted server scan-start bound.
         conn.execute(
             "UPDATE wrytely_agent.canvas_evidence_objects o SET missing_pending_confirmation=true "
             "WHERE connection_id=%s AND subject_digest=%s AND course_id=%s AND kind=ANY(%s) "
+            "AND last_observed_at<%s "
             "AND NOT EXISTS (SELECT 1 FROM wrytely_agent.canvas_resource_items i "
             "WHERE i.scan_id=%s AND i.resource_key=%s AND i.object_id=o.id)",
             (
@@ -319,6 +321,7 @@ class CanvasEvidenceStore:
                 subject_digest,
                 course,
                 list(RESOURCE_TYPES[kind]),
+                scan["started_at"],
                 scan["id"],
                 resource_key,
             ),

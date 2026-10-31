@@ -525,3 +525,52 @@ def test_two_resources_use_independent_cursors_and_cannot_switch_before_finish(d
     scan["checkpoint"] = receipt["checkpoint"]
     sync.finish_resource(device, scan, key="101/syllabus", finish_key="syllabus-done")
     assert sync.finish(device, scan)["coverage"] == "partial"
+
+
+@pytest.mark.parametrize("empty_clock_minutes", [0, 4])
+def test_empty_academic_scan_cannot_hide_newer_positive_observation(device, empty_clock_minutes):
+    first = prepare(device)
+    positive = body(device, first)
+    positive["observed_at"] = (datetime.now(UTC) + timedelta(minutes=2)).isoformat()
+    receipt = upload(device, first, positive)
+    close(device, first, receipt)
+    previous = rows(device, "canvas_evidence_objects")[0]
+    second = next_scan(device, "older-empty")
+    empty = body(device, second, [])
+    empty["observed_at"] = (datetime.now(UTC) + timedelta(minutes=empty_clock_minutes)).isoformat()
+    receipt = upload(device, second, empty)
+    close(device, second, receipt)
+    current = rows(device, "canvas_evidence_objects")[0]
+    assert current["missing_pending_confirmation"] is False
+    assert current["latest_observation_id"] == previous["latest_observation_id"]
+    assert current["complete_version_id"] == previous["complete_version_id"]
+
+
+@pytest.mark.parametrize("field", ["module_ids", "submission_types"])
+@pytest.mark.parametrize("values", [["e\u0301", "\u00e9"], ["e\u0301", "f"], ["a\nb", "a\rb"]])
+def test_identifier_lists_reject_collisions_or_disorder_after_normalization(field, values):
+    from contracts.canvas_evidence import EvidenceItem
+
+    value = assignment()
+    kind = "assignment"
+    if field == "module_ids":
+        kind = value["kind"] = "page"
+        value["fields"] = dict(page_id="17", module_ids=values, source_format="html")
+    else:
+        value["fields"][field] = values
+    with pytest.raises(ValueError, match="Sorted unique"):
+        EvidenceItem.model_validate(value).payload(kind)
+
+
+@pytest.mark.parametrize("field", ["module_ids", "submission_types"])
+def test_identifier_order_is_decided_by_canonical_values(field):
+    from contracts.canvas_evidence import EvidenceItem
+
+    value = assignment()
+    kind = "assignment"
+    if field == "module_ids":
+        kind = value["kind"] = "page"
+        value["fields"] = dict(page_id="17", module_ids=["f", "e\u0301"], source_format="html")
+    else:
+        value["fields"][field] = ["f", "e\u0301"]
+    assert EvidenceItem.model_validate(value).payload(kind)["fields"][field] == ["f", "\u00e9"]
