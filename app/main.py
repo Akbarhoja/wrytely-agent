@@ -14,6 +14,7 @@ from psycopg import Error as DatabaseError
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from starlette.concurrency import run_in_threadpool
 
+from app.canvas_sync_api import register_canvas_sync
 from app.source_connections import register_source_connections
 from contracts.delivery import WhatsAppStatusEvent
 from contracts.models import AgentControl, Identity, MessageIn, SessionVerifier, SourceObservation
@@ -126,6 +127,12 @@ def create_app(
     DB = Annotated[Store, Depends(database)]
 
     register_source_connections(
+        api,
+        identity_dependency=identity,
+        database_dependency=database,
+        canvas_origins=settings.canvas_origins,
+    )
+    register_canvas_sync(
         api,
         identity_dependency=identity,
         database_dependency=database,
