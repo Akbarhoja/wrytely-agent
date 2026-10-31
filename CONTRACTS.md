@@ -29,6 +29,15 @@ supplies approved configuration. Reject paths, ports, query/fragment, userinfo, 
 and noncanonical origins; no URL fetch occurs. This is not a browser-posted allowlist.
 Existing Store callers are unchanged. Origin consent/actual Canvas access remain separate.
 
+Operator configuration slice #61: `Settings.canvas_origins` reads
+`AGENT_CANVAS_ORIGINS` as a JSON list, for example
+`["https://canvas.example.edu"]`. Default/explicit empty list becomes `()`.
+At most20 distinct exact origins; malformed JSON, null, scalar/object values,
+duplicates and invalid origins fail validation rather than being trimmed or guessed.
+The same canvas_origin function validates Settings and Store. M passes the validated
+tuple to Store in owned app assembly; this configuration field alone does not wire
+routes, grant school access, prove readiness or modify a deployed environment.
+
 - `create_pairing(verified_user, allowed_origin)` requires a provisioned verified user
   and configured origin. Returns `{challenge, code, expires_at}`. challenge and code are
   the same192-bit copyable one-use secret, expires_at an aware ISO timestamp10 minutes
