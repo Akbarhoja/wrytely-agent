@@ -116,7 +116,10 @@ CI coverage for the journal is a separate A-owned follow-up; no missing-file ski
 P0 core checkpoint: Meta access proof passed. A owns Canvas feasibility; the operator supplied a new current-session report after local installation:
 7 courses discovered/1 selected; 22 assignments/12 instruction bodies; inline syllabus
 and one discussion view readable. No positive rubric proof or linked-document reading.
-Session matrix remains pending; browser controls cannot open extension management. No restart/logout was
+A second operator report returned the same reads after closing Canvas tabs with Chrome
+and the worker Console open. Manual tab-closed access is supported by that report;
+unattended worker/restart/expiry/account-switch checks remain untested. Browser controls
+cannot open extension management. No restart/logout was
 performed. Outlook is optional/paused and not a core blocker. M retains WhatsApp delivery.
 Baseline #46 exact9bbea97 still has no formal review and is merge-blocked; a human review
 was formally requested from murtazokhon-tech. C4–C7 and the exact document-wire decisions

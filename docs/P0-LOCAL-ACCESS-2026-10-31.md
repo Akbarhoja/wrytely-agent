@@ -178,3 +178,19 @@ linked-document extraction, all-topic coverage, browser restart/recovery, expire
 or account switching. Next repeat with Canvas tabs closed but Chrome running. An open
 service-worker Console can keep that worker alive, so label that result manual-start/
 debugger-attached rather than proof of unattended MV3 scheduling or suspension recovery.
+
+## Operator-reported tab-closed repeat
+
+After the requested closure of Canvas tabs with Chrome and the service-worker Console
+left open, the operator supplied the same schema1 partial_probe results: 7 courses
+discovered, 1 selected, assignments read22/instruction bodies12/rubrics0; syllabus
+inline body readable but linked documents unread; discussion list21 with one sampled
+view readable and 1 top-level entry. This is operator-reported manual-start access
+with Canvas tabs closed, not independently observed browser/Console state.
+
+For these sampled resources, an open Canvas tab was not required in this test while
+the authenticated browser session remained available. An attached Console may keep
+the worker alive: unattended invocation, worker suspension/recovery, Chrome restart,
+expired login and account switching remain untested. Linked-document extraction and
+positive rubric access remain gaps. No Chrome restart/logout, background scheduler,
+source upload, model call, WhatsApp send or deployment is implied. P0 stays open.
