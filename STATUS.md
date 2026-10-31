@@ -30,8 +30,8 @@ Historical M1/M2 live gates remain incomplete; renumbering the plan does not pas
 | P0-M1 Canvas             | M                 | M started #51 offline Canvas feasibility; live same-session access pending                 | Consenting exact CSU origin/course scope and install authorization requested by M |
 | P0-M2 Outlook            | M                 | M #54 at4aadc91 offline Graph probe;32 cases independently pass                            | Real consent, email/attachment and notification evidence pending                  |
 | P0-M3 WhatsApp           | M                 | Linking/inbound worked; last delivery failed131031                                         | Business/account resolution and delivered-reply proof                             |
-| P0-A3 interfaces         | A                 | C1/C2 agreed atccf84dc; RFC3339 offset fix10b8625; C3–C7 still proposals                   | M agreement6537274371 recorded; P1-A1 lifecycle implementation needs review       |
-| P1 collection/memory     | A/M by work order | P1-A1 #58 Canvas lifecycle storage implemented; automatic collectors absent                | 459 local backend pass; M review; sync transactions + Outlook secrets pending     |
+| P0-A3 interfaces         | A                 | C1/C2 agreed atccf84dc; RFC3339 offset fix10b8625; C3–C7 still proposals                   | M accepted lifecycle6537714125; scope/actor extension agreement still pending     |
+| P1 collection/memory     | A/M by work order | P1-A1 #58 Canvas lifecycle storage implemented; automatic collectors absent                | M accepted #59/68 independent cases; #61 operator config484 local pass            |
 | P2 always-on ownership   | A/M by work order | Existing task worker; continuous workers stopped                                           | Supervisor, schedule, hard budgets and bounded deployment                         |
 | P3/P4 work/adaptation    | A/M by work order | Private drafting/checks scripted; live artifact not produced; A4 parked                    | Real accepted work/delivery, revisions and follow-through                         |
 | P5/P6 pilot/release      | A/M by work order | Not started                                                                                | Reliability, live evidence and release approval                                   |
@@ -39,6 +39,9 @@ Historical M1/M2 live gates remain incomplete; renumbering the plan does not pas
 P1-A1 first slice: full disposable-local-Postgres suite **459 passed**, including38
 connection-lifecycle cases and30 digest cases; Ruff lint/format and doc/diff checks pass.
 Migration010 was applied only to disposable tests, not Railway. No route or collector wired.
+Requested operator config #61 adds25 tests; combined local backend **484 passed**.
+M #60 assignment mapping independently reviewed/tested:32 mapper +28 digest cases pass
+oncc5d793 in an ignored archive; no actual source/provider access proved.
 
 Other counts above belong to their cited commits and historical runs. Current source/status two-account live denial
 checks passed previously; live artifact isolation remains untested because no live
@@ -59,7 +62,7 @@ increase spending authorization. Original M2 scope remains one synthetic workflo
 
 ## Next actions
 
-A: #58 P1-A1 lifecycle review, then sync/source atomic persistence; keep P0 live gates open.
+A: #59 lifecycle accepted; #62 operator config review; #58 scope/actor agreement before sync transactions.
 M: #56 offline digest helper independently28 pass; Canvas/Outlook live access and WhatsApp recovery.
 Claims must be posted in #4 before implementation. Nobody takes over the other's files.
 
