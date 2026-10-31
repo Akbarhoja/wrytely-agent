@@ -13,6 +13,7 @@ from shared.academic_memory import AcademicMemoryStore
 from shared.academic_reads import AcademicReadStore
 from shared.artifacts import ArtifactStore
 from shared.bound_responsibilities import BoundResponsibilityStore
+from shared.canvas_sync import CanvasSyncStore
 from shared.connection_status import ConnectionStatusStore
 from shared.delivery_store import DeliveryStore
 from shared.draft_intents import DraftIntentStore
@@ -46,6 +47,7 @@ class Store(
     BoundResponsibilityStore,
     DraftIntentStore,
     SourceConnectionStore,
+    CanvasSyncStore,
 ):
     def __init__(self, url: str, *, canvas_origins: tuple[str, ...] = ()):
         self._url = url

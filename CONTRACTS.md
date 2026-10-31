@@ -96,6 +96,122 @@ assembling these methods; rollback application consumers first and retain additi
 for review, rather than automatically deleting credentials/history. No Railway database
 or existing Wrytely production migration is authorized by publishing this code.
 
+## P1-A1 next slice — Canvas context, selection and discovery sync (#58)
+
+Implemented in shared/canvas_sync.py, contracts/canvas_sync.py and additive migration011;
+composed into the existing Store. M agreed scope/bearer direction and requested context
+in [6537874178](https://github.com/Akbarhoja/wrytely-agent/issues/58#issuecomment-6537874178).
+A confirmed the exact context in6538966628 and list in6539057716; implementation still
+requires counterpart review before HTTP consumers. This is metadata discovery storage,
+not academic source ingestion, a public sync route or completed P1-A1.
+
+`canvas_connection_context(credential, origin)` checks the current ingestion bearer,
+configured exact origin and credential expiry under the existing agent lock. Returns
+unchanged safe C1 projection plus scope_revision, mode, course_ids, resource_kinds and
+`discovery: {coverage,last_attempt_at,last_complete_at}`. Initial scope_revision=0,
+mode=explicit_set, both lists empty, coverage=unknown and timestamps=null. Pending
+identity can read that safe context but cannot begin sync. Connected empty selection
+permits metadata discovery only. No subject/device/hash/bearer/opaque cursor is projected.
+Dates are ISO strings. last_complete_at is terminal receipt time, not an academic source
+freshness grant; captured observation times stay in catalog rows. P1 freshness consumers
+and source check records are not implemented here.
+
+`list_source_connections(verified_user, *, limit=20, cursor=None)` returns
+`{connections:[safe C1 projections],next_cursor}`. Strict integer1–20; immutable
+created_at/id descending. Opaque cursor is last returned connection UUID, looked up
+under the current verified account on each request. Malformed/absent/other-account
+cursor raises the same LookupError("Not found"). It grants no authority and contains
+no embedded user data/signature. Empty/unprovisioned list is empty. No total count,
+provider subject/device or credentials. New rows require restarting pagination to see.
+
+`set_canvas_scope(verified_user, connection_id, generation, *, mode, course_ids,
+resource_kinds)` requires current connected owned generation and nonexpired credential.
+Modes explicit_set/all_active. Up to1000 distinct numeric-string course IDs from the
+current generation's observed catalog; missing_pending_confirmation entries cannot be
+newly selected. all_active takes course_ids=[] and derives known active courses only,
+not unknown/missing courses from a partial catalog. Kinds: syllabus, assignments,
+announcements, discussions, modules, pages, files, submissions, grades. Return context.
+Duplicate IDs/kinds, arbitrary IDs and unsupported kinds reject. Identical normalized
+selection returns existing scope; changed selection advances scope_revision/generation,
+retains the live bearer and carries same-subject catalog provenance forward. Old scans
+abort with scope_changed. Device obtains current generation through context without a
+Clerk session or re-pair. Re-pair/account switch/revoke instead clear scope/catalog view,
+advance revision and abort active scans. Old evidence remains private historical data.
+
+### Discovery scan methods and limits
+
+The C2 begin/resume/commit/finish signatures in CONNECTION-SYNC-v1.md are implemented
+for discovery metadata. actor is the ingestion bearer, resolved inside the transaction;
+no posted owner ID. Each operation checks connected state, current generation/scope and
+subject where supplied before reading a receipt. One active scan/connection,300-second
+replaceable writer lease,24-hour lifetime, monotonically increasing scan_sequence.
+Begin replay returns its ORIGINAL saved lease/checkpoint, not a later writer's token.
+Resume key replays its original response; a new resume key replaces the writer lease
+and returns the latest durable checkpoint. Resume does not refresh observations.
+
+Checkpoint exactly `{resource:"courses",next_cursor,sequence,scope_revision}`; strict
+integers, bounded private cursor, sequence0 initially. commit_sync_batch accepts only
+schema_version integer1 and resource `{course_id:null,kind:"courses"}` in this slice.
+At most50 items/page,100 pages/scan,5000 cumulative records,1MiB serialized envelope,
+4000-character opaque cursor; replay keys1–128 ASCII letters/digits/dot/underscore/
+colon/hyphen. Client network body limits remain M's responsibility. Cursor stays opaque
+and private, never fetched here. More-pages cursor must accompany partial/more_pages;
+repeated current cursor rejects. Cumulative seen_count must match. No duplicate course
+IDs in a page or across pages. Captures require strict aware RFC3339, within scan start
+and at most five minutes ahead of server time. Historical pre-scan uploads are rejected
+in this increment; no historical-source ingestion is claimed.
+
+Each course item has provider_id (positive numeric string), provider_updated_at (nullable
+metadata), title<=500, exact origin/courses/ID reference, content="", fields exactly
+course_code/timezone/enrollment_state (bounded nullable strings), coverage and missing.
+Full syllabus/assignment text cannot be smuggled into discovery. Server computes C2
+content digests; course metadata does not create academic source_versions, so batch
+receipt source_versions is []. Receipt/checkpoint/catalog update atomically; storage
+failure rolls back all of them. Same batch key + canonical body/checkpoint replays its
+original receipt even after lease replacement/expiry, with replayed=true and no cursor,
+observation or completion-time advance. Changed payload/key reuse conflicts. An unseen
+batch needs the current live lease/checkpoint; retry the same capture after resume.
+
+finish_resource takes key "courses" or a selected course/kind key from the scan's
+resource ledger. Complete courses requires an observed final complete page (including
+an explicitly observed empty page). Partial/restricted/unsupported terminal receipts
+can close a failed enumeration without pretending completeness. No academic resource
+can be completed here: only controlled failure/unsupported receipts, or leave it open
+for a later implemented collector. Complete course discovery is independent of those
+resources. finish_sync requires every resource terminal; aggregate is partial if any
+required resource is not complete. It cannot imply academic collection from metadata.
+all_active newly observed active courses acquire required resource rows; they cannot
+silently disappear from the scan's completeness requirements.
+
+Only complete enumeration marks previously known absent courses
+missing_pending_confirmation; partial/restricted/expired scans do not delete or mark
+absence. Prior metadata is retained. Reappearance clears pending absence. Active-course
+selection excludes pending entries. No confirmed deletion is implemented here. A prior
+complete timestamp is retained on failure and never advanced by receipt replay. Terminal
+resources reject new writes/different outcomes; exact finish-key replays are allowed.
+
+Hard scan expiry is enforced on every operation. Expiry/aborted-resource history is
+persisted when authenticated context/new begin performs cleanup; a rejected transaction
+rolls back its attempted cleanup but still rejects expired writes. Context never grants
+freshness from that cleanup. No continuous cleanup worker is deployed. Revoke/scope
+changes abort scans in the same transaction that fences credentials/generation.
+
+Controlled CanvasSyncConflict.code includes identity_required, generation_changed,
+scope_changed, subject_changed, replay_conflict, resume_existing_scan, checkpoint_changed,
+lease_expired/replaced, scan_terminal, resource_terminal, resource_not_selected,
+incomplete_resource, resources_open and pagination/cursor/selection limits. HTTP mapping
+is M-owned:409 for state conflicts, generic401 for SourceCredentialRejected,422 for
+invalid envelope/selection, private404 for missing owned connection. Never log raw
+validation input, bearer, checkpoint/cursor or provider data. No runtime task, model call,
+source content event, email actor/secret or external action is introduced here.
+
+Migration011 adds metadata/receipt/catalog/resource tables and scope columns, tested only
+on disposable Postgres. Apply explicitly after010 before any new consumer deployment;
+do not modify applied SQL. Existing production/dev ledger remains001–007+009 until
+separately authorized. Roll back consumers first and preserve additive history for review.
+Remaining P1-A1: academic version/check/event transactions and segmentation, shared
+freshness consumption, Outlook credential/actor lifecycle, then assembled/live checks.
+
 ## Deterministic draft format checks — issue #37
 
 verify_artifact now checks supported formatting before semantic review and stores

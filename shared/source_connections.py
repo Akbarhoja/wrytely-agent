@@ -165,6 +165,8 @@ class SourceConnectionStore:
                                 _digest(bearer),
                             ),
                         ).fetchone()
+                        if row["generation"] > 1:
+                            self._reset_canvas_context(conn, row["id"])
                         result = {**_safe(row), "ingestion_bearer": bearer}
         if limited:
             raise PairingLimited()
@@ -220,6 +222,7 @@ class SourceConnectionStore:
                     (row["id"],),
                 )
                 changed = True
+                self._reset_canvas_context(conn, row["id"])
             else:
                 row = conn.execute(
                     "UPDATE wrytely_agent.source_connections SET provider_subject=%s, "
@@ -244,6 +247,42 @@ class SourceConnectionStore:
             ).fetchone()
         return _safe(row) if row else None
 
+    def list_source_connections(self, verified_user, *, limit=20, cursor=None):
+        if type(limit) is not int or not 1 <= limit <= 20:
+            raise ValueError("Invalid connection list limit")
+        with self.connection() as conn:
+            anchor = None
+            if cursor is not None:
+                try:
+                    cursor = UUID(str(cursor))
+                except (ValueError, TypeError, AttributeError):
+                    raise LookupError("Not found") from None
+                anchor = conn.execute(
+                    "SELECT c.created_at,c.id FROM wrytely_agent.source_connections c "
+                    "JOIN wrytely_agent.agents a ON a.id=c.agent_id "
+                    "WHERE a.user_id=%s AND c.id=%s",
+                    (verified_user, cursor),
+                ).fetchone()
+                if anchor is None:
+                    raise LookupError("Not found")
+            rows = conn.execute(
+                "SELECT c.* FROM wrytely_agent.source_connections c JOIN wrytely_agent.agents a "
+                "ON a.id=c.agent_id WHERE a.user_id=%s "
+                "AND (%s::timestamptz IS NULL OR (c.created_at,c.id)<(%s,%s::uuid)) "
+                "ORDER BY c.created_at DESC,c.id DESC LIMIT %s",
+                (
+                    verified_user,
+                    anchor["created_at"] if anchor else None,
+                    anchor["created_at"] if anchor else None,
+                    anchor["id"] if anchor else None,
+                    limit + 1,
+                ),
+            ).fetchall()
+        return {
+            "connections": [_safe(row) for row in rows[:limit]],
+            "next_cursor": str(rows[limit - 1]["id"]) if len(rows) > limit else None,
+        }
+
     def rotate_or_revoke(self, verified_user, connection_id):
         """Revoke only. Credential replacement requires fresh authenticated pairing."""
         try:
@@ -263,6 +302,7 @@ class SourceConnectionStore:
             ).fetchone()
             if not row:
                 raise LookupError("Not found")
+            self._reset_canvas_context(conn, row["id"])
             conn.execute(
                 "UPDATE wrytely_agent.source_pairings SET consumed_at=clock_timestamp() "
                 "WHERE agent_id=%s",
