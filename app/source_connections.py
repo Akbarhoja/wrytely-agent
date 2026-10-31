@@ -87,6 +87,23 @@ def register_source_connections(api, *, identity_dependency, database_dependency
         if not canvas_origins:
             raise HTTPException(503, "Canvas pairing is not configured")
 
+    @router.get("")
+    def list_connections(request: Request, user: User, db: DB):
+        query = request.query_params
+        if any(key not in {"limit", "cursor"} or len(query.getlist(key)) != 1 for key in query):
+            raise HTTPException(422, "Invalid Canvas request")
+        limit = query.get("limit", "20")
+        if not 1 <= len(limit) <= 2 or not limit.isascii() or not limit.isdecimal():
+            raise HTTPException(422, "Invalid Canvas request")
+        try:
+            return db.list_source_connections(
+                user.user_id, limit=int(limit), cursor=query.get("cursor")
+            )
+        except LookupError:
+            raise HTTPException(404, "Not found") from None
+        except ValueError:
+            raise HTTPException(422, "Invalid Canvas request") from None
+
     @router.post("/canvas/pairing")
     def pairing(body: PairingIn, user: User, db: DB):
         enabled()

@@ -71,6 +71,99 @@ def paired(client, who="alice", device="device-1"):
     return result.json()
 
 
+def test_connection_list_empty_unprovisioned_account_without_canvas_configuration(store):
+    response = client_for(store, enabled=False).get(ROOT, headers=auth())
+    assert response.status_code == 200
+    assert response.json() == {"connections": [], "next_cursor": None}
+    assert response.headers["cache-control"] == "no-store"
+
+
+def test_connection_list_owned_pagination_and_safe_projection(canvas_store):
+    client = client_for(canvas_store)
+    first = paired(client)
+    other = paired(client, who="bob")
+    second = paired(client, device="device-2")
+    bind(client, second["ingestion_bearer"])
+    client.post(ROOT + "/" + first["connection_id"] + "/revoke", headers=auth())
+    page = client.get(ROOT, headers=auth(), params={"limit": "1"})
+    assert page.status_code == 200
+    assert page.headers["cache-control"] == "no-store"
+    assert page.json()["next_cursor"] == second["connection_id"]
+    connections = page.json()["connections"]
+    page2 = client.get(
+        ROOT, headers=auth(), params={"limit": "1", "cursor": page.json()["next_cursor"]}
+    )
+    assert page2.status_code == 200
+    assert page2.json()["next_cursor"] is None
+    connections += page2.json()["connections"]
+    assert [item["connection_id"] for item in connections] == [
+        second["connection_id"],
+        first["connection_id"],
+    ]
+    assert [item["state"] for item in connections] == ["connected", "disconnected"]
+    for item in connections:
+        assert set(item) == {
+            "connection_id",
+            "provider",
+            "origin",
+            "state",
+            "generation",
+            "credential_expires_at",
+        }
+    for secret in [first["ingestion_bearer"], second["ingestion_bearer"], "provider-alice"]:
+        assert secret not in page.text + page2.text
+    assert other["connection_id"] not in page.text + page2.text
+
+
+def test_connection_list_requires_session_not_ingestion_bearer(canvas_store):
+    client = client_for(canvas_store)
+    linked = paired(client)
+    for headers in [{}, auth("unknown"), auth(linked["ingestion_bearer"])]:
+        response = client.get(ROOT, headers=headers)
+        assert response.status_code == 401
+        assert response.headers["cache-control"] == "no-store"
+
+
+def test_connection_list_cursor_errors_are_private(canvas_store):
+    client = client_for(canvas_store)
+    other = paired(client, who="bob")
+    responses = [
+        client.get(ROOT, headers=auth(), params={"cursor": cursor})
+        for cursor in [
+            "",
+            "bad-cursor",
+            "00000000-0000-0000-0000-000000000000",
+            other["connection_id"],
+        ]
+    ]
+    assert all(response.status_code == 404 for response in responses)
+    assert all(response.json() == {"detail": "Not found"} for response in responses)
+    assert all(response.headers["cache-control"] == "no-store" for response in responses)
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        "limit=0",
+        "limit=21",
+        "limit=-1",
+        "limit=1.0",
+        "limit=true",
+        "limit=",
+        "limit=999999999999999999999",
+        "limit=1&limit=2",
+        "cursor=a&cursor=b",
+        "user_id=user_bob",
+        "limit=1&unexpected=private-value",
+    ],
+)
+def test_connection_list_rejects_invalid_or_ambiguous_query(canvas_store, query):
+    response = client_for(canvas_store).get(ROOT + "?" + query, headers=auth())
+    assert response.status_code == 422
+    assert response.json() == {"detail": "Invalid Canvas request"}
+    assert response.headers["cache-control"] == "no-store"
+
+
 def test_pair_bind_read_revoke_real_store_flow(canvas_store):
     client = client_for(canvas_store)
     code = challenge(client)
