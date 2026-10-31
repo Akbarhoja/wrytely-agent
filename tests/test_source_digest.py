@@ -95,3 +95,19 @@ def test_content_spacing_and_list_order_are_preserved():
     first = source_digest(payload)
     payload["fields"]["rubric"].reverse()
     assert source_digest(payload) != first
+
+
+@pytest.mark.parametrize("offset", ["+01:60", "-01:99", "+24:00", "-24:00", "+０１:００"])
+def test_invalid_rfc3339_offset_components_are_not_normalized(offset):
+    payload = deepcopy(VECTORS[0]["input"])
+    payload["fields"] = {"due_at": "2026-01-01T00:00:00" + offset}
+    with pytest.raises(ValueError, match="RFC3339"):
+        source_digest(payload)
+
+
+def test_valid_extreme_offset_keeps_microseconds_across_year_boundary():
+    first = deepcopy(VECTORS[0]["input"])
+    second = deepcopy(first)
+    first["fields"] = {"due_at": "2026-01-01T00:00:00.123456+23:59"}
+    second["fields"] = {"due_at": "2025-12-31T00:01:00.123456Z"}
+    assert source_digest(first) == source_digest(second)

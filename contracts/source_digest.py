@@ -43,7 +43,8 @@ def _normalize(value, depth=0):
                 raise ValueError("Normalized digest key collision")
             if key in _DATES and item is not None:
                 if not isinstance(item, str) or not re.fullmatch(
-                    r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})",
+                    r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}"
+                    r"(?:\.[0-9]{1,6})?(?:Z|[+-](?:[01][0-9]|2[0-3]):[0-5][0-9])",
                     item,
                 ):
                     raise ValueError("Digest dates must be timezone-aware RFC3339")

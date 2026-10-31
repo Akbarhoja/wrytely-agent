@@ -1,9 +1,10 @@
 # C1/C2 v1 — connection and sync proposal
 
 Issue [#47](https://github.com/Akbarhoja/wrytely-agent/issues/47).
-**Proposed, not implemented or agreed.** Akbar/Codex owns shared models, persistence,
+**Design agreed at ccf84dc; implementation pending.** Akbar/Codex owns shared models, persistence,
 migrations and authorization. Murtazo owns public HTTP/OAuth assembly, Canvas extension,
-Outlook adapter and network IO. Accept this interface in #4/#47 before dependent code.
+Outlook adapter and network IO. M accepted C1/C2 in
+[review6537274371](https://github.com/Akbarhoja/wrytely-agent/pull/48#issuecomment-6537274371).
 This first slice of P0-A3 covers C1/C2; C3–C7 still need their own agreement.
 
 ## Connection identity and lifecycle
