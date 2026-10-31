@@ -17,6 +17,74 @@ This is design agreement, not implemented routes/store methods or relaxed permis
 decisions, typed delivery, private files and operational accounting for the same
 owner review. C3–C7 remain proposed; C1/C2 implementation proceeds in P1-A1 slices.
 
+## P1-A1 first slice — Canvas pairing and credential lifecycle (#58)
+
+Implemented in shared/source_connections.py, composed into Store with additive migration010.
+No HTTP route, extension pairing UI, sync ingestion or Outlook secret storage is added.
+C1/C2 design agreement remains separate from review of this implementation.
+
+`Store(url, *, canvas_origins=())` takes an operator-owned tuple of exact HTTPS origins.
+Default is empty: pairing and credential use are disabled until M's assembly explicitly
+supplies approved configuration. Reject paths, ports, query/fragment, userinfo, non-ASCII
+and noncanonical origins; no URL fetch occurs. This is not a browser-posted allowlist.
+Existing Store callers are unchanged. Origin consent/actual Canvas access remain separate.
+
+- `create_pairing(verified_user, allowed_origin)` requires a provisioned verified user
+  and configured origin. Returns `{challenge, code, expires_at}`. challenge and code are
+  the same192-bit copyable one-use secret, expires_at an aware ISO timestamp10 minutes
+  ahead. Persist only SHA256. A new code replaces the previous unconsumed code. Maximum
+  five issuances per account per10-minute window persists across redemption. Never log
+  this return value, expose it to another account or put it into model/conversation data.
+- `redeem_pairing(code, device_public_id)` atomically consumes a valid code and creates
+  a pending_identity connection. Device ID is1–128 ASCII letters/digits/dot/underscore/
+  colon/hyphen, not student authority. Return safe status below plus ingestion_bearer,
+  a256-bit random bearer shown once, stored only as SHA256, default expiry30 days.
+  Re-pairing the same owner/origin/device preserves connection_id, increments generation,
+  clears prior subject and replaces the credential. Different devices are distinct.
+  Issuance is not a successful device connection until this transaction commits.
+  If a successful redemption response is lost, the server cannot recover its hash-only
+  bearer: request a fresh pairing code and re-pair, fencing the lost credential.
+- `bind_canvas_identity(credential, origin, provider_subject)` validates live credential
+  under an agent lock and binds one nonblank bounded provider subject. M must obtain/check
+  it in the same-session adapter, not a browser account-ID input. Same subject rebind is
+  idempotent; changed subject commits generation increment, credential revocation and
+  reconnect_required before raising SourceCredentialRejected. No relabeling old evidence.
+- `source_connection(verified_user, connection_id)` returns None for missing/nonowned/
+  malformed IDs. Otherwise only connection_id, provider, origin, state, generation and
+  credential_expires_at. UUID/timestamp are strings; no subject/device, digest or secret.
+  Expired pending/connected credentials project reconnect_required, without writing on read.
+- `rotate_or_revoke(verified_user, connection_id)` implements revoke, not an unconfirmed
+  credential replacement. Owner lock scopes update, increments generation, clears digest,
+  marks disconnected and invalidates that account's outstanding pairing challenge.
+  Fresh authenticated pairing is required to reconnect. Nonowned/missing/malformed IDs
+  raise the same LookupError("Not found"). Revoke/re-pair and bind use the same agent lock.
+
+Internal `_lock_canvas_credential` authenticates/fences in an existing transaction;
+it is not an exposed method or independent grant to sync. Future sync must additionally
+check connected state, subject, selected scope and exact generation in that transaction.
+There are no scan rows in010 to abort yet. Source keys must retain subject/generation
+provenance when a device is re-paired; old evidence must not become a new login's data.
+
+Redemption budgets persist even for invalid/expired/used codes: at most120 attempts
+per server per minute and10 per claimed device per minute. Global limit is checked
+before inserting device buckets, with one transaction lock and expired-bucket cleanup.
+Device identity alone is untrusted and cannot bypass the global cap. The cap is an
+initial deployment-wide pairing throttle, not protection against service denial or
+an IP/authenticated-user HTTP rate limit. M must review its capacity and assembly rate
+limits before public rollout; no rate row stores the actual device ID or code.
+PairingLimited maps to429; PairingRejected has one generic invalid/expired/used-code
+message; SourceCredentialRejected maps to generic401/reconnect. Storage exceptions
+propagate and roll back credential/challenge changes, never empty successful responses.
+No mutation or data from these secrets is sent to providers/models. Private/no-cache
+HTTP assembly and extension-private secret storage remain M-owned and unimplemented.
+
+Migration010 only adds three Canvas lifecycle tables in wrytely_agent, replayed by the
+existing checksum ledger. Applied historical migrations remain unchanged;008 stays
+parked. Test only against a disposable database here. Roll out010 explicitly before
+assembling these methods; rollback application consumers first and retain additive data
+for review, rather than automatically deleting credentials/history. No Railway database
+or existing Wrytely production migration is authorized by publishing this code.
+
 ## Deterministic draft format checks — issue #37
 
 verify_artifact now checks supported formatting before semantic review and stores
