@@ -212,6 +212,106 @@ separately authorized. Roll back consumers first and preserve additive history f
 Remaining P1-A1: academic version/check/event transactions and segmentation, shared
 freshness consumption, Outlook credential/actor lifecycle, then assembled/live checks.
 
+## P1-A1 academic content increment — staged evidence (#58)
+
+Implemented in contracts/canvas_evidence.py, shared/canvas_evidence.py and additive012.
+The existing C2 commit_sync_batch/finish_resource signatures now accept bounded extracted
+academic content as well as discovery. No HTTP route/collector/parser, runtime source
+activation, model call or live access is added. Counterpart review remains necessary.
+
+Academic resource is `{course_id,kind}` with kinds assignments, syllabus, pages,
+announcements, discussions, submissions or grades. Item kind defaults to its corresponding
+singular (discussion for discussions); an explicit entry is also allowed in discussions.
+Provider IDs are bounded ASCII1–128; title<=300, reference<=2000, text<=24000 characters,
+50 items/batch and1MiB envelope remain hard limits. Text is already extracted by M's
+adapter, not raw HTML/PDF parsing here. Modules/file segments/document manifests remain
+unimplemented; their resources cannot be falsely marked complete. Oversize text rejects
+instead of clipping. This does not narrow the required full-source collection plan.
+
+Each item has the existing provider_updated_at/title/reference/fields/content/coverage/
+missing envelope, plus optional kind. Exact field sets are the C2 v1 table. Unknown
+fields/kinds and nonportable floats reject. Decimal strings and dates normalize before
+content hashing; equivalent formatting, collection timestamps and rotating reference URLs
+cannot create a content revision. Rubric shape follows M's reviewed #60 convention:
+criterion requires id/description/points/ratings; optional long_description,
+criterion_use_range/ignore_for_scoring/learning_outcome_id/vendor_guid; ratings have
+id/description/points and optional long_description. Nullable values remain unknown.
+Up to100 criteria,50 ratings/criterion, normalized unique IDs, bounded text and decimal
+points. Undeclared assignment constraints are still coverage gaps, not inferred defaults.
+Complete evidence needs nonblank title/text and no declared missing fields. Unknown source
+semantics/provider truth are not established merely by schema validation.
+
+References require configured exact HTTPS origin and the declared course path; decoded
+traversal/control paths reject. Store never follows a URL. Current bearer/owner/subject/
+generation, scope ledger, writer lease/checkpoint and changed-body replay fences apply
+before any source write. Selected course/kind resources must be terminalized sequentially
+before switching resources. Checkpoint.resource can now be courses or course/kind;
+sequence is globally bounded10000/scan. Per-resource next_cursor/page count prevents
+rewinds, cursor loops and false completion;100 pages/5000 records per resource. These
+are protocol bounds, not a deployed per-account storage quota or rollout approval.
+
+### Atomic persistence and explicit staging
+
+One existing Store transaction saves immutable source_versions, normalized full field
+payload/provenance, observation/check, content-change event, resource item, checkpoint and
+receipt. The public observe_source behavior is preserved; its shared transaction helper
+has an internal promote=False mode used here. Academic source_key hashes connection,
+provider-subject namespace, course, item kind and provider ID; it stays stable across a
+pure scope-generation change. Another login/connection cannot reuse that namespace.
+
+Collected versions deliberately leave academic_sources.latest_version_id unset: existing
+manual-source/drafting readers and their freshness gates cannot accidentally treat this
+partly integrated connector path as current evidence. The model is not consuming collected
+sources yet. This is staging, not completed P1 memory/read integration. P1-A2 must add
+owned freshness/coverage-aware retrieval and readiness checks before activating them.
+Never expose complete_version_id alone as a current-source guarantee.
+
+canvas_evidence_payloads binds canonical fields to immutable version IDs. Observations
+retain generation, source resource, observed_at, server received_at, provider-updated time,
+reference, canonical payload/digest, coverage and optional version ID. Empty restricted/
+partial text is retained as an observation with no invented text/version. Immutable version
+retrieved_at never changes. A genuinely new successful check can move
+last_successful_check_at to its observation time; a receipt replay cannot. Current source
+coverage must come from the latest observation plus resource/connection state, not the old
+immutable version's transport coverage='api'. These new check fields do not relax existing
+runtime policy.
+
+Object latest_observation_id and last_observed_at advance only for nonhistorical captures.
+Partial new extraction never overwrites complete_version_id or last_successful_check_at;
+previous complete evidence remains historical if the latest observation has gaps. Captures
+older than a newer observation can be retained as historical without promotion/check/event
+advance. Equal timestamps with different content conflict rather than guessing order.
+Existing pre-scan capture rejection remains; arbitrary historical import is not implemented.
+A->B->A reuses A's immutable version but records the new current transition/check. Unchanged
+repeat checks create no new version/content event. Pure selection retains namespace, whereas
+reconnect requires fresh catalog/scope and checked evidence; generation is always recorded.
+
+Durable events source_observed/source_changed/coverage_changed reference owned observations;
+they are not executed and authorize no workflow. A changed observation invalidates any bound
+responsibility through the existing memory fence. No supervisor/event consumer is deployed.
+Partial/resource failures and pending absence are state, not automatic deletion or outreach.
+
+Receipt source_versions lists actual staged text versions only; additive observations lists
+provider_id, kind, observation_id, nullable version_id, content_digest, coverage and historical.
+A partial/empty item may therefore appear only in observations. Model/HTTP clients cannot
+use these IDs as authority. Exact lost-ack replay returns original IDs/checkpoint with
+replayed=true, without extra versions/checks/events. All writes roll back on malformed later
+items, storage failure, stale state or lease expiry before receipt commit.
+
+finish_resource(complete) requires an observed final complete page, no cursor, and no partial/
+historical items. Otherwise close explicitly partial/restricted/unsupported; do not relabel
+it complete. A complete empty enumeration marks previously known absent objects
+missing_pending_confirmation, retaining original evidence. Partial enumeration never marks
+absence. Reappearance clears the flag. No confirmed deletion is implemented. Completed course
+discovery remains independent of academic-content coverage.
+
+Migration012 creates only staged evidence/payload/observation/event/resource-item tables and
+adds per-resource cursor/incompleteness fields. It was applied only to disposable tests;
+existing deployed ledger and workers remain unchanged. Apply explicitly after011 only in an
+authorized environment before a reviewed consumer; roll back consumers first, preserve
+additive evidence for review. Remaining: full document/segment manifests, unified private
+retrieval/freshness/readiness, Outlook credentials/actor and assembled/live collection tests.
+
 ## Deterministic draft format checks — issue #37
 
 verify_artifact now checks supported formatting before semantic review and stores
