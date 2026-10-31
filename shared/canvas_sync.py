@@ -1,4 +1,4 @@
-"""Durable Canvas discovery checkpoints and consent; no provider IO or academic ingestion."""
+"""Canvas sync leases, discovery and consent; academic batches share the same Store transaction."""
 
 import hashlib
 import json
@@ -393,7 +393,14 @@ class CanvasSyncStore:
     def commit_sync_batch(
         self, actor, scan_id, generation, lease_token, batch_key, expected_checkpoint, envelope
     ):
-        # This slice explicitly accepts discovery metadata only, not academic source payloads.
+        if (
+            isinstance(envelope, dict)
+            and isinstance(envelope.get("resource"), dict)
+            and (envelope["resource"].get("kind") != "courses")
+        ):
+            return self._commit_academic_batch(
+                actor, scan_id, generation, lease_token, batch_key, expected_checkpoint, envelope
+            )
         encoded = json.dumps(envelope, ensure_ascii=False, allow_nan=False).encode()
         if len(encoded) > 1024 * 1024:
             raise ValueError("Batch size limit")
@@ -490,8 +497,8 @@ class CanvasSyncStore:
             )
             conn.execute(
                 "UPDATE wrytely_agent.canvas_resources SET seen_count=%s,page_count=page_count+1, "
-                "last_page_coverage=%s WHERE scan_id=%s AND resource_key='courses'",
-                (batch.coverage.seen_count, batch.coverage.state, scan["id"]),
+                "last_page_coverage=%s,next_cursor=%s WHERE scan_id=%s AND resource_key='courses'",
+                (batch.coverage.seen_count, batch.coverage.state, batch.next_cursor, scan["id"]),
             )
             result = {
                 "receipt_id": str(uuid4()),
@@ -543,21 +550,25 @@ class CanvasSyncStore:
                 raise CanvasSyncConflict("resource_terminal")
             manifest = None
             if outcome == "complete":
-                if (
-                    resource_key != "courses"
-                    or not resource["page_count"]
-                    or resource["last_page_coverage"] != "complete"
-                    or scan["checkpoint"]["next_cursor"] is not None
-                ):
-                    raise CanvasSyncConflict("incomplete_resource")
-                manifest = _hash(
-                    conn.execute(
-                        "SELECT course_id,content_digest FROM "
-                        "wrytely_agent.canvas_scan_courses WHERE scan_id=%s "
-                        "ORDER BY course_id",
-                        (scan["id"],),
-                    ).fetchall()
-                )
+                if resource_key == "courses":
+                    if (
+                        not resource["page_count"]
+                        or resource["last_page_coverage"] != "complete"
+                        or resource["next_cursor"] is not None
+                    ):
+                        raise CanvasSyncConflict("incomplete_resource")
+                    manifest = _hash(
+                        conn.execute(
+                            "SELECT course_id,content_digest "
+                            "FROM wrytely_agent.canvas_scan_courses "
+                            "WHERE scan_id=%s ORDER BY course_id",
+                            (scan["id"],),
+                        ).fetchall()
+                    )
+                else:
+                    manifest = self._academic_resource_manifest(
+                        conn, row, scan, resource_key, resource
+                    )
             conn.execute(
                 "UPDATE wrytely_agent.canvas_resources SET coverage=%s,reason=%s "
                 "WHERE scan_id=%s AND resource_key=%s",

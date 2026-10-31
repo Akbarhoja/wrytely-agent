@@ -10,8 +10,6 @@ from contracts.models import SourceObservation
 
 class AcademicMemoryStore:
     def observe_source(self, user_id: str, observation: SourceObservation):
-        from shared.db import RequestConflict
-
         if observation.retrieved_at > datetime.now(UTC) + timedelta(minutes=5):
             raise ValueError("Retrieval time is in the future")
         with self.connection() as conn:
@@ -20,59 +18,69 @@ class AcademicMemoryStore:
             ).fetchone()
             if not agent:
                 raise LookupError("Complete setup first")
-            source = conn.execute(
-                "INSERT INTO wrytely_agent.academic_sources(id,agent_id,source_key) "
-                "VALUES (%s,%s,%s) "
-                "ON CONFLICT(agent_id,source_key) DO UPDATE SET source_key=excluded.source_key "
-                "RETURNING *",
-                (uuid4(), agent["id"], observation.source_key),
-            ).fetchone()
-            prior = conn.execute(
-                "SELECT * FROM wrytely_agent.source_versions "
-                "WHERE source_id=%s AND external_revision=%s",
-                (source["id"], observation.external_revision),
-            ).fetchone()
-            if prior:
-                for field in ("title", "reference", "coverage", "content"):
-                    if prior[field] != getattr(observation, field):
-                        raise RequestConflict("Revision reused with different evidence")
-                return prior
-            current = conn.execute(
-                "SELECT * FROM wrytely_agent.source_versions WHERE id=%s",
-                (source["latest_version_id"],),
-            ).fetchone()
-            if current and current["retrieved_at"] == observation.retrieved_at:
-                raise RequestConflict("Ambiguous version ordering")
-            version = conn.execute(
-                "INSERT INTO wrytely_agent.source_versions "
-                "(id,agent_id,source_id,external_revision,title,reference,coverage,content,"
-                "retrieved_at) "
-                "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING *",
-                (
-                    uuid4(),
-                    agent["id"],
-                    source["id"],
-                    observation.external_revision,
-                    observation.title,
-                    observation.reference,
-                    observation.coverage,
-                    observation.content,
-                    observation.retrieved_at,
-                ),
-            ).fetchone()
-            if current is None or version["retrieved_at"] > current["retrieved_at"]:
-                conn.execute(
-                    "UPDATE wrytely_agent.academic_sources SET latest_version_id=%s WHERE id=%s",
-                    (version["id"], source["id"]),
-                )
-                affected = conn.execute(
-                    "SELECT responsibility_id FROM wrytely_agent.responsibility_sources "
-                    "WHERE source_id=%s AND agent_id=%s",
-                    (source["id"], agent["id"]),
-                ).fetchall()
-                for row in affected:
-                    self._invalidate_memory(conn, row["responsibility_id"])
-            return version
+            return self._observe_source_transaction(conn, agent["id"], observation)
+
+    def _observe_source_transaction(self, conn, agent_id, observation, *, promote=True):
+        """Caller holds agent lock; optional staging never activates legacy source reads."""
+        from shared.db import RequestConflict
+
+        source = conn.execute(
+            "INSERT INTO wrytely_agent.academic_sources(id,agent_id,source_key) "
+            "VALUES (%s,%s,%s) "
+            "ON CONFLICT(agent_id,source_key) DO UPDATE SET source_key=excluded.source_key "
+            "RETURNING *",
+            (uuid4(), agent_id, observation.source_key),
+        ).fetchone()
+        prior = conn.execute(
+            "SELECT * FROM wrytely_agent.source_versions "
+            "WHERE source_id=%s AND external_revision=%s",
+            (source["id"], observation.external_revision),
+        ).fetchone()
+        if prior:
+            for field in (
+                ("title", "reference", "coverage", "content")
+                if promote
+                else ("title", "coverage", "content")
+            ):
+                if prior[field] != getattr(observation, field):
+                    raise RequestConflict("Revision reused with different evidence")
+            return prior
+        current = conn.execute(
+            "SELECT * FROM wrytely_agent.source_versions WHERE id=%s",
+            (source["latest_version_id"],),
+        ).fetchone()
+        if promote and current and current["retrieved_at"] == observation.retrieved_at:
+            raise RequestConflict("Ambiguous version ordering")
+        version = conn.execute(
+            "INSERT INTO wrytely_agent.source_versions "
+            "(id,agent_id,source_id,external_revision,title,reference,coverage,content,"
+            "retrieved_at) "
+            "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING *",
+            (
+                uuid4(),
+                agent_id,
+                source["id"],
+                observation.external_revision,
+                observation.title,
+                observation.reference,
+                observation.coverage,
+                observation.content,
+                observation.retrieved_at,
+            ),
+        ).fetchone()
+        if promote and (current is None or version["retrieved_at"] > current["retrieved_at"]):
+            conn.execute(
+                "UPDATE wrytely_agent.academic_sources SET latest_version_id=%s WHERE id=%s",
+                (version["id"], source["id"]),
+            )
+            affected = conn.execute(
+                "SELECT responsibility_id FROM wrytely_agent.responsibility_sources "
+                "WHERE source_id=%s AND agent_id=%s",
+                (source["id"], agent_id),
+            ).fetchall()
+            for row in affected:
+                self._invalidate_memory(conn, row["responsibility_id"])
+        return version
 
     def _invalidate_memory(self, conn, responsibility_id):
         conn.execute(

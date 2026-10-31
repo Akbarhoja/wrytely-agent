@@ -170,7 +170,17 @@ class DiscoveryBatch(Strict):
 
 
 class Checkpoint(Strict):
-    resource: Literal["courses"]
+    resource: str = Field(min_length=1, max_length=128)
     next_cursor: str | None = Field(max_length=4000)
-    sequence: int = Field(ge=0, le=100)
+    sequence: int = Field(ge=0, le=10000)
     scope_revision: int = Field(ge=0)
+
+    @field_validator("resource")
+    @classmethod
+    def valid_resource(cls, value):
+        if value != "courses":
+            course, separator, kind = value.partition("/")
+            course_id(course)
+            if not separator or kind not in RESOURCE_KINDS:
+                raise ValueError("Invalid checkpoint resource")
+        return value
