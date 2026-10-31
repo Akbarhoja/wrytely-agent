@@ -30,6 +30,29 @@ No organization/app was created; no Graph permission, token, message, attachment
 delta or notification access was obtained. #54 remains mocked probe evidence only.
 The proposed PKCE harness is not implemented or approved live execution.
 
+## Outlook registration follow-up
+
+The supervisor subsequently authorized preparing a new company setup and completed
+Microsoft email verification, Azure profile/card verification and account terms.
+The company-controlled default workforce directory now exists. Subscription ownership
+was visible; this is distinct from proving every Entra administrator permission.
+Azure lists a usage-based Microsoft Azure Plan with monthly billing and a separate
+Microsoft Entra ID Free item. Free-trial credit/hard spending protection remains
+unverified. No billable Azure compute/storage resource or paid upgrade was created.
+
+With explicit action-time approval for registration and Microsoft Platform Policies,
+A created **Wrytely Agent Development** in the company directory. Verified activated
+application/service principal, organizational multitenant audience (personal accounts
+excluded), and one Mobile and desktop callback: `http://localhost:8765/`.
+Configured delegated Graph `User.Read` and `Mail.Read`; configuration is not consent.
+No admin consent, mailbox token, refresh grant, client secret or mail read occurred.
+
+The app overview warns that end users cannot consent to new multitenant applications
+without verified publishers. Publisher verification/university administrator approval
+must be resolved through supported flows; the actual CSU consent outcome is untested.
+Local PKCE acquisition harness, identity-bound Graph test and full Outlook access
+acceptance are still pending. Registration alone does not complete P0-M2.
+
 ## Canvas handoff and limits
 
 M reports the installed diagnostic corresponds to reviewed #52 f1e0d9b, but the

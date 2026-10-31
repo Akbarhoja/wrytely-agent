@@ -19,9 +19,11 @@ Historical M1/M2 live gates remain incomplete; renumbering the plan does not pas
 
 Latest P0 ownership is recorded in [TEAM.md](TEAM.md): A resumes Canvas/Outlook
 access completion under #104; M acknowledged and paused duplicate live runs.
-[Local access check](docs/P0-LOCAL-ACCESS-2026-10-31.md): no company Microsoft
-organization/admin setup found in the checked directory/company-mailbox records;
-account selection/setup is pending. This does not close the Outlook access gate.
+[Local access check](docs/P0-LOCAL-ACCESS-2026-10-31.md): initial discovery found no company Microsoft setup; the owner subsequently
+created a company-controlled directory and approved the development app registration.
+Delegated User.Read/Mail.Read are configured, but publisher/actual school consent and
+the local PKCE/Graph access test remain pending. Billing protection is unverified.
+This does not close the Outlook access gate.
 
 ## Current work and evidence
 
