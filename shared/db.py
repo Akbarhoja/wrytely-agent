@@ -18,6 +18,7 @@ from shared.delivery_store import DeliveryStore
 from shared.draft_intents import DraftIntentStore
 from shared.drafting_tasks import DraftingTaskStore
 from shared.responsibilities import ResponsibilityStore
+from shared.source_connections import SourceConnectionStore, canvas_origin
 from shared.whatsapp_store import WhatsAppStore
 
 
@@ -44,9 +45,11 @@ class Store(
     AcademicReadStore,
     BoundResponsibilityStore,
     DraftIntentStore,
+    SourceConnectionStore,
 ):
-    def __init__(self, url: str):
+    def __init__(self, url: str, *, canvas_origins: tuple[str, ...] = ()):
         self._url = url
+        self._canvas_origins = frozenset(canvas_origin(origin) for origin in canvas_origins)
 
     @contextmanager
     def connection(self):

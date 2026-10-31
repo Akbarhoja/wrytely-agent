@@ -12,7 +12,8 @@ checked delegated work, revisions and follow-through. Hermes deferred. Cloud age
 must stay available while laptop is off; Canvas collection still depends on browser
 and session availability. No manual-paste substitute for connector completion.
 
-We are at **P0: baseline/access**, with reusable task/draft foundations. No completed
+We are at **P0: live access gates open; P1 storage implementation started**, with reusable
+task/draft foundations. No completed
 24/7 academic agent, Canvas extension, Outlook connection or semester supervisor yet.
 Historical M1/M2 live gates remain incomplete; renumbering the plan does not pass them.
 
@@ -29,14 +30,17 @@ Historical M1/M2 live gates remain incomplete; renumbering the plan does not pas
 | P0-M1 Canvas             | M                 | M started #51 offline Canvas feasibility; live same-session access pending                 | Consenting exact CSU origin/course scope and install authorization requested by M |
 | P0-M2 Outlook            | M                 | M #54 at4aadc91 offline Graph probe;32 cases independently pass                            | Real consent, email/attachment and notification evidence pending                  |
 | P0-M3 WhatsApp           | M                 | Linking/inbound worked; last delivery failed131031                                         | Business/account resolution and delivered-reply proof                             |
-| P0-A3 interfaces         | A                 | C1–C7 v1 proposals published (#47/#48); all await owner agreement                          | ccf84dc fixes UTF-8 vectors + terminal partial/expiry semantics; M review pending |
-| P1 collection/memory     | A/M by work order | Existing versioned snapshots; automatic collectors absent                                  | Connection/sync/freshness contracts and source readers                            |
+| P0-A3 interfaces         | A                 | C1/C2 agreed atccf84dc; RFC3339 offset fix10b8625; C3–C7 still proposals                   | M agreement6537274371 recorded; P1-A1 lifecycle implementation needs review       |
+| P1 collection/memory     | A/M by work order | P1-A1 #58 Canvas lifecycle storage implemented; automatic collectors absent                | 459 local backend pass; M review; sync transactions + Outlook secrets pending     |
 | P2 always-on ownership   | A/M by work order | Existing task worker; continuous workers stopped                                           | Supervisor, schedule, hard budgets and bounded deployment                         |
 | P3/P4 work/adaptation    | A/M by work order | Private drafting/checks scripted; live artifact not produced; A4 parked                    | Real accepted work/delivery, revisions and follow-through                         |
 | P5/P6 pilot/release      | A/M by work order | Not started                                                                                | Reliability, live evidence and release approval                                   |
 
-Counts above belong to their cited commits and historical runs, not a fresh full
-suite on the revised planning branch. Current source/status two-account live denial
+P1-A1 first slice: full disposable-local-Postgres suite **459 passed**, including38
+connection-lifecycle cases and30 digest cases; Ruff lint/format and doc/diff checks pass.
+Migration010 was applied only to disposable tests, not Railway. No route or collector wired.
+
+Other counts above belong to their cited commits and historical runs. Current source/status two-account live denial
 checks passed previously; live artifact isolation remains untested because no live
 artifact exists. Read the [actual M2 run](docs/M2-RUN-2026-10-29.md).
 
@@ -55,8 +59,8 @@ increase spending authorization. Original M2 scope remains one synthetic workflo
 
 ## Next actions
 
-A: P0-A1 reviewed consolidation; P0-A2 safe diagnosis; P0-A3 shared interfaces.
-M: P0-M1 Canvas extension feasibility; P0-M2 Outlook access; P0-M3 WhatsApp recovery.
+A: #58 P1-A1 lifecycle review, then sync/source atomic persistence; keep P0 live gates open.
+M: #56 offline digest helper independently28 pass; Canvas/Outlook live access and WhatsApp recovery.
 Claims must be posted in #4 before implementation. Nobody takes over the other's files.
 
 [Historical detailed status](docs/archive/STATUS-through-2026-10-29.md) preserves
