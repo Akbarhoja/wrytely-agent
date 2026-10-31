@@ -71,6 +71,148 @@ def paired(client, who="alice", device="device-1"):
     return result.json()
 
 
+def context(client, token, **kwargs):
+    return client.post(CANVAS + "/context", headers=auth(token), json={"origin": ORIGIN}, **kwargs)
+
+
+def test_context_pending_safe_projection_and_separate_accounts(canvas_store):
+    client = client_for(canvas_store)
+    alice = paired(client)
+    bob = paired(client, who="bob")
+    for linked in [alice, bob]:
+        response = context(client, linked["ingestion_bearer"])
+        assert response.status_code == 200
+        assert response.headers["cache-control"] == "no-store"
+        data = response.json()
+        assert set(data) == {
+            "connection_id",
+            "provider",
+            "origin",
+            "state",
+            "generation",
+            "credential_expires_at",
+            "scope_revision",
+            "mode",
+            "course_ids",
+            "resource_kinds",
+            "discovery",
+        }
+        assert data["connection_id"] == linked["connection_id"]
+        assert data["state"] == "pending_identity"
+        assert data["scope_revision"] == 0
+        assert data["mode"] == "explicit_set"
+        assert data["course_ids"] == data["resource_kinds"] == []
+        assert data["discovery"] == {
+            "coverage": "unknown",
+            "last_attempt_at": None,
+            "last_complete_at": None,
+        }
+        assert alice["ingestion_bearer"] not in response.text
+        assert bob["ingestion_bearer"] not in response.text
+
+
+def test_context_reflects_scope_generation_without_new_bearer(canvas_store):
+    client = client_for(canvas_store)
+    linked = paired(client)
+    assert bind(client, linked["ingestion_bearer"]).status_code == 200
+    changed = canvas_store.set_canvas_scope(
+        "user_alice",
+        linked["connection_id"],
+        linked["generation"],
+        mode="explicit_set",
+        course_ids=[],
+        resource_kinds=["assignments"],
+    )
+    response = context(client, linked["ingestion_bearer"])
+    assert response.status_code == 200
+    assert response.json() == changed
+    assert changed["generation"] > linked["generation"]
+    assert changed["state"] == "connected"
+    assert changed["resource_kinds"] == ["assignments"]
+    assert "provider-alice" not in response.text
+
+
+@pytest.mark.parametrize(
+    "headers", [{}, auth(), auth("unknown"), {"Authorization": "Basic hidden"}]
+)
+def test_context_requires_ingestion_bearer_not_session(canvas_store, headers):
+    response = client_for(canvas_store).post(
+        CANVAS + "/context", headers=headers, json={"origin": ORIGIN}
+    )
+    assert response.status_code == 401
+    assert response.headers["cache-control"] == "no-store"
+    assert response.headers["www-authenticate"] == "Bearer"
+
+
+@pytest.mark.parametrize("change", ["revoke", "repair", "expiry"])
+def test_context_rejects_invalidated_bearer(canvas_store, change):
+    client = client_for(canvas_store)
+    linked = paired(client)
+    if change == "revoke":
+        assert (
+            client.post(
+                ROOT + "/" + linked["connection_id"] + "/revoke", headers=auth()
+            ).status_code
+            == 200
+        )
+    elif change == "repair":
+        paired(client)
+    else:
+        with canvas_store.connection() as conn:
+            conn.execute(
+                "UPDATE wrytely_agent.source_connections "
+                "SET credential_expires_at=clock_timestamp()-interval '1 second' WHERE id=%s",
+                (linked["connection_id"],),
+            )
+    response = context(client, linked["ingestion_bearer"])
+    assert response.status_code == 401
+    assert response.headers["cache-control"] == "no-store"
+
+
+@pytest.mark.parametrize(
+    "extra", [{"user_id": "user_bob"}, {"connection_id": "other"}, {"provider_subject": "PRIVATE"}]
+)
+def test_context_rejects_posted_authority(canvas_store, extra):
+    client = client_for(canvas_store)
+    linked = paired(client)
+    response = client.post(
+        CANVAS + "/context",
+        headers=auth(linked["ingestion_bearer"]),
+        json={"origin": ORIGIN, **extra},
+    )
+    assert response.status_code == 422
+    assert response.json() == {"detail": "Invalid Canvas request"}
+    assert response.headers["cache-control"] == "no-store"
+
+
+def test_context_rejects_wrong_origin_and_query(canvas_store):
+    client = client_for(canvas_store)
+    linked = paired(client)
+    response = client.post(
+        CANVAS + "/context",
+        headers=auth(linked["ingestion_bearer"]),
+        json={"origin": "https://other.example.edu"},
+    )
+    assert response.status_code == 401
+    response = context(client, linked["ingestion_bearer"], params={"user_id": "PRIVATE"})
+    assert response.status_code == 422
+    assert response.json() == {"detail": "Invalid Canvas request"}
+
+
+def test_context_disabled_and_bounded_request(canvas_store):
+    response = client_for(canvas_store, enabled=False).post(
+        CANVAS + "/context", json={"origin": ORIGIN}
+    )
+    assert response.status_code == 503
+    assert response.headers["cache-control"] == "no-store"
+    client = client_for(canvas_store)
+    response = client.post(
+        CANVAS + "/context", content="x" * 16385, headers={"content-type": "application/json"}
+    )
+    assert response.status_code == 413
+    assert response.headers["cache-control"] == "no-store"
+
+
 def test_pair_bind_read_revoke_real_store_flow(canvas_store):
     client = client_for(canvas_store)
     code = challenge(client)

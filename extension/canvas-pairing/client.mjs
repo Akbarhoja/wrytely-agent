@@ -91,6 +91,63 @@ function projection(value, canvasOrigin, states) {
   );
 }
 
+function contextProjection(value, canvasOrigin) {
+  const connection = projection(value, canvasOrigin, [
+    "pending_identity",
+    "connected",
+    "reconnect_required",
+  ]);
+  const kinds = [
+    "syllabus",
+    "assignments",
+    "announcements",
+    "discussions",
+    "modules",
+    "pages",
+    "files",
+    "submissions",
+    "grades",
+  ];
+  if (
+    !Number.isSafeInteger(value.scope_revision) ||
+    value.scope_revision < 0 ||
+    !["explicit_set", "all_active"].includes(value.mode) ||
+    !Array.isArray(value.course_ids) ||
+    value.course_ids.length > 1000 ||
+    value.course_ids.some(
+      (id) => typeof id !== "string" || !/^[1-9][0-9]{0,19}$/.test(id),
+    ) ||
+    new Set(value.course_ids).size !== value.course_ids.length ||
+    !Array.isArray(value.resource_kinds) ||
+    value.resource_kinds.length > kinds.length ||
+    value.resource_kinds.some((kind) => !kinds.includes(kind)) ||
+    new Set(value.resource_kinds).size !== value.resource_kinds.length ||
+    !value.discovery ||
+    typeof value.discovery !== "object" ||
+    !["unknown", "complete", "partial", "restricted", "unsupported"].includes(
+      value.discovery.coverage,
+    ) ||
+    ["last_attempt_at", "last_complete_at"].some(
+      (key) =>
+        value.discovery[key] !== null && !validExpiry(value.discovery[key]),
+    )
+  )
+    throw Error();
+  return {
+    ...connection,
+    scope_revision: value.scope_revision,
+    mode: value.mode,
+    course_ids: [...value.course_ids],
+    resource_kinds: [...value.resource_kinds],
+    discovery: Object.fromEntries(
+      ["coverage", "last_attempt_at", "last_complete_at"].map((key) => [
+        key,
+        value.discovery[key],
+      ]),
+    ),
+  };
+}
+
 async function cancel(body) {
   try {
     await body?.cancel();
@@ -99,7 +156,7 @@ async function cancel(body) {
   }
 }
 
-async function jsonBody(response) {
+async function jsonBody(response, limit = 16384) {
   if (
     !/^application\/json(?:;|$)/i.test(
       response.headers.get("content-type") ?? "",
@@ -117,7 +174,7 @@ async function jsonBody(response) {
       const { done, value } = await reader.read();
       if (done) break;
       length += value.byteLength;
-      if (length > 16384) throw Error();
+      if (length > limit) throw Error();
       chunks.push(value);
     }
   } finally {
@@ -225,7 +282,9 @@ export function createPairingClient({
     const uncertain =
       action === "redeem"
         ? "pairing_outcome_unknown"
-        : "binding_outcome_unknown";
+        : action === "context"
+          ? "context_unavailable"
+          : "binding_outcome_unknown";
     const url = `${apiOrigin}/v1/source-connections/canvas/${action}`;
     let response;
     try {
@@ -247,12 +306,12 @@ export function createPairingClient({
         await cancel(response.body);
         if (action === "redeem" && response.status === 400)
           fail("invalid_pairing");
-        if (action === "bind" && response.status === 401)
+        if (["bind", "context"].includes(action) && response.status === 401)
           fail("reconnect_required");
         if (response.status === 429) fail("pairing_rate_limited");
         fail(uncertain);
       }
-      return await jsonBody(response);
+      return await jsonBody(response, action === "context" ? 65536 : 16384);
     } catch (error) {
       if (error instanceof PairingClientError) throw error;
       await cancel(response?.body);
@@ -369,6 +428,60 @@ export function createPairingClient({
               : "binding_outcome_unknown",
           );
         }
+      });
+    },
+    async readCurrentContext() {
+      return run(async () => {
+        const item = await record();
+        if (
+          !item ||
+          Date.parse(item.connection.credential_expires_at) <= Date.now()
+        )
+          return cleanup("reconnect_required");
+        let context;
+        try {
+          context = contextProjection(
+            await post(
+              "context",
+              { origin: canvasOrigin },
+              item.ingestion_bearer,
+            ),
+            canvasOrigin,
+          );
+          if (
+            context.connection_id !== item.connection.connection_id ||
+            context.generation < item.connection.generation
+          )
+            throw Error();
+        } catch (error) {
+          if (
+            error instanceof PairingClientError &&
+            error.code === "reconnect_required"
+          )
+            return cleanup("reconnect_required");
+          fail("context_unavailable");
+        }
+        if (
+          context.state === "reconnect_required" ||
+          Date.parse(context.credential_expires_at) <= Date.now()
+        )
+          return cleanup("reconnect_required");
+        try {
+          await storageArea.set({
+            [key]: {
+              ...item,
+              connection: projection(context, canvasOrigin, [
+                "pending_identity",
+                "connected",
+              ]),
+            },
+          });
+        } catch {
+          fail("storage_unavailable");
+        }
+        if (Date.parse(context.credential_expires_at) <= Date.now())
+          return cleanup("reconnect_required");
+        return context;
       });
     },
     async readCachedConnection() {

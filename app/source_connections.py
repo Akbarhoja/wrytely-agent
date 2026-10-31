@@ -87,6 +87,22 @@ def register_source_connections(api, *, identity_dependency, database_dependency
         if not canvas_origins:
             raise HTTPException(503, "Canvas pairing is not configured")
 
+    @router.post("/canvas/context")
+    def context(body: PairingIn, request: Request, credentials: Credential, db: DB):
+        enabled()
+        try:
+            if credentials is None:
+                raise SourceCredentialRejected()
+            if request.query_params:
+                raise HTTPException(422, "Invalid Canvas request")
+            return db.canvas_connection_context(credentials.credentials, body.origin)
+        except SourceCredentialRejected:
+            raise HTTPException(
+                401, "Reconnect Canvas", headers={"WWW-Authenticate": "Bearer"}
+            ) from None
+        except ValueError:
+            raise HTTPException(422, "Invalid Canvas request") from None
+
     @router.post("/canvas/pairing")
     def pairing(body: PairingIn, user: User, db: DB):
         enabled()
