@@ -375,6 +375,26 @@ The #84 ordering/normalization fix still needs counterpart acceptance. Long docu
 schema2 envelopes/digest vectors, original PDF sections, collector/API assembly and
 activation checks remain separate. Passing these readers does not complete P1-A2.
 
+## Canonical short-text bounds and legacy continuations — issue #97
+
+Every staged academic payload now checks normalized title<=300 and content<=24000
+code points after NFC/newline normalization, independently of coverage, title presence
+or whether a text version will be created. Oversized canonical payloads reject before
+any batch effects; mixed batches preserve no partial pointers/events/checkpoints.
+Input/envelope bounds remain in force. No text is truncated.
+
+Readers validate offset as a nonnegative exact integer, then against the selected
+immutable body's actual length. This replaces the fixed24000 offset cap so an older
+observation admitted before this fix cannot advertise a next_offset that the next
+read refuses. Per-page12000 and serialized1MiB response limits, pinned observation,
+owner/task/connection fences and historical/partial labels remain unchanged. Existing
+oversized observations are not rewritten, promoted or reclassified as complete.
+
+Ten new synthetic regression cases cover all coverage paths, normalized boundaries,
+atomic rejection and complete legacy/accepted continuation; six reproduced failures
+before the fix. Full disposable backend suite633 passed. No migration/deployment,
+provider call, current-source promotion or reader API/model activation is included.
+
 ## Canvas absence ordering and canonical ID fix — issue #83
 
 A complete enumeration may mark an unseen course/object missing-pending only when

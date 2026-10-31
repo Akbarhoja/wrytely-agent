@@ -196,6 +196,10 @@ class EvidenceItem(Strict):
                 }
             )
         )
+        # NFC can expand text; bounds apply to the canonical payload on every path,
+        # including partial observations without a title/text version.
+        if len(payload["content"]) > 24000 or len(payload["title"]) > 300:
+            raise ValueError("Normalized short-text size limit")
         for name in ("submission_types", "module_ids"):
             value = payload["fields"].get(name)
             if value is not None and value != sorted(set(value)):

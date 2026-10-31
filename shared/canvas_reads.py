@@ -320,7 +320,10 @@ class CanvasReadStore:
     def _read_canvas_evidence(
         self, user, lease, object_id, *, observation_id=None, offset=0, limit=12000
     ):
-        _bound(offset, 0, 24000)
+        # Validate against the actual immutable body below, not today's ingest cap:
+        # legacy observations may be longer and every advertised continuation must work.
+        if type(offset) is not int or offset < 0:
+            raise ValueError("Invalid read bounds")
         _bound(limit, 1, 12000)
         object_id = _uuid(object_id)
         observation_id = _uuid(observation_id) if observation_id is not None else None
