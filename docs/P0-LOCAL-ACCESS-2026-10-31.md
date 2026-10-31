@@ -377,3 +377,22 @@ References: [Fetch redirect behavior](https://fetch.spec.whatwg.org/) and
 [Chrome extension cross-origin requests](https://developer.chrome.com/docs/extensions/develop/concepts/network-requests).
 Synthetic Node tests47 pass (12 inherited+35 new). v4 still requires operator reload
 and live run; no live redirect classification is claimed yet.
+
+## v4 live result: redirect confirmed
+
+The operator supplied diagnosticVersion4 with fileHostPermissionGranted=true and
+linkedPdf incomplete/file_redirect_blocked. Course discovery, two selected course
+counts and four rubric-detail reads match the prior report, with no rubric criteria
+observed. This isolates a redirect response rather than a missing existing file-host
+grant or a thrown fetch. The redirect destination and chain remain unknown; no
+institution denial, successful extension PDF retrieval or positive rubric proof follows.
+
+A reopened the known file's normal Canvas preview through browser navigation and
+confirmed the Download control remains available. Visible page asset inspection did
+not identify the PDF redirect destination. Native Chrome inspection exposed no usable
+window/DevTools controls, so A could not inspect the redirect headers directly. No new
+hosts or webRequest permission were granted; no arbitrary follow mode was enabled.
+Next evidence needed: the redirect Location hostname only from the diagnostic request
+in the extension worker's Network panel. Do not share signed URLs, query values,
+cookies, headers, HAR exports or course content. This is an inspection blocker, not
+a reason to repeat unchanged diagnostic runs. P0 remains open.

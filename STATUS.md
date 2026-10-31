@@ -158,7 +158,9 @@ Canvas's documented first-party wrapper/preview-link path. v3 correction has45 s
 Node tests passed with unchanged host permissions. The operator v3 run reached file fetching
 but failed as file_network_or_redirect_blocked; PDF bytes remain unverified. v4 adds
 manual redirect classification and a local existing-host-grant boolean;47 synthetic
-Node tests pass. Operator reload/live diagnosis pending. No P1
+Node tests pass. Operator v4 live result confirms file_redirect_blocked with the
+existing file-host permission granted. Redirect destination inspection is pending;
+no need to rerun the unchanged probe. PDF bytes remain unverified. No P1
 collector/scheduler/runtime behavior changed. See the local access record for limits.
 
 ## Next actions
