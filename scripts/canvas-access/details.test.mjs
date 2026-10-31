@@ -10,6 +10,7 @@ import {
   MAX_PDF_BYTES,
   probeDetails,
   readPdf,
+  resolvePdfMetadata,
   validateScope,
 } from "./details.mjs";
 
@@ -76,7 +77,7 @@ test("reads exact PDF bytes and bounded rubric detail without leaking content or
   assert.equal(resources.linkedPdf.matchesOperatorSample, true);
   assert.equal(resources.rubricDetails.withRubric, 1);
   assert.equal(resources.rubricDetails.criteria, 1);
-  assert.equal(report.diagnosticVersion, 2);
+  assert.equal(report.diagnosticVersion, 3);
   assert.ok(!JSON.stringify(report).includes("PRIVATE"));
   assert.ok(!JSON.stringify(report).includes(FILE_ORIGIN));
 });
@@ -206,6 +207,126 @@ test("different bytes are not certified as the locally extracted sample", async 
   assert.equal(result.textExtraction, "separate_local_sample_only");
 });
 
+test("same-origin exact download wrapper resolves via fixed Canvas API before storage fetch", async () => {
+  const calls = [];
+  const base = provider();
+  const fetch = async (url, options) => {
+    calls.push(new URL(url).pathname);
+    if (new URL(url).pathname.endsWith("/files/31"))
+      return json({
+        ...metadata,
+        url: origin + "/files/31/download?download_frd=1",
+      });
+    if (new URL(url).pathname === "/api/v1/files/31/public_url")
+      return json({ public_url: metadata.url });
+    return base(url, options);
+  };
+  const result = await probeDetails(config, fetch);
+  assert.equal(
+    result.courses[0].resources.linkedPdf.matchesOperatorSample,
+    true,
+  );
+  assert.equal(
+    calls.filter((p) => p === "/api/v1/files/31/public_url").length,
+    1,
+  );
+  assert.ok(!calls.includes("/files/31/download"));
+  assert.ok(!JSON.stringify(result).includes("PRIVATE"));
+});
+
+for (const path of [
+  "/files/32/download",
+  "/files/31/download?token=private",
+  "/files/31/download?download_frd=2",
+  "/files/31/download?download_frd=1&download_frd=1",
+  "/courses/101/files/31",
+  "/files/31/download#fragment",
+])
+  test(
+    "reject unexpected first-party wrapper without resolver request: " + path,
+    async () => {
+      let calls = 0;
+      await assert.rejects(
+        resolvePdfMetadata(
+          {
+            get: () => {
+              calls++;
+            },
+          },
+          { ...metadata, url: origin + path },
+          sample,
+          origin,
+        ),
+        /unsafe_file_url/,
+      );
+      assert.equal(calls, 0);
+    },
+  );
+
+test("resolver output cannot authorize another storage host", async () => {
+  const resolved = await resolvePdfMetadata(
+    {
+      get: async () => ({
+        data: { public_url: "https://evil.example/files/private" },
+      }),
+    },
+    { ...metadata, url: origin + "/files/31/download" },
+    sample,
+    origin,
+  );
+  await assert.rejects(
+    readPdf(resolved, sample, () => assert.fail()),
+    /unsafe_file_url/,
+  );
+});
+
+test("locked metadata cannot request a preview link", async () => {
+  let calls = 0;
+  await assert.rejects(
+    resolvePdfMetadata(
+      {
+        get: () => {
+          calls++;
+        },
+      },
+      {
+        ...metadata,
+        locked_for_user: true,
+        url: origin + "/files/31/download",
+      },
+      sample,
+      origin,
+    ),
+    /file_scope_or_access_denied/,
+  );
+  assert.equal(calls, 0);
+});
+
+test("account switch during preview resolution prevents the PDF fetch", async () => {
+  const base = provider();
+  let switched = false,
+    fileReads = 0;
+  await assert.rejects(
+    probeDetails(config, async (url, options) => {
+      const u = new URL(url);
+      if (u.origin === FILE_ORIGIN) {
+        fileReads++;
+        return responsePdf();
+      }
+      if (u.pathname.endsWith("/profile") && switched) return json({ id: 98 });
+      if (u.pathname.endsWith("/files/31"))
+        return json({ ...metadata, url: origin + "/files/31/download" });
+      if (u.pathname === "/api/v1/files/31/public_url") {
+        switched = true;
+        return json({ public_url: metadata.url });
+      }
+      return base(url, options);
+    }),
+    /account_switched_discarded/,
+  );
+  assert.equal(fileReads, 0);
+});
+
 test("restricted detail resource is reported without provider error text", async () => {
   const fetch = provider();
   const report = await probeDetails(config, (url, options) =>
@@ -240,7 +361,7 @@ test("prepared extension has exact permissions and accepts only its own popup", 
       origin + "/*",
       FILE_ORIGIN + "/*",
     ]);
-    assert.equal(manifest.version, "0.0.2");
+    assert.equal(manifest.version, "0.0.3");
     assert.equal(manifest.permissions, undefined);
     assert.equal(manifest.action.default_popup, "popup.html");
     let listener;
@@ -282,7 +403,7 @@ test("prepared extension has exact permissions and accepts only its own popup", 
         true,
       );
     });
-    assert.equal(result.diagnosticVersion, 2);
+    assert.equal(result.diagnosticVersion, 3);
     assert.deepEqual(badges, ["RUN", "READ"]);
     assert.ok(!JSON.stringify(result).includes("PRIVATE"));
   } finally {

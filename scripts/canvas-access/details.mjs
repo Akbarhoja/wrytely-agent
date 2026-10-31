@@ -41,13 +41,43 @@ export function validateScope(config) {
   return { origin, courses };
 }
 
-export async function readPdf(metadata, sample, fetchImpl = fetch) {
+function checkFileScope(metadata, sample) {
   if (
     String(metadata?.id) !== sample.fileId ||
     metadata.locked_for_user === true ||
     metadata.hidden_for_user === true
   )
     throw new ProbeError("file_scope_or_access_denied");
+}
+
+export async function resolvePdfMetadata(api, metadata, sample, origin) {
+  checkFileScope(metadata, sample);
+  let url;
+  try {
+    url = new URL(metadata.url);
+  } catch {
+    throw new ProbeError("unsafe_file_url");
+  }
+  if (url.origin !== origin) return metadata; // Direct storage URLs still face readPdf's exact allowlist.
+  if (
+    url.username ||
+    url.password ||
+    url.hash ||
+    url.pathname !== `/files/${sample.fileId}/download` ||
+    [...url.searchParams.keys()].some((k) => k !== "download_frd") ||
+    (url.searchParams.has("download_frd") &&
+      url.searchParams.get("download_frd") !== "1") ||
+    url.searchParams.getAll("download_frd").length > 1
+  )
+    throw new ProbeError("unsafe_file_url");
+  // Resolve the known Canvas download wrapper through its documented read-only API.
+  // Never follow arbitrary redirects or emit this signed URL in diagnostics.
+  const { data } = await api.get(`/api/v1/files/${sample.fileId}/public_url`);
+  return { ...metadata, url: data.public_url };
+}
+
+export async function readPdf(metadata, sample, fetchImpl = fetch) {
+  checkFileScope(metadata, sample);
   let url;
   try {
     url = new URL(metadata.url);
@@ -219,9 +249,11 @@ export async function probeDetails(config, fetchImpl = fetch) {
           `/api/v1/courses/${course}/files/${sample.fileId}`,
         );
         await identity();
-        return readPdf(data, sample, fetchImpl);
+        const resolved = await resolvePdfMetadata(api, data, sample, origin);
+        await identity();
+        return readPdf(resolved, sample, fetchImpl);
       });
   }
   await identity();
-  return { ...report, diagnosticVersion: 2 };
+  return { ...report, diagnosticVersion: 3 };
 }

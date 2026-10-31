@@ -326,3 +326,31 @@ Synthetic Node evidence: 35 passed (12 inherited +23 new), including unauthorize
 exact prepared permissions, identity changes, unsafe file destinations, access failures,
 redirects, PDF MIME/signature, size limits, content secrecy and sample mismatch. A new
 isolated Node24 CI job runs both suites. No claim of live PDF/rubric access is made.
+
+## v2 live report and narrow URL-resolution correction
+
+The operator loaded/approved v2 and supplied:7 discovered/2 selected; assignment lists
+22 and23, instruction bodies12 and9; two detail samples per course read with no rubric
+criteria observed. First course discussion list21/one view read; second course list0.
+Both inline syllabus bodies read. The one linked PDF failed as unsafe_file_url before
+any file-host fetch. This is not evidence of institutional denial or inaccessible rubrics.
+
+A independently inspected the known file's metadata through normal browser navigation,
+returning only URL shape/origin classifications (no signed values). Metadata was an
+unlocked PDF with a university Canvas `/files/ID/download?download_frd=1` wrapper, not
+a direct storage URL. The documented read-only `/api/v1/files/ID/public_url` returned
+the already-approved exact Canvas storage origin and `/files/` path. The signed URL
+was not printed, retained, published or handed to another service.
+
+v3 narrowly supports this observed two-step form: validate metadata file/access scope,
+exact institution origin, matching file-ID download path and only download_frd=1;
+request that fixed file's preview-link API; recheck identity; then apply unchanged exact
+storage-host/path, credentials-omit, redirect rejection, size/signature/SHA256 checks.
+Unexpected wrappers/hosts and locked files still reject. No new host permission and no
+arbitrary redirect following. Code uses the existing authorized local operator scope.
+
+Synthetic diagnostic tests now45 (12 inherited+33 new), including exact wrapper
+resolution, wrong file/path/query, malicious resolver destination, locked metadata and
+account switch during resolution preventing file download. The local package was rebuilt
+as0.0.3 in the same ignored folder; operator reload/run remains required. No corrected
+live PDF result or positive rubric-access proof has been claimed.
