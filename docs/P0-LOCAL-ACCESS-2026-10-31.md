@@ -156,3 +156,25 @@ new credential, paid model call or WhatsApp send occurred in this account check.
   M is implementing #108 collector/HTTP/Store acceptance; A does not duplicate that work.
 
 Email is not a blocker for the above core work. This checkpoint does not mark P0 complete.
+
+## Operator-supplied current-session Canvas report
+
+The operator reported the diagnostic was not installed in this Chrome profile, then
+followed the existing local package's Load unpacked instructions. Do not rely on the
+older READ badge as evidence from this installation. The operator pasted this new
+counts-only report; service-worker output/installed bytes were not independently inspected.
+
+| Resource    | Reported result                                                      | Evidence limit                                                             |
+| ----------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Courses     | 7 discovered, 1 selected                                             | Not proof every course's academic content is collected                     |
+| Assignments | Read 22; 12 nonempty instruction bodies                              | Other items need source-specific interpretation, not invented instructions |
+| Rubrics     | 0 nonempty rubric arrays                                             | No positive rubric-read proof; does not establish rubrics are inaccessible |
+| Syllabus    | Read; inline body present                                            | Partial; linked documents not read                                         |
+| Discussions | 21 topics listed; one visible topic view read with 1 top-level entry | One-topic sample, not every thread/reply                                   |
+
+Schema1 explicitly labels this probe_output_not_acceptance / partial_probe. This is
+useful current-session, operator-reported extension access evidence. It does not prove
+linked-document extraction, all-topic coverage, browser restart/recovery, expired login
+or account switching. Next repeat with Canvas tabs closed but Chrome running. An open
+service-worker Console can keep that worker alive, so label that result manual-start/
+debugger-attached rather than proof of unattended MV3 scheduling or suspension recovery.

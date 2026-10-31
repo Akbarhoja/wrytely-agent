@@ -38,7 +38,7 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 | Pause recovery #42       | A                 | 224bc96 (code a7db006), scoped review;385 backend/113 web CI reported                      | Included in #46; combined CI391/114 passed, review pending                                  |
 | Murtazo #28              | M                 | a344642 UI; latest a383782 Canvas proposal;114 local web reported                          | Reuse proposal findings; extension supersedes initial OAuth path                            |
 | P0-A2 Meta               | A                 | P0 real tool/saved-result/continuation proof passed in #50; academic M2 remains open       | Two-call probe passed (see #50); failed-call reservation retained                           |
-| P0-M1 Canvas             | A (reassigned)    | M #64 lifecycle API reviewed/21 cases pass; local diagnostic work reported                 | Full redacted access/session/content acceptance evidence not yet reviewed                   |
+| P0-M1 Canvas             | A (reassigned)    | M #64 lifecycle API reviewed/21 cases pass; local diagnostic work reported                 | Current-session operator report received; linked files/rubric/session matrix pending        |
 | P0-M2 Outlook            | A (reassigned)    | M #54 at4aadc91 offline Graph probe;32 cases independently pass                            | Optional/paused: CSU admin consent required; not a core stage blocker                       |
 | P0-M3 WhatsApp           | M                 | Linking/inbound worked; last delivery failed131031                                         | Business/account resolution and delivered-reply proof                                       |
 | P0-A3 interfaces         | A                 | C1/C2 and C3 short-text design agreed; remaining C4–C7/precise document wire gates open    | Reader fix #98 accepted by M; document/schema2 wire details remain separate                 |
@@ -113,10 +113,10 @@ HTTP interoperability test/harness after a scoped claim. Conservative54001 retai
 resource rows/8MiB journal-finish reply accepted as a bound, not a proved6000-course run.
 CI coverage for the journal is a separate A-owned follow-up; no missing-file skips.
 
-P0 core checkpoint: Meta access proof passed. A owns Canvas feasibility; the current
-signed-in dashboard is available, but the diagnostic's detailed resource report/session
-matrix is still pending. Operator was asked to supply the existing counts-only report;
-browser controls cannot open Chrome extension-management pages. No restart/logout was
+P0 core checkpoint: Meta access proof passed. A owns Canvas feasibility; the operator supplied a new current-session report after local installation:
+7 courses discovered/1 selected; 22 assignments/12 instruction bodies; inline syllabus
+and one discussion view readable. No positive rubric proof or linked-document reading.
+Session matrix remains pending; browser controls cannot open extension management. No restart/logout was
 performed. Outlook is optional/paused and not a core blocker. M retains WhatsApp delivery.
 Baseline #46 exact9bbea97 still has no formal review and is merge-blocked; a human review
 was formally requested from murtazokhon-tech. C4–C7 and the exact document-wire decisions
