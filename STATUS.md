@@ -63,6 +63,18 @@ Staged Canvas policy boundaries are tested but unwired. C3 retrieval and documen
 segments remain pending agreement; P1-A2 is not complete. No deployment, migration,
 paid call, source activation or continuous worker change occurred.
 
+A counterpart reviews: M #66 exactbdb0e89 HTML extraction independently passes45
+focused cases plus2,744 small malformed-input probes and six targeted samples;
+M #70 exactb09535f pairing client independently passes53 Node cases. No scoped
+blocking finding; these are isolated helper/module tests, not live collection,
+installed MV3 storage/restart evidence or combined API/client acceptance.
+
+Shared PDF packaging #75 provides pypdf6.21.4 for M's requested future extractor; exact
+version and hashes are in uv.lock. Locked install, trusted synthetic text-PDF smoke,
+unchanged existing-version audit and full585 backend tests pass. The proposed subprocess/memory/CPU/wall
+boundary is in docs/contracts/PDF-EXTRACTION-BOUNDARY.md and awaits M agreement.
+No PDF extractor or document-segment/reader activation is included.
+
 Other counts above belong to their cited commits and historical runs. Current source/status two-account live denial
 checks passed previously; live artifact isolation remains untested because no live
 artifact exists. Read the [actual M2 run](docs/M2-RUN-2026-10-29.md).
