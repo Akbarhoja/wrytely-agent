@@ -317,6 +317,64 @@ authorized environment before a reviewed consumer; roll back consumers first, pr
 additive evidence for review. Remaining: full document/segment manifests, unified private
 retrieval/freshness/readiness, Outlook credentials/actor and assembled/live collection tests.
 
+## Agreed staged Canvas short-text readers — issue #85
+
+M accepted #78 sections1–2 at unchanged75df211 in
+[review6541105179](https://github.com/Akbarhoja/wrytely-agent/pull/78#issuecomment-6541105179).
+Shared implementation is `CanvasReadStore`, composed into Store. No M HTTP route,
+model tool, source promotion or document reader is introduced. Migration013 adds
+private read-cursor storage; it has only been applied to disposable tests.
+
+- `list_canvas_evidence(verified_user, *, connection_id, course_id=None, limit=20,
+cursor=None)` returns the agreed safe identity/coverage/freshness projection and
+  next_cursor. Bounds1–50; no body, payload fields, arbitrary provider reference,
+  subject or credential is returned in a list. Object UUID order is stable.
+- `read_canvas_evidence(verified_user, object_id, *, observation_id=None, offset=0,
+limit=12000)` returns original normalized text sections, exact fields/missing flags
+  and server-derived inert `canvas-object:course:kind:provider_id` provenance. Nonzero
+  offsets require an explicit observation. Code-point offsets preserve emoji; out-of-range
+  reads reject. Explicit old observations never fall back to a new version.
+- The corresponding `_for_task(lease,...)` methods fence the existing lease and restrict
+  results to sources bound to that task's current responsibility. An unbound reply task
+  gets no source bodies; course-filter failures do not reveal unbound course existence.
+  Student cursors cannot be reused as task cursors. No semester-wide model scope exists.
+
+Reads serialize with revoke/scope/ingest using the existing agent lock. Body access
+requires connected, unexpired, operator-configured origin, current subject/generation
+and selected course/resource. Owned disconnected metadata remains visible. Historical
+same-generation observations can be inspected but are explicitly unusable for current
+decisions. Different-account/missing object/observation returns LookupError; invalid
+bounds/cursors return ValueError; owned unavailable body access raises
+`shared.canvas_reads.SourceRefreshRequired` with only `source_refresh_required`.
+The future M route must map these to agreed generic404/400/409 and private/no-store;
+this implementation does not itself expose an HTTP surface.
+
+The latest scan/resource attempt determines coverage, including open, failed or missing
+resource attempts; a prior complete attempt cannot conceal a new gap. Text-version
+references come from the selected immutable observation, while latest_version_id
+always names the current observation's actual text version (possibly null).
+Freshness uses the shared inspection policy, not draft/action authorization. Empty
+restricted observations have empty sections/null versions rather than fake text evidence.
+Actual serialized read responses are capped at1MiB; source/model activation remains off.
+
+Opaque cursors are192-bit random handles, stored only as hashes with owner, connection,
+generation, course filter, task and anchor bindings. Expire after15 minutes; reuse does
+not renew TTL or source freshness. Under the agent lock, at most256 handles per agent
+are retained; issuance reclaims at most256 expired owner rows and rejects at the quota.
+No new operator signing key/configuration is needed. No global cleanup worker is deployed;
+inactive owners' bounded expired handles remain until another issuance or explicit
+future retention cleanup. Cursors do not act as source-access credentials.
+
+Final return checks use database wall-clock time for task lease and body credential
+expiry; transaction-fixed now() cannot keep an expired reader authorized. Validation:
+26 new reader cases and the full disposable backend suite **623 passed**. #82 API
+assembly was independently reviewed separately with36 passing focused cases, not
+included as an integrated runtime/API deployment on this branch.
+
+The #84 ordering/normalization fix still needs counterpart acceptance. Long documents,
+schema2 envelopes/digest vectors, original PDF sections, collector/API assembly and
+activation checks remain separate. Passing these readers does not complete P1-A2.
+
 ## Canvas absence ordering and canonical ID fix — issue #83
 
 A complete enumeration may mark an unseen course/object missing-pending only when
