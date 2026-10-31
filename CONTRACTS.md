@@ -74,8 +74,10 @@ check connected state, subject, selected scope and exact generation in that tran
 There are no scan rows in010 to abort yet. Source keys must retain subject/generation
 provenance when a device is re-paired; old evidence must not become a new login's data.
 
-Redemption budgets persist even for invalid/expired/used codes: at most120 attempts
-per server per minute and10 per claimed device per minute. Global limit is checked
+Redemption budgets persist for schema-valid attempts, including wrong/expired/used
+codes: at most120 per server per minute and10 per claimed device per minute.
+Malformed code/device syntax is rejected before the database budget, so these are
+not limits on every HTTP request; M must bound and rate-limit the public route. Global limit is checked
 before inserting device buckets, with one transaction lock and expired-bucket cleanup.
 Device identity alone is untrusted and cannot bypass the global cap. The cap is an
 initial deployment-wide pairing throttle, not protection against service denial or
