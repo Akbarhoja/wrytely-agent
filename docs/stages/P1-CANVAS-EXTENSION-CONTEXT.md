@@ -1,0 +1,25 @@
+# Current Canvas extension context handoff
+
+M-owned [claim #91](https://github.com/Akbarhoja/wrytely-agent/issues/91) adds the missing HTTP/client handoff for the already agreed `Store.canvas_connection_context(credential, origin)`. Base is reviewed A #84 `581a9f57088aca509a59a02f4ca33c01863d63ba`, including accepted catalog-ordering fixes. Existing M #64/#52/#70 scaffolds are reused unchanged as `9d631b4`, `14c29bb`, `e711e66`. PR90 remains unchanged on its own branch.
+
+## Behavior
+
+`POST /v1/source-connections/canvas/context` is extension-to-backend, accepting only JSON `{origin}` and an ingestion bearer. The existing strict16KiB route wrapper controls content type, malformed/extra fields and no-store responses. Query parameters reject with generic422. The Store derives the owning connection from the current bearer and exact configured origin; session tokens, posted user/connection IDs, expired/revoked/re-paired credentials and another origin cannot choose that ownership. Invalid bearer/origin is controlled401 with Bearer challenge. Existing database-error redaction remains in force.
+
+The existing pairing client adds `readCurrentContext()`. It secures trusted-context storage, reads its private bearer, and makes one no-store POST to the configured exact HTTPS API with omitted browser credentials, redirect rejection and a15-second signal. It returns only the six existing connection fields, scope revision/mode/course IDs/resource kinds, and three discovery fields. Unknown nested content, subjects and bearer fields are excluded. Connection mismatch, cached-generation rollback, invalid types/dates/lists and unsupported metadata produce a controlled error with no returned context.
+
+Legitimate scope-generation increases update the stored safe connection while retaining its existing private bearer. The refreshed connection is persisted before returning; expiry is checked again after storage. Missing/local/server-expired or unauthorized credentials trigger local cleanup. Transient network/format/server failures retain valid pairing and return `context_unavailable`; a storage failure returns `storage_unavailable` without returning unpersisted context. No automatic retry is added.
+
+Context JSON has a64KiB streaming cap, supporting all1000 distinct1–20-digit course IDs and all9 resource kinds rather than silently applying the old16KiB lifecycle response cap. Existing pairing/binding caps stay16KiB. Discovery coverage is one of unknown/complete/partial/restricted/unsupported, with nullable valid RFC3339 timestamps. Discovery completeness is metadata-enumeration evidence, not source-body freshness or collector readiness.
+
+## Evidence and limits
+
+TDD:14 API cases first failed on the absent route;25 client cases failed on the absent method, with41 existing client cases passing. Initial GREEN:35 real Store-backed lifecycle/context API cases and78 Node client/probe cases. Additional expiry-during-storage and Store-expiry-response races were independently reproduced with failing regressions and fixed. Final Node client/probe result80 passed with no skips. Full backend on fresh disposable Postgres:632 passed, two existing test-library warnings,344.11 seconds. Existing full web114 passed/31.37 seconds; TypeScript, locked Ruff check/format, changed-file Prettier and diff checks passed. Remote CI is separate and the existing workflow does not run the extension Node suites.
+
+Read-only review independently ran the earlier79 Node/probe cases and found the Store's `reconnect_required` expiry-response mismatch; after the fix the reviewer independently ran the new regression (one pass) and confirmed no further finding in that delta. Unavailable context now triggers cleanup before persistence/result delivery. Cached records still accept only pending/connected states. A counterpart acceptance remains pending.
+
+API cases use synthetic users, origins and a disposable Postgres database. Client tests use synthetic trusted-context storage and mocked HTTP. This is integrated API/client contract preparation, not installed Chrome end-to-end, real Canvas-session verification or live access evidence. Reading context does not verify the current Canvas browser account, supply a sync lease, grant ingestion, or eliminate the need for later generation/scope/account fencing.
+
+No collection loop, source-body/catalog read API, #86 reader consumer, sync upload, new manifest/UI/install/storage grant, PDF handoff, model activation, provider send/spend, production migration/deployment or main merge is included. Existing diagnostic code is reused; private uncommitted root findings are excluded. STATUS remains with A's serialized editor; shared contracts/runtime/store/CI are unchanged by this implementation. Chrome remains untouched and recurring automation remains deleted.
+
+Next dependency: A counterpart review of this context boundary; then assemble the agreed scope/discovery sync and resumable collector after their separate access/authorization and contract gates. The reported #86 reader defect remains a separate blocker for source-body consumers.
