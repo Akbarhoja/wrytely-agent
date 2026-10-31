@@ -1,4 +1,5 @@
 // Private worker helper. Public callers receive neither credentials nor writer leases.
+import { collectCourseTick } from "./collector.mjs";
 export const discoveryConflicts = [
   "checkpoint_changed",
   "course_not_discovered",
@@ -86,6 +87,7 @@ export function discoveryOperations({
   invalidateAccount,
   canvasOrigin,
   validExpiry,
+  readCoursePage,
 }) {
   function checkpoint(value, revision) {
     if (
@@ -518,6 +520,9 @@ export function discoveryOperations({
       j.scan.checkpoint = got;
       j.seen_count = body.envelope.coverage.seen_count;
       j.last_page_coverage = body.envelope.coverage.state;
+      // Preserve metadata gaps from earlier pages without forking journal storage.
+      if (body.envelope.items.some((item) => item.coverage !== "complete"))
+        j.incomplete_resource = true;
       if (j.scope_mode === "all_active") {
         const required = new Set(j.required);
         for (const item of body.envelope.items)
@@ -616,196 +621,217 @@ export function discoveryOperations({
     await persist(p, j);
     return sendPending({ ...p, j });
   }
-  return {
-    beginDiscovery: () =>
-      run(async () => {
-        const p = await prepare(true);
-        if (p.j && !p.j.finished) fail("discovery_pending_operation");
-        p.j = {
-          version: 1,
-          binding: {
-            connection_id: p.context.connection_id,
-            generation: p.context.generation,
-            scope_revision: p.context.scope_revision,
-            subject: p.subject,
-          },
-          scan: null,
-          seen_count: 0,
-          last_page_coverage: null,
-          scope_mode: p.context.mode,
-          resource_kinds: [...p.context.resource_kinds],
-          required: [
-            "courses",
-            ...p.context.course_ids.flatMap((course) =>
-              p.context.resource_kinds.map((kind) => `${course}/${kind}`),
-            ),
-          ],
-          incomplete_resource: false,
-          pending: null,
-          renewal: null,
-          closed: [],
-          finished: null,
-        };
-        return enqueue(p, "begin", {
-          ...p.j.binding,
-          begin_key: crypto.randomUUID(),
-        });
-      }),
-    retryDiscovery: () => run(async () => sendPending(await prepare())),
-    resumeDiscovery: () =>
-      run(async () => {
-        const p = await prepare(),
-          j = clone(p.j);
-        if (!j?.scan || j.finished)
-          fail(j?.pending ? "discovery_pending_begin" : "discovery_not_active");
-        if (!j.renewal) {
-          j.renewal = {
-            scan_id: j.scan.scan_id,
-            generation: j.binding.generation,
-            resume_key: crypto.randomUUID(),
-          };
-          await persist(p, j);
-        }
-        let response;
-        try {
-          response = await rpc(p, "resume", j.renewal);
-        } catch (e) {
-          if (
-            e?.code === "discovery_request_rejected" ||
-            discoveryConflicts.some((code) => e?.code === `discovery_${code}`)
-          ) {
-            // A controlled rejection has no accepted resume receipt; do not strand primary recovery.
-            j.renewal = null;
-            await persist(p, j);
-          }
-          throw e;
-        }
-        let next;
-        try {
-          next = lease(response, j.binding.scope_revision);
-          if (
-            next.scan_id !== j.scan.scan_id ||
-            next.scan_sequence !== j.scan.scan_sequence
-          )
-            throw Error();
-        } catch {
-          fail("discovery_outcome_unknown");
-        }
-        const expected =
-          j.pending?.operation === "batch"
-            ? {
-                ...j.pending.body.expected_checkpoint,
-                sequence: j.pending.body.expected_checkpoint.sequence + 1,
-                next_cursor: j.pending.body.envelope.next_cursor,
-              }
-            : null;
-        if (
-          !same(next.checkpoint, j.scan.checkpoint) &&
-          !(expected && same(next.checkpoint, expected))
-        )
-          fail("discovery_reconciliation_required");
-        j.scan = next;
-        j.renewal = null;
-        await persist(p, j);
-        return finalCheck(p, j);
-      }),
-    commitDiscoveryPage: (input) =>
-      run(async () => {
-        const p = await prepare();
-        available(p.j);
-        try {
-          validatePage(input);
-          if (
-            p.j.scan.checkpoint.sequence >= 100 ||
-            p.j.closed.includes("courses") ||
-            (p.j.scan.checkpoint.sequence > 0 &&
-              p.j.scan.checkpoint.next_cursor === null) ||
-            p.j.seen_count + input.items.length > 5000
-          )
-            throw Error();
-        } catch {
-          fail("invalid_discovery_input");
-        }
-        const batchKey = crypto.randomUUID(),
-          j = p.j;
-        return enqueue(p, "batch", {
+  const operations = {
+    beginDiscovery: async () => {
+      const p = await prepare(true);
+      if (p.j && !p.j.finished) fail("discovery_pending_operation");
+      p.j = {
+        version: 1,
+        binding: {
+          connection_id: p.context.connection_id,
+          generation: p.context.generation,
+          scope_revision: p.context.scope_revision,
+          subject: p.subject,
+        },
+        scan: null,
+        seen_count: 0,
+        last_page_coverage: null,
+        scope_mode: p.context.mode,
+        resource_kinds: [...p.context.resource_kinds],
+        required: [
+          "courses",
+          ...p.context.course_ids.flatMap((course) =>
+            p.context.resource_kinds.map((kind) => `${course}/${kind}`),
+          ),
+        ],
+        incomplete_resource: false,
+        pending: null,
+        renewal: null,
+        closed: [],
+        finished: null,
+      };
+      return enqueue(p, "begin", {
+        ...p.j.binding,
+        begin_key: crypto.randomUUID(),
+      });
+    },
+    retryDiscovery: async () => sendPending(await prepare()),
+    resumeDiscovery: async () => {
+      const p = await prepare(),
+        j = clone(p.j);
+      if (!j?.scan || j.finished)
+        fail(j?.pending ? "discovery_pending_begin" : "discovery_not_active");
+      if (!j.renewal) {
+        j.renewal = {
           scan_id: j.scan.scan_id,
           generation: j.binding.generation,
-          lease_token: j.scan.lease_token,
+          resume_key: crypto.randomUUID(),
+        };
+        await persist(p, j);
+      }
+      let response;
+      try {
+        response = await rpc(p, "resume", j.renewal);
+      } catch (e) {
+        if (
+          e?.code === "discovery_request_rejected" ||
+          discoveryConflicts.some((code) => e?.code === `discovery_${code}`)
+        ) {
+          // A controlled rejection has no accepted resume receipt; do not strand primary recovery.
+          j.renewal = null;
+          await persist(p, j);
+        }
+        throw e;
+      }
+      let next;
+      try {
+        next = lease(response, j.binding.scope_revision);
+        if (
+          next.scan_id !== j.scan.scan_id ||
+          next.scan_sequence !== j.scan.scan_sequence
+        )
+          throw Error();
+      } catch {
+        fail("discovery_outcome_unknown");
+      }
+      const expected =
+        j.pending?.operation === "batch"
+          ? {
+              ...j.pending.body.expected_checkpoint,
+              sequence: j.pending.body.expected_checkpoint.sequence + 1,
+              next_cursor: j.pending.body.envelope.next_cursor,
+            }
+          : null;
+      if (
+        !same(next.checkpoint, j.scan.checkpoint) &&
+        !(expected && same(next.checkpoint, expected))
+      )
+        fail("discovery_reconciliation_required");
+      j.scan = next;
+      j.renewal = null;
+      await persist(p, j);
+      return finalCheck(p, j);
+    },
+    commitDiscoveryPage: async (input) => {
+      const p = await prepare();
+      available(p.j);
+      try {
+        validatePage(input);
+        if (
+          p.j.scan.checkpoint.sequence >= 100 ||
+          p.j.closed.includes("courses") ||
+          (p.j.scan.checkpoint.sequence > 0 &&
+            p.j.scan.checkpoint.next_cursor === null) ||
+          p.j.seen_count + input.items.length > 5000
+        )
+          throw Error();
+      } catch {
+        fail("invalid_discovery_input");
+      }
+      const batchKey = crypto.randomUUID(),
+        j = p.j;
+      return enqueue(p, "batch", {
+        scan_id: j.scan.scan_id,
+        generation: j.binding.generation,
+        lease_token: j.scan.lease_token,
+        batch_key: batchKey,
+        expected_checkpoint: clone(j.scan.checkpoint),
+        envelope: {
+          schema_version: 1,
+          connection_id: j.binding.connection_id,
+          generation: j.binding.generation,
+          subject: j.binding.subject,
+          scan_id: j.scan.scan_id,
           batch_key: batchKey,
-          expected_checkpoint: clone(j.scan.checkpoint),
-          envelope: {
-            schema_version: 1,
-            connection_id: j.binding.connection_id,
-            generation: j.binding.generation,
-            subject: j.binding.subject,
-            scan_id: j.scan.scan_id,
-            batch_key: batchKey,
-            resource: { course_id: null, kind: "courses" },
-            observed_at: input.observed_at,
-            items: clone(input.items),
-            coverage: {
-              ...input.coverage,
-              seen_count: j.seen_count + input.items.length,
-            },
-            next_cursor: input.next_cursor,
+          resource: { course_id: null, kind: "courses" },
+          observed_at: input.observed_at,
+          items: clone(input.items),
+          coverage: {
+            ...input.coverage,
+            seen_count: j.seen_count + input.items.length,
           },
-        });
-      }),
-    finishDiscoveryResource: (input) =>
-      run(async () => {
-        const p = await prepare();
-        available(p.j);
-        if (
-          !exact(input, ["resource_key", "outcome", "reason"]) ||
-          !resourceKey(input.resource_key) ||
-          !outcome(input, input.resource_key)
-        )
-          fail("invalid_discovery_input");
-        if (p.j.closed.includes(input.resource_key))
-          fail("discovery_resource_closed");
-        if (
-          input.outcome === "complete" &&
-          (p.j.last_page_coverage !== "complete" ||
-            p.j.scan.checkpoint.next_cursor !== null)
-        )
-          fail("invalid_discovery_input");
-        if (!p.j.required.includes(input.resource_key))
-          fail("invalid_discovery_input");
-        return enqueue(p, "resource", {
-          scan_id: p.j.scan.scan_id,
-          generation: p.j.binding.generation,
-          lease_token: p.j.scan.lease_token,
-          finish_key: crypto.randomUUID(),
-          expected_checkpoint: clone(p.j.scan.checkpoint),
-          ...input,
-        });
-      }),
-    finishDiscovery: () =>
-      run(async () => {
-        const p = await prepare();
-        available(p.j);
-        const closed = new Set(p.j.closed);
-        if (p.j.required.some((key) => !closed.has(key)))
-          fail("discovery_resources_open");
-        return enqueue(p, "finish", {
-          scan_id: p.j.scan.scan_id,
-          generation: p.j.binding.generation,
-          lease_token: p.j.scan.lease_token,
-          finish_key: crypto.randomUUID(),
-        });
-      }),
-    readDiscoveryStatus: () =>
-      run(async () => {
-        const item = await record(),
-          j = journal(item?.discovery);
-        if (
-          j &&
-          (j.binding.connection_id !== item.connection.connection_id ||
-            j.binding.generation !== item.connection.generation)
-        )
-          return { state: "blocked", reason: "discovery_context_changed" };
-        return status(j);
-      }),
+          next_cursor: input.next_cursor,
+        },
+      });
+    },
+    finishDiscoveryResource: async (input) => {
+      const p = await prepare();
+      available(p.j);
+      if (
+        !exact(input, ["resource_key", "outcome", "reason"]) ||
+        !resourceKey(input.resource_key) ||
+        !outcome(input, input.resource_key)
+      )
+        fail("invalid_discovery_input");
+      if (p.j.closed.includes(input.resource_key))
+        fail("discovery_resource_closed");
+      if (
+        input.outcome === "complete" &&
+        (p.j.last_page_coverage !== "complete" ||
+          p.j.scan.checkpoint.next_cursor !== null)
+      )
+        fail("invalid_discovery_input");
+      if (!p.j.required.includes(input.resource_key))
+        fail("invalid_discovery_input");
+      return enqueue(p, "resource", {
+        scan_id: p.j.scan.scan_id,
+        generation: p.j.binding.generation,
+        lease_token: p.j.scan.lease_token,
+        finish_key: crypto.randomUUID(),
+        expected_checkpoint: clone(p.j.scan.checkpoint),
+        ...input,
+      });
+    },
+    finishDiscovery: async () => {
+      const p = await prepare();
+      available(p.j);
+      const closed = new Set(p.j.closed);
+      if (p.j.required.some((key) => !closed.has(key)))
+        fail("discovery_resources_open");
+      return enqueue(p, "finish", {
+        scan_id: p.j.scan.scan_id,
+        generation: p.j.binding.generation,
+        lease_token: p.j.scan.lease_token,
+        finish_key: crypto.randomUUID(),
+      });
+    },
+    readDiscoveryStatus: async () => {
+      const item = await record(),
+        j = journal(item?.discovery);
+      if (
+        j &&
+        (j.binding.connection_id !== item.connection.connection_id ||
+          j.binding.generation !== item.connection.generation)
+      )
+        return { state: "blocked", reason: "discovery_context_changed" };
+      return status(j);
+    },
   };
+  operations.collectCoursePage = () =>
+    collectCourseTick({
+      operations,
+      origin: canvasOrigin,
+      conflicts: discoveryConflicts,
+      readPage: readCoursePage,
+      inspect: async () => {
+        const { j } = await prepare();
+        return {
+          ...status(j),
+          checkpoint: j?.scan ? clone(j.scan.checkpoint) : null,
+          last_page_coverage: j?.last_page_coverage ?? null,
+          incomplete: j?.incomplete_resource ?? false,
+          courses_closed: j?.closed.includes("courses") ?? false,
+          open_resources: j
+            ? j.required.filter((key) => !j.closed.includes(key)).length
+            : 0,
+        };
+      },
+    });
+  // All operations, including the whole capture/commit tick, share the original lock.
+  return Object.fromEntries(
+    Object.entries(operations).map(([name, operation]) => [
+      name,
+      (...args) => run(() => operation(...args)),
+    ]),
+  );
 }

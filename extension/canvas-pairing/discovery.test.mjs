@@ -82,6 +82,8 @@ function fixture() {
     override: null,
     storageFailure: null,
     unauthorized: false,
+    pageCalls: [],
+    courseResponses: [],
   };
   f.storageArea = {
     async setAccessLevel(value) {
@@ -147,6 +149,8 @@ function fixture() {
         ...(operation === "begin" ? {} : { replayed: true }),
       };
     else {
+      if (["batch", "resource", "finish"].includes(operation) && f.expiredLease)
+        return json({ detail: { code: "lease_expired" } }, url, 409);
       if (
         ["batch", "resource", "finish"].includes(operation) &&
         body.lease_token !== id(f.leases + 10)
@@ -164,7 +168,10 @@ function fixture() {
               })),
             ),
           ];
-        if (operation === "resume") f.leases++;
+        if (operation === "resume") {
+          f.leases++;
+          f.expiredLease = false;
+        }
         result = {
           scan_id: id(2),
           scan_sequence: 1,
@@ -265,7 +272,27 @@ function fixture() {
       canvasOrigin,
       storageArea: f.storageArea,
       fetchImpl: f.fetch,
-      canvasFetch: async () => {
+      canvasFetch: async (url) => {
+        if (new URL(url).pathname === "/api/v1/courses") {
+          f.pageCalls.push(url);
+          if (f.onCourseRequest) await f.onCourseRequest();
+          if (f.pageError) throw Error("PRIVATE_PROVIDER_FAILURE");
+          const page = f.courseResponses.shift() ?? {
+            data: [
+              {
+                id: 101,
+                name: "PRIVATE_COURSE",
+                course_code: "SYN-101",
+                time_zone: "America/Denver",
+                enrollments: [{ enrollment_state: "active" }],
+              },
+            ],
+          };
+          const response = json(page.data, url, f.pageStatus ?? 200);
+          if (page.next)
+            response.headers.set("link", `<${page.next}>; rel="next"`);
+          return response;
+        }
         if (f.onProfile) await f.onProfile();
         return Response.json({ id: f.profiles.shift() ?? "7" });
       },
@@ -273,6 +300,211 @@ function fixture() {
   f.rpc = () => f.calls.filter((c) => c.action.startsWith("discovery/"));
   return f;
 }
+
+const courseCursor = `${canvasOrigin}/api/v1/courses?enrollment_state=active&per_page=50&page=opaque`;
+const rawCourse = (id, extra = {}) => ({
+  id,
+  name: "PRIVATE_COURSE",
+  course_code: "SYN",
+  time_zone: "America/Denver",
+  enrollments: [{ enrollment_state: "active" }],
+  ...extra,
+});
+
+test("collector begins, captures one page, closes courses then awaits academic resources", async () => {
+  const f = fixture();
+  f.context.mode = "all_active";
+  f.context.resource_kinds = ["assignments"];
+  const client = f.client();
+  assert.equal((await client.collectCoursePage()).action, "begin");
+  assert.equal(f.pageCalls.length, 0);
+  const result = await client.collectCoursePage();
+  assert.equal(result.action, "page");
+  assert.equal(result.seen_count, 1);
+  assert.equal(f.pageCalls.length, 1);
+  const body = f.rpc().find((c) => c.action.endsWith("/batch")).body;
+  assert.equal(body.envelope.items[0].title, "PRIVATE_COURSE");
+  for (const secret of [
+    "PRIVATE",
+    "lease_token",
+    "subject",
+    "checkpoint",
+    token,
+    canvasOrigin,
+  ])
+    assert.ok(!JSON.stringify(result).includes(secret));
+  assert.equal((await client.collectCoursePage()).action, "close_courses");
+  assert.equal((await client.collectCoursePage()).state, "awaiting_resources");
+  assert.equal(f.pageCalls.length, 1);
+  assert.ok(
+    f.resources.some(
+      (r) => r.resource_key === "101/assignments" && r.coverage === "open",
+    ),
+  );
+});
+
+test("collector terminal metadata-only scan finishes without fetching again", async () => {
+  const f = fixture(),
+    client = f.client();
+  for (const action of ["begin", "page", "close_courses", "finish"])
+    assert.equal((await client.collectCoursePage()).action, action);
+  assert.equal((await client.collectCoursePage()).state, "finished");
+  assert.equal(f.pageCalls.length, 1);
+});
+
+for (const loss of ["before", "after"]) {
+  test(`collector restart replays exact captured page after ${loss}-commit loss`, async () => {
+    const f = fixture(),
+      client = f.client();
+    await client.collectCoursePage();
+    f.loss = loss;
+    assert.equal((await client.collectCoursePage()).state, "blocked");
+    const saved = structuredClone(f.data[key].discovery.pending.body);
+    assert.equal((await f.client().collectCoursePage()).action, "recover");
+    const sends = f.rpc().filter((c) => c.action.endsWith("/batch"));
+    assert.deepEqual(sends[1].body, saved);
+    assert.equal(f.applied, 1);
+    assert.equal(f.pageCalls.length, 1);
+  });
+}
+
+test("collector lease renewal and lost resume ack never recapture pending source", async () => {
+  const f = fixture(),
+    client = f.client();
+  await client.collectCoursePage();
+  f.loss = "before";
+  await client.collectCoursePage();
+  const saved = structuredClone(f.data[key].discovery.pending.body);
+  f.data[key].discovery.scan.lease_expires_at = "2020-01-01T00:00:00Z";
+  f.expiredLease = true;
+  f.loss = "after";
+  assert.equal((await f.client().collectCoursePage()).state, "blocked");
+  assert.equal((await f.client().collectCoursePage()).action, "resume");
+  assert.equal((await f.client().collectCoursePage()).action, "recover");
+  const replay = f
+    .rpc()
+    .filter((c) => c.action.endsWith("/batch"))
+    .at(-1).body;
+  assert.equal(replay.batch_key, saved.batch_key);
+  assert.deepEqual(replay.envelope, saved.envelope);
+  assert.equal(f.pageCalls.length, 1);
+  assert.equal(f.applied, 1);
+});
+
+test("collector replays accepted finish receipt before renewing an expired lease", async () => {
+  const f = fixture(),
+    client = f.client();
+  for (let i = 0; i < 3; i++) await client.collectCoursePage();
+  f.loss = "after";
+  assert.equal(
+    (await client.collectCoursePage()).reason,
+    "discovery_outcome_unknown",
+  );
+  const saved = structuredClone(f.data[key].discovery.pending.body);
+  f.data[key].discovery.scan.lease_expires_at = "2020-01-01T00:00:00Z";
+  f.expiredLease = true;
+  f.resumeError = "scan_terminal";
+  const result = await f.client().collectCoursePage();
+  assert.equal(result.state, "finished");
+  assert.equal(result.action, "recover");
+  assert.equal(f.rpc().filter((c) => c.action.endsWith("/resume")).length, 0);
+  assert.deepEqual(
+    f
+      .rpc()
+      .filter((c) => c.action.endsWith("/finish"))
+      .at(-1).body,
+    saved,
+  );
+  assert.equal(f.pageCalls.length, 1);
+});
+
+test("collector handles lease replacement with bounded resume then recovery", async () => {
+  const f = fixture(),
+    client = f.client();
+  await client.collectCoursePage();
+  f.leases++;
+  assert.equal(
+    (await client.collectCoursePage()).reason,
+    "discovery_lease_replaced",
+  );
+  assert.equal((await client.collectCoursePage()).action, "resume");
+  assert.equal((await client.collectCoursePage()).action, "recover");
+  assert.equal(f.pageCalls.length, 1);
+});
+
+test("early metadata gap survives a later complete terminal page", async () => {
+  const f = fixture(),
+    client = f.client();
+  f.courseResponses = [
+    { data: [rawCourse(101, { course_code: null })], next: courseCursor },
+    { data: [rawCourse(102)] },
+  ];
+  await client.collectCoursePage();
+  await client.collectCoursePage();
+  await client.collectCoursePage();
+  assert.equal(f.pageCalls.length, 2);
+  assert.equal(f.pageCalls[1], courseCursor);
+  await client.collectCoursePage();
+  assert.equal(f.resources[0].coverage, "partial");
+  assert.equal((await client.collectCoursePage()).coverage, "partial");
+});
+
+test("provider denial preserves checkpoint and open resource; later explicit tick can recover", async () => {
+  const f = fixture(),
+    client = f.client();
+  await client.collectCoursePage();
+  f.pageStatus = 401;
+  assert.deepEqual(await client.collectCoursePage(), {
+    state: "blocked",
+    reason: "login_required",
+  });
+  assert.equal(f.data[key].discovery.scan.checkpoint.sequence, 0);
+  assert.equal(f.data[key].discovery.pending, null);
+  assert.equal(f.resources[0].coverage, "open");
+  f.pageStatus = 200;
+  assert.equal((await client.collectCoursePage()).action, "page");
+});
+
+for (const change of ["account", "scope", "expiry"]) {
+  test(`collector fences ${change} change between capture and commit`, async () => {
+    const f = fixture(),
+      client = f.client();
+    await client.collectCoursePage();
+    f.onCourseRequest = () => {
+      if (change === "account") f.profiles.push("8");
+      else if (change === "scope") f.context.scope_revision++;
+      else f.context.credential_expires_at = "2020-01-01T00:00:00Z";
+    };
+    assert.equal((await client.collectCoursePage()).state, "blocked");
+    assert.equal(f.rpc().filter((c) => c.action.endsWith("/batch")).length, 0);
+    assert.equal(f.applied, 0);
+  });
+}
+
+test("collector holds the existing storage lock throughout provider capture", async () => {
+  const f = fixture(),
+    client = f.client();
+  await client.collectCoursePage();
+  let release, entered;
+  const ready = new Promise((resolve) => {
+    entered = resolve;
+  });
+  const held = new Promise((resolve) => {
+    release = resolve;
+  });
+  f.onCourseRequest = async () => {
+    entered();
+    await held;
+  };
+  const pending = client.collectCoursePage();
+  await ready;
+  await assert.rejects(
+    f.client().readDiscoveryStatus(),
+    error("operation_in_progress"),
+  );
+  release();
+  assert.equal((await pending).action, "page");
+});
 
 test("persists begin before dispatch and hides private lease from results/status", async () => {
   const f = fixture(),

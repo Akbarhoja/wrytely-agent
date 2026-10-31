@@ -1,4 +1,4 @@
-// Worker-side C1 transport only. No installation, polling, source sync or token export.
+// Worker-side C1 transport and bounded metadata collector. No scheduler or token export.
 import { checkedOrigin, makeReader } from "../canvas-feasibility/probe.mjs";
 import { discoveryOperations, discoveryConflicts } from "./discovery.mjs";
 
@@ -415,6 +415,7 @@ export function createPairingClient({
       cleanup,
       canvasOrigin,
       validExpiry,
+      readCoursePage: (cursor) => canvas.coursePage(cursor),
       call: (operation, body, item) =>
         post(`discovery/${operation}`, body, item.ingestion_bearer),
       invalidateAccount: async (item, value) => {
