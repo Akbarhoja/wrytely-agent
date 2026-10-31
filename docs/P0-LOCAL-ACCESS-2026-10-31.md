@@ -277,3 +277,16 @@ and explicit sign-out rejection. Remaining Canvas gaps include positive rubric e
 extension-side document retrieval/extraction, unattended worker/suspension behavior,
 account switching and separately timed expiry. The manually downloaded syllabus remains
 separate evidence. Do not call the full Canvas collector or P0 complete from this probe.
+
+## Session restored after explicit logout test
+
+A reopened the normal Canvas origin, followed NetID Login, and independently observed
+the signed-in dashboard again. The current university SSO session restored Canvas
+without another password/Duo prompt. This does not contradict the earlier full-browser
+restart requiring a fresh NetID login: Canvas logout and university-wide SSO termination
+are different. The invalid-session diagnostic was run before starting this restoration.
+No additional diagnostic recovery run is claimed after this second restoration.
+
+The tested single-account authentication sequence is recorded; account-switch and
+natural timed-expiry coverage remain separate. No further disruptive browser action
+is implied by the earlier bounded restart/logout approval.
