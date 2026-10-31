@@ -4,6 +4,15 @@ Owner: Akbar/Codex. Claim: [#104](https://github.com/Akbarhoja/wrytely-agent/iss
 Base: 59c074e8c9cb8a8cb902a4fa6631b5fbd86fcfe6; branch: codex/p0-local-access.
 This record contains redacted access classifications, not source data or credentials.
 
+## Current supervisor decision: optional email
+
+Outlook is now optional. Keep the existing registration/probe and future connection
+path; pause live CSU access and duplicate approval requests. The owner reports an
+existing request without a response; this is not proof of rejection. Do not submit
+another request. P0-M2 stays unverified/paused as an optional track, not a core gate.
+Canvas, own Meta supervisor and WhatsApp development proceed with their original checks.
+Advertising must qualify university permission and actual implemented/live availability.
+
 ## Ownership and handoff
 
 Latest [supervisor reassignment](https://github.com/Akbarhoja/wrytely-agent/issues/4#issuecomment-6548991501)

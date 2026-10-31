@@ -20,6 +20,11 @@ from extension/API proof. Preserve Chrome-open instructions; coordinate disrupti
 session/restart tests. No ownership change supplies login/admin consent, human GitHub
 approval, new paid-call allowance or permission to publish private source evidence.
 
+October31 product amendment: Outlook is optional; A's P0 Outlook access work and
+new/duplicate CSU approval requests are paused. Preserve the existing app/probe and
+M's optional P1 connector ownership. Canvas/core-agent work proceeds without email.
+Do not call the blocked optional connector completed or advertise unverified live access.
+
 ## Exact ownership
 
 Akbar is product supervisor and owns account/legal/budget/release decisions. Akbar's

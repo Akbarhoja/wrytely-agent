@@ -7,7 +7,7 @@ Updated October 31, 2026. [Plan revision7](docs/BUILD-PLAN.md) ·
 ## Product decision and actual stage
 
 Own Wrytely runtime + Meta primary intelligence. Required first version: Canvas
-extension + Outlook email + WhatsApp, automatic discovery and semester supervision,
+extension + WhatsApp, with optional Outlook email, automatic discovery and semester supervision,
 checked delegated work, revisions and follow-through. Hermes deferred. Cloud agent
 must stay available while laptop is off; Canvas collection still depends on browser
 and session availability. No manual-paste substitute for connector completion.
@@ -25,7 +25,8 @@ Delegated User.Read/Mail.Read are configured, but publisher/actual school consen
 the actual CSU sign-in attempt is blocked by AADSTS90095/admin consent.
 The local PKCE harness has 20 synthetic cases; Graph access remains untested.
 Billing protection is unverified.
-This does not close the Outlook access gate.
+Outlook remains unverified but is now optional and paused by explicit supervisor decision;
+it no longer gates the core product. No new/duplicate CSU approval request will be submitted.
 
 ## Current work and evidence
 
@@ -38,7 +39,7 @@ This does not close the Outlook access gate.
 | Murtazo #28              | M                 | a344642 UI; latest a383782 Canvas proposal;114 local web reported                          | Reuse proposal findings; extension supersedes initial OAuth path                            |
 | P0-A2 Meta               | A                 | P0 real tool/saved-result/continuation proof passed in #50; academic M2 remains open       | Two-call probe passed (see #50); failed-call reservation retained                           |
 | P0-M1 Canvas             | A (reassigned)    | M #64 lifecycle API reviewed/21 cases pass; local diagnostic work reported                 | Full redacted access/session/content acceptance evidence not yet reviewed                   |
-| P0-M2 Outlook            | A (reassigned)    | M #54 at4aadc91 offline Graph probe;32 cases independently pass                            | Real consent, email/attachment and notification evidence pending                            |
+| P0-M2 Outlook            | A (reassigned)    | M #54 at4aadc91 offline Graph probe;32 cases independently pass                            | Optional/paused: CSU admin consent required; not a core stage blocker                       |
 | P0-M3 WhatsApp           | M                 | Linking/inbound worked; last delivery failed131031                                         | Business/account resolution and delivered-reply proof                                       |
 | P0-A3 interfaces         | A                 | C1/C2 and C3 short-text design agreed; remaining C4–C7/precise document wire gates open    | Reader #86 Unicode fix #97 under review; document/schema2 details remain separate           |
 | P1 collection/memory     | A/M by work order | P1-A1 #58 adds staged academic text/check/event transactions; collectors not assembled     | 633 A backend pass; M transport/journal separately reviewed; live assembly/segments pending |
