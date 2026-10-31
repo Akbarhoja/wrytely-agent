@@ -152,6 +152,11 @@ aggregate usage did not reconcile the failed request. Available$150 credits do n
 increase spending authorization. Original M2 scope remains one synthetic workflow,
 <=10 requests/<= $1.50 within$2, no WhatsApp sends, continuous workers stopped.
 
+P0 document/rubric diagnostic v2 is prepared in scripts/canvas-access/:35 synthetic
+Node tests pass, local popup/counts report and exact file-host scope. Not installed or
+run live; needs supervisor/operator review of the added file-host permission. No P1
+collector/scheduler/runtime behavior changed. See the local access record for limits.
+
 ## Next actions
 
 A: obtain #97 Unicode fix review, review/integrate agreed components and add discovery

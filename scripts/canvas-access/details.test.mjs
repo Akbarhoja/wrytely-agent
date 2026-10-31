@@ -1,0 +1,293 @@
+import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import test from "node:test";
+import { pathToFileURL } from "node:url";
+import {
+  FILE_ORIGIN,
+  MAX_PDF_BYTES,
+  probeDetails,
+  readPdf,
+  validateScope,
+} from "./details.mjs";
+
+const origin = "https://canvas.example.edu";
+const pdf = new TextEncoder().encode("%PDF-1.7\nPRIVATE_SYLLABUS\n%%EOF");
+const hash = async (bytes) =>
+  [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))]
+    .map((x) => x.toString(16).padStart(2, "0"))
+    .join("");
+const sample = {
+  courseId: "101",
+  fileId: "31",
+  expectedSha256: await hash(pdf),
+};
+const config = { origin, courseIds: ["101"], fileSamples: [sample] };
+const json = (data) =>
+  new Response(JSON.stringify(data), {
+    headers: { "content-type": "application/json" },
+  });
+const metadata = {
+  id: 31,
+  url: FILE_ORIGIN + "/files/private/sample.pdf?token=PRIVATE_TOKEN",
+};
+const responsePdf = () =>
+  new Response(pdf, { headers: { "content-type": "application/pdf" } });
+
+function provider({ switchOnFile = false, noRubric = false } = {}) {
+  let switched = false;
+  return async (url, options) => {
+    const u = new URL(url);
+    assert.equal(options.method, "GET");
+    assert.equal(options.redirect, "error");
+    if (u.origin === FILE_ORIGIN) {
+      assert.equal(options.credentials, "omit");
+      if (switchOnFile) switched = true;
+      return responsePdf();
+    }
+    assert.equal(u.origin, origin);
+    assert.equal(options.credentials, "include");
+    if (u.pathname.endsWith("/profile"))
+      return json({ id: switched ? 98 : 99 });
+    if (u.pathname === "/api/v1/courses") return json([{ id: 101 }]);
+    if (u.pathname.endsWith("/files/31")) return json(metadata);
+    if (u.pathname.endsWith("/assignments/11"))
+      return json({
+        id: 11,
+        rubric: noRubric
+          ? []
+          : [{ description: "PRIVATE_CRITERION", points: 5 }],
+      });
+    if (u.pathname.endsWith("/assignments"))
+      return json([
+        { id: 11, description: "PRIVATE_ASSIGNMENT", rubric_settings: {} },
+      ]);
+    if (u.pathname.endsWith("/discussion_topics")) return json([]);
+    return json({ syllabus_body: "PRIVATE_SYLLABUS" });
+  };
+}
+
+test("reads exact PDF bytes and bounded rubric detail without leaking content or URLs", async () => {
+  const report = await probeDetails(config, provider());
+  const resources = report.courses[0].resources;
+  assert.equal(resources.linkedPdf.byteLength, pdf.length);
+  assert.equal(resources.linkedPdf.matchesOperatorSample, true);
+  assert.equal(resources.rubricDetails.withRubric, 1);
+  assert.equal(resources.rubricDetails.criteria, 1);
+  assert.equal(report.diagnosticVersion, 2);
+  assert.ok(!JSON.stringify(report).includes("PRIVATE"));
+  assert.ok(!JSON.stringify(report).includes(FILE_ORIGIN));
+});
+
+test("no rubric in sample stays explicitly unproved", async () => {
+  const report = await probeDetails(config, provider({ noRubric: true }));
+  assert.equal(
+    report.courses[0].resources.rubricDetails.coverage,
+    "no_rubric_observed_in_sample",
+  );
+});
+
+test("account switch during file read discards the entire report", async () => {
+  await assert.rejects(
+    probeDetails(config, provider({ switchOnFile: true })),
+    /account_switched_discarded/,
+  );
+});
+
+for (const bad of [
+  { ...config, courseIds: ["101", "101"] },
+  { ...config, courseIds: ["101", "102", "103"] },
+  { ...config, courseIds: [101] },
+  { ...config, fileSamples: [{ ...sample, courseId: "102" }] },
+  { ...config, fileSamples: [{ ...sample, fileId: "../31" }] },
+  { ...config, fileSamples: [{ ...sample, expectedSha256: "bad" }] },
+  { ...config, fileSamples: [sample, sample] },
+])
+  test(
+    "scope rejects before any provider request: " +
+      JSON.stringify(bad.courseIds) +
+      "/" +
+      JSON.stringify(bad.fileSamples),
+    async () => {
+      assert.throws(() => validateScope(bad), /invalid_detail_scope/);
+      let calls = 0;
+      await assert.rejects(
+        probeDetails(bad, () => {
+          calls++;
+        }),
+        /invalid_detail_scope/,
+      );
+      assert.equal(calls, 0);
+    },
+  );
+
+for (const url of [
+  "http://inst-fs-iad-prod.inscloudgate.net/files/x",
+  "https://evil.example/files/x",
+  FILE_ORIGIN + "/other/x",
+  FILE_ORIGIN + "/files/x#fragment",
+  "https://u:p@inst-fs-iad-prod.inscloudgate.net/files/x",
+])
+  test("reject unsafe file origin/path before fetch: " + url, async () => {
+    let calls = 0;
+    await assert.rejects(
+      readPdf({ ...metadata, url }, sample, () => {
+        calls++;
+      }),
+      /unsafe_file_url/,
+    );
+    assert.equal(calls, 0);
+  });
+
+for (const change of [
+  { id: 32 },
+  { locked_for_user: true },
+  { hidden_for_user: true },
+])
+  test(
+    "file identity/access fails closed: " + JSON.stringify(change),
+    async () => {
+      await assert.rejects(
+        readPdf({ ...metadata, ...change }, sample, () => assert.fail()),
+        /file_scope_or_access_denied/,
+      );
+    },
+  );
+
+test("redirect/network failure is controlled, not permission denial", async () => {
+  await assert.rejects(
+    readPdf(metadata, sample, () => {
+      throw Error("PRIVATE_URL");
+    }),
+    /file_network_or_redirect_blocked/,
+  );
+});
+
+test("MIME, advertised size, streamed size and signature reject", async () => {
+  for (const [response, reason] of [
+    [new Response(pdf), "file_not_pdf"],
+    [
+      new Response(pdf, {
+        headers: {
+          "content-type": "application/pdf",
+          "content-length": MAX_PDF_BYTES + 1,
+        },
+      }),
+      "file_size_limit",
+    ],
+    [
+      new Response(new Uint8Array(MAX_PDF_BYTES + 1), {
+        headers: { "content-type": "application/pdf" },
+      }),
+      "file_size_limit",
+    ],
+    [
+      new Response("<html>PRIVATE</html>", {
+        headers: { "content-type": "application/pdf" },
+      }),
+      "file_invalid_signature",
+    ],
+  ])
+    await assert.rejects(
+      readPdf(metadata, sample, () => response),
+      new RegExp(reason),
+    );
+});
+
+test("different bytes are not certified as the locally extracted sample", async () => {
+  const result = await readPdf(
+    metadata,
+    { ...sample, expectedSha256: "0".repeat(64) },
+    responsePdf,
+  );
+  assert.equal(result.matchesOperatorSample, false);
+  assert.equal(result.textExtraction, "separate_local_sample_only");
+});
+
+test("restricted detail resource is reported without provider error text", async () => {
+  const fetch = provider();
+  const report = await probeDetails(config, (url, options) =>
+    new URL(url).pathname.endsWith("/assignments/11")
+      ? new Response("PRIVATE_ERROR", { status: 403 })
+      : fetch(url, options),
+  );
+  assert.deepEqual(report.courses[0].resources.rubricDetails, {
+    state: "incomplete",
+    reason: "permission_denied",
+  });
+  assert.ok(!JSON.stringify(report).includes("PRIVATE"));
+});
+
+test("prepared extension has exact permissions and accepts only its own popup", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "wrytely-diagnostic-test-"));
+  const priorChrome = globalThis.chrome,
+    priorFetch = globalThis.fetch;
+  try {
+    const source = join(directory, "scope.json"),
+      output = join(directory, "unpacked");
+    await writeFile(source, JSON.stringify(config));
+    execFileSync(process.execPath, [
+      new URL("prepare.mjs", import.meta.url).pathname,
+      source,
+      output,
+    ]);
+    const manifest = JSON.parse(
+      await readFile(join(output, "manifest.json"), "utf8"),
+    );
+    assert.deepEqual(manifest.host_permissions, [
+      origin + "/*",
+      FILE_ORIGIN + "/*",
+    ]);
+    assert.equal(manifest.version, "0.0.2");
+    assert.equal(manifest.permissions, undefined);
+    assert.equal(manifest.action.default_popup, "popup.html");
+    let listener;
+    const badges = [];
+    globalThis.chrome = {
+      runtime: {
+        id: "synthetic",
+        getURL: (x) => "chrome-extension://synthetic/" + x,
+        onMessage: {
+          addListener: (value) => {
+            listener = value;
+          },
+        },
+      },
+      action: {
+        setBadgeText: async (value) => {
+          badges.push(value.text);
+        },
+      },
+    };
+    globalThis.fetch = provider();
+    await import(pathToFileURL(join(output, "worker.mjs")).href);
+    assert.equal(
+      listener(
+        { kind: "run" },
+        { id: "attacker", url: "https://evil.example" },
+        () => assert.fail(),
+      ),
+      undefined,
+    );
+    assert.deepEqual(badges, []);
+    const result = await new Promise((resolve) => {
+      assert.equal(
+        listener(
+          { kind: "run" },
+          { id: "synthetic", url: "chrome-extension://synthetic/popup.html" },
+          resolve,
+        ),
+        true,
+      );
+    });
+    assert.equal(result.diagnosticVersion, 2);
+    assert.deepEqual(badges, ["RUN", "READ"]);
+    assert.ok(!JSON.stringify(result).includes("PRIVATE"));
+  } finally {
+    globalThis.chrome = priorChrome;
+    globalThis.fetch = priorFetch;
+    await rm(directory, { recursive: true, force: true });
+  }
+});

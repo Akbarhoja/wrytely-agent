@@ -290,3 +290,39 @@ No additional diagnostic recovery run is claimed after this second restoration.
 The tested single-account authentication sequence is recorded; account-switch and
 natural timed-expiry coverage remain separate. No further disruptive browser action
 is implied by the earlier bounded restart/logout approval.
+
+## Bounded document/rubric diagnostic v2 (prepared, not run live)
+
+Supervisor explicitly requested continuing the P0 document/rubric check. Under #104,
+`scripts/canvas-access/` reuses the existing reviewed core probe and its 12 tests
+unchanged, adding a separate bounded detail module. It is operator-only and does not
+implement M's P1 collector, source storage, scheduler or model tools.
+
+- At most two selected consenting courses; details sampled from at most two assignments
+  per course, preferring visible rubric candidates. Criteria require actual description
+  text. No rubric found is explicitly no_rubric_observed_in_sample, not access denial.
+- One known syllabus PDF gets metadata through the same-session course File API. Only
+  the exact reviewed Canvas storage origin is accepted for file reads; redirects are
+  rejected, file-host credentials omitted, stream capped at5MiB, PDF MIME/signature
+  checked. SHA256 is compared privately with the already locally parsed sample. A byte
+  match links retrieval to that known sample; the extension does not itself parse PDF text.
+- Identity checks surround reads and fence the entire report on account change. Only
+  counts/fixed status leave the worker; no source text, IDs, metadata URL, token or hash
+  enters the report. Source/PDF bytes stay in memory; no cloud upload or model call.
+- A local popup starts the check explicitly and displays JSON. It needs no storage,
+  cookie, debugger or clipboard permission. Keep the popup open during the check.
+  Closing/interruption is not completion; reruns are explicit read-only operations.
+- The manifest adds exact Canvas file-storage host access. The supervisor/operator must
+  review and approve installing/loading this local extension before any live read.
+  The previous v1 package remains unchanged. New private scope and unpacked v2 output
+  are ignored and inactive until loaded; no installed extension was silently replaced.
+
+API references: [Canvas files](https://developerdocs.instructure.com/services/canvas/resources/files)
+and [assignment details](https://developerdocs.instructure.com/services/canvas/resources/assignments).
+Configured host permission is not proof that the file URL/redirect path will work; report
+an actual controlled failure if the institution serves it differently. P0 stays open.
+
+Synthetic Node evidence: 35 passed (12 inherited +23 new), including unauthorized sender,
+exact prepared permissions, identity changes, unsafe file destinations, access failures,
+redirects, PDF MIME/signature, size limits, content secrecy and sample mismatch. A new
+isolated Node24 CI job runs both suites. No claim of live PDF/rubric access is made.
