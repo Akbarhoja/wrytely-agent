@@ -1,6 +1,6 @@
 # Engineering status
 
-Updated October 30, 2026. [Plan revision7](docs/BUILD-PLAN.md) ·
+Updated October 31, 2026. [Plan revision7](docs/BUILD-PLAN.md) ·
 [Work orders](docs/WORK-ORDERS.md) · [Code audit](docs/IMPLEMENTATION-AUDIT.md) ·
 [Team coordination](https://github.com/Akbarhoja/wrytely-agent/issues/4)
 
@@ -75,6 +75,12 @@ unchanged existing-version audit and full585 backend tests pass. The proposed su
 boundary is in docs/contracts/PDF-EXTRACTION-BOUNDARY.md and awaits M agreement.
 No PDF extractor or document-segment/reader activation is included.
 
+P1-A2 #77 adds a detailed proposed C3/long-document contract for counterpart review:
+scoped paged reads, original sections, immutable manifests and fenced staged document
+publication. Documentation only; no reader, upload, schema2 batch or source activation
+implemented. Fresh #4/comments/formal-review check found no new M reply on
+#71/#72/#74/#76; agreement remains the dependent implementation gate.
+
 Other counts above belong to their cited commits and historical runs. Current source/status two-account live denial
 checks passed previously; live artifact isolation remains untested because no live
 artifact exists. Read the [actual M2 run](docs/M2-RUN-2026-10-29.md).
@@ -94,7 +100,8 @@ increase spending authorization. Original M2 scope remains one synthetic workflo
 
 ## Next actions
 
-A: #71/#72 storage review and #73 freshness review; agree C3 retrieval/segments, then implement owned readers.
+A: request M agreement on #77 C3/segments; after agreement implement owned short-text readers first.
+M: pending #71/#72/#74/#76 reviews and #65 PDF-boundary agreement.
 M: assemble accepted lifecycle/context consumers; source extraction and Canvas/Outlook live evidence; WhatsApp recovery.
 Claims must be posted in #4 before implementation. Nobody takes over the other's files.
 

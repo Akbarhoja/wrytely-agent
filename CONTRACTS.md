@@ -17,6 +17,11 @@ This is design agreement, not implemented routes/store methods or relaxed permis
 decisions, typed delivery, private files and operational accounting for the same
 owner review. C3–C7 remain proposed; C1/C2 implementation proceeds in P1-A1 slices.
 
+Detailed [Canvas C3 retrieval/document-segment proposal](docs/contracts/CANVAS-RETRIEVAL-SEGMENTS-v1.md)
+(#77) specifies bounded reads, immutable section offsets, parent/slot manifests and
+staged document publication for M review. It is not agreed or executable; existing
+C2 v1 behavior and inactive Canvas model sources remain unchanged.
+
 ## P1-A1 first slice — Canvas pairing and credential lifecycle (#58)
 
 Implemented in shared/source_connections.py, composed into Store with additive migration010.
