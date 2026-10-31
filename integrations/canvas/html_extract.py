@@ -110,6 +110,14 @@ class _Text(HTMLParser):
     def unknown_decl(self, data):
         raise _Blocked("malformed_markup")
 
+    def parse_html_declaration(self, i):
+        # Python 3.14 routes unknown declarations through bogus-comment handling.
+        if not (
+            self.rawdata.startswith("<!--", i) or self.rawdata[i : i + 9].lower() == "<!doctype"
+        ):
+            raise _Blocked("malformed_markup")
+        return super().parse_html_declaration(i)
+
 
 def extract_html(
     content: bytes, *, max_bytes=1048576, max_chars=200000, max_events=20000, max_depth=128
