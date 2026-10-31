@@ -194,3 +194,18 @@ the worker alive: unattended invocation, worker suspension/recovery, Chrome rest
 expired login and account switching remain untested. Linked-document extraction and
 positive rubric access remain gaps. No Chrome restart/logout, background scheduler,
 source upload, model call, WhatsApp send or deployment is implied. P0 stays open.
+
+## Linked-document follow-up (pending local save)
+
+Read-only UI inspection of the first sampled syllabus found inline text and no linked
+PDF/Word file anchors; its Files view displayed no rows. This UI observation is not
+an API/extension file-collection classification. A second current course's normal
+course page exposed an authorized syllabus PDF link. Its Canvas preview opened, but
+no PDF contents were verified. Download attempts timed out in browser tooling.
+
+Native Chrome inspection then showed a Save dialog waiting for a destination, so the
+timeouts are not evidence that Canvas denied file access. Native controls failed during
+save-dialog interaction. The operator was asked to complete a local Downloads save;
+no downloaded bytes/text, extension-side file access or document extraction is passed.
+No signed download URL, raw PDF, course identifier or private source content is published.
+Chrome was not restarted/logged out. The manual tab-closed result above remains separate.
