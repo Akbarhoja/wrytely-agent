@@ -139,3 +139,20 @@ Chrome must stay open; disruptive session tests require coordination.
 
 P0 is not complete. No deployment, migration, source activation, continuous worker,
 new credential, paid model call or WhatsApp send occurred in this account check.
+
+## Follow-up core P0 checkpoint
+
+- #46 exact9bbea97: unmerged, merge-blocked, no formal review at fresh check. A formally
+  requested murtazokhon-tech as reviewer. No assistant self-approval/protection bypass.
+- Canvas dashboard is currently signed in; this is not extension API proof. A requested
+  the existing local diagnostic's counts-only Console report from the operator because
+  Chrome extension management is unavailable through browser controls. No restart/logout
+  or account switch was performed; those matrix entries remain explicitly untested.
+- A asked M for versioned C4–C7 and document-wire review and any new WhatsApp result.
+  Existing Meta evidence already passes P0-A2; no new paid call was made.
+- M's latest #107 course-metadata collector exact4106dc88 independently passed all six
+  requested Node suites: 233 pass, zero skips. Scoped counterpart review found no blocker
+  in that increment. Full academic collection/installed live behavior remain unfinished.
+  M is implementing #108 collector/HTTP/Store acceptance; A does not duplicate that work.
+
+Email is not a blocker for the above core work. This checkpoint does not mark P0 complete.

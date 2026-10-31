@@ -41,7 +41,7 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 | P0-M1 Canvas             | A (reassigned)    | M #64 lifecycle API reviewed/21 cases pass; local diagnostic work reported                 | Full redacted access/session/content acceptance evidence not yet reviewed                   |
 | P0-M2 Outlook            | A (reassigned)    | M #54 at4aadc91 offline Graph probe;32 cases independently pass                            | Optional/paused: CSU admin consent required; not a core stage blocker                       |
 | P0-M3 WhatsApp           | M                 | Linking/inbound worked; last delivery failed131031                                         | Business/account resolution and delivered-reply proof                                       |
-| P0-A3 interfaces         | A                 | C1/C2 and C3 short-text design agreed; remaining C4–C7/precise document wire gates open    | Reader #86 Unicode fix #97 under review; document/schema2 details remain separate           |
+| P0-A3 interfaces         | A                 | C1/C2 and C3 short-text design agreed; remaining C4–C7/precise document wire gates open    | Reader fix #98 accepted by M; document/schema2 wire details remain separate                 |
 | P1 collection/memory     | A/M by work order | P1-A1 #58 adds staged academic text/check/event transactions; collectors not assembled     | 633 A backend pass; M transport/journal separately reviewed; live assembly/segments pending |
 | P2 always-on ownership   | A/M by work order | Existing task worker; continuous workers stopped                                           | Supervisor, schedule, hard budgets and bounded deployment                                   |
 | P3/P4 work/adaptation    | A/M by work order | Private drafting/checks scripted; live artifact not produced; A4 parked                    | Real accepted work/delivery, revisions and follow-through                                   |
@@ -103,7 +103,7 @@ ordering/canonicalization fix581a9f5 after independent597 tests and original rep
 Reader #86 c464ecd had623 passing tests but a newly reproduced NFC-expansion paging
 defect; #97 fixes canonical size on every staged path and legacy continuation without
 truncation. Current A full backend **633 passed** (10 new cases, six initially RED).
-New reader implementation remains under review, unwired and undeployed.
+M independently accepted #98 exact59c074e focused Unicode cases; the reader remains unwired and undeployed.
 
 M #94 exact8bc90b0 discovery HTTP received A review and independently **68 API cases
 passed**. M #96 exact95c38cb journal received A review and independently **119 Node
@@ -113,10 +113,20 @@ HTTP interoperability test/harness after a scoped claim. Conservative54001 retai
 resource rows/8MiB journal-finish reply accepted as a bound, not a proved6000-course run.
 CI coverage for the journal is a separate A-owned follow-up; no missing-file skips.
 
-P0 remains open: Canvas returned a READ badge but detailed coverage/session matrix is
-not verified; Outlook needs an approved Wrytely app/home-tenant/consent route; WhatsApp
-business/account clearance and delivered-reply proof remain. M owns all three access
-tracks; A does not duplicate live runs. Baseline human approval is still separate.
+P0 core checkpoint: Meta access proof passed. A owns Canvas feasibility; the current
+signed-in dashboard is available, but the diagnostic's detailed resource report/session
+matrix is still pending. Operator was asked to supply the existing counts-only report;
+browser controls cannot open Chrome extension-management pages. No restart/logout was
+performed. Outlook is optional/paused and not a core blocker. M retains WhatsApp delivery.
+Baseline #46 exact9bbea97 still has no formal review and is merge-blocked; a human review
+was formally requested from murtazokhon-tech. C4–C7 and the exact document-wire decisions
+await counterpart agreement; no protection/interface gate was bypassed.
+
+A independently checked M #107 exact4106dc88 in an ignored archive: **233 Node tests
+passed, zero skips** across all six requested suites. Read collector, client injection
+and discovery lock/journal changes; scoped review posted on #107. This is course metadata
+only, with academic resources honestly open; not installed/live Canvas or collector-driven
+HTTP/Store proof. M owns active #108 for that next cross-layer acceptance scenario.
 
 Other counts above belong to their cited commits and historical runs. Current source/status two-account live denial
 checks passed previously; live artifact isolation remains untested because no live
