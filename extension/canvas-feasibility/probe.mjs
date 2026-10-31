@@ -1,4 +1,4 @@
-// P0-M1 diagnostic only. No persistence of source content and no Wrytely upload.
+// Shared bounded reader and P0-M1 diagnostic. No persistence or Wrytely upload.
 export class ProbeError extends Error {
   constructor(code) {
     super(code);
@@ -43,9 +43,18 @@ function safeURL(value, origin, path) {
   return url.href;
 }
 
-async function boundedText(response, maxBytes) {
+async function cancelBody(body) {
+  // Cleanup must not replace a controlled failure with a provider exception.
+  try {
+    await body?.cancel();
+  } catch {
+    // The request is already being discarded.
+  }
+}
+
+async function boundedText(response, maxBytes, strict = false) {
   if (Number(response.headers.get("content-length")) > maxBytes) {
-    await response.body?.cancel();
+    await cancelBody(response.body);
     throw new ProbeError("size_limit");
   }
   const reader = response.body?.getReader();
@@ -61,7 +70,7 @@ async function boundedText(response, maxBytes) {
       chunks.push(value);
     }
   } finally {
-    await reader.cancel();
+    await cancelBody(reader);
   }
   const bytes = new Uint8Array(length);
   let offset = 0;
@@ -69,7 +78,22 @@ async function boundedText(response, maxBytes) {
     bytes.set(chunk, offset);
     offset += chunk.byteLength;
   }
-  return new TextDecoder().decode(bytes);
+  return new TextDecoder("utf-8", { fatal: strict }).decode(bytes);
+}
+
+function nextLink(link) {
+  // Consume the whole header; a valid relation must not hide trailing garbage.
+  // Commas inside an opaque URL are preserved.
+  const links = link
+    ? link.split(/,(?=\s*<)/).map((part) => {
+        const match = part.match(/^\s*<([^>]+)>\s*;\s*rel="([^"]+)"\s*$/);
+        if (!match) throw new ProbeError("invalid_pagination");
+        return match;
+      })
+    : [];
+  const following = links.filter((x) => x[2].split(/\s+/).includes("next"));
+  if (following.length > 1) throw new ProbeError("invalid_pagination");
+  return following.length ? following[0][1] : null;
 }
 
 export function makeReader(originValue, fetchImpl = fetch, maxPages = 10) {
@@ -78,7 +102,7 @@ export function makeReader(originValue, fetchImpl = fetch, maxPages = 10) {
     const url = safeURL(path + query, origin, path);
     return read(url);
   }
-  async function read(url) {
+  async function read(url, strict = false) {
     let response;
     try {
       response = await fetchImpl(url, {
@@ -93,7 +117,7 @@ export function makeReader(originValue, fetchImpl = fetch, maxPages = 10) {
       throw new ProbeError("network_or_redirect_blocked");
     }
     if (!response.ok) {
-      await response.body?.cancel();
+      await cancelBody(response.body);
       throw new ProbeError(
         {
           401: "login_required",
@@ -104,17 +128,21 @@ export function makeReader(originValue, fetchImpl = fetch, maxPages = 10) {
         }[response.status] ?? "provider_error",
       );
     }
+    if (strict && (response.status !== 200 || response.url !== url)) {
+      await cancelBody(response.body);
+      throw new ProbeError("invalid_response");
+    }
     if (
       !/^application\/json(?:;|$)/i.test(
         response.headers.get("content-type") ?? "",
       )
     ) {
-      await response.body?.cancel();
+      await cancelBody(response.body);
       throw new ProbeError("login_or_non_json");
     }
     let data;
     try {
-      data = JSON.parse(await boundedText(response, 1024 * 1024));
+      data = JSON.parse(await boundedText(response, 1024 * 1024, strict));
     } catch (error) {
       throw error instanceof ProbeError
         ? error
@@ -133,22 +161,58 @@ export function makeReader(originValue, fetchImpl = fetch, maxPages = 10) {
       const { data, link } = await read(next);
       if (!Array.isArray(data)) throw new ProbeError("invalid_collection");
       items.push(...data);
-      // Consume the whole header: recognizing one valid relation must not hide
-      // an unparseable next page. Commas inside an opaque URL are preserved.
-      const links = link
-        ? link.split(/,(?=\s*<)/).map((part) => {
-            const match = part.match(/^\s*<([^>]+)>\s*;\s*rel="([^"]+)"\s*$/);
-            if (!match) throw new ProbeError("invalid_pagination");
-            return match;
-          })
-        : [];
-      const following = links.filter((x) => x[2].split(/\s+/).includes("next"));
-      if (following.length > 1) throw new ProbeError("invalid_pagination");
-      next = following.length ? safeURL(following[0][1], origin, path) : null;
+      const following = nextLink(link);
+      next = following ? safeURL(following, origin, path) : null;
     }
     return items;
   }
-  return { get, list };
+  function courseURL(value) {
+    try {
+      if (
+        typeof value !== "string" ||
+        [...value].length > 4000 ||
+        /[\u0000-\u0020\u007f\uD800-\uDFFF]/u.test(value)
+      )
+        throw Error();
+      const url = new URL(value);
+      if (safeURL(value, origin, "/api/v1/courses") !== url.href) throw Error();
+      const allowed = ["enrollment_state", "per_page", "page"];
+      if (
+        [...url.searchParams.keys()].some((k) => !allowed.includes(k)) ||
+        allowed.some((k) => url.searchParams.getAll(k).length > 1) ||
+        url.searchParams.get("enrollment_state") !== "active" ||
+        url.searchParams.get("per_page") !== "50" ||
+        (url.searchParams.has("page") && !url.searchParams.get("page"))
+      )
+        throw Error();
+      return url.href;
+    } catch {
+      throw new ProbeError("unsafe_pagination");
+    }
+  }
+  async function coursePage(cursor = null) {
+    const url = courseURL(
+      cursor === null
+        ? `${origin}/api/v1/courses?enrollment_state=active&per_page=50`
+        : cursor,
+    );
+    const { data, link } = await read(url, true);
+    if (
+      !Array.isArray(data) ||
+      data.length > 50 ||
+      data.some(
+        (row) => row === null || typeof row !== "object" || Array.isArray(row),
+      )
+    )
+      throw new ProbeError("invalid_collection");
+    if (new TextEncoder().encode(link).length > 16384)
+      throw new ProbeError("invalid_pagination");
+    const following = nextLink(link);
+    const next_cursor = following === null ? null : courseURL(following);
+    if (next_cursor === url) throw new ProbeError("pagination_cycle");
+    return { data, next_cursor };
+  }
+  return { get, list, coursePage };
 }
 
 const id = (value) => {
