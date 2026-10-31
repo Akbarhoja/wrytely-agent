@@ -19,6 +19,22 @@ Historical M1/M2 live gates remain incomplete; renumbering the plan does not pas
 
 ## Current work and evidence
 
+M integration handoff October31, issue[#80](https://github.com/Akbarhoja/wrytely-agent/issues/80):
+`codex/canvas-connection-list` reuses reviewed M lifecycle scaffold57ca6eae asfd0886a
+on A6237f1c and adds private paginated connection listing only.15 new API cases
+failed before implementation;36 focused API cases and621 full backend tests pass
+(333.45s), with locked Ruff/format passing. Read-only code review found no scoped
+blocker; A counterpart review remains pending. No deployment or live source activation.
+
+Independent review of A6237f1c passed585 existing backend tests, but synthetic
+Postgres reproduction found older empty enumerations marking newer catalog and
+academic evidence missing; reported on[#71](https://github.com/Akbarhoja/wrytely-agent/pull/71#issuecomment-6541151607).
+Those consumers remain blocked pending A's fix. Canonical normalized-list uniqueness
+also reported on#72. M explicitly agreed #78 short-text interfaces and document
+architecture, and #76 PDF process boundary; schema2/digest fixtures and actual
+Linux enforcement tests remain separate acceptance gates. Akbar's P0 Canvas/Outlook
+reassignment is acknowledged in#4; M is not duplicating those completion tasks.
+
 | Step/component           | Owner             | State and evidence                                                                         | Next action/blocker                                                                 |
 | ------------------------ | ----------------- | ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
 | Revision7 planning / #44 | A                 | Code/PR audit and ordered work orders prepared; docs only                                  | Counterpart review; new interfaces still proposals                                  |

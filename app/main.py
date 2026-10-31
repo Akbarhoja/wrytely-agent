@@ -14,6 +14,7 @@ from psycopg import Error as DatabaseError
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from starlette.concurrency import run_in_threadpool
 
+from app.source_connections import register_source_connections
 from contracts.delivery import WhatsAppStatusEvent
 from contracts.models import AgentControl, Identity, MessageIn, SessionVerifier, SourceObservation
 from integrations.whatsapp import extract_statuses, extract_texts, verify_signature
@@ -94,7 +95,9 @@ def create_app(
     bearer = HTTPBearer(auto_error=False)
     verifier = verifier or ClerkSessionVerifier(settings)
     if store is None and settings.database_url:
-        store = Store(settings.database_url.get_secret_value())
+        store = Store(
+            settings.database_url.get_secret_value(), canvas_origins=settings.canvas_origins
+        )
     if settings.authorized_parties:
         api.add_middleware(
             CORSMiddleware,
@@ -121,6 +124,13 @@ def create_app(
 
     User = Annotated[Identity, Depends(identity)]
     DB = Annotated[Store, Depends(database)]
+
+    register_source_connections(
+        api,
+        identity_dependency=identity,
+        database_dependency=database,
+        canvas_origins=settings.canvas_origins,
+    )
 
     @api.exception_handler(DatabaseError)
     async def database_error(request, exc):
