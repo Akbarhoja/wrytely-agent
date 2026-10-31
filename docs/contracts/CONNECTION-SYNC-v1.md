@@ -82,7 +82,6 @@ Illustrative JSON values below are synthetic. UUIDs represent server-issued iden
       "reference": "https://canvas.example.edu/courses/101/assignments/17",
       "fields": { "due_at": "2026-11-02T05:59:00Z", "points_possible": "20" },
       "content": "Write an essay using the attached rubric.",
-      "content_digest": "SERVER_RECOMPUTES_CANONICAL_DIGEST",
       "coverage": "partial",
       "missing": ["rubric_attachment"]
     }
@@ -92,12 +91,71 @@ Illustrative JSON values below are synthetic. UUIDs represent server-issued iden
 }
 ```
 
-The digest value above is explanatory, not a valid hash. Shared code defines canonical
-normalization and recomputes a SHA256 digest from relevant fields/content/coverage.
-Stable identity includes connection namespace, origin/mailbox, course, resource kind
-and provider object ID. Email IDs use provider-supported immutable identity where
-available; message movement is not automatically new academic work. Provider timestamp
-alone cannot replace digest comparison. Time fields are UTC-aware; preserve course zone.
+### Canonical content digest — executable reference candidate
+
+[contracts/source_digest.py](../../contracts/source_digest.py) is the proposed v1
+reference; [fixed vectors](../../tests/fixtures/source_digest_v1.json) include exact
+canonical UTF-8 and SHA256. It is not consumed by ingestion/runtime yet. M can port
+and run the same vectors in JavaScript before agreeing the wire version. Clients omit
+content_digest in uploads; server computes it and returns it in the commit receipt.
+
+Digest envelope has exactly digest_version=1, kind, title, content, fields, coverage
+and missing. No collection timestamps, provider updated_at, source identity, cursors,
+URLs or credentials enter the content digest. Identity is a separate key including
+connection namespace, origin/mailbox, course, resource kind and provider object.
+Reference links remain provenance; a rotating signed download URL does not create a
+new document revision. Both provider updated_at and content digest are retained.
+
+Normalize strings to Unicode NFC and LF line endings. Preserve spaces, trailing
+newlines, casing and ordinary array order. Normalize object keys the same way and
+reject collisions. Sort keys by Unicode scalar value (JavaScript's default UTF-16
+sort is insufficient for some astral keys); UTF-8 encode compact JSON with no ASCII
+escaping or incidental spaces. missing is a sorted unique normalized string set.
+Only null, booleans, safe JSON integers (absolute value <=2^53-1), strings, lists and
+objects are allowed; reject floats/NaN/infinity, invalid Unicode and depth>16.
+Decimal quantities use adapter-normalized base10 strings, not binary floats.
+
+Recognized date field names due_at/unlock_at/lock_at/submitted_at/sent_at require
+RFC3339 with an explicit offset and seconds, maximum6 fractional digits; normalize
+to UTC with exactly6 fractional digits and Z. Null remains null; naive dates and
+natural-language dates are not guessed. Calendar-only dates need a separate date
+field plus source timezone and cannot silently become midnight due_at.
+
+Provider mapping field sets (include null for unknown values; v1 mapper rejects
+undeclared fields before canonicalization, rather than passing entire raw objects):
+
+| Kind             | fields content affecting meaning                                                                              |
+| ---------------- | ------------------------------------------------------------------------------------------------------------- |
+| course           | course_code, timezone, enrollment_state                                                                       |
+| assignment       | due_at, unlock_at, lock_at, points_possible, submission_types, rubric (ordered source-backed rows), published |
+| submission       | assignment_id, submitted_at, workflow_state, attempt, late, missing                                           |
+| grade            | assignment_id, score, points_possible, grading_type, grade, grade_basis                                       |
+| syllabus/page    | page_id, module_ids (sorted stable IDs), source_format                                                        |
+| discussion/entry | topic_id, parent_entry_id, author_role, required_initial_post, due_at                                         |
+| announcement     | author_role, posted_at, announcement_id; posted_at is adapter-normalized RFC3339                              |
+| email            | immutable_message_id, sent_at, sender, subject, attachment_manifest                                           |
+| file_segment     | parent_object_id, extraction_version, slot, total_slots, source_format                                        |
+
+Lists whose order is irrelevant (module_ids/submission_types) are sorted by the mapper;
+rubric/thread/content order remains significant. Source wrappers validate required
+field sets; the reference canonicalizer only defines portable bytes, not provider
+schema validation. Additional resource fields require mapper/contract revision.
+
+Large documents: one stable parent object, deterministic extraction_version and slots
+such as page:1:chunk:0. Stable section key = parent object + extraction_version + slot;
+slot content hash is revision data, not identity. Manifest contains ordered slots,
+content digests, expected count, source-file digest and completeness. Changed extraction
+can resegment the object and invalidate bindings; do not silently reuse offset citations.
+Stage segments during a scan. Promote a complete parent manifest only after all expected
+slots are committed and verified. Partial new extraction records failed coverage without
+replacing the previously complete parent/source payload. Discovery may report the new
+partial evidence, but draft retrieval keeps the prior version labeled historical until
+an adequate current version is available. This does not bypass freshness checks.
+
+[Vector1](../../tests/fixtures/source_digest_v1.json) supplies an assignment input, exact
+canonical bytes and hash. Read it directly rather than copying an explanatory placeholder.
+The reference tests show unchanged content across repeated successful checks can share
+one digest; collection check records update separately under the receipt rules below.
 
 Proposed initial hard bounds:50 items/batch,1MiB JSON body,128-character batch key,
 4,000-character cursor,24,000 text characters/segment. Larger documents use stable
@@ -112,26 +170,86 @@ provider_unavailable, extraction_failed and size_limit. Resource coverage is sep
 from item coverage and accessible-course enumeration coverage. No raw provider error
 body is returned to a student. Unknown course/file contents remain unknown.
 
-## Begin, commit and finish
+## Begin, resume, commit and finish — exact proposed shared signatures
 
-1. begin_sync authenticates connection/generation/subject and issues server scan ID,
-   lease and bounded resource checkpoint. Only one active writer per connection.
-   Batches are sequential per scan; store a monotonic scan sequence on the server.
-2. commit_sync_batch checks lease/generation, size, item identity, time and cursor.
-   Ownership is derived from the credential/service role. Persist source versions,
-   coverage, checks, deduplicated change events and checkpoint in one transaction.
-3. Same scan/batch_key plus same canonical body returns its previous receipt. Same
-   key/different body conflicts; failed transaction advances nothing. Response contains
-   receipt_id, accepted counts and controlled coverage, never a guessed agent decision.
-4. Distinct batches can legitimately observe the same object; identical content adds
-   last_checked evidence but no version/event. Older scans cannot replace newer facts.
-5. finish_resource marks complete only after all pages/segments were received, validated
-   and committed. Explicit empty complete scans differ from failures/partial scans.
-   Lease expiry resumes a checkpoint under a new claim; stale old batches are rejected.
-6. A full authoritative scan may mark previously seen objects missing; retain history
-   and label missing separately. Require explicit provider deletion/authoritative
-   reconciliation before confirmed deleted state. Never infer deletion from403/429,
-   unavailable tab, unread page or interrupted scan.
+Python names below are proposed internal Store methods. M maps them to HTTP, with
+verified identity/credential context; no route is implemented by this document.
+
+- begin_sync(actor, connection_id, generation, subject, scope_revision, begin_key)
+  returns {scan_id, scan_sequence, lease_token, lease_expires_at, checkpoint}.
+  begin_key is a client-generated128-character replay key. Same key/body returns the
+  existing scan; same key/different body conflicts. Only one live scan per connection.
+- resume_sync(actor, scan_id, generation, resume_key) returns the same shape with a
+  fresh lease_token and last durable checkpoint. Lease duration300 seconds. Repeated
+  identical resume_key returns its prior response; if expired again, use a fresh key.
+  A scan lasts at most24 hours from start; after that use a new scan and do not promote
+  incomplete resource enumeration to complete. Resume never advances generation.
+- commit_sync_batch(actor, scan_id, generation, lease_token, batch_key, expected_checkpoint, envelope)
+  returns {receipt_id, scan_id, batch_key, batch_digest, source_versions, checkpoint,
+  coverage, replayed}. Source versions list stable provider_id, version_id and server
+  content_digest. Checkpoint includes resource key, next_cursor, committed batch sequence
+  and scope_revision. Batches serialize on scan; no parallel cursor advances.
+- finish_resource(actor, scan_id, generation, lease_token, resource_key, finish_key,
+  expected_checkpoint) returns a durable resource receipt with coverage, seen_count,
+  finished_at and source_manifest_digest. Requires no remaining page and all expected
+  segments; empty complete enumeration is valid. Matching key/body replays its receipt.
+- finish_sync(actor, scan_id, generation, lease_token, finish_key) returns scan summary,
+  discovery coverage and separate per-course/resource coverage. All selected resources
+  must have terminal receipts, including controlled partial/restricted/unsupported
+  receipts; aggregate state is partial if any required resource is not complete.
+
+### Selected-course consent
+
+Initial authenticated consent grants course discovery plus a user-selected set of
+courses (or explicit all accessible active courses). Store scope_revision, selected
+course IDs/mode and resource types. IDs come from same-session discovery, not arbitrary
+input. Discovery lists course identity/metadata only; it does not grant course-content
+collection automatically. Selection can be completed through the paired extension/UI.
+A later newly found course is not selected under explicit-set consent; all-active mode
+includes it only within its recorded scope. Change of course/resource selection advances
+scope_revision and connection generation, fencing scans and preventing late old uploads.
+No fetch outside scope and no source ingestion outside scope. M's counts-only feasibility
+probe has separate live authorization and does not imply product-wide collection consent.
+
+### Replays and browser termination
+
+1. Authenticate current credential, owner, connection generation, subject and scope
+   before any receipt lookup. Disconnected or replaced credentials cannot read receipts.
+2. For an already committed batch, compare canonical envelope digest (includes observed_at,
+   item payload, resource, cursor and coverage and expected_checkpoint; excludes lease_token and transport auth).
+   Same scan/key/body returns the original receipt even after the lease expires or is
+   renewed. No freshness timestamp or cursor changes on this replay. Changed body409.
+3. For an unseen batch, a current matching live lease is mandatory. Old lease409
+   lease_expired/lease_replaced; resume then retry the SAME captured envelope/batch key
+   using the new token. Do not change observed_at merely to retry an old fetch.
+4. If browser terminates after commit but before acknowledgment, resume scan, resend
+   the exact captured envelope, obtain the previous receipt, then fetch from the saved
+   next_cursor. If no commit occurred, new lease allows that exact batch to commit once.
+5. If the client lost its envelope, inspect the resume checkpoint and refetch the current
+   resource page using a new batch key. Source digest prevents duplicate content events;
+   resource/sequence constraints reject rewinding the checkpoint as a new earlier page.
+   A prior manifest is never declared complete from a missing client checkpoint.
+6. Lost or invalid provider cursor becomes partial/cursor_invalid. Finish partial scan
+   or start a new scan for bounded rescan; no arbitrary cursor URL fetch. Link/delta values
+   stay private opaque values and M validates exact provider origin/endpoint before IO.
+7. Transaction persists versions, check records, events, receipt and checkpoint atomically.
+   Failure rolls back all of them;503 response never advances a cursor. Checkpoint/scan
+   generation rejects older writes. Lease heartbeats cannot revive expired/replaced claims.
+
+Receipt example: {receipt_id: receipt-1, scan_id: scan-1, batch_key: page-1,
+replayed: true, checkpoint: {resource: course-101/assignments, next_cursor: opaque-2,
+sequence: 1, scope_revision: 1}, coverage: partial}. IDs are illustrative. Replay has
+identical receipt/time/version fields; only the replayed response flag differs.
+Error example:409 {code: lease_expired, action: resume_scan};409 {code: replay_conflict,
+action: inspect_checkpoint};403 {code: course_not_selected, action: update_consent};
+422 {code: incomplete_segments, action: resume_resource};503 {code: storage_unavailable,
+action: retry_same_batch}. These controlled errors contain no raw content/cursor/token.
+
+A complete course-discovery receipt proves only enumeration. Assignments, discussions,
+files, grades and every selected course have independent receipts. A403 on discussions
+cannot overwrite the earlier complete syllabus or mark the whole course empty. Known
+objects missing from a full authoritative scan become missing_pending_confirmation;
+explicit deletion/reconciled authoritative evidence is required for deleted state.
 
 Outlook ingestion uses the same observations/receipts under trusted worker identity;
 webhooks merely queue a read. Subscription renewal, delta token invalidation, per-folder

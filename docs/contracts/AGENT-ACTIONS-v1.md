@@ -160,6 +160,42 @@ Proposed sequence:
    temporary signed URL, bound lifetime/scope and disclose bearer-link behavior; do not
    claim a URL alone authenticates its reader. No stable public artifact URL.
 
+### Exact proposed byte-stream boundary
+
+M implements put_rendered_file(scope, render_id, descriptor, chunks) -> UploadAck,
+where chunks is an iterator of bytes from A's renderer, never a caller-provided path
+or arbitrary URL. descriptor has artifact_id, artifact_revision, renderer_version,
+format, MIME, sanitized filename, expected_byte_length and expected_sha256. render_id
+is a server UUID/idempotency key, not the final downloadable file_id. Initial bound:
+10MiB rendered output, chunks at most64KiB, allowed MIME application/pdf or the DOCX
+MIME. Stream stops on length overflow, invalid MIME/signature, cancellation or checksum
+mismatch. The provider uploader consumes and independently hashes/counts the actual
+bytes; an object-store ETag alone is not a verified SHA256.
+
+UploadAck is {render_id, storage_handle, byte_length, sha256, durable: true}; return
+only after object storage acknowledges a completed upload and recorded checksum/length
+match the consumed bytes. Failed/interrupted upload stays provisional and privately
+cleanable, not downloadable. Same render_id and exact bytes/descriptor return its
+existing acknowledgment; changed descriptor/body409. Lost acknowledgment reconciles
+that exact render_id/checksum, not another student object's filename. Provider IO
+never trusts a model-created storage_handle.
+
+A's finalize_render(lease, render_id, UploadAck) rechecks lease, source/artifact revision,
+expected checksum/length and approved renderer metadata before creating final file_id.
+Only this stored final identity can enter a C4 document intent. A stale upload may be
+retained as private historical bytes but cannot be finalized for current delivery.
+M supplies open_owned_file(verified_actor, file_id) -> bounded byte stream + stored
+metadata for authenticated download; cross-account requests return the same404.
+
+For WhatsApp media, M uploads these exact authorized bytes to the configured account
+and records provider_media_id, own file checksum, creation time and actual provider
+expiry/revalidation policy. Do not invent a media lifetime if the provider does not
+supply one. Expired/unavailable media before dispatch may be re-uploaded idempotently
+for the same current file, followed by a fresh dispatch authorization. After unknown
+message dispatch, a media refresh is not permission to send again. Signed result/
+delivery receipts continue to identify the original action and attempt. Remote media
+URLs are not student download permissions and never become stable public file URLs.
+
 Render limits are configured and visible. Draft text, citations and math/tables that
 cannot render must return a controlled error. A stale draft remains privately readable
 but cannot be silently sent as current. Revocation prevents new dispatch; it cannot
