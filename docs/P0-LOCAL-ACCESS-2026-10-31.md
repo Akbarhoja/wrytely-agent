@@ -209,3 +209,18 @@ save-dialog interaction. The operator was asked to complete a local Downloads sa
 no downloaded bytes/text, extension-side file access or document extraction is passed.
 No signed download URL, raw PDF, course identifier or private source content is published.
 Chrome was not restarted/logged out. The manual tab-closed result above remains separate.
+
+## Operator-completed syllabus download and local extraction
+
+After the operator completed the native Save dialog, A verified the expected local
+PDF existed (398346 bytes). Local pypdf inspection opened it successfully: 3 pages,
+text present on all 3, 6935 extracted characters, not encrypted. Only these summary
+measurements are recorded; PDF contents, course/file IDs, paths and signed URLs are
+not published. No PDF bytes entered model/runtime storage or any cloud collector.
+
+This confirms the normal signed-in browser/manual-download path and local text
+extractability for one real syllabus PDF. It does not prove the extension can follow
+that file's download/redirect chain, extract documents, or synchronize them. The
+second course is a manual UI sample, not automatic two-course collector acceptance.
+A still needs coordinated browser-restart/session-expiry testing; the standing
+instruction to keep Chrome open is preserved until the supervisor explicitly changes it.

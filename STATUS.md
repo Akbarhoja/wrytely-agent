@@ -115,7 +115,8 @@ CI coverage for the journal is a separate A-owned follow-up; no missing-file ski
 
 P0 core checkpoint: Meta access proof passed. A owns Canvas feasibility; the operator supplied a new current-session report after local installation:
 7 courses discovered/1 selected; 22 assignments/12 instruction bodies; inline syllabus
-and one discussion view readable. No positive rubric proof or linked-document reading.
+and one discussion view readable. No positive rubric proof. One syllabus PDF manually downloaded and locally text-readable;
+extension document reading remains unverified.
 A second operator report returned the same reads after closing Canvas tabs with Chrome
 and the worker Console open. Manual tab-closed access is supported by that report;
 unattended worker/restart/expiry/account-switch checks remain untested. Browser controls
