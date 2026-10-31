@@ -254,3 +254,81 @@ def test_pause_during_review_blocks_finalization(store, alice):
             store, PauseModel(), Settings(), lease, artifact["id"], policy=policy, rubric=rubric
         )
     assert store.artifact("user_alice", artifact["id"])["state"] == "review"
+
+
+@pytest.mark.parametrize("age", [timedelta(days=2), -timedelta(minutes=6)])
+def test_evidence_expiring_during_model_review_cannot_become_ready(store, alice, age):
+    lease, artifact, policy, rubric, source, _ = prepare(store, alice)
+
+    class AgingModel:
+        calls = 0
+
+        def turn(self, history, tools):
+            self.calls += 1
+            with store.connection() as conn:
+                conn.execute(
+                    "UPDATE wrytely_agent.source_versions SET retrieved_at=%s WHERE id=%s",
+                    (datetime.now(UTC) - age, source["id"]),
+                )
+            return assessment()
+
+    model = AgingModel()
+    report = verify_artifact(
+        store, model, Settings(), lease, artifact["id"], policy=policy, rubric=rubric
+    )
+    assert not report["passed"]
+    assert "evidence_freshness_failed_at_commit" in report["errors"]
+    assert model.calls == 1
+    assert report["input_tokens"] == 40
+    assert store.artifact("user_alice", artifact["id"])["state"] == "needs_revision"
+    assert store.draft_progress(lease, "draft-one")[1] == report
+
+
+def test_cached_success_is_invalidated_without_repeated_check_records(store, alice):
+    lease, artifact, policy, rubric, source, _ = prepare(store, alice)
+    verify_artifact(
+        store,
+        ScriptedModel([assessment()]),
+        Settings(),
+        lease,
+        artifact["id"],
+        policy=policy,
+        rubric=rubric,
+    )
+    with store.connection() as conn:
+        conn.execute(
+            "UPDATE wrytely_agent.source_versions "
+            "SET retrieved_at=clock_timestamp()-interval '2 days' WHERE id=%s",
+            (source["id"],),
+        )
+    saved, report = store.draft_progress(lease, "draft-one")
+    assert saved["state"] == "needs_revision"
+    assert not report["passed"]
+    assert store.draft_progress(lease, "draft-one")[1] == report
+    with store.connection() as conn:
+        checks = conn.execute(
+            "SELECT passed FROM wrytely_agent.artifact_checks "
+            "WHERE artifact_id=%s ORDER BY created_at",
+            (artifact["id"],),
+        ).fetchall()
+    assert [c["passed"] for c in checks] == [True, False]
+
+
+def test_evidence_unbound_during_review_cannot_become_ready(store, alice):
+    lease, artifact, policy, rubric, source, _ = prepare(store, alice)
+
+    class UnbindingModel:
+        def turn(self, history, tools):
+            with store.connection() as conn:
+                conn.execute(
+                    "DELETE FROM wrytely_agent.responsibility_sources WHERE source_id=%s",
+                    (source["source_id"],),
+                )
+            return assessment()
+
+    report = verify_artifact(
+        store, UnbindingModel(), Settings(), lease, artifact["id"], policy=policy, rubric=rubric
+    )
+    assert not report["passed"]
+    assert "evidence_unavailable_at_commit" in report["errors"]
+    assert store.artifact("user_alice", artifact["id"])["state"] == "needs_revision"

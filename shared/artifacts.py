@@ -1,13 +1,60 @@
 """Private saved drafts; readiness is committed only through mandatory verification."""
 
-from uuid import uuid4
+from copy import deepcopy
+from uuid import UUID, uuid4
 
 from psycopg.types.json import Jsonb
 
 from contracts.artifacts import DraftArtifact
+from shared.freshness import legacy_freshness
 
 
 class ArtifactStore:
+    @staticmethod
+    def _artifact_evidence_failure(conn, row, report):
+        """Internal: caller holds agent fence; only current owned cited evidence can pass."""
+        try:
+            if not report["rubric"] or not row["draft"]["citations"]:
+                return "evidence_unavailable_at_commit"
+            ids = {str(UUID(str(report["policy"]["version_id"])))}
+            ids.update(str(UUID(str(item["version_id"]))) for item in report["rubric"])
+            ids.update(str(UUID(str(item["version_id"]))) for item in row["draft"]["citations"])
+        except (KeyError, ValueError, TypeError, AttributeError):
+            return "evidence_unavailable_at_commit"
+        sources = conn.execute(
+            "SELECT v.id,v.retrieved_at FROM wrytely_agent.responsibility_sources b "
+            "JOIN wrytely_agent.academic_sources s ON s.id=b.source_id AND s.agent_id=b.agent_id "
+            "JOIN wrytely_agent.source_versions v ON v.id=s.latest_version_id "
+            "AND v.agent_id=s.agent_id "
+            "WHERE b.agent_id=%s AND b.responsibility_id=%s",
+            (row["agent_id"], row["responsibility_id"]),
+        ).fetchall()
+        indexed = {str(source["id"]): source for source in sources}
+        if not ids <= indexed.keys():
+            return "evidence_unavailable_at_commit"
+        now = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
+        if any(not legacy_freshness(indexed[key]["retrieved_at"], now=now).usable for key in ids):
+            return "evidence_freshness_failed_at_commit"
+
+    @staticmethod
+    def _failed_freshness_report(report, reason):
+        result = deepcopy(report)
+        result["passed"] = False
+        result["errors"] = list(dict.fromkeys([*result["errors"], reason]))
+        return result
+
+    @staticmethod
+    def _write_artifact_check(conn, row, report):
+        conn.execute(
+            "INSERT INTO wrytely_agent.artifact_checks "
+            "(id,artifact_id,memory_revision,passed,report) VALUES (%s,%s,%s,%s,%s)",
+            (uuid4(), row["id"], row["memory_revision"], report["passed"], Jsonb(report)),
+        )
+        conn.execute(
+            "UPDATE wrytely_agent.artifacts SET state=%s WHERE id=%s",
+            ("ready" if report["passed"] else "needs_revision", row["id"]),
+        )
+
     def save_draft(self, lease, draft: DraftArtifact, request_key):
         from shared.db import RequestConflict
 
@@ -85,7 +132,7 @@ class ArtifactStore:
         with self.connection() as conn:
             self._fence(conn, lease)
             row = conn.execute(
-                "SELECT f.id FROM wrytely_agent.artifacts f JOIN wrytely_agent.responsibilities r "
+                "SELECT f.* FROM wrytely_agent.artifacts f JOIN wrytely_agent.responsibilities r "
                 "ON r.id=f.responsibility_id AND r.agent_id=f.agent_id "
                 "WHERE f.id=%s AND f.agent_id=%s AND f.task_id=%s "
                 "AND f.memory_revision=%s AND r.memory_revision=f.memory_revision FOR UPDATE OF f",
@@ -93,15 +140,13 @@ class ArtifactStore:
             ).fetchone()
             if not row:
                 raise LookupError("Artifact changed or not owned")
-            conn.execute(
-                "INSERT INTO wrytely_agent.artifact_checks "
-                "(id,artifact_id,memory_revision,passed,report) VALUES (%s,%s,%s,%s,%s)",
-                (uuid4(), artifact_id, memory_revision, report["passed"], Jsonb(report)),
-            )
-            conn.execute(
-                "UPDATE wrytely_agent.artifacts SET state=%s WHERE id=%s",
-                ("ready" if report["passed"] else "needs_revision", artifact_id),
-            )
+            committed = deepcopy(report)
+            if committed["passed"]:
+                reason = self._artifact_evidence_failure(conn, row, committed)
+                if reason:
+                    committed = self._failed_freshness_report(committed, reason)
+            self._write_artifact_check(conn, row, committed)
+            return committed
 
     def drafting_checkpoint(self, lease, kind, workflow_key):
         """Fenced recovery of this task's private drafting workflow state."""
@@ -131,7 +176,14 @@ class ArtifactStore:
                 "ORDER BY created_at DESC,id DESC LIMIT 1",
                 (artifact["id"],),
             ).fetchone()
-            return artifact, report["report"] if report else None
+            result = report["report"] if report else None
+            if result and result["passed"]:
+                reason = self._artifact_evidence_failure(conn, artifact, result)
+                if reason:
+                    result = self._failed_freshness_report(result, reason)
+                    self._write_artifact_check(conn, artifact, result)
+                    artifact = {**artifact, "state": "needs_revision"}
+            return artifact, result
 
     def drafting_sources(self, lease):
         """Full current bound evidence for policy preflight and generation."""

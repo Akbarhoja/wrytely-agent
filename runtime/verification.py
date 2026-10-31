@@ -1,11 +1,12 @@
 """Mandatory finalization gate; structural evidence checks precede model assessment."""
 
 import json
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 
 from contracts.artifacts import Assessment, CoursePolicy, DraftArtifact, RubricItem
 from runtime.draft_format import check_draft_format
 from shared.db import json_text
+from shared.freshness import legacy_freshness
 
 ASSESS_TOOL = {
     "type": "function",
@@ -45,7 +46,7 @@ def verify_artifact(
         source = indexed.get(str(version_id))
         if not source or not quote.strip() or quote not in source["content"]:
             return False
-        if source["retrieved_at"] < datetime.now(UTC) - timedelta(hours=24):
+        if not legacy_freshness(source["retrieved_at"], now=datetime.now(UTC)).usable:
             return False
         return True
 
@@ -132,5 +133,4 @@ def verify_artifact(
             "not submitted or approved."
         ),
     }
-    store._commit_artifact_check(lease, artifact_id, row["memory_revision"], report)
-    return report
+    return store._commit_artifact_check(lease, artifact_id, row["memory_revision"], report)

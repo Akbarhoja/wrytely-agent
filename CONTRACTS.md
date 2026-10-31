@@ -837,6 +837,40 @@ policy extraction, end-to-end worker orchestration, student review/download APIs
 sharing and automatic change-driven revision are still pending. The existing
 internal academic worker continues producing working notes, not ready artifacts.
 
+## P1-A2 internal freshness increment — issue #73
+
+`shared.freshness.legacy_freshness` centralizes the existing 24-hour limit and
+five-minute future-clock tolerance for manual/API/feed snapshot evidence. Unknown
+or timezone-naive timestamps fail closed. Existing context flags, extraction,
+drafting preflight and verification use this policy; it does not certify that a
+provider has been checked recently.
+
+The verifier rechecks all policy, rubric and saved-draft citation version IDs against
+current owned responsibility bindings using database wall-clock time immediately
+before persisting a successful check. Expired/future evidence becomes a failed
+`evidence_freshness_failed_at_commit` report; missing/currently unbound versions
+become `evidence_unavailable_at_commit`. Failure leaves the artifact `needs_revision`,
+retains inference usage, and blocks the draft workflow without spending another
+revision call. The returned report is the committed report. Recovery also rechecks
+cached successful reports, appending one failed check when necessary; subsequent
+reads reuse that failure. Private-draft responsibility completion independently
+requires still-fresh evidence, rather than relying on historical ready state.
+Readable artifacts and historical successful reports are not renewed by these checks.
+
+The **unwired** `canvas_freshness` policy foundation requires connected state,
+matching positive integer generations, selected scope, known nonhistorical/nonmissing
+status, and complete item plus resource coverage. Age uses the earlier of client
+observation and server receipt; neither timestamp may exceed server time by more
+than five minutes. Proposed purpose limits are inspect 24 hours, draft six hours,
+act one hour, with urgent decisions capped at 30 minutes. Exact expiry is inclusive.
+Purpose/urgency must be server-owned and valid. Ownership and exact version/resource
+binding remain separate caller requirements. These are internal tested policy inputs,
+not agreed C3 consumer interfaces or a grant to activate staged Canvas evidence.
+
+No new API, schema migration, source promotion, model tool, continuous worker or
+provider call is introduced. C3 retrieval, original-section paging/segments and new
+Canvas evidence activation still need counterpart agreement and implementation.
+
 ## A3 generation helper — issue #12
 
 `runtime.drafting.generate_checked_draft(store, model, settings, lease,

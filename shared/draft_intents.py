@@ -1,10 +1,11 @@
 """Trusted private-draft intent, fenced assessment and atomic task attachment."""
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 
 from psycopg.types.json import Jsonb
 
 from contracts.artifacts import CoursePolicy, RubricItem
+from shared.freshness import legacy_freshness
 
 
 class DraftIntentStore:
@@ -56,11 +57,7 @@ class DraftIntentStore:
         now = datetime.now(UTC)
         if not 1 <= len(sources) <= 8 or len(rubric) > 30:
             raise ValueError("Invalid assessment evidence bounds")
-        if any(
-            s["retrieved_at"] < now - timedelta(hours=24)
-            or s["retrieved_at"] > now + timedelta(minutes=5)
-            for s in sources
-        ):
+        if any(not legacy_freshness(s["retrieved_at"], now=now).usable for s in sources):
             raise ValueError("Assessment evidence is stale")
         for item in ([policy] if policy else []) + rubric:
             source = indexed.get(str(item.version_id))
@@ -167,14 +164,20 @@ class DraftIntentStore:
         intent = self._intent(conn, lease)
         if not intent:
             return True
-        return bool(
-            conn.execute(
-                "SELECT 1 FROM wrytely_agent.artifacts f JOIN wrytely_agent.tasks "
-                "t ON t.id=f.task_id "
-                "WHERE f.task_id=%s AND f.agent_id=%s AND f.state='ready' AND t.status='done' "
-                "AND f.memory_revision=%s",
-                (intent["drafting_task_id"], lease.agent_id, intent["memory_revision"]),
-            ).fetchone()
+        candidates = conn.execute(
+            "SELECT f.*,(SELECT c.report FROM wrytely_agent.artifact_checks c "
+            "WHERE c.artifact_id=f.id ORDER BY c.created_at DESC,c.id DESC LIMIT 1) AS report "
+            "FROM wrytely_agent.artifacts f JOIN wrytely_agent.tasks "
+            "t ON t.id=f.task_id "
+            "WHERE f.task_id=%s AND f.agent_id=%s AND f.state='ready' AND t.status='done' "
+            "AND f.memory_revision=%s",
+            (intent["drafting_task_id"], lease.agent_id, intent["memory_revision"]),
+        ).fetchall()
+        return any(
+            row["report"]
+            and row["report"]["passed"]
+            and not self._artifact_evidence_failure(conn, row, row["report"])
+            for row in candidates
         )
 
     def draft_responsibility_status(self, user_id, responsibility_id):
