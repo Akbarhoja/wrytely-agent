@@ -1,5 +1,6 @@
 // Worker-side C1 transport only. No installation, polling, source sync or token export.
 import { checkedOrigin, makeReader } from "../canvas-feasibility/probe.mjs";
+import { discoveryOperations, discoveryConflicts } from "./discovery.mjs";
 
 const active = new WeakSet();
 const quarantined = new WeakMap();
@@ -273,18 +274,22 @@ export function createPairingClient({
         api_origin: apiOrigin,
         connection,
         ingestion_bearer: item.ingestion_bearer,
+        ...(item.discovery === undefined ? {} : { discovery: item.discovery }),
       };
     } catch {
       return cleanup("reconnect_required");
     }
   }
   async function post(action, body, bearer) {
+    const discovery = action.startsWith("discovery/");
     const uncertain =
       action === "redeem"
         ? "pairing_outcome_unknown"
-        : action === "context"
-          ? "context_unavailable"
-          : "binding_outcome_unknown";
+        : discovery
+          ? "discovery_outcome_unknown"
+          : action === "context"
+            ? "context_unavailable"
+            : "binding_outcome_unknown";
     const url = `${apiOrigin}/v1/source-connections/canvas/${action}`;
     let response;
     try {
@@ -303,15 +308,38 @@ export function createPairingClient({
       });
       if (response.url !== url || response.redirected) throw Error();
       if (!response.ok) {
+        if (discovery && response.status === 409) {
+          const code = (await jsonBody(response))?.detail?.code;
+          fail(
+            discoveryConflicts.includes(code)
+              ? `discovery_${code}`
+              : "discovery_state_changed",
+          );
+        }
         await cancel(response.body);
         if (action === "redeem" && response.status === 400)
           fail("invalid_pairing");
-        if (["bind", "context"].includes(action) && response.status === 401)
+        if (
+          (discovery || ["bind", "context"].includes(action)) &&
+          response.status === 401
+        )
           fail("reconnect_required");
+        if (discovery && response.status === 422)
+          fail("discovery_request_rejected");
+        if (discovery) fail(uncertain);
         if (response.status === 429) fail("pairing_rate_limited");
         fail(uncertain);
       }
-      return await jsonBody(response, action === "context" ? 65536 : 16384);
+      return await jsonBody(
+        response,
+        action === "discovery/finish"
+          ? 8 * 1024 * 1024
+          : discovery
+            ? 2 * 1024 * 1024
+            : action === "context"
+              ? 65536
+              : 16384,
+      );
     } catch (error) {
       if (error instanceof PairingClientError) throw error;
       await cancel(response?.body);
@@ -329,7 +357,86 @@ export function createPairingClient({
       throw Error();
     return String(value);
   }
+  async function currentContext(item) {
+    item ??= await record();
+    if (
+      !item ||
+      Date.parse(item.connection.credential_expires_at) <= Date.now()
+    )
+      return cleanup("reconnect_required");
+    let context;
+    try {
+      context = contextProjection(
+        await post("context", { origin: canvasOrigin }, item.ingestion_bearer),
+        canvasOrigin,
+      );
+      if (
+        context.connection_id !== item.connection.connection_id ||
+        context.generation < item.connection.generation
+      )
+        throw Error();
+    } catch (error) {
+      if (
+        error instanceof PairingClientError &&
+        error.code === "reconnect_required"
+      )
+        return cleanup("reconnect_required");
+      fail("context_unavailable");
+    }
+    if (
+      context.state === "reconnect_required" ||
+      Date.parse(context.credential_expires_at) <= Date.now()
+    )
+      return cleanup("reconnect_required");
+    try {
+      await storageArea.set({
+        [key]: {
+          ...item,
+          connection: projection(context, canvasOrigin, [
+            "pending_identity",
+            "connected",
+          ]),
+        },
+      });
+    } catch {
+      fail("storage_unavailable");
+    }
+    if (Date.parse(context.credential_expires_at) <= Date.now())
+      return cleanup("reconnect_required");
+    return context;
+  }
   return Object.freeze({
+    ...discoveryOperations({
+      run,
+      record,
+      currentContext,
+      subject,
+      fail,
+      cleanup,
+      canvasOrigin,
+      validExpiry,
+      call: (operation, body, item) =>
+        post(`discovery/${operation}`, body, item.ingestion_bearer),
+      invalidateAccount: async (item, value) => {
+        try {
+          await post(
+            "bind",
+            { origin: canvasOrigin, provider_subject: value },
+            item.ingestion_bearer,
+          );
+        } catch {
+          /* Local cleanup is required even if server fencing outcome is unknown. */
+        }
+        return cleanup("canvas_account_changed");
+      },
+      save: async (item, journal) => {
+        try {
+          await storageArea.set({ [key]: { ...item, discovery: journal } });
+        } catch {
+          fail("storage_unavailable");
+        }
+      },
+    }),
     async redeem(input = {}) {
       if (!input || typeof input !== "object") fail("invalid_pairing_input");
       const { code, devicePublicId } = input;
@@ -431,58 +538,7 @@ export function createPairingClient({
       });
     },
     async readCurrentContext() {
-      return run(async () => {
-        const item = await record();
-        if (
-          !item ||
-          Date.parse(item.connection.credential_expires_at) <= Date.now()
-        )
-          return cleanup("reconnect_required");
-        let context;
-        try {
-          context = contextProjection(
-            await post(
-              "context",
-              { origin: canvasOrigin },
-              item.ingestion_bearer,
-            ),
-            canvasOrigin,
-          );
-          if (
-            context.connection_id !== item.connection.connection_id ||
-            context.generation < item.connection.generation
-          )
-            throw Error();
-        } catch (error) {
-          if (
-            error instanceof PairingClientError &&
-            error.code === "reconnect_required"
-          )
-            return cleanup("reconnect_required");
-          fail("context_unavailable");
-        }
-        if (
-          context.state === "reconnect_required" ||
-          Date.parse(context.credential_expires_at) <= Date.now()
-        )
-          return cleanup("reconnect_required");
-        try {
-          await storageArea.set({
-            [key]: {
-              ...item,
-              connection: projection(context, canvasOrigin, [
-                "pending_identity",
-                "connected",
-              ]),
-            },
-          });
-        } catch {
-          fail("storage_unavailable");
-        }
-        if (Date.parse(context.credential_expires_at) <= Date.now())
-          return cleanup("reconnect_required");
-        return context;
-      });
+      return run(() => currentContext());
     },
     async readCachedConnection() {
       return run(async () => {
