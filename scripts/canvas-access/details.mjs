@@ -98,18 +98,25 @@ export async function readPdf(metadata, sample, fetchImpl = fetch) {
     response = await fetchImpl(url.href, {
       method: "GET",
       credentials: "omit",
-      redirect: "error",
+      redirect: "manual",
       cache: "no-store",
       referrerPolicy: "no-referrer",
       headers: { Accept: "application/pdf" },
       signal: AbortSignal.timeout(15000),
     });
   } catch {
-    throw new ProbeError("file_network_or_redirect_blocked");
+    throw new ProbeError("file_network_failed");
   }
   const cancel = async () => {
     await response.body?.cancel();
   };
+  if (
+    response.type === "opaqueredirect" ||
+    (response.status >= 300 && response.status < 400)
+  ) {
+    await cancel();
+    throw new ProbeError("file_redirect_blocked");
+  }
   if (!response.ok) {
     await cancel();
     throw new ProbeError("file_access_failed");
@@ -255,5 +262,5 @@ export async function probeDetails(config, fetchImpl = fetch) {
       });
   }
   await identity();
-  return { ...report, diagnosticVersion: 3 };
+  return { ...report, diagnosticVersion: 4 };
 }

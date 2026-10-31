@@ -1,4 +1,4 @@
-import { probeDetails } from "./details.mjs";
+import { FILE_ORIGIN, probeDetails } from "./details.mjs";
 import { ProbeError } from "./probe.mjs";
 import { config } from "./scope.mjs";
 
@@ -19,7 +19,11 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
     await chrome.action.setBadgeText({ text: "RUN" });
     let report;
     try {
+      const granted = config.fileSamples.length
+        ? await chrome.permissions.contains({ origins: [`${FILE_ORIGIN}/*`] })
+        : null;
       report = await probeDetails(config);
+      if (granted !== null) report.fileHostPermissionGranted = granted;
     } catch (error) {
       report = {
         state: "blocked",

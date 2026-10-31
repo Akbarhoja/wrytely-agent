@@ -354,3 +354,26 @@ resolution, wrong file/path/query, malicious resolver destination, locked metada
 account switch during resolution preventing file download. The local package was rebuilt
 as0.0.3 in the same ignored folder; operator reload/run remains required. No corrected
 live PDF result or positive rubric-access proof has been claimed.
+
+## v3 live result; v4 failure classification
+
+The operator supplied a v3 report with the same7 discovered/2 selected courses,
+assignment counts22/23 and instruction counts12/9. Four assignment details read;
+none contained rubric criteria. Inline syllabus and bounded discussion results were
+unchanged. The known linked PDF reached the storage-fetch stage but failed as
+file_network_or_redirect_blocked. This does not prove a redirect, institution denial,
+or working extension PDF access. The separately saved/local-parsed PDF remains
+separate evidence. P0 remains open.
+
+v4 keeps the same host grants and selected scope. The storage fetch now uses manual
+redirect handling: an opaque redirect or3xx response is classified file_redirect_blocked
+without following or reading its destination; a thrown fetch is file_network_failed.
+Chrome's existing permissions.contains API adds only a fileHostPermissionGranted
+boolean to the local report, without requesting permissions. This narrows diagnosis;
+a granted host alone cannot prove successful file access. No private exception strings,
+URLs, tokens, source text, storage or upload were added.
+
+References: [Fetch redirect behavior](https://fetch.spec.whatwg.org/) and
+[Chrome extension cross-origin requests](https://developer.chrome.com/docs/extensions/develop/concepts/network-requests).
+Synthetic Node tests47 pass (12 inherited+35 new). v4 still requires operator reload
+and live run; no live redirect classification is claimed yet.

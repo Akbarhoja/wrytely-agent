@@ -28,7 +28,7 @@ await writeFile(
     {
       manifest_version: 3,
       name: "Wrytely Canvas feasibility (local diagnostic)",
-      version: "0.0.3",
+      version: "0.0.4",
       description:
         "Operator-only read-only document/rubric check; private local counts, no uploads.",
       host_permissions: [
@@ -46,5 +46,5 @@ await writeFile(
   ) + "\n",
 );
 console.info(
-  "Prepared v3 diagnostic; no installation, permissions or source reads performed.",
+  "Prepared v4 diagnostic; no installation, permissions or source reads performed.",
 );

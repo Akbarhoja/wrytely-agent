@@ -42,7 +42,10 @@ function provider({ switchOnFile = false, noRubric = false } = {}) {
   return async (url, options) => {
     const u = new URL(url);
     assert.equal(options.method, "GET");
-    assert.equal(options.redirect, "error");
+    assert.equal(
+      options.redirect,
+      u.origin === FILE_ORIGIN ? "manual" : "error",
+    );
     if (u.origin === FILE_ORIGIN) {
       assert.equal(options.credentials, "omit");
       if (switchOnFile) switched = true;
@@ -77,7 +80,7 @@ test("reads exact PDF bytes and bounded rubric detail without leaking content or
   assert.equal(resources.linkedPdf.matchesOperatorSample, true);
   assert.equal(resources.rubricDetails.withRubric, 1);
   assert.equal(resources.rubricDetails.criteria, 1);
-  assert.equal(report.diagnosticVersion, 3);
+  assert.equal(report.diagnosticVersion, 4);
   assert.ok(!JSON.stringify(report).includes("PRIVATE"));
   assert.ok(!JSON.stringify(report).includes(FILE_ORIGIN));
 });
@@ -157,12 +160,12 @@ for (const change of [
     },
   );
 
-test("redirect/network failure is controlled, not permission denial", async () => {
+test("network failure is controlled and does not expose the signed URL", async () => {
   await assert.rejects(
     readPdf(metadata, sample, () => {
       throw Error("PRIVATE_URL");
     }),
-    /file_network_or_redirect_blocked/,
+    /file_network_failed/,
   );
 });
 
@@ -361,7 +364,7 @@ test("prepared extension has exact permissions and accepts only its own popup", 
       origin + "/*",
       FILE_ORIGIN + "/*",
     ]);
-    assert.equal(manifest.version, "0.0.3");
+    assert.equal(manifest.version, "0.0.4");
     assert.equal(manifest.permissions, undefined);
     assert.equal(manifest.action.default_popup, "popup.html");
     let listener;
@@ -374,6 +377,12 @@ test("prepared extension has exact permissions and accepts only its own popup", 
           addListener: (value) => {
             listener = value;
           },
+        },
+      },
+      permissions: {
+        contains: async (value) => {
+          assert.deepEqual(value, { origins: [`${FILE_ORIGIN}/*`] });
+          return true;
         },
       },
       action: {
@@ -403,7 +412,8 @@ test("prepared extension has exact permissions and accepts only its own popup", 
         true,
       );
     });
-    assert.equal(result.diagnosticVersion, 3);
+    assert.equal(result.diagnosticVersion, 4);
+    assert.equal(result.fileHostPermissionGranted, true);
     assert.deepEqual(badges, ["RUN", "READ"]);
     assert.ok(!JSON.stringify(result).includes("PRIVATE"));
   } finally {
@@ -412,3 +422,28 @@ test("prepared extension has exact permissions and accepts only its own popup", 
     await rm(directory, { recursive: true, force: true });
   }
 });
+
+for (const redirect of [
+  { type: "opaqueredirect", status: 0, ok: false },
+  { type: "basic", status: 302, ok: false },
+]) {
+  test(`reports redirect without reading destination: ${redirect.type}`, async () => {
+    let cancelled = false;
+    await assert.rejects(
+      readPdf(metadata, sample, async (_url, options) => {
+        assert.equal(options.redirect, "manual");
+        assert.equal(options.credentials, "omit");
+        return {
+          ...redirect,
+          body: {
+            cancel: async () => {
+              cancelled = true;
+            },
+          },
+        };
+      }),
+      /file_redirect_blocked/,
+    );
+    assert.equal(cancelled, true);
+  });
+}

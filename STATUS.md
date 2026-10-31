@@ -155,7 +155,10 @@ increase spending authorization. Original M2 scope remains one synthetic workflo
 P0 document/rubric diagnostic v2 was operator-loaded/run: both course lists/detail
 samples read, no rubric observed; linked PDF rejected our too-narrow URL form. A confirmed
 Canvas's documented first-party wrapper/preview-link path. v3 correction has45 synthetic
-Node tests passed with unchanged host permissions; operator reload/live PDF result pending. No P1
+Node tests passed with unchanged host permissions. The operator v3 run reached file fetching
+but failed as file_network_or_redirect_blocked; PDF bytes remain unverified. v4 adds
+manual redirect classification and a local existing-host-grant boolean;47 synthetic
+Node tests pass. Operator reload/live diagnosis pending. No P1
 collector/scheduler/runtime behavior changed. See the local access record for limits.
 
 ## Next actions
