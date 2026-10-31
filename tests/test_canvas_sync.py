@@ -654,3 +654,24 @@ def test_expiry_during_batch_rolls_back_catalog_checkpoint_and_receipt(device, m
             == 0
         )
     assert commit(device, scan, body)["checkpoint"]["sequence"] == 1
+
+
+@pytest.mark.parametrize("empty_clock_minutes", [0, 4])
+def test_empty_discovery_cannot_hide_newer_positive_observation(device, empty_clock_minutes):
+    first = begin(device)
+    positive = envelope(device, first)
+    positive["observed_at"] = (datetime.now(UTC) + timedelta(minutes=2)).isoformat()
+    first["checkpoint"] = commit(device, first, positive)["checkpoint"]
+    finish_resource(device, first)
+    finish(device, first)
+    second = begin(device, "older-empty")
+    empty = envelope(device, second, [])
+    empty["observed_at"] = (datetime.now(UTC) + timedelta(minutes=empty_clock_minutes)).isoformat()
+    second["checkpoint"] = commit(device, second, empty)["checkpoint"]
+    finish_resource(device, second)
+    with device[0].connection() as conn:
+        row = conn.execute(
+            "SELECT missing_pending_confirmation FROM wrytely_agent.canvas_catalog "
+            "WHERE course_id='101'"
+        ).fetchone()
+    assert row["missing_pending_confirmation"] is False

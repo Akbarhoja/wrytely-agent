@@ -161,7 +161,6 @@ class EvidenceItem(Strict):
                     not isinstance(value, list)
                     or len(value) > 1000
                     or any(not isinstance(v, str) or not 1 <= len(v) <= 128 for v in value)
-                    or value != sorted(set(value))
                 ):
                     raise ValueError("Sorted unique field list required")
             elif value is not None and (not isinstance(value, str) or len(value) > 1024):
@@ -184,7 +183,7 @@ class EvidenceItem(Strict):
             self.missing or not self.content.strip() or not self.title.strip()
         ):
             raise ValueError("Complete evidence requires nonblank text/title and no gaps")
-        return json.loads(
+        payload = json.loads(
             canonical_source_bytes(
                 {
                     "digest_version": 1,
@@ -197,6 +196,11 @@ class EvidenceItem(Strict):
                 }
             )
         )
+        for name in ("submission_types", "module_ids"):
+            value = payload["fields"].get(name)
+            if value is not None and value != sorted(set(value)):
+                raise ValueError("Sorted unique canonical field list required")
+        return payload
 
 
 class AcademicBatch(DiscoveryBatch):

@@ -576,13 +576,15 @@ class CanvasSyncStore:
             )
             if resource_key == "courses":
                 if outcome == "complete":
+                    # The persisted server scan start is a conservative capture lower bound.
+                    # Collector clocks/finish time cannot supersede newer positive evidence.
                     conn.execute(
                         "UPDATE wrytely_agent.canvas_catalog c "
                         "SET missing_pending_confirmation=true "
-                        "WHERE connection_id=%s AND generation=%s AND NOT EXISTS "
-                        "(SELECT 1 FROM wrytely_agent.canvas_scan_courses s "
+                        "WHERE connection_id=%s AND generation=%s AND observed_at<%s "
+                        "AND NOT EXISTS (SELECT 1 FROM wrytely_agent.canvas_scan_courses s "
                         "WHERE s.scan_id=%s AND s.course_id=c.course_id)",
-                        (row["id"], generation, scan["id"]),
+                        (row["id"], generation, scan["started_at"], scan["id"]),
                     )
                 conn.execute(
                     "UPDATE wrytely_agent.source_connections SET discovery_coverage=%s, "
