@@ -7,6 +7,16 @@
 > action, freshness relaxation or proactive send permission exists merely because
 > the plan names it. Existing private-draft and policy gates remain effective.
 
+## Agreed connection and sync design; implementation pending
+
+[C1/C2 v1 proposal](docs/contracts/CONNECTION-SYNC-v1.md) (#47) defines pairing,
+connection identity, sync receipts/coverage and last_checked semantics. M agreed exact
+ccf84dc in [review6537274371](https://github.com/Akbarhoja/wrytely-agent/pull/48#issuecomment-6537274371).
+This is design agreement, not implemented routes/store methods or relaxed permission gates.
+[C3–C7 v1 proposal](docs/contracts/AGENT-ACTIONS-v1.md) adds retrieval, student
+decisions, typed delivery, private files and operational accounting for the same
+owner review. C3–C7 remain proposed; C1/C2 implementation proceeds in P1-A1 slices.
+
 ## Deterministic draft format checks — issue #37
 
 verify_artifact now checks supported formatting before semantic review and stores
