@@ -121,7 +121,8 @@ A second operator report returned the same reads after closing Canvas tabs with 
 and the worker Console open. Manual tab-closed access is supported by that report;
 after operator-performed Chrome restart, diagnostic reported login_required and A
 observed the official NetID login form. Post-login dashboard and operator-reported sampled extension reads recovered; unattended worker,
-separately induced expiry and account-switch checks remain untested. Browser controls
+explicit Canvas sign-out also returned login_required in the operator probe. Natural
+timed expiry and account-switch checks remain untested. Browser controls
 cannot open extension management. No restart/logout was
 performed. Outlook is optional/paused and not a core blocker. M retains WhatsApp delivery.
 Baseline #46 exact9bbea97 still has no formal review and is merge-blocked; a human review

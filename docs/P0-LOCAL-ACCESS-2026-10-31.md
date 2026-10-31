@@ -261,3 +261,19 @@ No requirement to sign in after every restart for all students is inferred from 
 The required product behavior is to expose reconnect-needed/stale evidence and resume
 sync after login, never report a logged-out scan as empty success. That collector/runtime
 behavior still requires its own integrated implementation/acceptance.
+
+## Explicit Canvas sign-out check
+
+Within the supervisor-approved session-test window, A clicked the normal Canvas
+Logout link and observed the university session logout page. Before reopening Canvas,
+the operator reran the installed diagnostic and reported `{state: blocked, reason:
+login_required}`. This passes the bounded operator-reported explicit-sign-out rejection
+check: no successful resource report was returned while the Canvas session was invalid.
+It is distinct from natural timed expiry and from switching between two Canvas users.
+
+The tested sequence now includes current-session reads, manual tab-closed reads with
+Chrome/debugger available, restart requiring reauthentication, post-login read recovery,
+and explicit sign-out rejection. Remaining Canvas gaps include positive rubric evidence,
+extension-side document retrieval/extraction, unattended worker/suspension behavior,
+account switching and separately timed expiry. The manually downloaded syllabus remains
+separate evidence. Do not call the full Canvas collector or P0 complete from this probe.
