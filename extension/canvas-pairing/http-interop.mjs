@@ -1,6 +1,7 @@
 // Acceptance driver only: actual client + actual loopback API, synthetic identity/storage.
 import assert from "node:assert/strict";
 import { createPairingClient, PairingClientError } from "./client.mjs";
+import { harnessEnvironmentAllowed } from "./http-environment.mjs";
 
 const apiOrigin = "https://agent.example.edu",
   canvasOrigin = "https://canvas.example.edu";
@@ -38,28 +39,13 @@ const scenarios = [
   "academic_revoke",
   "academic_cross_account",
 ];
-const environment = new Set([
-  "PATH",
-  "SYSTEMROOT",
-  "WINDIR",
-  "COMSPEC",
-  "PATHEXT",
-  "TEMP",
-  "TMP",
-  "LANG",
-  "LC_ALL",
-]);
 let phase = "configuration";
 const rejection = (code) => (e) =>
   e instanceof PairingClientError && e.code === code;
 
 try {
   assert.equal(process.argv.length, 2);
-  assert.ok(
-    Object.keys(process.env).every((name) =>
-      environment.has(name.toUpperCase()),
-    ),
-  );
+  assert.ok(harnessEnvironmentAllowed(process.env));
   let input = "";
   for await (const chunk of process.stdin) {
     input += chunk.toString("utf8");
