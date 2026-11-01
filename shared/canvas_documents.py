@@ -4,12 +4,14 @@ No upload wire, canonical protocol root digest, source promotion or model consum
 Private writer helpers must run inside a trusted, already-authorized transaction.
 """
 
+import json
 import re
 from dataclasses import asdict
 from uuid import uuid4
 
 from psycopg.types.json import Jsonb
 
+from contracts.source_digest import canonical_source_bytes, source_digest
 from shared.canvas_reads import SourceRefreshRequired, _bound, _uuid
 from shared.canvas_sync import CanvasSyncConflict, _hash
 from shared.document_sections import (
@@ -25,17 +27,41 @@ def _section_manifest(document):
     ]
 
 
-def _fingerprint(document, format, extractor_version):
-    # Internal byte/section identity, NOT #118's pending protocol document_digest.
-    return _hash(
-        {
-            "format": format,
-            "extractor_version": extractor_version,
-            "total_characters": document.total_characters,
-            "total_pages": document.total_pages,
-            "manifest": _section_manifest(document),
-        }
-    )
+def _fingerprint(document, format, extractor_version, protocol_payload=None):
+    data = {
+        "format": format,
+        "extractor_version": extractor_version,
+        "total_characters": document.total_characters,
+        "total_pages": document.total_pages,
+        "manifest": _section_manifest(document),
+    }
+    if protocol_payload is not None:
+        # New protocol roots distinguish changed academic fields from body-only
+        # legacy section storage, without changing old internal fingerprints.
+        payload = json.loads(canonical_source_bytes(protocol_payload))
+        fields = payload["fields"]
+        if (
+            payload["kind"] != "document"
+            or payload["content"] != ""
+            or set(fields)
+            != {
+                "format",
+                "extractor_version",
+                "total_pages",
+                "total_characters",
+                "slots",
+                "owner_kind",
+                "object_fields",
+            }
+            or any(
+                fields[k] != data[k]
+                for k in ("format", "extractor_version", "total_characters", "total_pages")
+            )
+            or fields["slots"] != data["manifest"]
+        ):
+            raise ValueError("Protocol root/sections mismatch")
+        data["protocol_digest"] = source_digest(payload)
+    return _hash(data)
 
 
 def _validate_format(document, format, extractor_version):
@@ -51,7 +77,15 @@ def _validate_format(document, format, extractor_version):
 
 class CanvasDocumentStore:
     def _stage_canvas_document_sections(
-        self, conn, agent_id, object_id, document, *, format, extractor_version
+        self,
+        conn,
+        agent_id,
+        object_id,
+        document,
+        *,
+        format,
+        extractor_version,
+        protocol_payload=None,
     ):
         """Trusted internal write, not a user/model/ingestion endpoint. Does not bind or publish."""
         if not isinstance(document, DocumentSections):
@@ -65,17 +99,20 @@ class CanvasDocumentStore:
             "SELECT id FROM wrytely_agent.agents WHERE id=%s FOR UPDATE", (agent_id,)
         ).fetchone()
         obj = conn.execute(
-            "SELECT id FROM wrytely_agent.canvas_evidence_objects WHERE agent_id=%s AND "
+            "SELECT id,kind FROM wrytely_agent.canvas_evidence_objects WHERE agent_id=%s AND "
             "id=%s FOR UPDATE",
             (agent_id, object_id),
         ).fetchone()
         if not agent or not obj:
             raise LookupError("Not found")
-        fingerprint = _fingerprint(document, format, extractor_version)
+        fingerprint = _fingerprint(document, format, extractor_version, protocol_payload)
+        if protocol_payload is not None and protocol_payload["fields"]["owner_kind"] != obj["kind"]:
+            raise ValueError("Protocol owner kind mismatch")
         row = conn.execute(
             "INSERT INTO wrytely_agent.canvas_document_versions (id,agent_id,object_id,"
             "section_fingerprint,format,extractor_version,total_characters,total_pages,"
-            "manifest) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT(agent_id,"
+            "manifest,protocol_payload) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON "
+            "CONFLICT(agent_id,"
             "object_id,section_fingerprint) DO NOTHING RETURNING id",
             (
                 uuid4(),
@@ -87,6 +124,7 @@ class CanvasDocumentStore:
                 document.total_characters,
                 document.total_pages,
                 Jsonb(_section_manifest(document)),
+                Jsonb(protocol_payload) if protocol_payload is not None else None,
             ),
         ).fetchone()
         if row is None:
@@ -146,7 +184,9 @@ class CanvasDocumentStore:
             ) != (expected.start, expected.end, expected.page, expected.text_sha256):
                 raise ValueError("Stored document section mismatch")
         if (
-            _fingerprint(document, root["format"], root["extractor_version"])
+            _fingerprint(
+                document, root["format"], root["extractor_version"], root["protocol_payload"]
+            )
             != root["section_fingerprint"]
         ):
             raise ValueError("Stored document integrity mismatch")
