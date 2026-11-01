@@ -6,13 +6,18 @@ from uuid import UUID, uuid4
 from psycopg.types.json import Jsonb
 
 from contracts.artifacts import DraftArtifact
+from shared.artifact_documents import check_artifact_documents, draft_document_citations
+from shared.canvas_reads import SourceRefreshRequired
 from shared.freshness import legacy_freshness
 
 
 class ArtifactStore:
-    @staticmethod
-    def _artifact_evidence_failure(conn, row, report):
+    def _artifact_evidence_failure(self, conn, row, report):
         """Internal: caller holds agent fence; only current owned cited evidence can pass."""
+        try:
+            check_artifact_documents(self, conn, row)
+        except (ValueError, LookupError, SourceRefreshRequired):
+            return "document_evidence_failed_at_commit"
         try:
             if not report["rubric"] or not row["draft"]["citations"]:
                 return "evidence_unavailable_at_commit"
@@ -55,12 +60,15 @@ class ArtifactStore:
             ("ready" if report["passed"] else "needs_revision", row["id"]),
         )
 
-    def save_draft(self, lease, draft: DraftArtifact, request_key):
+    def save_draft(self, lease, draft: DraftArtifact, request_key, *, document_citations=None):
         from shared.db import RequestConflict
 
         if not 1 <= len(request_key) <= 128:
             raise ValueError("Invalid draft key")
         payload = draft.model_dump(mode="json")
+        documents = draft_document_citations(
+            payload, [] if document_citations is None else document_citations
+        )
         with self.connection() as conn:
             self._fence(conn, lease)
             task = conn.execute(
@@ -76,13 +84,14 @@ class ArtifactStore:
                 (lease.task_id, request_key),
             ).fetchone()
             if prior:
-                if prior["draft"] != payload:
+                if prior["draft"] != payload or prior["document_citations"] != documents:
                     raise RequestConflict("Draft key reused")
                 return prior
             return conn.execute(
                 "INSERT INTO wrytely_agent.artifacts "
-                "(id,agent_id,responsibility_id,task_id,request_key,memory_revision,draft) "
-                "VALUES (%s,%s,%s,%s,%s,%s,%s) RETURNING *",
+                "(id,agent_id,responsibility_id,task_id,request_key,memory_revision,"
+                "draft,document_citations) "
+                "VALUES (%s,%s,%s,%s,%s,%s,%s,%s) RETURNING *",
                 (
                     uuid4(),
                     lease.agent_id,
@@ -91,6 +100,7 @@ class ArtifactStore:
                     request_key,
                     task["memory_revision"],
                     Jsonb(payload),
+                    Jsonb(documents),
                 ),
             ).fetchone()
 
@@ -127,6 +137,19 @@ class ArtifactStore:
             ).fetchall()
             return row, sources
 
+    def artifact_document_evidence(self, lease, artifact_id):
+        """Internal verifier input; scope is the current leased task, never a user ID."""
+        with self.connection() as conn:
+            self._fence(conn, lease)
+            artifact = conn.execute(
+                "SELECT * FROM wrytely_agent.artifacts WHERE id=%s AND agent_id=%s AND task_id=%s",
+                (artifact_id, lease.agent_id, lease.task_id),
+            ).fetchone()
+            if not artifact:
+                raise LookupError("Artifact not found")
+            proofs = check_artifact_documents(self, conn, artifact)
+            return self._finish_canvas_read(conn, lease, proofs)
+
     def _commit_artifact_check(self, lease, artifact_id, memory_revision, report):
         """Internal verifier commit only. Not an API or model tool."""
         with self.connection() as conn:
@@ -145,6 +168,7 @@ class ArtifactStore:
                 reason = self._artifact_evidence_failure(conn, row, committed)
                 if reason:
                     committed = self._failed_freshness_report(committed, reason)
+            self._finish_canvas_read(conn, lease, {})
             self._write_artifact_check(conn, row, committed)
             return committed
 
@@ -183,6 +207,7 @@ class ArtifactStore:
                     result = self._failed_freshness_report(result, reason)
                     self._write_artifact_check(conn, artifact, result)
                     artifact = {**artifact, "state": "needs_revision"}
+            self._finish_canvas_read(conn, lease, {})
             return artifact, result
 
     def drafting_sources(self, lease):

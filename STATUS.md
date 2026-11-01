@@ -30,6 +30,21 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+Latest A increment: **P1-A2 pinned-document draft verification** on
+codex/p1-draft-document-verification, stacked on #140. Internal immutable
+provenance now feeds exact original-section checks before model review and is
+revalidated at successful commit, cached recovery and private-completion gates.
+Canvas checks use draft-purpose6h, not inspection24h. Focused disposable-Postgres
+suite **118 passed** (22 new provenance cases); full disposable backend **1246 passed**, zero skips, two existing warnings
+in80.23s. Ruff lint/format200files and diff checks pass; counterpart review pending.
+The existing migration-repeat test now includes020. Positive bridge fixtures use
+the actual staged version with a test-only legacy pointer; no product activation
+is implied. Same text from another source cannot impersonate the cited document.
+Migration020 is disposable-test-only. No HTTP/model DTO or M-owned file changed.
+Current generator does not yet provide pinned references: document-only task scope,
+generation consumers and live collection remain unfinished. No P0 closure, live
+provider call, production migration, deployment or continuous-worker activation.
+
 | Step/component           | Owner             | State and evidence                                                                         | Next action/blocker                                                                         |
 | ------------------------ | ----------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
 | Revision7 planning / #44 | A                 | Code/PR audit and ordered work orders prepared; docs only                                  | Counterpart review; new interfaces still proposals                                          |

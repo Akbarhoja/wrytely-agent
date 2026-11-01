@@ -45,6 +45,44 @@ exact clarification3b86710 in6554751518. Current executable text/reply/delivery
 contracts remain in force until the new implementation is separately reviewed.
 No new paid allowance, migration, runtime, queue or source activation is implied.
 
+## P1 internal draft document provenance
+
+Internal `save_draft(..., document_citations=[...])` can now persist pinned document
+references alongside the unchanged external DraftArtifact. Empty/default retains
+legacy behavior. Once supplied, the list must match all draft citations in order
+and each quote must be identical. Verification also requires the observation
+version to equal that citation's legacy version; the same text in another bound
+source cannot impersonate its provenance. Exact normalized references use the fields and
+limits below. Same request-key replay cannot drop or change provenance; attach it
+when saving a new draft, not after an artifact has passed review. Migration020 adds
+only a bounded JSON array to artifacts in wrytely_agent; it has run in disposable
+tests only.
+
+`artifact_document_evidence(lease, artifact_id)` is an internal verifier read, not
+an HTTP route or model tool. It reuses current responsibility source bindings,
+owned observation/root/segment identity, original hash/offset/page checks and
+server-owned **draft-purpose six-hour freshness**. Partial/historical evidence,
+failed latest resource checks, revoked/expired/unselected connections and unbound
+objects fail closed. Agent locks serialize control changes; final credential,
+evidence-age and task-clock checks prevent work crossing a validity deadline.
+Returned proofs establish exact quotations, not semantic support by themselves.
+The existing full-source model assessment and policy/rubric gates remain mandatory.
+
+Verification checks declared document provenance before spending a model call.
+Successful-check commit, cached-check recovery and private-draft completion re-read
+it inside their existing agent transaction; an old report is never fresh authority.
+No nested Store connection is opened while holding its agent lock. The pure exact
+reference/page checker moved to shared/document_citations.py; inspection helpers
+retain their original behavior and 24-hour inspection policy.
+
+**Consumer limit:** current automatic generation and external API/model schemas do
+not yet supply these references. This slice connects the guard for trusted internal
+callers; it is not document-only drafting or automatic source activation. Published
+document-only objects without source/responsibility bindings remain unavailable to
+tasks, even for the same account. No fake legacy versions or semester-wide access
+are created. Future generator/source-consumer wiring needs its scoped agreement
+and review; M's extension/API files are unchanged.
+
 ## P1 internal exact document citations
 
 `runtime/document_citations.py` adds internal verify_document_citation and

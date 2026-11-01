@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 
 from contracts.artifacts import Assessment, CoursePolicy, DraftArtifact, RubricItem
 from runtime.draft_format import check_draft_format
+from shared.canvas_reads import SourceRefreshRequired
 from shared.db import json_text
 from shared.freshness import legacy_freshness
 
@@ -41,6 +42,11 @@ def verify_artifact(
     draft = DraftArtifact.model_validate(row["draft"])
     indexed = {str(s["id"]): s for s in sources}
     errors = []
+    document_evidence = []
+    try:
+        document_evidence = store.artifact_document_evidence(lease, artifact_id)
+    except (LookupError, ValueError, SourceRefreshRequired):
+        errors.append("document_evidence_missing_or_stale")
 
     def evidence(version_id, quote):
         source = indexed.get(str(version_id))
@@ -86,6 +92,7 @@ def verify_artifact(
                             "draft": draft.model_dump(mode="json"),
                             "rubric": [item.model_dump(mode="json") for item in rubric],
                             "sources": sources,
+                            "document_evidence": document_evidence,
                             "policy": policy.model_dump(mode="json"),
                         }
                     ),
@@ -121,6 +128,7 @@ def verify_artifact(
                     errors.append("uncited_claims")
     report = {
         "passed": not errors,
+        "document_evidence": document_evidence,
         "errors": errors,
         "assessment": assessment.model_dump() if assessment else None,
         "policy": policy.model_dump(mode="json"),

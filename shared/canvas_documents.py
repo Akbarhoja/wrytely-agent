@@ -192,7 +192,9 @@ class CanvasDocumentStore:
             raise ValueError("Stored document integrity mismatch")
         return document, sections
 
-    def _document_observation(self, conn, agent, duty, object_id, observation_id, *, task=False):
+    def _document_observation(
+        self, conn, agent, duty, object_id, observation_id, *, task=False, purpose="inspect"
+    ):
         owned = conn.execute(
             "SELECT connection_id FROM wrytely_agent.canvas_evidence_objects WHERE id=%s "
             "AND agent_id=%s",
@@ -214,7 +216,9 @@ class CanvasDocumentStore:
         if not rows:
             raise LookupError("Not found")
         row = rows[0]
-        projection, selected, state = self._evidence_projection(conn, connection, row)
+        projection, selected, state = self._evidence_projection(
+            conn, connection, row, purpose=purpose
+        )
         if (
             state != "connected"
             or not selected
