@@ -10,8 +10,9 @@ from pydantic import Field, field_validator, model_validator
 
 from app.source_connections import CanvasRoute, StrictBody
 from contracts.canvas_evidence import RESOURCE_TYPES, AcademicBatch, AcademicResource
-from contracts.canvas_sync import REASONS, Checkpoint, DiscoveryBatch, replay_key
+from contracts.canvas_sync import REASONS, Checkpoint, DiscoveryBatch, course_id, replay_key
 from contracts.models import Identity
+from integrations.canvas.html_extract import extract_html
 from shared.canvas_sync import CanvasSyncConflict
 from shared.db import Store
 from shared.source_connections import SourceCredentialRejected
@@ -122,6 +123,40 @@ class AcademicBatchIn(LeasedIn):
         return self
 
 
+class AssignmentHtml(StrictBody):
+    assignment_id: str
+    html: str | None
+
+    @field_validator("assignment_id")
+    @classmethod
+    def valid_id(cls, value):
+        return course_id(value)
+
+
+class AssignmentExtractIn(Control):
+    origin: str = Field(min_length=1, max_length=2048)
+    connection_id: str
+    scope_revision: int = Field(ge=0)
+    course_id: str
+    items: list[AssignmentHtml] = Field(max_length=50)
+
+    @field_validator("course_id")
+    @classmethod
+    def valid_course(cls, value):
+        return course_id(value)
+
+    @model_validator(mode="after")
+    def bounded_html(self):
+        if len({item.assignment_id for item in self.items}) != len(self.items):
+            raise ValueError("Duplicate assignment")
+        if (
+            sum(len(item.html.encode("utf-8")) for item in self.items if item.html is not None)
+            > 1024 * 1024
+        ):
+            raise ValueError("HTML size limit")
+        return self
+
+
 class ResourceControlIn(LeasedIn):
     resource_key: str = Field(min_length=1, max_length=128)
     finish_key: str
@@ -197,6 +232,46 @@ def register_canvas_sync(api, *, identity_dependency, database_dependency, canva
             raise HTTPException(404, "Not found") from None
         except ValueError:
             raise HTTPException(422, "Invalid Canvas request") from None
+
+    @batches.post("/academic/extract")
+    def extract_assignments(body: AssignmentExtractIn, request: Request, token: Actor, db: DB):
+        def check_context():
+            context = db.canvas_connection_context(token, body.origin)
+            if context["connection_id"] != body.connection_id:
+                raise SourceCredentialRejected()
+            if context["generation"] != body.generation:
+                raise CanvasSyncConflict("generation_changed")
+            if context["scope_revision"] != body.scope_revision:
+                raise CanvasSyncConflict("scope_changed")
+            if context["state"] != "connected":
+                raise CanvasSyncConflict("identity_required")
+            if (
+                body.course_id not in context["course_ids"]
+                or "assignments" not in context["resource_kinds"]
+            ):
+                raise CanvasSyncConflict("resource_not_selected")
+
+        def convert():
+            check_context()
+            items = []
+            for item in body.items:
+                result = (
+                    extract_html(item.html.encode("utf-8"), max_chars=24000)
+                    if item.html is not None
+                    else None
+                )
+                items.append(
+                    {
+                        "assignment_id": item.assignment_id,
+                        "text": result.text if result else "",
+                        "coverage": "partial",
+                        "missing": list(result.reasons) if result else ["description_not_observed"],
+                    }
+                )
+            check_context()
+            return {"course_id": body.course_id, "items": items}
+
+        return dispatch(request, convert)
 
     @metadata_controls.post("/scope")
     def scope(body: ScopeIn, request: Request, user: User, db: DB):
