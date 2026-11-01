@@ -28,7 +28,7 @@ property returns a detached dictionary. Caller-owned inputs cannot mutate the re
 
 ## Verification
 
--98 new pure tests pass, including all10 unchanged agreed vectors with exact canonical
+- 98 new pure tests pass, including all10 unchanged agreed vectors with exact canonical
   bytes/SHA256, Unicode expansion/surrogates, field tampering, bad keys/types/bounds,
   invalid provenance, gaps/empty coverage, configured extractor IDs, file metadata,
   schema1 assignment validation, deadline/rubric changes and full200000-character text.
