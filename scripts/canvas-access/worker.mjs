@@ -1,4 +1,9 @@
-import { FILE_ORIGIN, probeDetails } from "./details.mjs";
+import {
+  CDN_ORIGIN,
+  FILE_ORIGIN,
+  makeFileTransport,
+  probeDetails,
+} from "./details.mjs";
 import { ProbeError } from "./probe.mjs";
 import { config } from "./scope.mjs";
 
@@ -22,7 +27,19 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
       const granted = config.fileSamples.length
         ? await chrome.permissions.contains({ origins: [`${FILE_ORIGIN}/*`] })
         : null;
-      report = await probeDetails(config);
+      const cdnGranted = config.fileSamples.length
+        ? await chrome.permissions.contains({ origins: [`${CDN_ORIGIN}/*`] })
+        : null;
+      if (granted === false || cdnGranted === false)
+        throw new ProbeError("file_host_permission_missing");
+      const transport = config.fileSamples.length
+        ? makeFileTransport(
+            chrome.webRequest,
+            chrome.runtime.getURL("").replace(/\/$/, ""),
+          )
+        : undefined;
+      report = await probeDetails(config, fetch, transport);
+      if (cdnGranted !== null) report.cdnHostPermissionGranted = cdnGranted;
       if (granted !== null) report.fileHostPermissionGranted = granted;
     } catch (error) {
       report = {

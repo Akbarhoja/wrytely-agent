@@ -6,7 +6,9 @@ import { join } from "node:path";
 import test from "node:test";
 import { pathToFileURL } from "node:url";
 import {
+  CDN_ORIGIN,
   FILE_ORIGIN,
+  makeFileTransport,
   MAX_PDF_BYTES,
   probeDetails,
   readPdf,
@@ -80,7 +82,7 @@ test("reads exact PDF bytes and bounded rubric detail without leaking content or
   assert.equal(resources.linkedPdf.matchesOperatorSample, true);
   assert.equal(resources.rubricDetails.withRubric, 1);
   assert.equal(resources.rubricDetails.criteria, 1);
-  assert.equal(report.diagnosticVersion, 4);
+  assert.equal(report.diagnosticVersion, 5);
   assert.ok(!JSON.stringify(report).includes("PRIVATE"));
   assert.ok(!JSON.stringify(report).includes(FILE_ORIGIN));
 });
@@ -363,9 +365,10 @@ test("prepared extension has exact permissions and accepts only its own popup", 
     assert.deepEqual(manifest.host_permissions, [
       origin + "/*",
       FILE_ORIGIN + "/*",
+      CDN_ORIGIN + "/*",
     ]);
-    assert.equal(manifest.version, "0.0.4");
-    assert.equal(manifest.permissions, undefined);
+    assert.equal(manifest.version, "0.0.5");
+    assert.deepEqual(manifest.permissions, ["webRequest"]);
     assert.equal(manifest.action.default_popup, "popup.html");
     let listener;
     const badges = [];
@@ -381,9 +384,18 @@ test("prepared extension has exact permissions and accepts only its own popup", 
       },
       permissions: {
         contains: async (value) => {
-          assert.deepEqual(value, { origins: [`${FILE_ORIGIN}/*`] });
+          assert.ok(
+            [FILE_ORIGIN, CDN_ORIGIN].some(
+              (host) =>
+                JSON.stringify(value) ===
+                JSON.stringify({ origins: [`${host}/*`] }),
+            ),
+          );
           return true;
         },
+      },
+      webRequest: {
+        onHeadersReceived: { addListener: () => {}, removeListener: () => {} },
       },
       action: {
         setBadgeText: async (value) => {
@@ -412,7 +424,7 @@ test("prepared extension has exact permissions and accepts only its own popup", 
         true,
       );
     });
-    assert.equal(result.diagnosticVersion, 4);
+    assert.equal(result.diagnosticVersion, 5);
     assert.equal(result.fileHostPermissionGranted, true);
     assert.deepEqual(badges, ["RUN", "READ"]);
     assert.ok(!JSON.stringify(result).includes("PRIVATE"));
@@ -447,3 +459,229 @@ for (const redirect of [
     assert.equal(cancelled, true);
   });
 }
+
+const cdnUrl =
+  CDN_ORIGIN +
+  "/11111111-1111-1111-1111-111111111111/sample.pdf?token=PRIVATE_CDN&content_type=application%2Fpdf";
+const opaqueRedirect = () => ({
+  type: "opaqueredirect",
+  status: 0,
+  ok: false,
+  body: null,
+});
+
+test("manually follows one exact CDN hop with identity check and no credential forwarding", async () => {
+  const calls = [];
+  let identityChecked = false;
+  const result = await readPdf(
+    metadata,
+    sample,
+    async (url, options) => {
+      calls.push(url);
+      assert.equal(options.redirect, "manual");
+      assert.equal(options.credentials, "omit");
+      if (calls.length === 1) return opaqueRedirect();
+      assert.equal(identityChecked, true);
+      assert.equal(url, cdnUrl);
+      return responsePdf();
+    },
+    () => cdnUrl,
+    async () => {
+      identityChecked = true;
+    },
+  );
+  assert.equal(calls.length, 2);
+  assert.equal(result.redirectsFollowed, 1);
+  assert.equal(result.matchesOperatorSample, true);
+  assert.ok(!JSON.stringify(result).includes("PRIVATE"));
+});
+
+for (const bad of [
+  cdnUrl.replace("https:", "http:"),
+  cdnUrl.replace("cdn.inst-fs-iad-prod.inscloudgate.net", "evil.example"),
+  cdnUrl.replace(".net/", ".net.evil.example/"),
+  cdnUrl.replace("https://", "https://user:pass@"),
+  cdnUrl + "#fragment",
+  cdnUrl + "&other=value",
+  cdnUrl + "&token=duplicate",
+  cdnUrl.replace("sample.pdf", "sample.html"),
+  cdnUrl.replace("application%2Fpdf", "text%2Fhtml"),
+  cdnUrl.replace("11111111-1111-1111-1111-111111111111/", "other/"),
+]) {
+  test(
+    "rejects unexpected CDN destination before fetching: " +
+      bad.replace(/token=[^&]*/, "token=REDACTED"),
+    async () => {
+      let calls = 0;
+      await assert.rejects(
+        readPdf(
+          metadata,
+          sample,
+          async () => {
+            calls++;
+            return opaqueRedirect();
+          },
+          () => bad,
+        ),
+        /unsafe_file_redirect/,
+      );
+      assert.equal(calls, 1);
+    },
+  );
+}
+
+test("a second redirect never triggers a third request", async () => {
+  let calls = 0;
+  await assert.rejects(
+    readPdf(
+      metadata,
+      sample,
+      async () => {
+        calls++;
+        return opaqueRedirect();
+      },
+      () => cdnUrl,
+    ),
+    /file_redirect_limit/,
+  );
+  assert.equal(calls, 2);
+});
+
+test("account change before CDN request prevents that request", async () => {
+  let calls = 0;
+  await assert.rejects(
+    readPdf(
+      metadata,
+      sample,
+      async () => {
+        calls++;
+        return opaqueRedirect();
+      },
+      () => cdnUrl,
+      async () => {
+        throw Error("account_switched_discarded");
+      },
+    ),
+    /account_switched_discarded/,
+  );
+  assert.equal(calls, 1);
+});
+
+function observedRequest() {
+  let handler;
+  const origin = "chrome-extension://synthetic";
+  return {
+    origin,
+    get handler() {
+      return handler;
+    },
+    api: {
+      onHeadersReceived: {
+        addListener: (listener, filter, extra) => {
+          assert.deepEqual(filter, {
+            urls: [`${FILE_ORIGIN}/files/*`],
+            types: ["xmlhttprequest"],
+          });
+          assert.deepEqual(extra, ["responseHeaders"]);
+          handler = listener;
+        },
+        removeListener: (listener) => {
+          assert.equal(listener, handler);
+          handler = null;
+        },
+      },
+    },
+  };
+}
+
+test("header observer ignores unrelated URLs/initiators/methods and cleans up", async () => {
+  const mock = observedRequest();
+  const event = {
+    url: metadata.url,
+    initiator: mock.origin,
+    method: "GET",
+    statusCode: 302,
+    responseHeaders: [{ name: "Location", value: cdnUrl }],
+  };
+  const response = opaqueRedirect();
+  const transport = makeFileTransport(mock.api, mock.origin, async () => {
+    mock.handler({
+      ...event,
+      url: "https://evil.example",
+      responseHeaders: [{ name: "Location", value: "https://evil.example" }],
+    });
+    mock.handler({
+      ...event,
+      initiator: "https://canvas.example.edu",
+      responseHeaders: [{ name: "Location", value: "https://evil.example" }],
+    });
+    mock.handler({
+      ...event,
+      method: "POST",
+      responseHeaders: [{ name: "Location", value: "https://evil.example" }],
+    });
+    mock.handler(event);
+    return response;
+  });
+  assert.equal(await transport.fetch(metadata.url, {}), response);
+  assert.equal(transport.location(response), cdnUrl);
+  assert.equal(mock.handler, null);
+  assert.equal(transport.location(opaqueRedirect()), null);
+});
+
+test("observer handles delayed header dispatch without leaking listener", async () => {
+  const mock = observedRequest();
+  const response = opaqueRedirect();
+  const transport = makeFileTransport(mock.api, mock.origin, async () => {
+    setTimeout(
+      () =>
+        mock.handler({
+          url: metadata.url,
+          initiator: mock.origin,
+          method: "GET",
+          statusCode: 302,
+          responseHeaders: [{ name: "location", value: cdnUrl }],
+        }),
+      0,
+    );
+    return response;
+  });
+  await transport.fetch(metadata.url, {});
+  assert.equal(transport.location(response), cdnUrl);
+  assert.equal(mock.handler, null);
+});
+
+test("duplicate Location headers do not provide a destination", async () => {
+  const mock = observedRequest();
+  const response = opaqueRedirect();
+  const transport = makeFileTransport(mock.api, mock.origin, async () => {
+    mock.handler({
+      url: metadata.url,
+      initiator: mock.origin,
+      method: "GET",
+      statusCode: 302,
+      responseHeaders: [
+        { name: "Location", value: cdnUrl },
+        { name: "Location", value: cdnUrl },
+      ],
+    });
+    return response;
+  });
+  await transport.fetch(metadata.url, {});
+  assert.equal(transport.location(response), null);
+  assert.equal(mock.handler, null);
+});
+
+test("observer cleanup happens on thrown fetch and nonredirect responses", async () => {
+  const mock = observedRequest();
+  const transport = makeFileTransport(mock.api, mock.origin, async () => {
+    throw Error("synthetic");
+  });
+  await assert.rejects(transport.fetch(metadata.url, {}), /synthetic/);
+  assert.equal(mock.handler, null);
+  const success = makeFileTransport(mock.api, mock.origin, async () =>
+    responsePdf(),
+  );
+  await success.fetch(metadata.url, {});
+  assert.equal(mock.handler, null);
+});

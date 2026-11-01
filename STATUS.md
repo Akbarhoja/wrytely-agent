@@ -160,7 +160,10 @@ but failed as file_network_or_redirect_blocked; PDF bytes remain unverified. v4 
 manual redirect classification and a local existing-host-grant boolean;47 synthetic
 Node tests pass. Operator v4 live result confirms file_redirect_blocked with the
 existing file-host permission granted. Redirect destination inspection is pending;
-no need to rerun the unchanged probe. PDF bytes remain unverified. No P1
+no need to rerun the unchanged probe. The operator identified a failed request to the
+exact Canvas CDN host. v5 prepares one manually validated storage-to-CDN hop,
+64 synthetic tests passing. New exact CDN-host/webRequest permissions require operator
+review and reload before live testing; PDF bytes remain unverified. No P1
 collector/scheduler/runtime behavior changed. See the local access record for limits.
 
 ## Next actions

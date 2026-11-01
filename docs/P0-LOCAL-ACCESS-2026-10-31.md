@@ -396,3 +396,34 @@ Next evidence needed: the redirect Location hostname only from the diagnostic re
 in the extension worker's Network panel. Do not share signed URLs, query values,
 cookies, headers, HAR exports or course content. This is an inspection blocker, not
 a reason to repeat unchanged diagnostic runs. P0 remains open.
+
+## Operator CDN evidence and prepared v5
+
+The supervisor supplied a Network screenshot of a failed/cancelled request to the
+exact hostname cdn.inst-fs-iad-prod.inscloudgate.net and its signed PDF URL. The
+selected row was a Request URL, not a successful response or independently verified
+Location header. Only the hostname and URL form were used for implementation; the
+provided signed values were not saved to source, config, logs or GitHub.
+
+v5 is prepared but not authorized/loaded/run yet. Its changed manifest requires
+operator review of exact CDN-host access plus observational webRequest permission.
+The worker installs a temporary onHeadersReceived listener only for the active
+known storage request, matching exact URL, GET and its own extension initiator.
+It requests responseHeaders, never blocking/extraHeaders/requestBody, and retains
+only one Location in memory. Listener cleanup covers success/error/timeout paths;
+no request headers/cookies/source logging, persistent storage or uploads are added.
+
+All file fetches remain manual redirects, credentials omitted, cache disabled and
+referrer omitted. Exactly one observed storage-to-CDN hop can be performed: only
+the exact CDN origin, UUID/PDF path and bounded token/content_type query form pass.
+Any other host, malformed destination, extra hop or unobserved header blocks before
+following it. Canvas identity is checked again before the CDN request. Final bytes
+still face the5MiB limit, PDF MIME/signature and private SHA256 sample comparison.
+No pasted signed URL is replayed; each run resolves fresh metadata through Canvas.
+
+64 synthetic Node tests pass, including manual-hop success, unexpected hosts/schemes/
+paths/queries, second-hop rejection, session change before CDN access, header-event
+correlation, delayed header dispatch, duplicate Location and listener cleanup. These
+are implementation tests, not live browser proof. Chrome observation behavior with
+manual redirects still requires the operator run. No P1 collector changes were made.
+Reference: [Chrome webRequest](https://developer.chrome.com/docs/extensions/reference/api/webRequest).

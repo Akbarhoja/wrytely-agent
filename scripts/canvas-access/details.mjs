@@ -7,6 +7,7 @@ import {
 } from "./probe.mjs";
 
 export const FILE_ORIGIN = "https://inst-fs-iad-prod.inscloudgate.net";
+export const CDN_ORIGIN = "https://cdn.inst-fs-iad-prod.inscloudgate.net";
 export const MAX_PDF_BYTES = 5 * 1024 * 1024;
 const numeric = (value) => {
   if (typeof value !== "string" || !/^[1-9][0-9]{0,19}$/.test(value))
@@ -76,7 +77,98 @@ export async function resolvePdfMetadata(api, metadata, sample, origin) {
   return { ...metadata, url: data.public_url };
 }
 
-export async function readPdf(metadata, sample, fetchImpl = fetch) {
+// Observe only this extension's one active storage request. Never log signed URLs/headers.
+export function makeFileTransport(
+  webRequest,
+  extensionOrigin,
+  fetchImpl = fetch,
+) {
+  const locations = new WeakMap();
+  return {
+    location: (response) => locations.get(response) ?? null,
+    fetch: async (url, options) => {
+      if (new URL(url).origin !== FILE_ORIGIN) return fetchImpl(url, options);
+      let finish, timer;
+      const headers = new Promise((resolve) => {
+        finish = resolve;
+      });
+      const listener = (event) => {
+        if (
+          event.url !== url ||
+          event.initiator !== extensionOrigin ||
+          event.method !== "GET"
+        )
+          return;
+        const values = (event.responseHeaders ?? []).filter(
+          (h) => h.name.toLowerCase() === "location",
+        );
+        finish(
+          [301, 302, 303, 307, 308].includes(event.statusCode) &&
+            values.length === 1 &&
+            typeof values[0].value === "string"
+            ? values[0].value
+            : null,
+        );
+      };
+      webRequest.onHeadersReceived.addListener(
+        listener,
+        { urls: [`${FILE_ORIGIN}/files/*`], types: ["xmlhttprequest"] },
+        ["responseHeaders"],
+      );
+      try {
+        const response = await fetchImpl(url, options);
+        if (
+          response.type === "opaqueredirect" ||
+          (response.status >= 300 && response.status < 400)
+        ) {
+          timer = setTimeout(() => finish(null), 1000);
+          const location = await headers;
+          if (location) locations.set(response, location);
+        }
+        return response;
+      } finally {
+        clearTimeout(timer);
+        webRequest.onHeadersReceived.removeListener(listener);
+      }
+    },
+  };
+}
+
+function checkedCdnLocation(value) {
+  let url;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new ProbeError("unsafe_file_redirect");
+  }
+  if (
+    url.origin !== CDN_ORIGIN ||
+    url.username ||
+    url.password ||
+    url.hash ||
+    url.href.length > 16384 ||
+    !/^\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\/[^/]+\.pdf$/i.test(
+      url.pathname,
+    ) ||
+    [...url.searchParams.keys()].some(
+      (k) => !["token", "content_type"].includes(k),
+    ) ||
+    url.searchParams.getAll("token").length !== 1 ||
+    !url.searchParams.get("token") ||
+    url.searchParams.getAll("content_type").length !== 1 ||
+    url.searchParams.get("content_type") !== "application/pdf"
+  )
+    throw new ProbeError("unsafe_file_redirect");
+  return url;
+}
+
+export async function readPdf(
+  metadata,
+  sample,
+  fetchImpl = fetch,
+  redirectLocation = () => null,
+  beforeRedirect = async () => {},
+) {
   checkFileScope(metadata, sample);
   let url;
   try {
@@ -93,29 +185,42 @@ export async function readPdf(metadata, sample, fetchImpl = fetch) {
     url.href.length > 16384
   )
     throw new ProbeError("unsafe_file_url");
-  let response;
-  try {
-    response = await fetchImpl(url.href, {
-      method: "GET",
-      credentials: "omit",
-      redirect: "manual",
-      cache: "no-store",
-      referrerPolicy: "no-referrer",
-      headers: { Accept: "application/pdf" },
-      signal: AbortSignal.timeout(15000),
-    });
-  } catch {
-    throw new ProbeError("file_network_failed");
-  }
+  let response,
+    redirectsFollowed = 0;
   const cancel = async () => {
     await response.body?.cancel();
   };
-  if (
-    response.type === "opaqueredirect" ||
-    (response.status >= 300 && response.status < 400)
-  ) {
+  while (true) {
+    try {
+      response = await fetchImpl(url.href, {
+        method: "GET",
+        credentials: "omit",
+        redirect: "manual",
+        cache: "no-store",
+        referrerPolicy: "no-referrer",
+        headers: { Accept: "application/pdf" },
+        signal: AbortSignal.timeout(15000),
+      });
+    } catch {
+      throw new ProbeError("file_network_failed");
+    }
+    if (response.url && response.url !== url.href) {
+      await cancel();
+      throw new ProbeError("file_redirect_blocked");
+    }
+    if (
+      response.type !== "opaqueredirect" &&
+      !(response.status >= 300 && response.status < 400)
+    )
+      break;
     await cancel();
-    throw new ProbeError("file_redirect_blocked");
+    if (redirectsFollowed) throw new ProbeError("file_redirect_limit");
+    const location = redirectLocation(response);
+    if (!location) throw new ProbeError("file_redirect_blocked");
+    const next = checkedCdnLocation(location);
+    await beforeRedirect(); // Recheck the Canvas session before the second request.
+    url = next;
+    redirectsFollowed++;
   }
   if (!response.ok) {
     await cancel();
@@ -166,13 +271,18 @@ export async function readPdf(metadata, sample, fetchImpl = fetch) {
   return {
     state: "read",
     byteLength: size,
+    redirectsFollowed,
     pdfSignature: true,
     matchesOperatorSample: hash === sample.expectedSha256,
     textExtraction: "separate_local_sample_only",
   };
 }
 
-export async function probeDetails(config, fetchImpl = fetch) {
+export async function probeDetails(
+  config,
+  fetchImpl = fetch,
+  fileTransport = { fetch: fetchImpl, location: () => null },
+) {
   const { origin, courses } = validateScope(config);
   const api = makeReader(origin, fetchImpl);
   const initial = String((await api.get("/api/v1/users/self/profile")).data.id);
@@ -258,9 +368,15 @@ export async function probeDetails(config, fetchImpl = fetch) {
         await identity();
         const resolved = await resolvePdfMetadata(api, data, sample, origin);
         await identity();
-        return readPdf(resolved, sample, fetchImpl);
+        return readPdf(
+          resolved,
+          sample,
+          fileTransport.fetch,
+          fileTransport.location,
+          identity,
+        );
       });
   }
   await identity();
-  return { ...report, diagnosticVersion: 4 };
+  return { ...report, diagnosticVersion: 5 };
 }
