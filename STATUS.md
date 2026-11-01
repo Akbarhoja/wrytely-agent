@@ -30,6 +30,22 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+Latest A integration: M document staging HTTP #155 exact647c5032014af444eea114992773cbb3b438bb1c
+merged unchanged onto #153f62fb0c on codex/p1-document-api-integration. All5 M files,
+including app/main.py, byte-identical; read review found no blocking issue in scope.
+POST begin/parts/finish reuse current Store and retain default-off trusted extractor
+configuration and bounded/no-store/error/replay semantics. On fresh disposable
+Postgres, all 54 focused API tests pass (zero skips, one existing warning, 6.83s);
+full combined backend passes 1,422 tests (zero skips, two existing warnings,
+137.85s). All 404 extension tests pass;
+Ruff lint/format (222 files), scoped Prettier and diff checks pass. [Review evidence](docs/P1-DOCUMENT-API-INTEGRATION.md).
+M's #153 counterpart integration/CI review6564595290 found no blocker;404NodePASS,
+existing dependency GitHub CI green. M's #152 scoped consumer review passed16pure
+cases, requesting a separate versioned private result interface; no public v2
+exposure. M has resumed #149 producer, not delivered yet. Counterpart review and
+new candidate CI remain separate. No live source/model/send/spend/grant/install,
+retained migration, worker/deploy/mainmerge. P0/P1 stay open.
+
 Latest A integration increment: M's browser controls/package #146 exact
 c9deb62434365ce7af22fbc7772f5fafc11cdfcc merged unchanged onto #1524dd8a06 on
 codex/p1-browser-package-integration. All16 delivered files byte-identical; A read
