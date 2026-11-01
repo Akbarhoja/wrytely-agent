@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Canvas collection · Wrytely</title>
+    <link rel="stylesheet" href="tokens.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="boot.mjs"></script>
+  </head>
+  <body class="options">
+    <main id="controls" aria-busy="true">
+      <header>
+        <span class="wordmark">wrytely<span aria-hidden="true">.</span></span
+        ><button id="options" type="button" class="quiet" disabled>
+          Settings
+        </button>
+      </header>
+      <section class="status-rail" aria-labelledby="heading">
+        <p class="eyebrow">Canvas collection</p>
+        <h1 id="heading">Checking browser status…</h1>
+        <p id="coverage">Coverage not measured in this view.</p>
+      </section>
+      <p
+        id="feedback"
+        class="feedback"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      ></p>
+      <section aria-labelledby="connection-heading" class="panel">
+        <h2 id="connection-heading">Connect this browser</h2>
+        <p>Use a pairing code from your signed-in Wrytely account.</p>
+        <form id="pair-form" novalidate>
+          <label for="code">Pairing code</label>
+          <div class="code-row">
+            <input
+              id="code"
+              type="password"
+              autocomplete="one-time-code"
+              spellcheck="false"
+              maxlength="32"
+              aria-describedby="code-help code-error"
+            /><button
+              id="reveal"
+              type="button"
+              class="quiet"
+              aria-pressed="false"
+              disabled
+            >
+              Show code
+            </button>
+          </div>
+          <p id="code-help" class="hint">
+            The code is not saved and clears when you send it.
+          </p>
+          <p id="code-error" class="field-error"></p>
+          <button id="pair" type="submit" class="secondary" disabled>
+            Pair browser
+          </button>
+        </form>
+        <div class="identity">
+          <button id="bind" type="button" class="secondary" disabled>
+            Verify Canvas identity
+          </button>
+          <p id="identity-status" class="hint">
+            Identity has not been checked in this view.
+          </p>
+        </div>
+      </section>
+      <section aria-labelledby="collection-heading" class="panel">
+        <h2 id="collection-heading">You control collection</h2>
+        <p id="scope" class="hint">
+          Sites are fixed when this package is built.
+        </p>
+        <label class="consent"
+          ><input id="consent" type="checkbox" /><span
+            >Allow background reads from this package’s Canvas site and uploads
+            to its Wrytely service.</span
+          ></label
+        >
+        <button id="enable" type="button" class="primary" disabled>
+          Enable collection
+        </button>
+        <div class="actions">
+          <button id="collect" type="button" class="secondary" disabled>
+            Collect one step</button
+          ><button id="disable" type="button" class="secondary" disabled>
+            Pause collection
+          </button>
+        </div>
+        <p id="activity" class="hint">
+          Collection depends on this browser and your signed-in Canvas session.
+        </p>
+        <p class="hint">
+          Pause stops new steps. A step already running may finish its remaining
+          requests.
+        </p>
+      </section>
+      <footer>
+        <button id="refresh" type="button" class="quiet" disabled>
+          Refresh status</button
+        ><span>Availability, not an uptime guarantee.</span>
+      </footer>
+      <noscript
+        >Enable this extension’s local scripts to use the controls. No
+        collection has been enabled here.</noscript
+      >
+    </main>
+  </body>
+</html>
