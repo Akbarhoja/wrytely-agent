@@ -375,3 +375,15 @@ Mac counterpart/combined verification is next separate review, not yet passed.
 No M files/fixture bytes modified; no live source/model/send/spend/grant/install/
 retained migration/continuous worker/deploy/mainmerge. Finish/root publication and
 safe cleanup remain subsequent A slices; P0/P1 stay open.
+
+P1 two-course acceptance: exact M#13200dad2ac merged unchanged into
+`codex/p1-two-course-acceptance`, executable015dde1/base#133c107b68. Four M
+test/scoped-doc files verified byte-identical; A shared/runtime/contracts preserved.
+Independent Mac all19 actualHTTP/client/extractionAPI/Store PASS8.38s;365NodePASS.
+Full combined disposable backend1123PASS/zero skips/2existingwarnings61.80s;
+Ruff/format183files/diff pass. Synthetic committed two-course initial/repeat/deadline
+change proves2→2→3 versions/events,2→4→6observations and exact lost-ack replay without
+refetch. No scoped blocker; [review](docs/P1-TWO-COURSE-ACCEPTANCE.md). Not installed
+MV3/restart/live/all-source/modelactivation acceptance. A document finish/publication
+continues separately; no M implementation edit, live/send/spend/retainedmigration/
+worker/deploy/mainmerge. P0/P1 remain open.
