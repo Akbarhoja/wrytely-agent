@@ -22,12 +22,15 @@ def _clock(now):
     now = datetime.now(UTC) if now is None else now
     if not _aware(now):
         raise ValueError("Aware policy clock required")
-    return now
+    return now.astimezone(UTC)
 
 
 def _age(checked_at, now, ttl):
     if not _aware(checked_at):
         return Freshness(False, "unknown_time")
+    # Policy durations are elapsed time; local-zone arithmetic can add or lose
+    # an hour at DST transitions, and same-zone comparisons ignore the fold.
+    checked_at = checked_at.astimezone(UTC)
     if checked_at > now + timedelta(minutes=5):
         return Freshness(False, "future_observation")
     expires_at = checked_at + ttl
@@ -91,6 +94,8 @@ def canvas_freshness(
         return Freshness(False, "resource_incomplete")
     if not _aware(observed_at) or not _aware(received_at):
         return Freshness(False, "unknown_time")
+    observed_at = observed_at.astimezone(UTC)
+    received_at = received_at.astimezone(UTC)
     if max(observed_at, received_at) > now + timedelta(minutes=5):
         return Freshness(False, "future_observation")
     ttl = min(ttl_by_purpose[purpose], timedelta(minutes=30)) if urgent else ttl_by_purpose[purpose]

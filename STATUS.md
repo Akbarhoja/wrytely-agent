@@ -336,3 +336,17 @@ No staged request parser/store, SQL, upload/publication, M source/harness, live 
 model, send, worker or deployment change. Counterpart review requested.
 M reports #127 two-course actual tests green, final782 full suite still running;
 this is implementer progress, not A review/combined/live acceptance.
+
+P1-A2 DST audit follow-up on `codex/p1-freshness-utc`, base#129d70c9a8:
+M's #130 duplicate source-time blocker already fixed by Aec6f0c9; exact commit
+handed off in6554869602 and M acknowledged6554875745. Further audit reproduced
+nine freshness failures (local elapsed TTL/future/min/max/urgent limits) and two
+Canvas same-instant ambiguity failures in fixed Denver fold tests. f5a2f34 normalizes
+policy clock/evidence to UTC; c29aba6 normalizes Canvas current/prior instants.
+Preserves age thresholds, all permission/coverage fences and historical semantics.
+13new policy +2 transactional regressions; final full disposable backend1077PASS,
+zero skips,2existingwarnings52.92s; Ruff lint/format177files/diff pass. Tests also
+cover spring-forward, exact limits, rollback and reversed wall-clock history/order.
+[Evidence](docs/P1-FRESHNESS-UTC.md). No M-source/HTTP/schema changes, live access,
+spend/send, retained migration, worker, deployment or main merge. Counterpart review
+requested; document staged transactions/publication remain next A implementation.

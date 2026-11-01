@@ -84,8 +84,12 @@ class CanvasEvidenceStore:
             "SELECT * FROM wrytely_agent.canvas_evidence_observations WHERE id=%s",
             (obj["latest_observation_id"],),
         ).fetchone()
-        historical = prior is not None and observed < prior["observed_at"]
-        if prior and observed == prior["observed_at"] and digest != prior["content_digest"]:
+        # Equal instants in different zones can compare unequal during a DST
+        # fold; same-zone ordering can also ignore the fold. Use UTC instants.
+        observed = observed.astimezone(UTC)
+        prior_at = prior["observed_at"].astimezone(UTC) if prior else None
+        historical = prior_at is not None and observed < prior_at
+        if prior and observed == prior_at and digest != prior["content_digest"]:
             raise CanvasSyncConflict("ambiguous_observation_time")
         version = None
         if payload["content"].strip() and payload["title"].strip():
