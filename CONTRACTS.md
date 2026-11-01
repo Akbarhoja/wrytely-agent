@@ -24,7 +24,8 @@ supply executable document APIs. The explicit deferred document-consumer gate no
 has a [document-only v2 wire review candidate](docs/contracts/CANVAS-DOCUMENT-WIRE-v2.md)
 with exact upload/publication/receipt shapes, canonical vectors and bounded orphan
 cleanup. It is **proposed, not agreed or implemented**; schema1 and inactive source
-behavior remain unchanged. C4–C7 still require counterpart agreement.
+behavior remain unchanged. C4–C7 behavioral design agreement is retained per M review6554440608; the newer
+exact consumer wire still needs the named clarifications and final agreement.
 
 ## C4–C7 exact review candidate; no consumer agreement yet
 
@@ -34,8 +35,44 @@ private-file and model-accounting boundaries, defaults, and migration/stop/rollb
 order. [Twenty synthetic review cases](tests/fixtures/agent_operations_v1.json)
 cover replay, ownership, stale scope, unknown send, file mismatch and cost races.
 These are proposed examples, not implemented validation or authorization grants.
-M consumer agreement is required; current text/reply/delivery contracts remain in force.
+M reviewed20 cases and retained behavioral design agreement in6554440608. Revision
+3b86710 now answers its dispatch-consumption, consumed-offer and typed-health questions;
+24 review cases/two health samples accompany the final wire agreement request.
+Final consumer wire agreement is required; current text/reply/delivery contracts remain in force.
 No new paid allowance, migration, runtime, queue or source activation is implied.
+
+## P1-A2 internal document section storage and pinned reads
+
+`shared/canvas_documents.py` composes into Store with additive migration015. Three
+private tables store immutable section versions, stable segment UUIDs and exact
+observation bindings. Composite foreign keys bind the same agent AND source object
+through root, parts and observation. Internal `_stage_canvas_document_sections` and
+`_bind_canvas_document_sections` require a trusted caller-owned transaction; they
+are not upload/user/model endpoints. A future C2 publisher must supply its live
+scan/credential/lease/expiry/quota fences. Root/parts and binding roll back together
+with caller failure; unbound roots cannot be read. Same bytes/manifest/format/extractor
+under the same owned object reuse a version; a binding cannot change to another root.
+The internal section_fingerprint is integrity/dedup only, not #118's pending protocol
+canonical document_digest. No pending wire/root-digest fields are adopted here.
+
+`read_canvas_document_sections(verified_user,object_id,*,observation_id,
+document_version_id,first_slot=0,limit=10)` and its `_for_task(lease,...)` variant
+require both pinned IDs; no latest-root fallback. They reuse existing verified actor,
+task-bound source scope, current subject/generation, configured origin, selected
+course/resource, credential expiry and final task/clock fences. Part hashes,
+provenance, full manifest and internal fingerprint are revalidated before a bounded
+original-section response. Stable segment IDs accompany code-point offsets/pages/text.
+Response has the agreed object/observation/document IDs, sections,next_slot,total_slots,
+coverage,missing,historical,freshness. Owned stale/partial history remains inspectable
+but unusable; source age comes from evidence, never a new storage timestamp.
+
+An empty or page-gapped section set cannot bind to evidence claiming complete or
+without explicit missing evidence. SQL/helper checks never manufacture text. Staging/
+binding does not change observations, legacy latest pointers, checks/events, scan
+coverage or model readiness. No existing list/short-body reader or schema1 shape is
+changed. No HTTP/collector upload path consumes these methods yet. #118 wire agreement,
+real root/publication assembly and separate retention/cleanup work remain required.
+Migration015 was applied only to disposable tests; no retained DB/deployment change.
 
 ## P1-A2 internal immutable document sections
 
