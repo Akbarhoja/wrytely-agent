@@ -45,6 +45,32 @@ exact clarification3b86710 in6554751518. Current executable text/reply/delivery
 contracts remain in force until the new implementation is separately reviewed.
 No new paid allowance, migration, runtime, queue or source activation is implied.
 
+## P1 internal exact document citations
+
+`runtime/document_citations.py` adds internal verify_document_citation and
+verify_document_citation_for_task helpers over the existing authorized pinned
+section readers. Caller supplies a server-verified identity/current task lease;
+models never choose it. No Store/HTTP/extension wire or model tool is added.
+Citation fields are exact object_id,observation_id,document_version_id,segment_id,
+slot,page,start,end,quote. Quote is nonblank normalized text up to4000 code points;
+offsets are global code points and must span that exact quote within one section.
+
+Helpers read exactly one pinned slot, verify root/observation/segment/page identity,
+recheck its exact UTF8 SHA256 and compare the explicit substring. They return only
+the quote/reference/hash and original coverage/missing/history/inspection freshness,
+not the remaining section text. Unknown/mismatched IDs or a fabricated quote never
+fall back to another root, section or current observation. Existing Store permission,
+task-source binding, pause/lease/connection/scope/expiry and section-integrity fences
+remain authoritative; a task gains no semester-wide source capability.
+
+quote_matches is literal containment, not a semantic claim or drafting permission.
+A match can remain historical/stale/partial/unusable. evidence_usable_for_inspection
+requires the current reader's inspection policy plus complete/no-gap/nonhistorical
+state. This is not the stricter drafting/action policy. A future integrated draft/
+verification/dispatch must rerun reference/control checks under its own purpose and
+current lease at final commit; a previous return value is not reusable authority.
+No fact persistence, automatic source promotion, model activation or deployment occurs.
+
 ## P1 explicit bounded document staging cleanup
 
 `Store.cleanup_canvas_document_staging(*,limit=100)` is a trusted operator-only
