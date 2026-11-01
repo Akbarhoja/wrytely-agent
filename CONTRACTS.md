@@ -26,6 +26,17 @@ with exact upload/publication/receipt shapes, canonical vectors and bounded orph
 cleanup. It is **proposed, not agreed or implemented**; schema1 and inactive source
 behavior remain unchanged. C4–C7 still require counterpart agreement.
 
+## C4–C7 exact review candidate; no consumer agreement yet
+
+[Agent operations wire v1](docs/contracts/AGENT-OPERATIONS-WIRE-v1.md) supplements the
+existing architecture with exact action/authorization/result, student-decision,
+private-file and model-accounting boundaries, defaults, and migration/stop/rollback
+order. [Twenty synthetic review cases](tests/fixtures/agent_operations_v1.json)
+cover replay, ownership, stale scope, unknown send, file mismatch and cost races.
+These are proposed examples, not implemented validation or authorization grants.
+M consumer agreement is required; current text/reply/delivery contracts remain in force.
+No new paid allowance, migration, runtime, queue or source activation is implied.
+
 ## P1-A1 first slice — Canvas pairing and credential lifecycle (#58)
 
 Implemented in shared/source_connections.py, composed into Store with additive migration010.
