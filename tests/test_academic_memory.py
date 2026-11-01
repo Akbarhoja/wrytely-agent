@@ -158,6 +158,58 @@ def test_equal_timestamp_revisions_are_ambiguous(store, alice):
         store.observe_source("user_alice", obs.model_copy(update={"external_revision": "v2"}))
 
 
+@pytest.mark.parametrize("stamp", ["2025-11-02T07:30:00+00:00", "2025-11-02T08:30:00+00:00"])
+def test_equal_instants_in_both_dst_folds_reject_revision_and_roll_back(store, alice, stamp):
+    from contextlib import contextmanager
+
+    original_connection = store.connection
+
+    @contextmanager
+    def denver_connection():
+        with original_connection() as conn:
+            conn.execute("SET TIME ZONE 'America/Denver'")
+            yield conn
+
+    store.connection = denver_connection
+    obs = observation().model_copy(update={"retrieved_at": datetime.fromisoformat(stamp)})
+    first = store.observe_source("user_alice", obs)
+    with pytest.raises(RequestConflict):
+        store.observe_source("user_alice", obs.model_copy(update={"external_revision": "v2"}))
+    with store.connection() as conn:
+        assert (
+            conn.execute(
+                "SELECT count(*) AS n FROM wrytely_agent.source_versions WHERE source_id=%s",
+                (first["source_id"],),
+            ).fetchone()["n"]
+            == 1
+        )
+        assert (
+            conn.execute(
+                "SELECT latest_version_id FROM wrytely_agent.academic_sources WHERE id=%s",
+                (first["source_id"],),
+            ).fetchone()["latest_version_id"]
+            == first["id"]
+        )
+
+    # A different fold may have an earlier wall clock despite being later in UTC.
+    from zoneinfo import ZoneInfo
+
+    other_stamp = "2025-11-02T08:15:00+00:00" if "07:30" in stamp else "2025-11-02T07:45:00+00:00"
+    other_time = datetime.fromisoformat(other_stamp).astimezone(ZoneInfo("America/Denver"))
+    other = store.observe_source(
+        "user_alice", obs.model_copy(update={"external_revision": "v3", "retrieved_at": other_time})
+    )
+    expected = other if other_time.astimezone(UTC) > obs.retrieved_at else first
+    with store.connection() as conn:
+        assert (
+            conn.execute(
+                "SELECT latest_version_id FROM wrytely_agent.academic_sources WHERE id=%s",
+                (first["source_id"],),
+            ).fetchone()["latest_version_id"]
+            == expected["id"]
+        )
+
+
 def test_planner_receives_only_bound_memory(store, alice):
     from test_planner import plan
 
