@@ -73,6 +73,8 @@ jobs:
           extension/canvas-pairing/client.test.mjs
           extension/canvas-feasibility/probe.test.mjs
           extension/canvas-feasibility/page.test.mjs
+          extension/canvas-feasibility/assignment-page.test.mjs
+          extension/canvas-pairing/http-environment.test.mjs
           extension/canvas-pairing/collector.test.mjs
           extension/canvas-pairing/assignment-page.test.mjs
           extension/canvas/assignment-observation.test.mjs

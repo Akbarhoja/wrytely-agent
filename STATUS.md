@@ -1,6 +1,6 @@
 # Engineering status
 
-Updated October 31, 2026. [Plan revision7](docs/BUILD-PLAN.md) ·
+Updated November 1, 2026. [Plan revision7](docs/BUILD-PLAN.md) ·
 [Work orders](docs/WORK-ORDERS.md) · [Code audit](docs/IMPLEMENTATION-AUDIT.md) ·
 [Team coordination](https://github.com/Akbarhoja/wrytely-agent/issues/4)
 
@@ -265,12 +265,36 @@ skip/bypass. Separate diagnostic64PASS, web114PASS and TypeScript, Ruff/format/C
 format/diff pass. Source collector handoff and M harness fix are still required.
 No deployed/live collection or main merge; see [candidate evidence](docs/P1-INTEGRATION-CANDIDATE.md).
 
+November1 combined candidate `codex/p1-collection-integration`: A#124bba479d plus
+M#12545dbebf and #126e7558f7, with prior #121 CI/evidence retained. Actual macOS
+17-case client/HTTP/Store suite now passes on exact #125; its21 environment-policy
+cases also pass without bypass. Exact #126 extraction API/parser59 and focused
+reader/discovery/course143 Node cases pass. Combined extension365/zero skips,
+separate diagnostic64, web114 and TypeScript pass. CI pins Node24 and enumerates all10
+extension test files. M source preserved exactly except the separate exact #125
+harness files and retained A-branch Outlook probe; shared014/015 retained.
+
+First combined backend run:961PASS/1FAIL in56.00s. Existing source ambiguity test
+exposed cross-zone datetime equality during today's DST repeated hour. Both fixed
+2025 Denver fold reproductions failed before the fix. A-owned ec6f0c9 compares UTC
+instants; regressions cover rejection/rollback and chronological promotion despite
+reversed wall clocks. Final combined backend **964PASS**, zero skips,2 existing
+warnings in51.53s. Ruff lint/format173files, CI format and diff checks pass.
+See [combined evidence](docs/P1-COLLECTION-INTEGRATION.md). Counterpart review of this
+candidate/DST fix/#124 and final #118/#119 agreement remain pending. Full actual
+collector→extractorHTTP→Store two-course initial/repeat/changed-deadline acceptance
+is M's next sole-editor harness slice, not passed by these component scenarios.
+P0/P1 remain open; no live Canvas/model/WhatsApp, retained migration, install,
+continuous-worker activation, deployment or protected-main merge occurred.
+
 ## Next actions
 
-A: obtain #97 Unicode fix review, review/integrate agreed components and add discovery
-Node CI on a branch containing the actual extension. Complete reader/long-document
-and supervisor work in their ordered reviewed slices; no live source activation yet.
-M: P0 access evidence/blockers; claimed integration work and agreed cross-layer tests.
+A: obtain counterpart review of the combined collection/storage candidate, its narrow
+DST fix and #124 storage; obtain final #118/#119 wire agreement and human baseline
+approval. Continue owned document/runtime work after its specific dependencies clear.
+M: next sole-editor harness slice proves actual collector → extraction API → Store
+for synthetic two-course initial/repeat/changed-deadline flows; then remaining Canvas
+resource kinds/documents and installed-host recovery. WhatsApp live delivery remains M-owned.
 Claims must be posted in #4 before implementation. Nobody takes over the other's files.
 
 [Historical detailed status](docs/archive/STATUS-through-2026-10-29.md) preserves
