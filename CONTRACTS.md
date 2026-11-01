@@ -37,6 +37,31 @@ These are proposed examples, not implemented validation or authorization grants.
 M consumer agreement is required; current text/reply/delivery contracts remain in force.
 No new paid allowance, migration, runtime, queue or source activation is implied.
 
+## P1-A2 internal immutable document sections
+
+`shared/document_sections.py` implements only the section/manifest invariants from
+M's accepted #78 document architecture. `split_document_text` reuses existing
+canonical LF/NFC normalization on the whole non-PDF text before splitting, then
+computes SHA256 for each exact UTF-8 section. Bounds:200000 normalized code points,
+512 sections and24000 code points/section; oversized input rejects without prefix
+output. Input is also bounded before normalization; malformed Unicode rejects.
+
+`validate_document_sections` checks exact manifest `{slot,start,end,page,text_sha256}`
+and part `{slot,text}` records. Parts may arrive out of order, but duplicate/missing
+slots, extra fields, bad hashes, gaps/overlap, non-normalized text, wrong totals and
+whole-text NFC changes across boundaries reject. Page provenance is positive,
+nondecreasing and within1–200; non-PDF sections require page=null. Returned dataclasses
+and section tuples are immutable and independent of mutable input containers.
+Unrepresented PDF pages are exposed as gaps, not invented text or complete coverage.
+
+`page_document_sections` returns whole sections, maximum20/40000 code points, with
+explicit next_slot. Ending exactly at total slots returns an empty terminal page;
+no section prefix is presented as the full document. These pure internal functions
+have no persistence, parsing, root digest, IDs, ownership, freshness or coverage
+policy. Callers must authenticate/fence a pinned root and its observations separately.
+No C2/schema2/HTTP or model tool consumes them. #118 wire agreement and M's existing
+parser/collector remain required; this does not duplicate PDF/HTML extraction.
+
 ## P1-A2 structured Canvas change details
 
 `shared/canvas_evidence.py` now records private canonical comparisons in the existing
