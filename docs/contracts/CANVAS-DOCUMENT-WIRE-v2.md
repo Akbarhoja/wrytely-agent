@@ -9,10 +9,19 @@ M must agree this exact revision and vectors before dependent implementation.
 
 ## 1. Exact discriminator and authority
 
-The new discriminator is the pair `schema_version:2, batch_type:"canvas_documents"`.
-Both keys are mandatory, with integer2 (not bool/string) and the exact literal.
-Unknown fields or mixed inline/document items reject the whole operation. An integer2
-alone never selects this parser. No schema1 item acquires optional document fields.
+For **C2 publication batches and their receipts** (§4), the discriminator is the
+pair `schema_version:2, batch_type:"canvas_documents"`. Both keys are mandatory,
+with integer2 (not bool/string) and the exact literal. Integer2 alone never selects
+the publication parser. Publication shapes forbid the staging `operation` key and
+mixed inline/document items; unknown fields reject the whole operation.
+
+**Staged begin/put/finish requests and receipts** (§2) instead use the exact pair
+`schema_version:2, operation:"begin_document"|"put_document_parts"|"finish_document"`.
+Their exact shapes deliberately contain NO batch_type; supplying it is an unknown-key
+error. The trusted assembly dispatches by the operation-specific staging endpoint or
+the publication endpoint, never by schema_version alone or payload-shape guessing.
+An operation cannot be interpreted as a publication batch, or vice versa. No schema1
+item acquires optional document fields.
 
 All operations use the existing verified ingestion bearer, operator-approved origin,
 connection generation, current subject and selected course/resource/scan. Bodies
@@ -23,7 +32,8 @@ internal operation names below are not claims that endpoints exist.
 
 ## 2. Staged upload requests and receipts
 
-Every request body has exactly the fields shown here (types after colons):
+Every staged request body has exactly the fields shown here (types after colons).
+The §1 publication batch_type requirement does not apply to these staging bodies:
 
 ```text
 common = schema_version:2, connection_id:UUID, generation:int>=1,
@@ -120,7 +130,8 @@ and missing remain content identity under the existing v1 digest rule.
 
 [Fixed synthetic vectors](../../tests/fixtures/canvas_document_v2.json) contain raw
 text/page input, normalized text, slots/parts, exact digest payload, canonical UTF-8
-and SHA256. Cases cover NFC/CRLF/emoji, PDF page boundaries, partial/image-page gaps,
+and SHA256. Separate wire_cases pin staged/publication discriminators and unknown-key
+rejections; they do not alter the ten root-digest vectors. Cases cover NFC/CRLF/emoji, PDF page boundaries, partial/image-page gaps,
 zero text and A→B→A. Equal normalized Unicode variants hash equally; changing a page
 boundary, structured field or coverage must change the root. A→B→A reuses the first
 immutable root but creates three transition observations; do not reuse the first

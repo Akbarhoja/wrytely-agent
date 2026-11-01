@@ -35,8 +35,9 @@ private-file and model-accounting boundaries, defaults, and migration/stop/rollb
 order. [Twenty synthetic review cases](tests/fixtures/agent_operations_v1.json)
 cover replay, ownership, stale scope, unknown send, file mismatch and cost races.
 These are proposed examples, not implemented validation or authorization grants.
-M reviewed20 cases and retained behavioral design agreement, requesting exact dispatch
-consumption, consumed-offer replay and health DTO clarifications in6554440608.
+M reviewed20 cases and retained behavioral design agreement in6554440608. Revision
+3b86710 now answers its dispatch-consumption, consumed-offer and typed-health questions;
+24 review cases/two health samples accompany the final wire agreement request.
 Final consumer wire agreement is required; current text/reply/delivery contracts remain in force.
 No new paid allowance, migration, runtime, queue or source activation is implied.
 

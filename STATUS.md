@@ -241,6 +241,18 @@ offer/different-key decisions and typed health projections need exact wire clari
 M is prioritizing the owned macOS harness fix and preserving his collector worktree.
 New storage #124ee41cb0 is separately awaiting counterpart review; no blanket approval.
 
+P0-A3 requested clarifications are now addressed in original PR revisions:
+#1187f4f09f scopes publication schema2/batch_type separately from staged schema2/operation
+and adds8 shape examples while preserving all10 digest vectors. #1193b86710 specifies
+commit-before-permitted dispatch consumption, accept-only responsibility creation,
+consumed-token/different-key409 with no side effects, and exact typed operator/worker/
+student health projections. Original20 review examples unchanged;4 edge cases plus2
+health samples added. Shapes/arithmetic/privacy-key/link/format/diff checks pass.
+These docs/fixture updates are carried into this storage branch; runtime remains
+ee41cb0 with779 full tests previously passed, no redundant runtime rerun. Final M exact
+agreement is requested; no consumer, permission, paid allowance or deployment activation.
+M's #125 harness fix and #126 collector handoffs have arrived for separate A review.
+
 ## Next actions
 
 A: obtain #97 Unicode fix review, review/integrate agreed components and add discovery
@@ -252,3 +264,18 @@ Claims must be posted in #4 before implementation. Nobody takes over the other's
 [Historical detailed status](docs/archive/STATUS-through-2026-10-29.md) preserves
 prior runs, authorizations and limitations. Old stage documents are context; this
 revision's scope and work orders determine new implementation.
+
+P0-A3 #118 exact-key clarification: publication uses schema_version2 plus
+batch_type=canvas_documents; staging uses schema_version2 plus its exact operation
+and forbids batch_type. Endpoint-specific dispatch never guesses from version alone.
+Eight synthetic wire examples supplement the unchanged ten canonical vectors. M final
+review requested; no executable upload or agreement/activation inferred.
+
+P0-A3 #119 clarification: authorize_agent_dispatch itself commits one-use consumption
+and dispatch_at BEFORE returning permitted; no separate M consume operation. Only
+successful acceptance creates a responsibility; consumed-token/different-key reuse
+returns409/offer_consumed without new authority or side effects. Operator, heartbeat
+and student health DTOs now have exact fields/types/nullability and separate scope.
+Four examples plus two health DTO examples supplement the unchanged20 prior cases.
+This branch includes #118's7f4f09f staging/publication clarification. Final M agreement
+is requested; no consumer implementation, budget or activation change.
