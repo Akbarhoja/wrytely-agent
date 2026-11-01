@@ -10,9 +10,9 @@ import pytest
 
 from shared.canvas_document_wire import validate_canvas_document
 
-VECTORS = json.loads((Path(__file__).parent / "fixtures/canvas_document_v2.json").read_text())[
-    "vectors"
-]
+VECTORS = json.loads(
+    (Path(__file__).parent / "fixtures/canvas_document_v2.json").read_text(encoding="utf-8")
+)["vectors"]
 
 
 def arguments(vector=None):
