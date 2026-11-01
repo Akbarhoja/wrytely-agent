@@ -1,5 +1,6 @@
-"""Thin private HTTP assembly for existing Canvas scope/discovery transactions."""
+"""Thin private HTTP assembly for existing Canvas scope and staged C2 transactions."""
 
+import unicodedata
 from typing import Annotated, Literal
 from uuid import UUID
 
@@ -8,6 +9,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import Field, field_validator, model_validator
 
 from app.source_connections import CanvasRoute, StrictBody
+from contracts.canvas_evidence import RESOURCE_TYPES, AcademicBatch, AcademicResource
 from contracts.canvas_sync import REASONS, Checkpoint, DiscoveryBatch, replay_key
 from contracts.models import Identity
 from shared.canvas_sync import CanvasSyncConflict
@@ -36,6 +38,10 @@ CONFLICT_CODES = frozenset(
         "scan_terminal",
         "scope_changed",
         "subject_changed",
+        "ambiguous_observation_time",
+        "duplicate_resource_item",
+        "finish_previous_resource",
+        "resource_rewind",
     }
 )
 
@@ -97,18 +103,55 @@ class BatchIn(LeasedIn):
     envelope: DiscoveryBatch
 
 
-class ResourceIn(LeasedIn):
+class AcademicBatchIn(LeasedIn):
+    batch_key: str
+    expected_checkpoint: Checkpoint
+    envelope: AcademicBatch
+
+    @model_validator(mode="after")
+    def normalized_http_text_bounds(self):
+        # HTTP transport bound only; shared C2 owns canonicalization/persistence.
+        # Also protects historical partial/no-title validators before #98 consolidation.
+        for item in self.envelope.items:
+            for text, limit in ((item.title, 300), (item.content, 24000)):
+                normalized = unicodedata.normalize(
+                    "NFC", text.replace("\r\n", "\n").replace("\r", "\n")
+                )
+                if len(normalized) > limit:
+                    raise ValueError("Normalized academic text limit")
+        return self
+
+
+class ResourceControlIn(LeasedIn):
     resource_key: str = Field(min_length=1, max_length=128)
     finish_key: str
     expected_checkpoint: Checkpoint
     outcome: Literal["complete", "partial", "restricted", "unsupported"]
     reason: str | None = None
 
+
+class ResourceIn(ResourceControlIn):
     @model_validator(mode="after")
     def discovery_outcome(self):
         if self.outcome == "complete":
             if self.reason is not None or self.resource_key != "courses":
                 raise ValueError("Only course metadata completion is supported")
+        elif self.reason not in REASONS:
+            raise ValueError("Controlled failure reason required")
+        return self
+
+
+class AcademicResourceIn(ResourceControlIn):
+    @model_validator(mode="after")
+    def academic_outcome(self):
+        course, separator, kind = self.resource_key.partition("/")
+        if not separator or kind not in RESOURCE_TYPES:
+            raise ValueError("Unsupported academic resource")
+        # Reuse the typed resource's canonical course-ID validation.
+        AcademicResource(course_id=course, kind=kind)
+        if self.outcome == "complete":
+            if self.reason is not None:
+                raise ValueError("Complete resource has no failure reason")
         elif self.reason not in REASONS:
             raise ValueError("Controlled failure reason required")
         return self
@@ -231,6 +274,38 @@ def register_canvas_sync(api, *, identity_dependency, database_dependency, canva
                 body.generation,
                 body.lease_token,
                 body.finish_key,
+            ),
+        )
+
+    @batches.post("/academic/batch")
+    def academic_batch(body: AcademicBatchIn, request: Request, token: Actor, db: DB):
+        return dispatch(
+            request,
+            lambda: db.commit_sync_batch(
+                token,
+                body.scan_id,
+                body.generation,
+                body.lease_token,
+                body.batch_key,
+                body.expected_checkpoint.model_dump(),
+                body.envelope.model_dump(),
+            ),
+        )
+
+    @metadata_controls.post("/academic/resource")
+    def academic_resource(body: AcademicResourceIn, request: Request, token: Actor, db: DB):
+        return dispatch(
+            request,
+            lambda: db.finish_resource(
+                token,
+                body.scan_id,
+                body.generation,
+                body.lease_token,
+                body.resource_key,
+                body.finish_key,
+                body.expected_checkpoint.model_dump(),
+                outcome=body.outcome,
+                reason=body.reason,
             ),
         )
 
