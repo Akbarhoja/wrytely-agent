@@ -459,3 +459,245 @@ def test_parts_do_not_accept_publication_discriminator_or_unrecognized_fields(de
         with pytest.raises(ValueError):
             put(device, request | {field: value})
     assert count(device, "canvas_document_upload_parts") == 0
+
+
+def finish_body(body, upload_id, key="finish-doc"):
+    value = put_body(body, upload_id, key=key)
+    del value["parts"]
+    value["operation"] = "finish_document"
+    return value
+
+
+def finish(device, request):
+    return device[0].finish_document_upload(
+        device[1]["ingestion_bearer"], request, extractor_versions=("fixture.v1",)
+    )
+
+
+def test_finish_reuses_sections_and_exposes_no_evidence_until_publication(device):
+    body = begin_body(device, evidence.prepare(device))
+    upload = begin(device, body)
+    put(device, put_body(body, upload["upload_id"]))
+    request = finish_body(body, upload["upload_id"])
+    receipt = finish(device, request)
+    assert receipt["ready"] is True and "received_slots" not in receipt
+    assert receipt["expires_at"] == upload["expires_at"]
+    assert finish(device, request) == {**receipt, "replayed": True}
+    assert count(device, "source_versions") == count(device, "canvas_evidence_observations") == 0
+    with device[0].connection() as conn:
+        obj = conn.execute("SELECT * FROM wrytely_agent.canvas_evidence_objects").fetchone()
+        assert obj["latest_observation_id"] is None and obj["source_id"] is None
+        doc, _ = device[0]._load_canvas_document(
+            conn, obj["agent_id"], obj["id"], receipt["document_version_id"]
+        )
+        assert "".join(s.text for s in doc.sections) == "Café\n📚"
+    assert (
+        device[0].list_canvas_evidence("user_alice", connection_id=body["connection_id"])["sources"]
+        == []
+    )
+
+
+def test_missing_parts_and_expired_finish_create_no_root(device):
+    body = begin_body(device, evidence.prepare(device))
+    upload = begin(device, body)
+    with pytest.raises(ValueError):
+        finish(device, finish_body(body, upload["upload_id"]))
+    put(device, put_body(body, upload["upload_id"]))
+    with device[0].connection() as conn:
+        conn.execute(
+            "UPDATE wrytely_agent.canvas_document_uploads SET "
+            "expires_at=clock_timestamp()-interval '1 second' WHERE id=%s",
+            (upload["upload_id"],),
+        )
+    with pytest.raises(CanvasSyncConflict, match="document_expired"):
+        finish(device, finish_body(body, upload["upload_id"]))
+    with device[0].connection() as conn:
+        assert (
+            conn.execute(
+                "SELECT count(*) AS n FROM wrytely_agent.canvas_document_versions"
+            ).fetchone()["n"]
+            == 0
+        )
+
+
+def test_protocol_roots_bind_fields_and_deduplicate_same_object_reversion(device):
+    body = begin_body(device, evidence.prepare(device))
+    receipts = []
+    for index in range(3):
+        value = deepcopy(body)
+        value["request_key"] = f"begin-{index}"
+        if index == 1:
+            value["object_fields"]["due_at"] = "2026-01-03T00:00:00Z"
+        upload = begin(device, value)
+        put(device, put_body(value, upload["upload_id"], key=f"put-{index}"))
+        receipts.append(finish(device, finish_body(value, upload["upload_id"], f"finish-{index}")))
+    assert receipts[0]["document_version_id"] == receipts[2]["document_version_id"]
+    assert receipts[0]["document_version_id"] != receipts[1]["document_version_id"]
+    assert (
+        receipts[0]["document_digest"]
+        == receipts[2]["document_digest"]
+        != receipts[1]["document_digest"]
+    )
+    with device[0].connection() as conn:
+        assert (
+            conn.execute(
+                "SELECT count(*) AS n FROM wrytely_agent.canvas_document_versions"
+            ).fetchone()["n"]
+            == 2
+        )
+
+
+def test_finish_fences_lease_at_final_receipt_and_rolls_back_root(device, monkeypatch):
+    body = begin_body(device, evidence.prepare(device))
+    upload = begin(device, body)
+    put(device, put_body(body, upload["upload_id"]))
+    original = device[0]._save_document_receipt
+
+    def late(conn, *args, **kwargs):
+        conn.execute(
+            "UPDATE wrytely_agent.canvas_scans SET "
+            "lease_expires_at=clock_timestamp()-interval '1 second' WHERE id=%s",
+            (body["scan_id"],),
+        )
+        return original(conn, *args, **kwargs)
+
+    monkeypatch.setattr(device[0], "_save_document_receipt", late)
+    with pytest.raises(CanvasSyncConflict, match="lease_expired"):
+        finish(device, finish_body(body, upload["upload_id"]))
+    with device[0].connection() as conn:
+        assert (
+            conn.execute(
+                "SELECT count(*) AS n FROM wrytely_agent.canvas_document_versions"
+            ).fetchone()["n"]
+            == 0
+        )
+        assert (
+            conn.execute(
+                "SELECT count(*) AS n FROM wrytely_agent.canvas_evidence_objects"
+            ).fetchone()["n"]
+            == 0
+        )
+
+
+@pytest.mark.parametrize("change", ["revoke", "scope", "generation", "extra", "upload"])
+def test_finish_controls_and_strict_wire_remain_enforced(device, change):
+    body = begin_body(device, evidence.prepare(device))
+    upload = begin(device, body)
+    put(device, put_body(body, upload["upload_id"]))
+    request = finish_body(body, upload["upload_id"])
+    finish(device, request)
+    if change == "revoke":
+        device[0].rotate_or_revoke("user_alice", body["connection_id"])
+    if change == "scope":
+        sync.set_scope(device, [], kinds=[])
+    if change == "generation":
+        request["generation"] += 1
+    if change == "extra":
+        request["parts"] = []
+    if change == "upload":
+        request["upload_id"] = str(uuid4())
+        request["request_key"] = "other"
+    with pytest.raises((ValueError, LookupError, SourceCredentialRejected)):
+        finish(device, request)
+
+
+def test_finish_rejects_whole_text_nfc_change_across_individually_valid_parts(device):
+    import hashlib
+
+    body = begin_body(device, evidence.prepare(device))
+    body["metadata"]["total_characters"] = 2
+    texts = ["e", "\u0301"]
+    body["manifest"] = []
+    for index, text in enumerate(texts):
+        body["manifest"].append(
+            {
+                "slot": index,
+                "start": index,
+                "end": index + 1,
+                "page": None,
+                "text_sha256": hashlib.sha256(text.encode()).hexdigest(),
+            }
+        )
+    upload = begin(device, body)
+    put(
+        device,
+        put_body(
+            body, upload["upload_id"], parts=[{"slot": i, "text": t} for i, t in enumerate(texts)]
+        ),
+    )
+    with pytest.raises(ValueError, match="normalization"):
+        finish(device, finish_body(body, upload["upload_id"]))
+    with device[0].connection() as conn:
+        assert (
+            conn.execute(
+                "SELECT count(*) AS n FROM wrytely_agent.canvas_document_versions"
+            ).fetchone()["n"]
+            == 0
+        )
+
+
+def test_zero_text_unsupported_root_is_ready_without_claiming_complete(device):
+    body = begin_body(device, evidence.prepare(device))
+    body["manifest"] = []
+    body["metadata"].update(
+        format="pdf_text",
+        total_pages=2,
+        total_characters=0,
+        coverage="unsupported",
+        missing=["image_only"],
+    )
+    upload = begin(device, body)
+    receipt = finish(device, finish_body(body, upload["upload_id"]))
+    assert receipt["ready"]
+    with device[0].connection() as conn:
+        root = conn.execute(
+            "SELECT protocol_payload FROM wrytely_agent.canvas_document_versions WHERE id=%s",
+            (receipt["document_version_id"],),
+        ).fetchone()["protocol_payload"]
+        assert root["coverage"] == "unsupported" and root["missing"] == ["image_only"]
+        assert (
+            conn.execute(
+                "SELECT count(*) AS n FROM wrytely_agent.canvas_document_sections"
+            ).fetchone()["n"]
+            == 0
+        )
+    assert count(device, "source_versions") == count(device, "canvas_evidence_observations") == 0
+
+
+def test_parallel_finish_reuses_one_root_and_original_receipt(device):
+    body = begin_body(device, evidence.prepare(device))
+    upload = begin(device, body)
+    put(device, put_body(body, upload["upload_id"]))
+    request = finish_body(body, upload["upload_id"])
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        receipts = list(pool.map(lambda _: finish(device, request), range(4)))
+    assert len({r["receipt_id"] for r in receipts}) == 1
+    assert len({r["document_version_id"] for r in receipts}) == 1
+    assert sum(not r["replayed"] for r in receipts) == 1
+    with device[0].connection() as conn:
+        assert (
+            conn.execute(
+                "SELECT count(*) AS n FROM wrytely_agent.canvas_document_versions"
+            ).fetchone()["n"]
+            == 1
+        )
+
+
+def test_finish_uses_current_extractor_configuration_and_private_identity(device):
+    body = begin_body(device, evidence.prepare(device))
+    upload = begin(device, body)
+    put(device, put_body(body, upload["upload_id"]))
+    request = finish_body(body, upload["upload_id"])
+    with pytest.raises(ValueError, match="Unconfigured"):
+        device[0].finish_document_upload(
+            device[1]["ingestion_bearer"], request, extractor_versions=("different.v1",)
+        )
+    db = device[0]
+    db.provision("user_bob")
+    code = db.create_pairing("user_bob", sync.ORIGIN)["code"]
+    bob = db.redeem_pairing(code, "bob-finish")
+    db.bind_canvas_identity(bob["ingestion_bearer"], sync.ORIGIN, "bob")
+    with pytest.raises(SourceCredentialRejected):
+        db.finish_document_upload(
+            bob["ingestion_bearer"], request, extractor_versions=("fixture.v1",)
+        )

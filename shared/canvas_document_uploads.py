@@ -1,12 +1,17 @@
 """Private begin/part staging only; finish, publication and cleanup remain separate."""
 
+import hashlib
 import json
 from uuid import UUID, uuid4
 
 from psycopg.types.json import Jsonb
 
 from contracts.canvas_sync import replay_key
-from shared.canvas_document_wire import _keys, validate_canvas_document_header
+from shared.canvas_document_wire import (
+    _keys,
+    validate_canvas_document,
+    validate_canvas_document_header,
+)
 from shared.canvas_sync import CanvasSyncConflict, _hash
 from shared.document_sections import DocumentSection
 
@@ -28,7 +33,17 @@ class CanvasDocumentUploadLimited(ValueError):
 
 
 def _request(body, operation):
-    _keys(body, _COMMON | (_BEGIN if operation == "begin_document" else {"upload_id", "parts"}))
+    _keys(
+        body,
+        _COMMON
+        | (
+            _BEGIN
+            if operation == "begin_document"
+            else {"upload_id"}
+            if operation == "finish_document"
+            else {"upload_id", "parts"}
+        ),
+    )
     if (
         type(body["schema_version"]) is not int
         or body["schema_version"] != 2
@@ -113,6 +128,22 @@ class CanvasDocumentUploadStore:
             "received_slots": [r["slot"] for r in slots],
             "replayed": False,
         }
+        if body["operation"] == "finish_document":
+            root = conn.execute(
+                "SELECT protocol_payload FROM wrytely_agent.canvas_document_versions WHERE id=%s "
+                "AND agent_id=%s AND object_id=%s",
+                (upload["document_version_id"], row["agent_id"], upload["object_id"]),
+            ).fetchone()
+            if root is None or root["protocol_payload"] is None:
+                raise CanvasSyncConflict("document_not_ready")
+            from contracts.source_digest import source_digest
+
+            del result["received_slots"]
+            result.update(
+                document_version_id=str(upload["document_version_id"]),
+                document_digest=source_digest(root["protocol_payload"]),
+                ready=True,
+            )
         conn.execute(
             "INSERT INTO wrytely_agent.canvas_document_upload_receipts VALUES (%s,%s,%s,%s,%s,%s)",
             (scan["id"], body["operation"], body["request_key"], upload_id, digest, Jsonb(result)),
@@ -218,4 +249,64 @@ class CanvasDocumentUploadStore:
                     "INSERT INTO wrytely_agent.canvas_document_upload_parts VALUES (%s,%s,%s)",
                     (upload["id"], part["slot"], part["text"]),
                 )
+            return self._save_document_receipt(conn, actor, row, scan, body, digest, upload["id"])
+
+    def finish_document_upload(self, actor, body, *, extractor_versions):
+        digest = _request(body, "finish_document")
+        if (
+            not isinstance(body["upload_id"], str)
+            or str(UUID(body["upload_id"])) != body["upload_id"]
+        ):
+            raise ValueError("Invalid upload ID")
+        with self.connection() as conn:
+            row, scan = self._document_context(conn, actor, body)
+            replay = self._document_receipt(conn, actor, row, scan, body, digest)
+            if replay:
+                return replay
+            upload = self._document_upload(conn, row, scan, UUID(body["upload_id"]))
+            parts = conn.execute(
+                "SELECT slot,text FROM wrytely_agent.canvas_document_upload_parts "
+                "WHERE upload_id=%s ORDER BY slot",
+                (upload["id"],),
+            ).fetchall()
+            root = validate_canvas_document(
+                **upload["header"], parts=parts, extractor_versions=extractor_versions
+            )
+            # Shell identity only: readers require an actual observation and binding.
+            obj = conn.execute(
+                "INSERT INTO wrytely_agent.canvas_evidence_objects "
+                "(id,agent_id,connection_id,subject_digest,course_id,kind,provider_id) "
+                "VALUES (%s,%s,%s,%s,%s,%s,%s) "
+                "ON CONFLICT(connection_id,subject_digest,course_id,kind,provider_id) "
+                "DO UPDATE SET provider_id=excluded.provider_id RETURNING id",
+                (
+                    uuid4(),
+                    row["agent_id"],
+                    row["id"],
+                    hashlib.sha256(row["provider_subject"].encode()).hexdigest(),
+                    root.course_id,
+                    root.owner_kind,
+                    root.provider_id,
+                ),
+            ).fetchone()
+            version_id = self._stage_canvas_document_sections(
+                conn,
+                row["agent_id"],
+                obj["id"],
+                root.sections,
+                format=root.payload["fields"]["format"],
+                extractor_version=root.payload["fields"]["extractor_version"],
+                protocol_payload=root.payload,
+            )
+            if (
+                upload["document_version_id"] is not None
+                and upload["document_version_id"] != version_id
+            ):
+                raise CanvasSyncConflict("document_conflict")
+            conn.execute(
+                "UPDATE wrytely_agent.canvas_document_uploads SET "
+                "object_id=%s,document_version_id=%s "
+                "WHERE id=%s",
+                (obj["id"], version_id, upload["id"]),
+            )
             return self._save_document_receipt(conn, actor, row, scan, body, digest, upload["id"])
