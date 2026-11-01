@@ -30,6 +30,25 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+Latest A internal P1-A2 increment: typed document drafting on
+codex/p1-typed-document-drafting, base #1510345cc8. Existing requirement assessment,
+policy preflight, generation, format/semantic verification, saved artifacts, bounded
+revision and recovery now accept exact legacy/document evidence for policy/rubric/
+claims. Actual synthetic document-only publication reaches internally checked draft
+with zero legacy versions; mixed real inline/document refs also pass. Original text
+and structured rubric fields are read through the leased object scope. Migration022
+versions internal artifacts; old website projections hide v2 rows pending M consumer
+agreement. Earlier document_drafting_not_wired hold is superseded by this path.
+41new type/workflow cases PASS; full combined disposable backend1368PASS/zero
+skips/2existingwarnings99.23s; extension389NodePASS; Ruff/format213files/diffPASS.
+Counterpart review pending. No live Meta call/schema/quality proof, Canvas
+collection, WhatsApp send, worker activation, retained migration or deployment.
+Complete context over80000 code points/512000 serialized bytes explicitly requires
+further paged investigation rather than truncating or certifying missing policy.
+Counterpart review and versioned HTTP/UI assembly remain separate; P0/P1 stay open.
+
+Historical slice notes below preserve the evidence and limits at their original heads.
+
 Current integration candidate: codex/p1-host-integration from #150493a5cd plus
 M #144945d1c5 merged unchanged (six files checked byte-for-byte). A reviewed both
 host modules and independently passed24focused/all389Node on the exact M archive;

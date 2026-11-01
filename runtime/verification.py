@@ -4,10 +4,12 @@ import json
 from datetime import UTC, datetime
 
 from contracts.artifacts import Assessment, CoursePolicy, DraftArtifact, RubricItem
+from contracts.document_artifacts import CoursePolicyV2, DraftArtifactV2, RubricItemV2
 from runtime.draft_format import check_draft_format
 from shared.canvas_reads import SourceRefreshRequired
 from shared.db import json_text
 from shared.freshness import legacy_freshness
+from shared.typed_evidence import EvidenceContextLimit, resolve_evidence, source_text
 
 ASSESS_TOOL = {
     "type": "function",
@@ -39,41 +41,55 @@ def verify_artifact(
     if not 1 <= len(rubric) <= 30:
         raise ValueError("A bounded source-backed rubric is required")
     row, sources = store.artifact_verification_input(lease, artifact_id)
-    draft = DraftArtifact.model_validate(row["draft"])
-    indexed = {str(s["id"]): s for s in sources}
+    typed = row["evidence_schema"] == 2
+    if typed != isinstance(policy, CoursePolicyV2) or any(
+        typed != isinstance(item, RubricItemV2) for item in rubric
+    ):
+        raise ValueError("Evidence schema mismatch")
+    draft = (DraftArtifactV2 if typed else DraftArtifact).model_validate(row["draft"])
+    indexed = {} if typed else {str(s["id"]): s for s in sources}
     errors = []
     document_evidence = []
-    try:
-        document_evidence = store.artifact_document_evidence(lease, artifact_id)
-    except (LookupError, ValueError, SourceRefreshRequired):
-        errors.append("document_evidence_missing_or_stale")
+    if typed:
+        if row.get("typed_evidence_unavailable"):
+            errors.append("typed_evidence_missing_or_stale")
+    else:
+        try:
+            document_evidence = store.artifact_document_evidence(lease, artifact_id)
+        except (LookupError, ValueError, SourceRefreshRequired):
+            errors.append("document_evidence_missing_or_stale")
 
-    def evidence(version_id, quote):
-        source = indexed.get(str(version_id))
-        if not source or not quote.strip() or quote not in source["content"]:
-            return False
+    def evidence(item):
+        if typed:
+            try:
+                proof, source = resolve_evidence(item.evidence, sources)
+                document_evidence.append(proof)
+                return source_text(source)
+            except (ValueError, EvidenceContextLimit):
+                return None
+        source = indexed.get(str(item.version_id))
+        if not source or not item.quote.strip() or item.quote not in source["content"]:
+            return None
         if not legacy_freshness(source["retrieved_at"], now=datetime.now(UTC)).usable:
-            return False
-        return True
+            return None
+        return source["content"]
 
-    if not evidence(policy.version_id, policy.quote):
+    policy_content = evidence(policy)
+    if policy_content is None:
         errors.append("policy_evidence_missing_or_stale")
     if policy.status not in ("permitted", "disclosure_required"):
         errors.append("course_policy_not_permitting_draft")
-    policy_source = indexed.get(str(policy.version_id))
-    format_checks = check_draft_format(
-        draft, policy, policy_source["content"] if policy_source else "", rubric
-    )
+    format_checks = check_draft_format(draft, policy, policy_content or "", rubric)
     errors.extend(format_checks["errors"])
     if not draft.citations:
         errors.append("citations_missing")
     for citation in draft.citations:
-        if not evidence(citation.version_id, citation.quote):
+        if evidence(citation) is None:
             errors.append("citation_missing_or_stale")
         if citation.claim not in draft.body:
             errors.append("cited_claim_not_in_draft")
     for item in rubric:
-        if not evidence(item.version_id, item.quote):
+        if evidence(item) is None:
             errors.append("rubric_evidence_missing_or_stale")
     assessment = None
     input_tokens = output_tokens = 0
@@ -92,7 +108,11 @@ def verify_artifact(
                             "draft": draft.model_dump(mode="json"),
                             "rubric": [item.model_dump(mode="json") for item in rubric],
                             "sources": sources,
-                            "document_evidence": document_evidence,
+                            **(
+                                {"evidence_schema": 2, "typed_evidence": document_evidence}
+                                if typed
+                                else {"document_evidence": document_evidence}
+                            ),
                             "policy": policy.model_dump(mode="json"),
                         }
                     ),
@@ -128,7 +148,11 @@ def verify_artifact(
                     errors.append("uncited_claims")
     report = {
         "passed": not errors,
-        "document_evidence": document_evidence,
+        **(
+            {"evidence_schema": 2, "typed_evidence": document_evidence}
+            if typed
+            else {"document_evidence": document_evidence}
+        ),
         "errors": errors,
         "assessment": assessment.model_dump() if assessment else None,
         "policy": policy.model_dump(mode="json"),

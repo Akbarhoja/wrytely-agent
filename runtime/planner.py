@@ -2,9 +2,12 @@
 
 import json
 
+from contracts.document_artifacts import CoursePolicyV2, RubricItemV2
 from contracts.models import DraftPlannerDecision, PlannerDecision
 from runtime.draft_requirements import assess_draft_requirements
+from shared.canvas_reads import SourceRefreshRequired
 from shared.db import json_text
+from shared.typed_evidence import EvidenceContextLimit, resolve_evidence
 
 PLAN_TOOL = {
     "type": "function",
@@ -39,25 +42,42 @@ def run_planning_episode(store, model, settings, lease):
     instructions = PLANNER_INSTRUCTIONS
     tool = PLAN_TOOL
     if intent:
-        if intent.get("canvas_objects_bound"):
-            # Object authorization exists; typed document policy/rubric/generation
-            # does not yet. Never fall back to an empty legacy context or infer permission.
+        typed = intent.get("canvas_objects_bound", False)
+        try:
+            if intent["assessment"] is None:
+                store.heartbeat(lease, settings.lease_seconds)
+                sources = store.draft_intent_sources(lease)
+                candidate = (
+                    assess_draft_requirements(model, sources, evidence_schema=2)
+                    if typed
+                    else assess_draft_requirements(model, sources)
+                )
+                if not store.commit_draft_assessment(lease, candidate):
+                    return
+                intent = store.draft_intent(lease)
+            elif typed:
+                sources = store.draft_intent_sources(lease)
+                saved = intent["assessment"]
+                policy = CoursePolicyV2.model_validate(saved["policy"])
+                rubric = [RubricItemV2.model_validate(r) for r in saved["rubric"]]
+                for item in [policy, *rubric]:
+                    try:
+                        resolve_evidence(item.evidence, sources)
+                    except ValueError:
+                        raise SourceRefreshRequired() from None
+        except (SourceRefreshRequired, EvidenceContextLimit) as error:
+            reason = (
+                "evidence_context_requires_paged_investigation"
+                if isinstance(error, EvidenceContextLimit)
+                else "source_refresh_required"
+            )
             store.apply_plan(
                 lease,
                 DraftPlannerDecision(
-                    action="blocked",
-                    reason="document_drafting_not_wired",
-                    step_key="await-document-drafting",
-                    instruction="",
+                    action="blocked", reason=reason, step_key="evidence-unavailable", instruction=""
                 ),
             )
             return
-        if intent["assessment"] is None:
-            store.heartbeat(lease, settings.lease_seconds)
-            candidate = assess_draft_requirements(model, store.draft_intent_sources(lease))
-            if not store.commit_draft_assessment(lease, candidate):
-                return
-            intent = store.draft_intent(lease)
         context["private_draft"] = {
             "requested": True,
             "assessment": intent["assessment"],
@@ -105,4 +125,15 @@ def run_planning_episode(store, model, settings, lease):
         )
     else:
         decision = decision_type.model_validate(saved)
-    store.apply_plan(lease, decision)
+    try:
+        store.apply_plan(lease, decision)
+    except (SourceRefreshRequired, EvidenceContextLimit):
+        store.apply_plan(
+            lease,
+            decision_type(
+                action="blocked",
+                reason="source_refresh_required",
+                step_key="evidence-unavailable",
+                instruction="",
+            ),
+        )

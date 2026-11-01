@@ -6,14 +6,47 @@ from uuid import UUID, uuid4
 from psycopg.types.json import Jsonb
 
 from contracts.artifacts import DraftArtifact
+from contracts.document_artifacts import CoursePolicyV2, DraftArtifactV2, RubricItemV2
 from shared.artifact_documents import check_artifact_documents, draft_document_citations
 from shared.canvas_reads import SourceRefreshRequired
 from shared.freshness import legacy_freshness
+from shared.typed_evidence import EvidenceContextLimit, check_context, resolve_evidence
 
 
 class ArtifactStore:
     def _artifact_evidence_failure(self, conn, row, report):
         """Internal: caller holds agent fence; only current owned cited evidence can pass."""
+        if row["evidence_schema"] == 2:
+            try:
+                if report.get("evidence_schema") != 2:
+                    raise ValueError("Typed report required")
+                draft = DraftArtifactV2.model_validate(row["draft"])
+                policy = CoursePolicyV2.model_validate(report["policy"])
+                rubric = [RubricItemV2.model_validate(r) for r in report["rubric"]]
+                if (
+                    not draft.citations
+                    or not rubric
+                    or policy.status not in ("permitted", "disclosure_required")
+                ):
+                    raise ValueError("Source-backed policy/rubric/citations required")
+                sources = self._typed_drafting_context(
+                    conn, row["agent_id"], row["responsibility_id"]
+                )
+                for item in [policy, *rubric, *draft.citations]:
+                    resolve_evidence(item.evidence, sources)
+                if any(c.claim not in draft.body for c in draft.citations):
+                    raise ValueError("Claim missing from draft")
+                check_context(sources)
+            except (
+                KeyError,
+                ValueError,
+                TypeError,
+                LookupError,
+                SourceRefreshRequired,
+                EvidenceContextLimit,
+            ):
+                return "typed_evidence_failed_at_commit"
+            return None
         try:
             check_artifact_documents(self, conn, row)
         except (ValueError, LookupError, SourceRefreshRequired):
@@ -66,8 +99,15 @@ class ArtifactStore:
         if not 1 <= len(request_key) <= 128:
             raise ValueError("Invalid draft key")
         payload = draft.model_dump(mode="json")
-        documents = draft_document_citations(
-            payload, [] if document_citations is None else document_citations
+        schema = 2 if isinstance(draft, DraftArtifactV2) else 1
+        if schema == 2 and document_citations is not None and document_citations != []:
+            raise ValueError("V2 evidence is embedded, not a legacy sidecar")
+        documents = (
+            []
+            if schema == 2
+            else draft_document_citations(
+                payload, [] if document_citations is None else document_citations
+            )
         )
         with self.connection() as conn:
             self._fence(conn, lease)
@@ -84,14 +124,18 @@ class ArtifactStore:
                 (lease.task_id, request_key),
             ).fetchone()
             if prior:
-                if prior["draft"] != payload or prior["document_citations"] != documents:
+                if (
+                    prior["draft"] != payload
+                    or prior["document_citations"] != documents
+                    or prior["evidence_schema"] != schema
+                ):
                     raise RequestConflict("Draft key reused")
                 return prior
             return conn.execute(
                 "INSERT INTO wrytely_agent.artifacts "
                 "(id,agent_id,responsibility_id,task_id,request_key,memory_revision,"
-                "draft,document_citations) "
-                "VALUES (%s,%s,%s,%s,%s,%s,%s,%s) RETURNING *",
+                "draft,document_citations,evidence_schema) "
+                "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING *",
                 (
                     uuid4(),
                     lease.agent_id,
@@ -101,6 +145,7 @@ class ArtifactStore:
                     task["memory_revision"],
                     Jsonb(payload),
                     Jsonb(documents),
+                    schema,
                 ),
             ).fetchone()
 
@@ -112,7 +157,7 @@ class ArtifactStore:
                 "JOIN wrytely_agent.agents a ON a.id=f.agent_id "
                 "JOIN wrytely_agent.responsibilities r ON r.id=f.responsibility_id AND "
                 "r.agent_id=f.agent_id "
-                "WHERE a.user_id=%s AND f.id=%s",
+                "WHERE a.user_id=%s AND f.id=%s AND f.evidence_schema=1",
                 (user_id, artifact_id),
             ).fetchone()
 
@@ -125,6 +170,16 @@ class ArtifactStore:
             ).fetchone()
             if not row:
                 raise LookupError("Artifact not found")
+            if row["evidence_schema"] == 2:
+                try:
+                    sources = self._typed_drafting_context(
+                        conn, lease.agent_id, row["responsibility_id"]
+                    )
+                except (ValueError, LookupError, SourceRefreshRequired, EvidenceContextLimit):
+                    row = {**row, "typed_evidence_unavailable": True}
+                    sources = []
+                self._finish_canvas_read(conn, lease, {})
+                return row, sources
             sources = conn.execute(
                 "SELECT v.id,v.content,v.coverage,v.retrieved_at FROM "
                 "wrytely_agent.responsibility_sources b "
@@ -147,6 +202,8 @@ class ArtifactStore:
             ).fetchone()
             if not artifact:
                 raise LookupError("Artifact not found")
+            if artifact["evidence_schema"] != 1:
+                raise ValueError("Typed artifacts require typed verification")
             proofs = check_artifact_documents(self, conn, artifact)
             return self._finish_canvas_read(conn, lease, proofs)
 
@@ -210,7 +267,7 @@ class ArtifactStore:
             self._finish_canvas_read(conn, lease, {})
             return artifact, result
 
-    def drafting_sources(self, lease):
+    def drafting_sources(self, lease, *, evidence_schema=1):
         """Full current bound evidence for policy preflight and generation."""
         with self.connection() as conn:
             self._fence(conn, lease)
@@ -220,6 +277,16 @@ class ArtifactStore:
             ).fetchone()
             if row["kind"] != "academic":
                 raise ValueError("Drafting requires an academic responsibility task")
+            if evidence_schema == 2:
+                try:
+                    sources = self._typed_drafting_context(
+                        conn, lease.agent_id, row["responsibility_id"]
+                    )
+                except ValueError:
+                    raise SourceRefreshRequired() from None
+                return self._finish_canvas_read(conn, lease, sources)
+            if evidence_schema != 1:
+                raise ValueError("Unknown evidence schema")
             return conn.execute(
                 "SELECT v.id,v.content,v.coverage,v.retrieved_at FROM "
                 "wrytely_agent.responsibility_sources b JOIN wrytely_agent.academic_sources s "

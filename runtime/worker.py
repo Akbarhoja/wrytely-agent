@@ -4,6 +4,7 @@ import logging
 import time
 
 from contracts.artifacts import CoursePolicy, RubricItem
+from contracts.document_artifacts import CoursePolicyV2, RubricItemV2
 from contracts.models import ModelClient, TaskLease
 from runtime.drafting import generate_checked_draft
 from runtime.planner import run_planning_episode
@@ -54,8 +55,15 @@ def run_episode(store: Store, model: ModelClient, settings: Settings, lease: Tas
             settings,
             lease,
             workflow_key="delegated-draft",
-            policy=CoursePolicy.model_validate(request["policy"]),
-            rubric=[RubricItem.model_validate(item) for item in request["rubric"]],
+            policy=(
+                CoursePolicyV2 if request.get("evidence_schema") == 2 else CoursePolicy
+            ).model_validate(request["policy"]),
+            rubric=[
+                (
+                    RubricItemV2 if request.get("evidence_schema") == 2 else RubricItem
+                ).model_validate(item)
+                for item in request["rubric"]
+            ],
             max_revisions=request["max_revisions"],
         )
         if outcome["state"] == "ready":

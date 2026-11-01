@@ -53,7 +53,11 @@ def check_draft_format(draft, policy, policy_content, rubric):
                 continue
             ranges.append(
                 {
-                    "version_id": str(item.version_id),
+                    **(
+                        {"evidence": item.evidence.model_dump(mode="json")}
+                        if hasattr(item, "evidence")
+                        else {"version_id": str(item.version_id)}
+                    ),
                     "quote": item.quote,
                     "minimum": low,
                     "maximum": high,
