@@ -45,6 +45,15 @@ exact clarification3b86710 in6554751518. Current executable text/reply/delivery
 contracts remain in force until the new implementation is separately reviewed.
 No new paid allowance, migration, runtime, queue or source activation is implied.
 
+## Proposed private v2 artifact consumer boundary
+
+[Private artifact reads v2](docs/contracts/PRIVATE-ARTIFACT-READ-v2.md) responds to
+M's #152 request6564664188 with explicit owned list/detail/exact-evidence reads,
+mixed reference shapes, saved-check versus current inspection status, authority/
+freshness/control fences and A-store/M-HTTP/UI ownership. **Proposal only; M agreement
+and implementation remain pending.** No Store method, route, public DTO or permission
+is introduced; existing v1 filters continue hiding internal v2 artifacts.
+
 ## Internal typed v2 document drafting
 
 Under M's exact design agreement6560955094, contracts/document_artifacts.py adds
