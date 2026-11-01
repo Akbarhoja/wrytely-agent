@@ -15,7 +15,8 @@ ccf84dc in [review6537274371](https://github.com/Akbarhoja/wrytely-agent/pull/48
 This is design agreement, not implemented routes/store methods or relaxed permission gates.
 [C3–C7 v1 proposal](docs/contracts/AGENT-ACTIONS-v1.md) adds retrieval, student
 decisions, typed delivery, private files and operational accounting for the same
-owner review. C3–C7 remain proposed; C1/C2 implementation proceeds in P1-A1 slices.
+owner review. C3 design and exact C4–C7 agreements are recorded below; implemented capability
+and consumer acceptance remain separate from those design agreements.
 
 Detailed [Canvas C3 retrieval/document-segment proposal](docs/contracts/CANVAS-RETRIEVAL-SEGMENTS-v1.md)
 (#77/#78) has M agreement for short-text sections1–2 and the immutable root/slot
@@ -24,8 +25,9 @@ supply executable document APIs. The explicit deferred document-consumer gate no
 has a [document-only v2 wire review candidate](docs/contracts/CANVAS-DOCUMENT-WIRE-v2.md)
 with exact upload/publication/receipt shapes, canonical vectors and bounded orphan
 cleanup. M agreed exact7f4f09f as DESIGN in [6554751370](https://github.com/Akbarhoja/wrytely-agent/pull/118#issuecomment-6554751370).
-Schema1 and inactive source behavior remain unchanged; upload/publication is not yet
-implemented. M also agreed exact C4–C7 wire3b86710 as DESIGN in
+Schema1 and inactive source behavior remain unchanged. Shared document staging/
+publication/cleanup are implemented on the later candidate slices documented below;
+M HTTP/extension consumers and independent implementation reviews remain separate. M also agreed exact C4–C7 wire3b86710 as DESIGN in
 [6554751518](https://github.com/Akbarhoja/wrytely-agent/pull/119#issuecomment-6554751518).
 
 ## C4–C7 agreed wire design; implementation pending

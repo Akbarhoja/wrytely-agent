@@ -431,3 +431,30 @@ Previous #137 exactafc42c9 CI41288720692/41288717315 SUCCESS; new cleanup CI sep
 Counterpart reviews/consumer assembly remain pending. M retains host/HTTP/extractor/
 extension work; no M file edit/live/model/send/spend/grant/install/retainedmigration/
 worker/deploy/mainmerge. P0/P1 remain open.
+
+## Current non-WhatsApp P0 closure audit — November1
+
+Supervisor explicitly prioritized finishing P0 excluding WhatsApp.
+[Consolidated closure record](docs/P0-CLOSURE-2026-11-01.md) separates feasibility
+classifications/design agreement from P1 implementation and live activation. Meta
+#50 real tool→saved-result→continuation proof is passed; its original report is now
+restored byte-identically froma7bc400. Exact C1/C2, C3 architecture/#118 and C4–C7
+#119 design agreements are recorded. Outlook remains optional/paused, not a core gate.
+
+Canvas evidence is gathered: signed-in sampled text/PDF reads and negative-login/
+recovery classifications exist; rubric/live-account-switch/natural-timeout evidence
+remains explicitly unknown. Current read-only dashboard reload still shows7 courses.
+Proposed conservative tab/session-required feasibility classification is submitted
+for M counterpart acceptance, NOT a claim those unknown checks passed or that
+unattended collection works. P0 work-order outcome is reviewed classification and
+gaps; P1/P2/P5 recovery/full-collection requirements remain unchanged.
+
+Baseline#46 exact9bbea97 remains green/technically reviewed391backend114web and
+ancestry checked. Formal human reviews are still empty; main requires1approval.
+AuthorAkbarhoja cannot approve its ownPR; another account alone is not independent
+human review under TEAM.md. Murtazo's review is requested. Non-WhatsApp P0 cannot
+be marked closed until this normal approval/merge and Canvas decision are recorded.
+WhatsApp remains excluded/M-owned, not passed. No P1 code/permission/budget/live
+source/model/send/grant/install/restart/logout/retainedmigration/worker/deploy/main
+merge changed in this audit. Links/provenance/arithmetic/diff checks passed; unchanged
+application suite was not redundantly rerun.

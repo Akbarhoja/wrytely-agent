@@ -509,3 +509,15 @@ was run. A requested a known positive rubric assignment from the supervisor rath
 than treating more rubric-free pages as a pass. Positive rubric access remains
 unproved. Current follow-up validation:64 local Node,685 disposable backend (two
 existing warnings), Ruff lint/format, Prettier and diff checks pass.
+
+## November1 consolidated closure review
+
+Supervisor requests finishing P0 except WhatsApp. The exact work-order feasibility
+outcome is an access classification with gaps, not proof that unavailable content
+is readable. [Consolidated decision record](P0-CLOSURE-2026-11-01.md) submits the
+conservative signed-in/tab-required path and explicit untested rubric/natural-timeout/
+account-switch limits for M counterpart acceptance. The previous narrow #109 code
+review does not silently supply that decision. Existing findings above remain true.
+November1 read-only dashboard reload confirmed the existing session and7 courses;
+no new content/API probe, logout/restart, extension or permission change occurred.
+Baseline#46 human approval is still required; no unilateral P0 closure is claimed.
