@@ -172,8 +172,17 @@ validated those results. M now claims assignment collection; no takeover. A's
 Canvas rubric UI attempt initially hit an origin-approval block; supervisor approved
 inspection and normal CSU NetID navigation recovered Canvas through existing SSO.
 Two additional selected-course assignment pages showed no visible rubric. A known
-positive rubric sample is requested; no new positive rubric proof.
+positive rubric sample is unavailable: supervisor knows of none. Keep capability
+unverified; no more blind reruns or false denial/pass.
 The dated access record now consolidates the session/content evidence matrix.
+
+P0-A3 follow-up: proposed exact document-only schema2 wire now specifies staged
+upload and publication/receipt shapes, structured-field binding, canonical synthetic
+vectors and bounded orphan cleanup. M agreement is required before consumers;
+schema1 and production code are unchanged. Ten synthetic vectors independently
+match Python and Node canonical hashes/offsets;30 existing digest tests pass,
+proposal/fixture formatting and links/diff clean. This addresses M's explicit #78 request,
+not an implemented document upload or completed P0 gate.
 
 ## Next actions
 

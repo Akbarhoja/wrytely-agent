@@ -18,9 +18,13 @@ decisions, typed delivery, private files and operational accounting for the same
 owner review. C3–C7 remain proposed; C1/C2 implementation proceeds in P1-A1 slices.
 
 Detailed [Canvas C3 retrieval/document-segment proposal](docs/contracts/CANVAS-RETRIEVAL-SEGMENTS-v1.md)
-(#77) specifies bounded reads, immutable section offsets, parent/slot manifests and
-staged document publication for M review. It is not agreed or executable; existing
-C2 v1 behavior and inactive Canvas model sources remain unchanged.
+(#77/#78) has M agreement for short-text sections1–2 and the immutable root/slot
+architecture, recorded in comments6541105179 and6541182136. These agreements do not
+supply executable document APIs. The explicit deferred document-consumer gate now
+has a [document-only v2 wire review candidate](docs/contracts/CANVAS-DOCUMENT-WIRE-v2.md)
+with exact upload/publication/receipt shapes, canonical vectors and bounded orphan
+cleanup. It is **proposed, not agreed or implemented**; schema1 and inactive source
+behavior remain unchanged. C4–C7 still require counterpart agreement.
 
 ## P1-A1 first slice — Canvas pairing and credential lifecycle (#58)
 
