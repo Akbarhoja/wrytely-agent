@@ -26,6 +26,8 @@ const scenarios = [
   "scope_changed",
   "revoke",
   "cross_account",
+  "collector_two_page",
+  "collector_lost_after",
 ];
 const environment = new Set([
   "PATH",
@@ -96,7 +98,12 @@ try {
     }
     const response = await fetch(`${target.origin}${requested.pathname}`, init);
     assert.equal(response.headers.get("cache-control"), "no-store");
-    if (isBatch && !injected && scenario === "lost_after" && response.ok) {
+    if (
+      isBatch &&
+      !injected &&
+      ["lost_after", "collector_lost_after"].includes(scenario) &&
+      response.ok
+    ) {
       injected = true;
       await response.arrayBuffer();
       throw Error("synthetic acknowledgment loss after actual server commit");
@@ -124,6 +131,9 @@ try {
   async function setup(user = "alice", provider = "7") {
     phase = "pairing";
     const data = {};
+    const courseRequests = [];
+    const courseStart = `${canvasOrigin}/api/v1/courses?enrollment_state=active&per_page=50`;
+    const courseNext = `${courseStart}&page=opaque-2`;
     const storageArea = {
       async setAccessLevel(value) {
         assert.deepEqual(value, { accessLevel: "TRUSTED_CONTEXTS" });
@@ -145,10 +155,34 @@ try {
         storageArea,
         fetchImpl: transport,
         canvasFetch: async (url, init) => {
-          assert.equal(url, `${canvasOrigin}/api/v1/users/self/profile`);
           assert.equal(init.method, "GET");
           assert.equal(init.credentials, "include");
-          return Response.json({ id: provider }); // No provider network request is permitted.
+          assert.equal(init.redirect, "error");
+          assert.equal(init.cache, "no-store");
+          assert.ok(init.signal instanceof AbortSignal);
+          if (url === `${canvasOrigin}/api/v1/users/self/profile`)
+            return Response.json({ id: provider });
+          assert.ok(scenario.startsWith("collector_"));
+          assert.ok([courseStart, courseNext].includes(url));
+          courseRequests.push(url);
+          const first = url === courseStart;
+          const response = Response.json(
+            [
+              {
+                id: first ? 101 : 102,
+                name: first
+                  ? "Synthetic first course"
+                  : "Synthetic second course",
+                course_code: first ? "SYN-101" : "SYN-102",
+                time_zone: "America/Denver",
+                enrollments: [{ enrollment_state: "active" }],
+                syllabus_body: "Synthetic excluded field",
+              },
+            ],
+            { headers: first ? { link: `<${courseNext}>; rel="next"` } : {} },
+          );
+          Object.defineProperty(response, "url", { value: url });
+          return response; // No provider network request is permitted.
         },
       });
     const issued = await request(`${root}/pairing`, user, {
@@ -161,7 +195,15 @@ try {
       devicePublicId: `interop-${user}`,
     });
     await client.bindCurrentSession();
-    return { client, fresh, data, record: () => Object.values(data)[0] };
+    return {
+      client,
+      fresh,
+      data,
+      courseRequests,
+      courseStart,
+      courseNext,
+      record: () => Object.values(data)[0],
+    };
   }
   const alice = await setup();
   const page = () => ({
@@ -194,9 +236,100 @@ try {
     });
   }
   phase = "begin";
-  await alice.client.beginDiscovery();
+  if (!scenario.startsWith("collector_")) await alice.client.beginDiscovery();
 
-  if (scenario === "cross_account") {
+  if (scenario.startsWith("collector_")) {
+    phase = "collector_scope";
+    const context = await alice.client.readCurrentContext();
+    const selected = await request(`${root}/scope`, "alice", {
+      connection_id: context.connection_id,
+      generation: context.generation,
+      mode: "all_active",
+      course_ids: [],
+      resource_kinds: ["assignments"],
+    });
+    assert.equal(selected.status, 200);
+    phase = "collector_begin";
+    assert.equal((await alice.client.collectCoursePage()).action, "begin");
+    assert.equal(alice.courseRequests.length, 0);
+    phase = "collector_first_page";
+    const first = await alice.fresh().collectCoursePage();
+    if (scenario === "collector_lost_after") {
+      assert.deepEqual(first, {
+        state: "blocked",
+        reason: "discovery_outcome_unknown",
+      });
+      const capture = structuredClone(alice.record().discovery.pending.body);
+      assert.equal(alice.courseRequests.length, 1);
+      phase = "collector_recovery";
+      const recovered = await alice.fresh().collectCoursePage();
+      assert.equal(recovered.action, "recover");
+      assert.equal(recovered.seen_count, 1);
+      assert.equal(alice.courseRequests.length, 1);
+      assert.deepEqual(batchBodies[0], capture);
+      assert.deepEqual(batchBodies[1], capture);
+    } else {
+      assert.equal(first.action, "page");
+      assert.equal(first.seen_count, 1);
+    }
+    phase = "collector_second_page";
+    const second = await alice.fresh().collectCoursePage();
+    assert.equal(second.action, "page");
+    assert.equal(second.seen_count, 2);
+    assert.deepEqual(alice.courseRequests, [
+      alice.courseStart,
+      alice.courseNext,
+    ]);
+    assert.equal(new Set(batchBodies.map((body) => body.batch_key)).size, 2);
+    assert.ok(
+      batchBodies.every((body) =>
+        body.envelope.items.every((item) => item.content === ""),
+      ),
+    );
+    phase = "collector_close_courses";
+    assert.equal(
+      (await alice.fresh().collectCoursePage()).action,
+      "close_courses",
+    );
+    phase = "collector_awaiting_academic_resources";
+    for (let i = 0; i < 2; i++) {
+      const waiting = await alice.fresh().collectCoursePage();
+      assert.equal(waiting.state, "awaiting_resources");
+      assert.equal(waiting.open_resources, 2);
+      assert.equal(waiting.coverage, null);
+      const serialized = JSON.stringify(waiting);
+      for (const forbidden of [
+        "Synthetic",
+        "subject",
+        "lease_token",
+        "checkpoint",
+        "cursor",
+        canvasOrigin,
+      ])
+        assert.ok(!serialized.includes(forbidden));
+    }
+    assert.equal(alice.courseRequests.length, 2);
+    assert.equal(alice.record().discovery.pending, null);
+    await assert.rejects(
+      alice.fresh().finishDiscovery(),
+      rejection("discovery_resources_open"),
+    );
+    assert.equal(alice.record().discovery.pending, null);
+    const record = alice.record(),
+      j = record.discovery;
+    const denied = await request(
+      `${root}/discovery/finish`,
+      record.ingestion_bearer,
+      {
+        scan_id: j.scan.scan_id,
+        generation: j.binding.generation,
+        lease_token: j.scan.lease_token,
+        finish_key: "collector-incomplete-denied",
+      },
+    );
+    assert.equal(denied.status, 409);
+    assert.equal(denied.body.detail.code, "resources_open");
+  } else if (scenario === "cross_account") {
     const bob = await setup("bob", "8"),
       record = alice.record(),
       j = record.discovery;
