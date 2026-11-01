@@ -43,6 +43,30 @@ exact clarification3b86710 in6554751518. Current executable text/reply/delivery
 contracts remain in force until the new implementation is separately reviewed.
 No new paid allowance, migration, runtime, queue or source activation is implied.
 
+## P1 explicit bounded document staging cleanup
+
+`Store.cleanup_canvas_document_staging(*,limit=100)` is a trusted operator-only
+maintenance entry. It has no HTTP endpoint, worker, timer or automatic invocation.
+Integers1–100 are required. Each pass selects at most limit expired-upload candidates
+and limit orphan-root candidates total, skipping busy rows rather than waiting.
+It returns aggregate counts only, with no source text or student identifiers.
+
+Migration019 adds cleaned_at plus pointer/binding/age indexes. Maintenance acquires
+the same agent lock as writers with SKIP LOCKED before upload/root row locks. It
+rechecks expiry and references inside one transaction, so interruption rolls the
+pass back. Expired staging parts and entire headers are removed; ready pointers are
+cleared and a cleaned tombstone remains. All original receipts, IDs and expiry stay;
+no receipt body or digest changes. Expired retries still fail current expiry checks.
+Published roots and source evidence are not deleted to release staging quota.
+
+Only protocol roots at least24h old can be considered. Transactional anti-joins
+protect ALL observation bindings, matching published observation payloads (including
+history/reversion), and every retained upload pointer, even expired pointers not yet
+processed. The locked root and foreign keys prevent dangling publications. Legacy
+internal null-protocol roots are excluded. Original source/check/observation times
+and events never change. Remaining expired staging bytes stay counted until cleaned;
+a backlog does not relax quotas.019 ran only against disposable test databases.
+
 ## P1 document-only atomic evidence publication
 
 `Store.commit_sync_batch` dispatches the exact schema2+batch_type=canvas_documents
