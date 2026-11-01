@@ -88,3 +88,89 @@ def test_urgent_checks_expire_after_thirty_minutes():
 def test_invalid_policy_configuration_rejected(changes):
     with pytest.raises(ValueError):
         canvas(**changes)
+
+
+# Fixed instants and a real named zone reproduce DST issues independently of the
+# machine's current date and timezone. Compare age in elapsed time, not wall time.
+@pytest.mark.parametrize(
+    "stamp", ["2025-11-02T07:30:00+00:00", "2025-11-02T08:30:00+00:00", "2025-03-09T08:30:00+00:00"]
+)
+@pytest.mark.parametrize("hours", [1, 6, 24])
+def test_elapsed_ttl_is_invariant_to_dst_and_timestamp_representation(stamp, hours):
+    from zoneinfo import ZoneInfo
+
+    zone = ZoneInfo("America/Denver")
+    checked = datetime.fromisoformat(stamp)
+    boundary = checked + timedelta(hours=hours)
+    for observed in (checked, checked.astimezone(zone)):
+        for clock in (boundary, boundary.astimezone(zone)):
+            if hours == 24:
+                result = legacy_freshness(observed, now=clock)
+            else:
+                result = canvas(
+                    observed_at=observed,
+                    received_at=observed,
+                    now=clock,
+                    purpose="act" if hours == 1 else "draft",
+                )
+            assert result.usable
+            assert result.expires_at.astimezone(UTC) == boundary
+        late = boundary + timedelta(microseconds=1)
+        result = (
+            legacy_freshness(observed, now=late)
+            if hours == 24
+            else canvas(
+                observed_at=observed,
+                received_at=observed,
+                now=late,
+                purpose="act" if hours == 1 else "draft",
+            )
+        )
+        assert not result.usable
+
+
+@pytest.mark.parametrize(
+    "clock_stamp,observed_stamp",
+    [
+        ("2025-11-02T07:55:00+00:00", "2025-11-02T08:01:00+00:00"),
+        ("2025-03-09T08:55:00+00:00", "2025-03-09T09:01:00+00:00"),
+    ],
+)
+def test_future_limit_uses_elapsed_minutes_across_clock_changes(clock_stamp, observed_stamp):
+    from zoneinfo import ZoneInfo
+
+    zone = ZoneInfo("America/Denver")
+    now = datetime.fromisoformat(clock_stamp).astimezone(zone)
+    observed = datetime.fromisoformat(observed_stamp).astimezone(zone)
+    assert legacy_freshness(observed, now=now).reason == "future_observation"
+    assert (
+        canvas(observed_at=observed, received_at=observed, now=now).reason == "future_observation"
+    )
+
+
+def test_receipt_cannot_hide_older_evidence_when_wall_clock_order_reverses():
+    from zoneinfo import ZoneInfo
+
+    zone = ZoneInfo("America/Denver")
+    early = datetime.fromisoformat("2025-11-02T07:45:00+00:00").astimezone(zone)
+    late = datetime.fromisoformat("2025-11-02T08:15:00+00:00").astimezone(zone)
+    now = datetime.fromisoformat("2025-11-02T08:50:00+00:00")
+    for observed, received in ((early, late), (late, early)):
+        result = canvas(observed_at=observed, received_at=received, now=now, purpose="act")
+        assert not result.usable and result.reason == "too_old"
+        assert result.checked_at.astimezone(UTC) == early.astimezone(UTC)
+
+
+def test_urgent_half_hour_expires_after_thirty_elapsed_minutes_across_fold():
+    from zoneinfo import ZoneInfo
+
+    zone = ZoneInfo("America/Denver")
+    observed = datetime.fromisoformat("2025-11-02T07:50:00+00:00").astimezone(zone)
+    boundary = datetime.fromisoformat("2025-11-02T08:20:00+00:00")
+    assert canvas(observed_at=observed, received_at=observed, now=boundary, urgent=True).usable
+    assert not canvas(
+        observed_at=observed,
+        received_at=observed,
+        now=boundary + timedelta(microseconds=1),
+        urgent=True,
+    ).usable
