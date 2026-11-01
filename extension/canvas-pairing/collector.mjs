@@ -41,6 +41,8 @@ const providerErrors = new Set([
   "discovery_not_active",
   "discovery_request_rejected",
   "discovery_identity_required",
+  "invalid_assignment_input",
+  "assignment_extraction_invalid",
 ]);
 const text = (value) => {
   if (typeof value !== "string" || /[\u0000\uD800-\uDFFF]/u.test(value))
@@ -205,6 +207,95 @@ export async function collectCourseTick({
       current.state === "finished" ? "finished" : "progress",
       action,
     );
+  } catch (error) {
+    const code = error?.code;
+    return {
+      state: "blocked",
+      reason:
+        providerErrors.has(code) ||
+        conflicts.some((c) => code === `discovery_${c}`)
+          ? code
+          : "collector_failed",
+    };
+  }
+}
+
+export async function collectAssignmentTick({
+  operations,
+  inspect,
+  courseTick,
+  readPage,
+  extractPage,
+  conflicts,
+}) {
+  try {
+    let current = await inspect();
+    if (
+      current.state !== "active" ||
+      current.pending ||
+      current.needs_resume ||
+      !current.courses_closed
+    )
+      return courseTick();
+    const active = current.academic;
+    const resource =
+      active && current.open_keys.includes(active.resource_key)
+        ? active.resource_key
+        : current.open_keys.find((key) =>
+            /^[1-9][0-9]{0,19}\/assignments$/.test(key),
+          );
+    if (!resource) return courseTick();
+    const course = resource.split("/")[0];
+    if (!current.selected_courses.includes(course)) {
+      const error = Error("discovery_resource_not_selected");
+      error.code = "discovery_resource_not_selected";
+      throw error;
+    }
+    let action;
+    if (
+      active?.resource_key === resource &&
+      current.checkpoint.next_cursor === null
+    ) {
+      action = "close_assignments";
+      const complete =
+        active.last_page_coverage === "complete" && !active.incomplete;
+      await operations.finishAssignmentResource({
+        resource_key: resource,
+        outcome: complete ? "complete" : "partial",
+        reason: complete ? null : "extraction_failed",
+      });
+    } else {
+      action = "assignment_page";
+      if (
+        current.checkpoint.sequence >= 10000 ||
+        (active?.resource_key === resource &&
+          (active.page_count >= 100 || active.seen_count >= 5000))
+      ) {
+        const error = Error("invalid_assignment_input");
+        error.code = "invalid_assignment_input";
+        throw error;
+      }
+      const page = await readPage(
+        course,
+        active?.resource_key === resource
+          ? current.checkpoint.next_cursor
+          : null,
+      );
+      const observed_at = new Date().toISOString();
+      const items = await extractPage(course, page.data);
+      await operations.commitAssignmentPage({
+        resource_key: resource,
+        observed_at,
+        next_cursor: page.next_cursor,
+        coverage: {
+          state: page.next_cursor ? "partial" : "complete",
+          reason: page.next_cursor ? "more_pages" : null,
+        },
+        items,
+      });
+    }
+    current = await inspect();
+    return summary(current, "progress", action);
   } catch (error) {
     const code = error?.code;
     return {

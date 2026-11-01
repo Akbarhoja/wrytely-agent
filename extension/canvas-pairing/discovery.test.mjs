@@ -84,6 +84,8 @@ function fixture() {
     storageFailure: null,
     unauthorized: false,
     pageCalls: [],
+    assignmentCalls: [],
+    assignmentResponses: [],
     courseResponses: [],
   };
   f.storageArea = {
@@ -130,6 +132,19 @@ function fixture() {
     assert.equal(init.credentials, "omit");
     assert.equal(init.redirect, "error");
     assert.equal(init.cache, "no-store");
+    if (action === "academic/extract") {
+      if (f.onExtract) await f.onExtract(body);
+      const result = {
+        course_id: body.course_id,
+        items: body.items.map((item) => ({
+          assignment_id: item.assignment_id,
+          text: item.html === null ? "" : "PRIVATE_EXTRACTED_TEXT",
+          coverage: "partial",
+          missing: ["html_text_only"],
+        })),
+      };
+      return json(f.extractOverride ? f.extractOverride(result) : result, url);
+    }
     f.events.push({ type: "send", operation: action.split("/")[1] });
     if (f.onSend) await f.onSend(action, body);
     if (f.unauthorized) return json({ detail: "Reconnect Canvas" }, url, 401);
@@ -334,6 +349,17 @@ function fixture() {
       storageArea: f.storageArea,
       fetchImpl: f.fetch,
       canvasFetch: async (url) => {
+        if (new URL(url).pathname === "/api/v1/courses/101/assignments") {
+          f.assignmentCalls.push(url);
+          if (f.onAssignmentRequest) await f.onAssignmentRequest();
+          const value = f.assignmentResponses.shift() ?? {
+            data: assignmentPage().items.map((item) => item.raw),
+          };
+          const response = json(value.data, url, value.status ?? 200);
+          if (value.next)
+            response.headers.set("link", `<${value.next}>; rel="next"`);
+          return response;
+        }
         if (new URL(url).pathname === "/api/v1/courses") {
           f.pageCalls.push(url);
           if (f.onCourseRequest) await f.onCourseRequest();
@@ -429,6 +455,176 @@ const closeAssignment = (client, outcome = "complete") =>
     outcome,
     reason: outcome === "complete" ? null : "extraction_failed",
   });
+
+test("assignment collector fetches and extracts one page then closes honest partial coverage", async () => {
+  const f = fixture(),
+    client = await readyAssignment(f);
+  const first = await client.collectAssignmentPage();
+  assert.equal(first.action, "assignment_page");
+  assert.equal(f.assignmentCalls.length, 1);
+  assert.equal(f.data[key].discovery.academic.seen_count, 1);
+  assert.ok(!JSON.stringify(f.data[key]).includes("PRIVATE_RAW_HTML"));
+  assert.ok(!JSON.stringify(first).includes("PRIVATE_EXTRACTED_TEXT"));
+  assert.equal(
+    (await f.client().collectAssignmentPage()).action,
+    "close_assignments",
+  );
+  assert.equal((await f.client().collectAssignmentPage()).coverage, "partial");
+  assert.equal(f.assignmentCalls.length, 1);
+});
+
+test("assignment collector recovers accepted pending capture without provider refetch", async () => {
+  const f = fixture(),
+    client = await readyAssignment(f);
+  f.onSend = (action) => {
+    if (action === "academic/batch") {
+      f.loss = "after";
+      f.onSend = null;
+    }
+  };
+  assert.equal(
+    (await client.collectAssignmentPage()).reason,
+    "discovery_outcome_unknown",
+  );
+  const capture = structuredClone(f.data[key].discovery.pending.body);
+  assert.equal((await f.client().collectAssignmentPage()).action, "recover");
+  assert.deepEqual(f.rpc().at(-1).body, capture);
+  assert.equal(f.assignmentCalls.length, 1);
+});
+
+for (const control of ["scope", "account", "expiry"])
+  test(`assignment collector fences ${control} before extraction upload`, async () => {
+    const f = fixture(),
+      client = await readyAssignment(f);
+    f.onAssignmentRequest = () => {
+      if (control === "scope") f.context.scope_revision++;
+      if (control === "account") f.profiles.push("8");
+      if (control === "expiry")
+        f.context.credential_expires_at = "2000-01-01T00:00:00Z";
+    };
+    const result = await client.collectAssignmentPage();
+    assert.equal(result.state, "blocked");
+    assert.equal(
+      f.calls.filter((c) => c.action === "academic/extract").length,
+      0,
+    );
+    assert.equal(
+      f.calls.filter((c) => c.action === "academic/batch").length,
+      0,
+    );
+  });
+
+for (const corruption of ["course", "id", "missing", "complete"])
+  test(`assignment collector rejects invalid extraction ${corruption}`, async () => {
+    const f = fixture(),
+      client = await readyAssignment(f);
+    f.extractOverride = (result) => {
+      if (corruption === "course") result.course_id = "102";
+      if (corruption === "id") result.items[0].assignment_id = "999";
+      if (corruption === "missing") result.items = [];
+      if (corruption === "complete") result.items[0].coverage = "complete";
+      return result;
+    };
+    const result = await client.collectAssignmentPage();
+    assert.equal(result.state, "blocked");
+    assert.equal(f.data[key].discovery.pending, null);
+    assert.equal(
+      f.calls.filter((c) => c.action === "academic/batch").length,
+      0,
+    );
+  });
+
+test("assignment collector fences context changed during extraction", async () => {
+  const f = fixture(),
+    client = await readyAssignment(f);
+  f.onExtract = () => {
+    f.context.scope_revision++;
+  };
+  assert.equal((await client.collectAssignmentPage()).state, "blocked");
+  assert.equal(f.calls.filter((c) => c.action === "academic/batch").length, 0);
+});
+
+test("assignment collector preserves same storage lock during provider fetch", async () => {
+  const f = fixture(),
+    client = await readyAssignment(f);
+  let release, entered;
+  const gate = new Promise((resolve) => {
+    release = resolve;
+  });
+  const started = new Promise((resolve) => {
+    entered = resolve;
+  });
+  f.onAssignmentRequest = async () => {
+    entered();
+    await gate;
+  };
+  const collecting = client.collectAssignmentPage();
+  await started;
+  await assert.rejects(
+    f.client().readDiscoveryStatus(),
+    error("operation_in_progress"),
+  );
+  release();
+  await collecting;
+});
+
+test("assignment collector follows one page per explicit tick and never fetches locked description", async () => {
+  const f = fixture(),
+    client = await readyAssignment(f);
+  const cursor = `${canvasOrigin}/api/v1/courses/101/assignments?per_page=50&override_assignment_dates=true&page=opaque`;
+  const locked = assignmentPage(18).items[0].raw;
+  locked.locked_for_user = true;
+  f.assignmentResponses = [
+    { data: [assignmentPage(17).items[0].raw], next: cursor },
+    { data: [locked] },
+  ];
+  await client.collectAssignmentPage();
+  assert.equal(f.assignmentCalls.length, 1);
+  await f.client().collectAssignmentPage();
+  assert.deepEqual(f.assignmentCalls, [cursor.split("&page=")[0], cursor]);
+  assert.equal(f.data[key].discovery.academic.seen_count, 2);
+  const extracts = f.calls.filter((c) => c.action === "academic/extract");
+  assert.equal(extracts[1].body.items[0].html, null);
+  assert.equal(
+    (await f.client().collectAssignmentPage()).action,
+    "close_assignments",
+  );
+  assert.equal((await f.client().collectAssignmentPage()).coverage, "partial");
+});
+
+test("assignment collector does not fetch removed scope or hide provider denial", async () => {
+  const f = fixture(),
+    client = await readyAssignment(f);
+  f.context.course_ids = [];
+  assert.equal(
+    (await client.collectAssignmentPage()).reason,
+    "discovery_resource_not_selected",
+  );
+  assert.equal(f.assignmentCalls.length, 0);
+  const g = fixture(),
+    other = await readyAssignment(g);
+  g.assignmentResponses = [{ status: 401, data: { private: "not logged" } }];
+  assert.equal((await other.collectAssignmentPage()).reason, "login_required");
+  assert.equal(g.data[key].discovery.pending, null);
+});
+
+test("assignment collector stops repeated provider reads at the known page ceiling", async () => {
+  const f = fixture(),
+    client = await readyAssignment(f);
+  const next = `${canvasOrigin}/api/v1/courses/101/assignments?per_page=50&override_assignment_dates=true&page=opaque`;
+  await client.commitAssignmentPage(assignmentPage(17, next));
+  f.data[key].discovery.academic.page_count = 100;
+  for (let tick = 0; tick < 2; tick++)
+    assert.equal(
+      (await f.client().collectAssignmentPage()).reason,
+      "invalid_assignment_input",
+    );
+  assert.equal(f.assignmentCalls.length, 0);
+  assert.equal(
+    f.calls.filter((c) => c.action === "academic/extract").length,
+    0,
+  );
+});
 
 test("assignment journal posts mapped content then validates resource manifest", async () => {
   const f = fixture(),

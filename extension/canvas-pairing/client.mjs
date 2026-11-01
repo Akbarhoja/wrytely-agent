@@ -417,6 +417,8 @@ export function createPairingClient({
       canvasOrigin,
       validExpiry,
       readCoursePage: (cursor) => canvas.coursePage(cursor),
+      readAssignmentPage: (course, cursor) =>
+        canvas.assignmentPage(course, cursor),
       call: (operation, body, item) =>
         post(
           operation.startsWith("academic_")
