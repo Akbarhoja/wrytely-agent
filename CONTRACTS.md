@@ -43,6 +43,48 @@ exact clarification3b86710 in6554751518. Current executable text/reply/delivery
 contracts remain in force until the new implementation is separately reviewed.
 No new paid allowance, migration, runtime, queue or source activation is implied.
 
+## P1 document-only atomic evidence publication
+
+`Store.commit_sync_batch` dispatches the exact schema2+batch_type=canvas_documents
+envelope to `contracts.canvas_document_publication.DocumentBatch` and the shared
+transaction in `shared/canvas_document_publication.py`. Operation staging fields,
+inline bodies, client digests, unknown keys, mixed kinds and duplicate uploads reject.
+Existing schema1 models remain strict and unchanged. No M HTTP route consumes this
+new model yet; shared support does not activate the connector or model runtime.
+
+The existing scan/subject/generation/credential/scope/lease and checkpoint fences,
+size/page/cursor/count/time bounds, receipt namespace and transactional final checks
+are reused. Item ownership, exact header/resource/owner/title/update metadata and
+unexpired ready upload/root integrity must match. All items atomically create owned
+observations with pinned015 bindings, resource items/checks, structured change events,
+checkpoint and the exact document receipt. A missing or invalid second item rolls
+back the first too. Source versions are not fabricated from empty root content.
+
+Additive018 records per-resource inline/documents mode and published_at on uploads.
+A scan resource cannot mix inline and document content across pages; empty pages
+also select an explicit mode. Existing batch replay keys span both versions, so
+changed-schema key reuse conflicts. Published uploads leave the4-unpublished-upload
+count, but retained upload-part bytes remain conservatively counted until cleanup.
+No published data is deleted to release quota.
+
+Unchanged syncs reuse roots and add observations without duplicate events; changed
+academic fields are reported by original names (due_at/rubric), and A→B→A preserves
+transition observations while reusing roots. Older captures stay historical and
+cannot replace current pointers or emit new change events. Same-instant conflicting
+content rejects by UTC instant. Existing bound work is invalidated on actual change,
+without source promotion or automatic drafting permission.
+
+Student metadata reads expose the pinned document_version_id. The old short-body
+reader rejects protocol documents with an instruction to use the pinned section
+reader, avoiding a falsely complete empty/prefix body. Section reads reuse existing
+owner/generation/selection/lease/freshness checks and bounded original sections.
+Complete-resource finalization includes document digests and selected file resources;
+partial/historical/latest-failed attempts cannot fall back to older complete proof.
+No new observation/source causes model readiness or starts a worker.
+
+Counterpart review, M HTTP/extraction/extension consumers, safe bounded cleanup and
+live/installed-host acceptance remain separate.018 ran only in disposable tests.
+
 ## P1 ready document finish transaction
 
 `Store.finish_document_upload(actor,body,*,extractor_versions)` consumes the agreed

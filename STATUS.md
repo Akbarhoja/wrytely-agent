@@ -399,3 +399,20 @@ upload+storagePASS; full disposable backend1136PASS/zero skips/2existingwarnings
 Zero-text gaps, cross-section NFC, missing parts, scope/revocation/expiry, parallel
 finish, changed fields and atomic rollback checked. Publication follows separately;
 no M API/collector edit, live/send/spend/retainedmigration/worker/deploy/mainmerge.
+
+P1 document-only publication implemented on `codex/p1-document-publication`,
+executable7339a59/base#135019d6c7. Exact schema2/batch_type parser uses existing
+commit_sync_batch namespace and scan/lease/credential/scope/checkpoint fences. Ready
+owned roots atomically produce observations,015 section bindings, original-field
+change events, resource items/checks, checkpoints and receipts.018 records resource
+inline/document mode and published uploads; schema1 remains unchanged, mixed modes
+reject. No legacy empty text versions or source/model activation. Metadata exposes
+pinned root IDs; protocol documents cannot masquerade as short empty source bodies.
+27newcasesPASS; full combined disposable backend1163PASS/zero skips/2existingwarnings
+68.49s. Ruff/format188files/diff pass. Repeat/changed-deadline/reversion,100000-emoji
+paging, partial/failed latest evidence, file scope, historical/ambiguous captures,
+all-or-nothing batch/lease rollback, cross-account denial and shared replay namespace
+verified. [Evidence](docs/P1-DOCUMENT-PUBLICATION.md).017/018 test-only; independent
+review and M consumer/installed/live assembly remain required; safe cleanup pending.
+No M API/collector edit, live/model/send/spend/grant/install/retainedmigration/worker/
+deploy/mainmerge. #134/#135 counterpart review requests remain distinct.
