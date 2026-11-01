@@ -427,3 +427,34 @@ correlation, delayed header dispatch, duplicate Location and listener cleanup. T
 are implementation tests, not live browser proof. Chrome observation behavior with
 manual redirects still requires the operator run. No P1 collector changes were made.
 Reference: [Chrome webRequest](https://developer.chrome.com/docs/extensions/reference/api/webRequest).
+
+## v5 operator live result: bounded PDF retrieval passes
+
+The supervisor supplied diagnosticVersion5 after reloading/running the prepared
+package. Both fileHostPermissionGranted and cdnHostPermissionGranted are true.
+The selected known PDF reports state=read, byteLength=398346, redirectsFollowed=1,
+pdfSignature=true and matchesOperatorSample=true. This demonstrates successful
+extension retrieval through the validated hop and equality with the PDF separately
+saved and parsed locally (three pages with extractable text). The extension itself
+does not extract text; textExtraction remains separate_local_sample_only.
+
+Seven courses were discovered and two selected. Their assignment counts are22/23
+with12/9 instruction bodies; two detail samples per course read with zero rubric
+criteria. This is not proof of absent rubrics throughout the courses or denied rubric
+access. First-course discussion list21, one view read/one top-level entry; second
+list0. Inline syllabus bodies read; linkedDocumentsRead=false remains the original
+core probe's fixed partial-coverage field. The separate linkedPdf success establishes
+only the configured PDF retrieval, not automatic discovery of every linked document.
+
+Evidence is the operator-provided redacted report, not an independently observed
+full production sync. The prepared source is100d5a2; its64 synthetic Node and685
+disposable backend tests passed before the run. This update changes evidence/docs
+only; no additional source read, model call, upload, scheduling or deployment.
+
+Bounded PDF retrieval is now passed. P0 remains open for counterpart review, the
+positive rubric/content coverage gap and remaining session/account-switch limitations;
+separate baseline/interface/WhatsApp gates retain their existing states. A second
+Canvas login is not available for the live account-switch test; synthetic fencing
+cases are separate evidence. No further operator diagnostic rerun is needed for
+the now-passed PDF sample. M can reuse the reviewed approach in his P1 collector
+without taking this operator diagnostic as the completed academic connector.
