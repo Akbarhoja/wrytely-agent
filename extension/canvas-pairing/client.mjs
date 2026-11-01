@@ -281,7 +281,8 @@ export function createPairingClient({
     }
   }
   async function post(action, body, bearer) {
-    const discovery = action.startsWith("discovery/");
+    const discovery =
+      action.startsWith("discovery/") || action.startsWith("academic/");
     const uncertain =
       action === "redeem"
         ? "pairing_outcome_unknown"
@@ -417,7 +418,13 @@ export function createPairingClient({
       validExpiry,
       readCoursePage: (cursor) => canvas.coursePage(cursor),
       call: (operation, body, item) =>
-        post(`discovery/${operation}`, body, item.ingestion_bearer),
+        post(
+          operation.startsWith("academic_")
+            ? `academic/${operation.slice(9)}`
+            : `discovery/${operation}`,
+          body,
+          item.ingestion_bearer,
+        ),
       invalidateAccount: async (item, value) => {
         try {
           await post(

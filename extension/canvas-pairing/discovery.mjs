@@ -1,6 +1,16 @@
 // Private worker helper. Public callers receive neither credentials nor writer leases.
 import { collectCourseTick } from "./collector.mjs";
+import { sourceDigest } from "../canvas/source-digest.mjs";
+import {
+  assignmentKey,
+  prepareAssignmentPage,
+  validateAssignmentPage,
+} from "./assignment-page.mjs";
 export const discoveryConflicts = [
+  "ambiguous_observation_time",
+  "duplicate_resource_item",
+  "finish_previous_resource",
+  "resource_rewind",
   "checkpoint_changed",
   "course_not_discovered",
   "course_scope_limit",
@@ -67,6 +77,24 @@ const same = (a, b) =>
   a.next_cursor === b.next_cursor &&
   a.scope_revision === b.scope_revision;
 const bytes = (x) => new TextEncoder().encode(JSON.stringify(x)).length;
+// Store measures json.dumps with default separators. Count structural spaces;
+// source strings and canonical digests remain untouched.
+function serverEnvelopeBytes(value) {
+  function spaces(x) {
+    if (Array.isArray(x))
+      return Math.max(0, x.length - 1) + x.reduce((n, v) => n + spaces(v), 0);
+    if (object(x)) {
+      const values = Object.values(x);
+      return (
+        values.length +
+        Math.max(0, values.length - 1) +
+        values.reduce((n, v) => n + spaces(v), 0)
+      );
+    }
+    return 0;
+  }
+  return bytes(value) + spaces(value);
+}
 const clone = (x) => structuredClone(x);
 const resourceKey = (x) =>
   x === "courses" ||
@@ -97,8 +125,8 @@ export function discoveryOperations({
         "next_cursor",
         "scope_revision",
       ]) ||
-      value.resource !== "courses" ||
-      !integer(value.sequence, 100) ||
+      !(value.resource === "courses" || assignmentKey(value.resource)) ||
+      !integer(value.sequence, value.resource === "courses" ? 100 : 10000) ||
       value.scope_revision !== revision ||
       !(
         value.next_cursor === null ||
@@ -126,11 +154,12 @@ export function discoveryOperations({
       checkpoint: checkpoint(value.checkpoint, revision),
     };
   }
-  function outcome(value, key) {
+  function outcome(value, key, academic = false) {
     return (
       states.includes(value.outcome) &&
       (value.outcome === "complete"
-        ? key === "courses" && value.reason === null
+        ? (key === "courses" || (academic && assignmentKey(key))) &&
+          value.reason === null
         : reasons.includes(value.reason))
     );
   }
@@ -223,6 +252,8 @@ export function discoveryOperations({
       finish: ["scan_id", "generation", "lease_token", "finish_key"],
       resume: ["scan_id", "generation", "resume_key"],
     };
+    fields.academic_batch = fields.batch;
+    fields.academic_resource = fields.resource;
     if (
       !exact(body, fields[operation] ?? []) ||
       body.generation !== j.binding.generation
@@ -250,12 +281,22 @@ export function discoveryOperations({
     if (body.expected_checkpoint)
       checkpoint(body.expected_checkpoint, j.binding.scope_revision);
     if (
-      operation === "resource" &&
-      (!resourceKey(body.resource_key) || !outcome(body, body.resource_key))
+      ["resource", "academic_resource"].includes(operation) &&
+      (!resourceKey(body.resource_key) ||
+        !outcome(body, body.resource_key, operation === "academic_resource") ||
+        (operation === "academic_resource" &&
+          !assignmentKey(body.resource_key)))
     )
       throw Error();
-    if (operation === "batch") {
+    if (operation === "batch" || operation === "academic_batch") {
       const e = body.envelope;
+      const academic = operation === "academic_batch";
+      const key = `${e?.resource?.course_id}/assignments`;
+      const count = academic
+        ? j.academic?.resource_key === key
+          ? j.academic.seen_count
+          : 0
+        : j.seen_count;
       if (
         !exact(e, [
           "schema_version",
@@ -277,25 +318,67 @@ export function discoveryOperations({
         e.batch_key !== body.batch_key ||
         e.subject !== j.binding.subject ||
         !exact(e.resource, ["course_id", "kind"]) ||
-        e.resource.course_id !== null ||
-        e.resource.kind !== "courses" ||
+        (academic
+          ? typeof e.resource.course_id !== "string" ||
+            !assignmentKey(key) ||
+            e.resource.kind !== "assignments" ||
+            !j.required.includes(key)
+          : e.resource.course_id !== null || e.resource.kind !== "courses") ||
         !exact(e.coverage, ["state", "reason", "seen_count"]) ||
-        e.coverage.seen_count !== j.seen_count + e.items?.length ||
+        e.coverage.seen_count !== count + e.items?.length ||
         !integer(e.coverage.seen_count, 5000) ||
-        bytes(e) > 1024 * 1024
+        (academic ? serverEnvelopeBytes(e) : bytes(e)) > 1024 * 1024
       )
         throw Error();
-      validatePage({
+      const page = {
         items: e.items,
         observed_at: e.observed_at,
         coverage: { state: e.coverage.state, reason: e.coverage.reason },
         next_cursor: e.next_cursor,
-      });
+      };
+      if (academic)
+        validateAssignmentPage(
+          { resource_key: key, ...page },
+          canvasOrigin,
+          validExpiry,
+        );
+      else validatePage(page);
     }
   }
   function journal(value) {
     if (value === undefined) return null;
     try {
+      const legacyKeys = [
+        "version",
+        "binding",
+        "scan",
+        "seen_count",
+        "last_page_coverage",
+        "scope_mode",
+        "resource_kinds",
+        "required",
+        "incomplete_resource",
+        "pending",
+        "renewal",
+        "closed",
+        "finished",
+      ];
+      if (value.version === 1) {
+        if (
+          !exact(value, legacyKeys) ||
+          (value.scan &&
+            (value.scan.checkpoint?.resource !== "courses" ||
+              !integer(value.scan.checkpoint.sequence, 100))) ||
+          (value.pending &&
+            (!["begin", "batch", "resource", "finish"].includes(
+              value.pending.operation,
+            ) ||
+              (value.pending.body.expected_checkpoint &&
+                value.pending.body.expected_checkpoint.resource !== "courses")))
+        )
+          throw Error();
+        value = { ...clone(value), version: 2, academic: null };
+      }
       if (
         bytes(value) > 8 * 1024 * 1024 ||
         !exact(value, [
@@ -312,8 +395,9 @@ export function discoveryOperations({
           "renewal",
           "closed",
           "finished",
+          "academic",
         ]) ||
-        value.version !== 1 ||
+        value.version !== 2 ||
         !exact(value.binding, [
           "connection_id",
           "generation",
@@ -350,6 +434,34 @@ export function discoveryOperations({
         throw Error();
       const required = new Set(value.required);
       if (value.closed.some((k) => !required.has(k))) throw Error();
+      if (
+        value.academic !== null &&
+        (!exact(value.academic, [
+          "resource_key",
+          "seen_count",
+          "page_count",
+          "last_page_coverage",
+          "incomplete",
+        ]) ||
+          !assignmentKey(value.academic.resource_key) ||
+          !required.has(value.academic.resource_key) ||
+          !integer(value.academic.seen_count, 5000) ||
+          !integer(value.academic.page_count, 100) ||
+          value.academic.page_count < 1 ||
+          !states.includes(value.academic.last_page_coverage) ||
+          typeof value.academic.incomplete !== "boolean")
+      )
+        throw Error();
+      if (
+        assignmentKey(value.scan?.checkpoint?.resource) &&
+        value.academic?.resource_key !== value.scan.checkpoint.resource &&
+        !(
+          value.pending?.operation === "academic_batch" &&
+          `${value.pending.body.envelope?.resource?.course_id}/assignments` ===
+            value.scan.checkpoint.resource
+        )
+      )
+        throw Error();
       if (value.scan !== null) {
         if (
           !exact(value.scan, [
@@ -366,9 +478,14 @@ export function discoveryOperations({
       if (value.pending !== null) {
         if (
           !exact(value.pending, ["operation", "body"]) ||
-          !["begin", "batch", "resource", "finish"].includes(
-            value.pending.operation,
-          )
+          ![
+            "begin",
+            "batch",
+            "resource",
+            "finish",
+            "academic_batch",
+            "academic_resource",
+          ].includes(value.pending.operation)
         )
           throw Error();
         validateBody(value.pending.operation, value.pending.body, value);
@@ -484,22 +601,98 @@ export function discoveryOperations({
       throw e;
     }
   }
-  function acknowledge(j, response) {
+  function expectedBatchCheckpoint(operation, body) {
+    return {
+      ...body.expected_checkpoint,
+      resource:
+        operation === "academic_batch"
+          ? `${body.envelope.resource.course_id}/assignments`
+          : "courses",
+      sequence: body.expected_checkpoint.sequence + 1,
+      next_cursor: body.envelope.next_cursor,
+    };
+  }
+  async function academicReceipt(items, response) {
+    if (
+      !Array.isArray(response.observations) ||
+      response.observations.length !== items.length
+    )
+      throw Error();
+    const observations = new Map(),
+      ids = new Set();
+    for (const row of response.observations) {
+      if (
+        !exact(row, [
+          "provider_id",
+          "kind",
+          "observation_id",
+          "version_id",
+          "content_digest",
+          "coverage",
+          "historical",
+        ]) ||
+        row.kind !== "assignment" ||
+        !uuid.test(row.observation_id) ||
+        ids.has(row.observation_id) ||
+        observations.has(row.provider_id) ||
+        !(row.version_id === null || uuid.test(row.version_id)) ||
+        !digest.test(row.content_digest) ||
+        typeof row.historical !== "boolean"
+      )
+        throw Error();
+      observations.set(row.provider_id, row);
+      ids.add(row.observation_id);
+    }
+    let incomplete = false;
+    const versions = new Map();
+    for (const item of items) {
+      const row = observations.get(item.provider_id);
+      const expectedDigest = await sourceDigest({
+        digest_version: 1,
+        kind: item.kind,
+        title: item.title,
+        content: item.content,
+        fields: item.fields,
+        coverage: item.coverage,
+        missing: item.missing,
+      });
+      if (
+        !row ||
+        row.content_digest !== expectedDigest ||
+        row.coverage !== item.coverage ||
+        (item.coverage === "complete" && row.version_id === null)
+      )
+        throw Error();
+      if (row.version_id !== null) versions.set(row.provider_id, row);
+      incomplete ||= item.coverage !== "complete" || row.historical;
+    }
+    if (response.source_versions.length !== versions.size) throw Error();
+    for (const row of response.source_versions) {
+      const expected = versions.get(row.provider_id);
+      if (
+        !exact(row, ["provider_id", "version_id", "content_digest"]) ||
+        !expected ||
+        row.version_id !== expected.version_id ||
+        row.content_digest !== expected.content_digest
+      )
+        throw Error();
+      versions.delete(row.provider_id);
+    }
+    return incomplete;
+  }
+  async function acknowledge(j, response) {
     const { operation, body } = j.pending;
     if (operation === "begin") {
       const scan = lease(response, j.binding.scope_revision);
       if (
+        scan.checkpoint.resource !== "courses" ||
         scan.checkpoint.sequence !== 0 ||
         scan.checkpoint.next_cursor !== null
       )
         throw Error();
       j.scan = scan;
-    } else if (operation === "batch") {
-      const expected = {
-        ...body.expected_checkpoint,
-        sequence: body.expected_checkpoint.sequence + 1,
-        next_cursor: body.envelope.next_cursor,
-      };
+    } else if (operation === "batch" || operation === "academic_batch") {
+      const expected = expectedBatchCheckpoint(operation, body);
       const got = checkpoint(response.checkpoint, j.binding.scope_revision);
       if (
         !uuid.test(response.receipt_id) ||
@@ -507,7 +700,7 @@ export function discoveryOperations({
         response.batch_key !== body.batch_key ||
         !digest.test(response.batch_digest) ||
         !Array.isArray(response.source_versions) ||
-        response.source_versions.length ||
+        (operation === "batch" && response.source_versions.length) ||
         response.coverage !== body.envelope.coverage.state ||
         typeof response.replayed !== "boolean" ||
         !same(got, expected) ||
@@ -517,6 +710,22 @@ export function discoveryOperations({
         )
       )
         throw Error();
+      if (operation === "academic_batch") {
+        const incomplete = await academicReceipt(body.envelope.items, response);
+        const previous =
+          j.academic?.resource_key === expected.resource ? j.academic : null;
+        j.academic = {
+          resource_key: expected.resource,
+          seen_count: body.envelope.coverage.seen_count,
+          page_count: (previous?.page_count ?? 0) + 1,
+          last_page_coverage: body.envelope.coverage.state,
+          incomplete: !!previous?.incomplete || incomplete,
+        };
+        if (j.academic.incomplete) j.incomplete_resource = true;
+        j.scan.checkpoint = got;
+        j.pending = null;
+        return;
+      }
       j.scan.checkpoint = got;
       j.seen_count = body.envelope.coverage.seen_count;
       j.last_page_coverage = body.envelope.coverage.state;
@@ -532,13 +741,20 @@ export function discoveryOperations({
         if (required.size > MAX_RESOURCES) throw Error();
         j.required = [...required];
       }
-    } else if (operation === "resource") {
+    } else if (operation === "resource" || operation === "academic_resource") {
       if (
         !uuid.test(response.receipt_id) ||
         response.resource_key !== body.resource_key ||
         response.coverage !== body.outcome ||
         response.reason !== body.reason ||
         !integer(response.seen_count, 5000) ||
+        (operation === "academic_resource" &&
+          (response.seen_count !==
+            (j.academic?.resource_key === body.resource_key
+              ? j.academic.seen_count
+              : 0) ||
+            (body.outcome === "complete" &&
+              !digest.test(response.source_manifest_digest)))) ||
         !validExpiry(response.finished_at) ||
         !(
           response.source_manifest_digest === null ||
@@ -597,7 +813,7 @@ export function discoveryOperations({
     }
     const response = await rpc(p, j.pending.operation, j.pending.body);
     try {
-      acknowledge(j, response);
+      await acknowledge(j, response);
     } catch {
       fail("discovery_outcome_unknown");
     }
@@ -626,7 +842,8 @@ export function discoveryOperations({
       const p = await prepare(true);
       if (p.j && !p.j.finished) fail("discovery_pending_operation");
       p.j = {
-        version: 1,
+        version: 2,
+        academic: null,
         binding: {
           connection_id: p.context.connection_id,
           generation: p.context.generation,
@@ -694,14 +911,11 @@ export function discoveryOperations({
       } catch {
         fail("discovery_outcome_unknown");
       }
-      const expected =
-        j.pending?.operation === "batch"
-          ? {
-              ...j.pending.body.expected_checkpoint,
-              sequence: j.pending.body.expected_checkpoint.sequence + 1,
-              next_cursor: j.pending.body.envelope.next_cursor,
-            }
-          : null;
+      const expected = ["batch", "academic_batch"].includes(
+        j.pending?.operation,
+      )
+        ? expectedBatchCheckpoint(j.pending.operation, j.pending.body)
+        : null;
       if (
         !same(next.checkpoint, j.scan.checkpoint) &&
         !(expected && same(next.checkpoint, expected))
@@ -752,6 +966,95 @@ export function discoveryOperations({
           },
           next_cursor: input.next_cursor,
         },
+      });
+    },
+    commitAssignmentPage: async (input) => {
+      const p = await prepare();
+      available(p.j);
+      let page;
+      try {
+        page = prepareAssignmentPage(input, canvasOrigin, validExpiry);
+        const j = p.j,
+          previous = j.academic;
+        if (
+          !j.closed.includes("courses") ||
+          !j.required.includes(page.resource_key) ||
+          j.closed.includes(page.resource_key) ||
+          j.scan.checkpoint.sequence >= 10000 ||
+          (previous &&
+            previous.resource_key !== page.resource_key &&
+            !j.closed.includes(previous.resource_key)) ||
+          (previous?.resource_key === page.resource_key &&
+            (previous.page_count >= 100 ||
+              j.scan.checkpoint.next_cursor === null ||
+              previous.seen_count + page.items.length > 5000))
+        )
+          throw Error();
+      } catch {
+        fail("invalid_assignment_input");
+      }
+      const j = p.j,
+        batchKey = crypto.randomUUID();
+      return enqueue(p, "academic_batch", {
+        scan_id: j.scan.scan_id,
+        generation: j.binding.generation,
+        lease_token: j.scan.lease_token,
+        batch_key: batchKey,
+        expected_checkpoint: clone(j.scan.checkpoint),
+        envelope: {
+          schema_version: 1,
+          connection_id: j.binding.connection_id,
+          generation: j.binding.generation,
+          subject: j.binding.subject,
+          scan_id: j.scan.scan_id,
+          batch_key: batchKey,
+          resource: {
+            course_id: page.resource_key.split("/")[0],
+            kind: "assignments",
+          },
+          observed_at: page.observed_at,
+          items: page.items,
+          coverage: {
+            ...page.coverage,
+            seen_count:
+              (j.academic?.resource_key === page.resource_key
+                ? j.academic.seen_count
+                : 0) + page.items.length,
+          },
+          next_cursor: page.next_cursor,
+        },
+      });
+    },
+    finishAssignmentResource: async (input) => {
+      const p = await prepare();
+      available(p.j);
+      const j = p.j,
+        progress = j.academic;
+      if (
+        !exact(input, ["resource_key", "outcome", "reason"]) ||
+        !assignmentKey(input.resource_key) ||
+        !outcome(input, input.resource_key, true) ||
+        !j.required.includes(input.resource_key) ||
+        j.closed.includes(input.resource_key) ||
+        !j.closed.includes("courses") ||
+        (progress &&
+          progress.resource_key !== input.resource_key &&
+          !j.closed.includes(progress.resource_key)) ||
+        (input.outcome === "complete" &&
+          (progress?.resource_key !== input.resource_key ||
+            progress.page_count < 1 ||
+            progress.incomplete ||
+            progress.last_page_coverage !== "complete" ||
+            j.scan.checkpoint.next_cursor !== null))
+      )
+        fail("invalid_assignment_input");
+      return enqueue(p, "academic_resource", {
+        scan_id: j.scan.scan_id,
+        generation: j.binding.generation,
+        lease_token: j.scan.lease_token,
+        finish_key: crypto.randomUUID(),
+        expected_checkpoint: clone(j.scan.checkpoint),
+        ...input,
       });
     },
     finishDiscoveryResource: async (input) => {
