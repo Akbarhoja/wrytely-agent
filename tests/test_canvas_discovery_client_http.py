@@ -29,6 +29,8 @@ SCENARIOS = (
     "scope_changed",
     "revoke",
     "cross_account",
+    "collector_two_page",
+    "collector_lost_after",
 )
 ENV_NAMES = {"PATH", "SYSTEMROOT", "WINDIR", "COMSPEC", "PATHEXT", "TEMP", "TMP", "LANG", "LC_ALL"}
 
@@ -163,7 +165,39 @@ def test_actual_client_http_contract(canvas_store, interop_service, scenario, mo
             conn.execute("SELECT count(*) AS n FROM wrytely_agent.source_versions").fetchone()["n"]
             == 0
         )
-        if scenario in {"scope_changed", "revoke", "cross_account"}:
+        if scenario.startswith("collector_"):
+            assert catalog == batches == 2
+            courses = conn.execute(
+                "SELECT course_id,payload->>'coverage' AS coverage "
+                "FROM wrytely_agent.canvas_catalog ORDER BY course_id"
+            ).fetchall()
+            assert [(row["course_id"], row["coverage"]) for row in courses] == [
+                ("101", "complete"),
+                ("102", "complete"),
+            ]
+            resources = conn.execute(
+                "SELECT resource_key,coverage FROM wrytely_agent.canvas_resources "
+                "ORDER BY resource_key"
+            ).fetchall()
+            assert [(row["resource_key"], row["coverage"]) for row in resources] == [
+                ("101/assignments", "open"),
+                ("102/assignments", "open"),
+                ("courses", "complete"),
+            ]
+            scan = conn.execute(
+                "SELECT state,checkpoint FROM wrytely_agent.canvas_scans"
+            ).fetchone()
+            assert scan["state"] == "active"
+            assert scan["checkpoint"]["sequence"] == 2
+            assert scan["checkpoint"]["next_cursor"] is None
+            assert (
+                conn.execute(
+                    "SELECT count(*) AS n FROM wrytely_agent.canvas_sync_receipts "
+                    "WHERE operation='finish'"
+                ).fetchone()["n"]
+                == 0
+            )
+        elif scenario in {"scope_changed", "revoke", "cross_account"}:
             assert catalog == batches == 0
         else:
             assert catalog == (2 if scenario == "partial_finish" else 1)
