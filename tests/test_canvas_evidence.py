@@ -620,3 +620,159 @@ def test_normalized_short_text_boundaries_apply_before_storage(field, raw, accep
     else:
         with pytest.raises(ValueError):
             EvidenceItem.model_validate(value).payload("assignment")
+
+
+def test_new_source_event_marks_baseline_without_inventing_changes(device):
+    scan = prepare(device)
+    receipt = upload(device, scan, body(device, scan))
+    event = rows(device, "canvas_evidence_events")[0]
+    assert str(event["observation_id"]) == receipt["observations"][0]["observation_id"]
+    assert event["previous_observation_id"] is None
+    assert event["changes"] == {
+        "schema_version": 1,
+        "initial": True,
+        "changed_fields": [],
+        "title_changed": False,
+        "content_changed": False,
+        "coverage_changed": False,
+        "missing_changed": False,
+    }
+
+
+@pytest.mark.parametrize("change", ["due_at", "rubric", "content", "title", "coverage", "combined"])
+def test_structured_changes_compare_canonical_current_observations(device, change):
+    scan = prepare(device)
+    first = upload(device, scan, body(device, scan))
+    close(device, scan, first)
+    scan = next_scan(device, "changed-evidence")
+    value = body(device, scan)
+    item = value["items"][0]
+    if change in {"due_at", "combined"}:
+        item["fields"]["due_at"] = "2026-11-03T05:59:00Z"
+    if change in {"rubric", "combined"}:
+        item["fields"]["rubric"][0]["description"] = "Use four sources"
+    if change in {"content", "combined"}:
+        item["content"] = "Changed synthetic instructions"
+    if change in {"title", "combined"}:
+        item["title"] = "Revised synthetic assignment"
+    if change in {"coverage", "combined"}:
+        item.update(coverage="partial", missing=["attachment_unread"])
+    second = upload(device, scan, value)
+    events = rows(device, "canvas_evidence_events")
+    event = next(
+        e for e in events if str(e["observation_id"]) == second["observations"][0]["observation_id"]
+    )
+    assert str(event["previous_observation_id"]) == first["observations"][0]["observation_id"]
+    assert event["changes"] == {
+        "schema_version": 1,
+        "initial": False,
+        "changed_fields": ["due_at", "rubric"]
+        if change == "combined"
+        else ([change] if change in {"due_at", "rubric"} else []),
+        "title_changed": change in {"title", "combined"},
+        "content_changed": change in {"content", "combined"},
+        "coverage_changed": change in {"coverage", "combined"},
+        "missing_changed": change in {"coverage", "combined"},
+    }
+    assert "synthetic" not in str(event["changes"])
+    assert "sources" not in str(event["changes"])
+    assert upload(device, scan, value) == {**second, "replayed": True}
+    assert rows(device, "canvas_evidence_events") == events
+
+
+def test_change_event_references_latest_check_even_when_unchanged_version_was_reused(device):
+    scan = prepare(device)
+    receipts = []
+    for index, text in enumerate(["Version A", "Version A", "Version B", "Version A"]):
+        if index:
+            scan = next_scan(device, f"event-check-{index}")
+        value = body(device, scan)
+        value["items"][0]["content"] = text
+        receipt = upload(device, scan, value)
+        receipts.append(receipt["observations"][0])
+        close(device, scan, receipt)
+    events = {str(e["observation_id"]): e for e in rows(device, "canvas_evidence_events")}
+    assert len(events) == 3
+    assert receipts[0]["version_id"] == receipts[1]["version_id"] == receipts[3]["version_id"]
+    for current, prior in [(2, 1), (3, 2)]:
+        event = events[receipts[current]["observation_id"]]
+        assert str(event["previous_observation_id"]) == receipts[prior]["observation_id"]
+        assert event["changes"]["content_changed"] is True
+        assert event["changes"]["changed_fields"] == []
+
+
+def test_equivalent_unicode_dates_and_metadata_do_not_create_change_event(device):
+    scan = prepare(device)
+    value = body(device, scan)
+    value["items"][0]["content"] = "Cafe\u0301\r\nRead."
+    first = upload(device, scan, value)
+    close(device, scan, first)
+    events = rows(device, "canvas_evidence_events")
+    second = next_scan(device, "equivalent-event-check")
+    value = body(device, second)
+    item = value["items"][0]
+    item["content"] = "Café\nRead."
+    item["fields"]["due_at"] = "2026-11-02T00:59:00-05:00"
+    item["fields"]["points_possible"] = "20.00"
+    item["reference"] += "?synthetic_revision=2"
+    item["provider_updated_at"] = "2026-10-31T03:00:00Z"
+    result = upload(device, second, value)
+    assert result["observations"][0]["version_id"] == first["observations"][0]["version_id"]
+    assert rows(device, "canvas_evidence_events") == events
+
+
+def test_later_invalid_item_rolls_back_change_event_and_previous_pointer(device):
+    scan = prepare(device)
+    first = upload(device, scan, body(device, scan))
+    close(device, scan, first)
+    scan = next_scan(device, "change-rollback")
+    events = rows(device, "canvas_evidence_events")
+    checks = rows(device, "canvas_evidence_observations")
+    changed, invalid = assignment(), assignment()
+    changed["fields"]["due_at"] = "2026-11-03T05:59:00Z"
+    invalid.update(
+        provider_id="18", reference="https://unrelated.example.edu/courses/101/assignments/18"
+    )
+    with pytest.raises(ValueError, match="Evidence reference outside course"):
+        upload(device, scan, body(device, scan, [changed, invalid]))
+    assert rows(device, "canvas_evidence_events") == events
+    assert rows(device, "canvas_evidence_observations") == checks
+    assert len(rows(device, "source_versions")) == 1
+    with device[0].connection() as conn:
+        checkpoint = conn.execute(
+            "SELECT checkpoint FROM wrytely_agent.canvas_scans WHERE id=%s", (scan["scan_id"],)
+        ).fetchone()["checkpoint"]
+    assert checkpoint == scan["checkpoint"]
+
+
+def test_previous_event_reference_cannot_point_to_another_object(device):
+    from psycopg.errors import ForeignKeyViolation
+
+    scan = prepare(device)
+    other = assignment()
+    other.update(provider_id="18", reference=sync.ORIGIN + "/courses/101/assignments/18")
+    upload(device, scan, body(device, scan, [assignment(), other]))
+    events = rows(device, "canvas_evidence_events")
+    with pytest.raises(ForeignKeyViolation):
+        with device[0].connection() as conn:
+            conn.execute(
+                "UPDATE wrytely_agent.canvas_evidence_events "
+                "SET previous_observation_id=%s WHERE id=%s",
+                (events[1]["observation_id"], events[0]["id"]),
+            )
+    assert rows(device, "canvas_evidence_events") == events
+
+
+def test_legacy_event_insert_keeps_detail_explicitly_unavailable(device):
+    scan = prepare(device)
+    upload(device, scan, body(device, scan))
+    event = rows(device, "canvas_evidence_events")[0]
+    with device[0].connection() as conn:
+        conn.execute("DELETE FROM wrytely_agent.canvas_evidence_events WHERE id=%s", (event["id"],))
+        conn.execute(
+            "INSERT INTO wrytely_agent.canvas_evidence_events "
+            "(id,agent_id,object_id,observation_id,kind) VALUES (%s,%s,%s,%s,%s)",
+            tuple(event[k] for k in ("id", "agent_id", "object_id", "observation_id", "kind")),
+        )
+    legacy = rows(device, "canvas_evidence_events")[0]
+    assert legacy["changes"] is None and legacy["previous_observation_id"] is None

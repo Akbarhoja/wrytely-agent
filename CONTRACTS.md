@@ -37,6 +37,26 @@ These are proposed examples, not implemented validation or authorization grants.
 M consumer agreement is required; current text/reply/delivery contracts remain in force.
 No new paid allowance, migration, runtime, queue or source activation is implied.
 
+## P1-A2 structured Canvas change details
+
+`shared/canvas_evidence.py` now records private canonical comparisons in the existing
+`canvas_evidence_events` transaction. Additive migration014 adds nullable
+`previous_observation_id` (foreign-key scoped to the same agent AND object) and
+`changes`. Legacy rows retain null detail; no inferred/backfilled change history.
+New detail is exactly `{schema_version:1,initial,changed_fields,title_changed,
+content_changed,coverage_changed,missing_changed}`. changed_fields is sorted field
+names only (for example due_at/rubric); flags compare canonical stored payloads.
+No source text, field values or private rubric descriptions are duplicated in events.
+
+Initial observations mark initial=true without claiming a before/after change.
+Subsequent events link the latest prior check even when that check reused the same
+immutable version. Unchanged canonical text/dates/fields, provenance-only updates,
+replays and historical captures add no new change event. A→B→A retains both transitions.
+Existing source_observed/source_changed/coverage_changed kinds and C2 receipts remain
+unchanged. Failed batches roll back detail, source versions and checkpoints together.
+The event remains staged/private: no HTTP consumer, notification, model-source promotion,
+supervisor or deployment is activated. Migration014 was applied only to disposable tests.
+
 ## P1-A1 first slice — Canvas pairing and credential lifecycle (#58)
 
 Implemented in shared/source_connections.py, composed into Store with additive migration010.

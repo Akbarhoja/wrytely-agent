@@ -15,6 +15,28 @@ from contracts.source_digest import source_digest
 from shared.canvas_sync import CanvasSyncConflict, _hash
 
 
+def _change_details(prior, payload):
+    """Compare canonical evidence only; no inference, content copying or readiness grant."""
+    previous = prior["payload"] if prior is not None else None
+    return {
+        "schema_version": 1,
+        "initial": previous is None,
+        "changed_fields": sorted(
+            key
+            for key in (previous["fields"].keys() | payload["fields"].keys())
+            if key not in previous["fields"]
+            or key not in payload["fields"]
+            or previous["fields"][key] != payload["fields"][key]
+        )
+        if previous is not None
+        else [],
+        **{
+            key + "_changed": previous is not None and previous[key] != payload[key]
+            for key in ("title", "content", "coverage", "missing")
+        },
+    }
+
+
 class CanvasEvidenceStore:
     def _stage_canvas_item(self, conn, row, scan, resource_key, batch, item, observed):
         kind = item.kind or (
@@ -153,8 +175,17 @@ class CanvasEvidenceStore:
                 )
                 conn.execute(
                     "INSERT INTO wrytely_agent.canvas_evidence_events "
-                    "(id,agent_id,object_id,observation_id,kind) VALUES (%s,%s,%s,%s,%s)",
-                    (uuid4(), row["agent_id"], obj["id"], observation_id, event_kind),
+                    "(id,agent_id,object_id,observation_id,kind,previous_observation_id,changes) "
+                    "VALUES (%s,%s,%s,%s,%s,%s,%s)",
+                    (
+                        uuid4(),
+                        row["agent_id"],
+                        obj["id"],
+                        observation_id,
+                        event_kind,
+                        prior["id"] if prior is not None else None,
+                        Jsonb(_change_details(prior, payload)),
+                    ),
                 )
                 if obj["source_id"] is not None:
                     duties = conn.execute(
