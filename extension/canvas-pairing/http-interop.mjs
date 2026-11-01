@@ -15,6 +15,7 @@ const allowedPaths = new Set(
     "scope",
     "academic/batch",
     "academic/resource",
+    "academic/extract",
     ...["begin", "resume", "batch", "resource", "finish"].map(
       (p) => `discovery/${p}`,
     ),
@@ -38,6 +39,8 @@ const scenarios = [
   "academic_scope_changed",
   "academic_revoke",
   "academic_cross_account",
+  "assignment_collector_lifecycle",
+  "assignment_collector_lost_after",
 ];
 let phase = "configuration";
 const rejection = (code) => (e) =>
@@ -67,6 +70,8 @@ try {
   let injected = false;
   const batchBodies = [];
   const academicBodies = [];
+  const extractionBodies = [];
+  let collectionRound = 0;
 
   async function transport(url, init) {
     const requested = new URL(url);
@@ -86,6 +91,8 @@ try {
     const isAcademic = requested.pathname.endsWith("/academic/batch");
     if (isBatch) batchBodies.push(JSON.parse(init.body));
     if (isAcademic) academicBodies.push(JSON.parse(init.body));
+    if (requested.pathname.endsWith("/academic/extract"))
+      extractionBodies.push(JSON.parse(init.body));
     if (
       isAcademic &&
       !injected &&
@@ -107,7 +114,9 @@ try {
     if (
       isAcademic &&
       !injected &&
-      scenario === "academic_lost_after" &&
+      ["academic_lost_after", "assignment_collector_lost_after"].includes(
+        scenario,
+      ) &&
       response.ok
     ) {
       injected = true;
@@ -150,6 +159,7 @@ try {
     phase = "pairing";
     const data = {};
     const courseRequests = [];
+    const assignmentRequests = [];
     const courseStart = `${canvasOrigin}/api/v1/courses?enrollment_state=active&per_page=50`;
     const courseNext = `${courseStart}&page=opaque-2`;
     const storageArea = {
@@ -180,7 +190,44 @@ try {
           assert.ok(init.signal instanceof AbortSignal);
           if (url === `${canvasOrigin}/api/v1/users/self/profile`)
             return Response.json({ id: provider });
-          assert.ok(scenario.startsWith("collector_"));
+          if (scenario.startsWith("assignment_collector_")) {
+            const match = new URL(url).pathname.match(
+              /^\/api\/v1\/courses\/(101|102)\/assignments$/,
+            );
+            if (match) {
+              const course = match[1],
+                assignment = course === "101" ? 17 : 18;
+              assert.equal(
+                url,
+                `${canvasOrigin}/api/v1/courses/${course}/assignments?per_page=50&override_assignment_dates=true`,
+              );
+              assignmentRequests.push(url);
+              const response = Response.json([
+                {
+                  id: assignment,
+                  course_id: Number(course),
+                  name: `Synthetic collection assignment ${assignment}`,
+                  description: `<p>Read <strong>carefully</strong> for course ${course}</p><script>PRIVATE_SCRIPT</script><p><a href="/courses/${course}/pages/reference">Reference</a></p>`,
+                  due_at:
+                    collectionRound === 2 && course === "101"
+                      ? "2026-11-03T05:59:00Z"
+                      : "2026-11-02T05:59:00Z",
+                  unlock_at: null,
+                  lock_at: null,
+                  points_possible: 20,
+                  submission_types: ["online_upload"],
+                  rubric: [],
+                  published: true,
+                },
+              ]);
+              Object.defineProperty(response, "url", { value: url });
+              return response;
+            }
+          }
+          assert.ok(
+            scenario.startsWith("collector_") ||
+              scenario.startsWith("assignment_collector_"),
+          );
           assert.ok([courseStart, courseNext].includes(url));
           courseRequests.push(url);
           const first = url === courseStart;
@@ -218,6 +265,7 @@ try {
       fresh,
       data,
       courseRequests,
+      assignmentRequests,
       courseStart,
       courseNext,
       record: () => Object.values(data)[0],
@@ -254,10 +302,90 @@ try {
     });
   }
   phase = "begin";
-  if (!scenario.startsWith("collector_") && !scenario.startsWith("academic_"))
+  if (
+    !scenario.startsWith("collector_") &&
+    !scenario.startsWith("academic_") &&
+    !scenario.startsWith("assignment_collector_")
+  )
     await alice.client.beginDiscovery();
 
-  if (scenario.startsWith("academic_")) {
+  if (scenario.startsWith("assignment_collector_")) {
+    phase = "assignment_collector_scope";
+    const context = await alice.fresh().readCurrentContext();
+    assert.equal(
+      (
+        await request(`${root}/scope`, "alice", {
+          connection_id: context.connection_id,
+          generation: context.generation,
+          mode: "all_active",
+          course_ids: [],
+          resource_kinds: ["assignments"],
+        })
+      ).status,
+      200,
+    );
+    for (collectionRound = 0; collectionRound < 3; collectionRound++) {
+      phase = "assignment_collector_cycle";
+      if (collectionRound > 0) await alice.fresh().beginDiscovery();
+      let finished = false;
+      for (let tick = 0; tick < 20; tick++) {
+        const result = await alice.fresh().collectAssignmentPage();
+        if (result.state === "blocked") {
+          assert.equal(scenario, "assignment_collector_lost_after");
+          assert.equal(result.reason, "discovery_outcome_unknown");
+          const captured = structuredClone(
+            alice.record().discovery.pending.body,
+          );
+          assert.equal(alice.assignmentRequests.length, 1);
+          assert.equal(extractionBodies.length, 1);
+          phase = "assignment_collector_recover";
+          assert.equal(
+            (await alice.fresh().collectAssignmentPage()).action,
+            "recover",
+          );
+          assert.deepEqual(academicBodies.at(-1), captured);
+          assert.equal(alice.assignmentRequests.length, 1);
+          assert.equal(extractionBodies.length, 1);
+          continue;
+        }
+        for (const secret of [
+          "Synthetic",
+          "PRIVATE_SCRIPT",
+          "lease_token",
+          "ingestion_bearer",
+          "subject",
+          "checkpoint",
+        ])
+          assert.ok(!JSON.stringify(result).includes(secret));
+        assert.ok(!JSON.stringify(alice.record()).includes("PRIVATE_SCRIPT"));
+        if (result.state === "finished") {
+          assert.equal(result.coverage, "partial");
+          finished = true;
+          break;
+        }
+      }
+      assert.equal(finished, true);
+      assert.equal(alice.courseRequests.length, (collectionRound + 1) * 2);
+      assert.equal(alice.assignmentRequests.length, (collectionRound + 1) * 2);
+      assert.equal(extractionBodies.length, (collectionRound + 1) * 2);
+      assert.equal(alice.record().discovery.pending, null);
+    }
+    assert.deepEqual(
+      alice.courseRequests,
+      Array.from({ length: 3 }, () => [
+        alice.courseStart,
+        alice.courseNext,
+      ]).flat(),
+    );
+    assert.equal(
+      academicBodies.length,
+      scenario === "assignment_collector_lost_after" ? 7 : 6,
+    );
+    assert.equal(new Set(academicBodies.map((body) => body.batch_key)).size, 6);
+    assert.ok(
+      extractionBodies.every((body) => ["101", "102"].includes(body.course_id)),
+    );
+  } else if (scenario.startsWith("academic_")) {
     phase = "academic_scope";
     const context = await alice.client.readCurrentContext();
     assert.equal(

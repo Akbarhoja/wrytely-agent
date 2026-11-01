@@ -40,6 +40,8 @@ SCENARIOS = (
     "academic_scope_changed",
     "academic_revoke",
     "academic_cross_account",
+    "assignment_collector_lifecycle",
+    "assignment_collector_lost_after",
 )
 ENV_NAMES = {"PATH", "SYSTEMROOT", "WINDIR", "COMSPEC", "PATHEXT", "TEMP", "TMP", "LANG", "LC_ALL"}
 
@@ -58,6 +60,7 @@ def interop_service(canvas_store, scenario, monkeypatch):
         settings = Settings(_env_file=None, canvas_origins=[ORIGIN])
         api = create_app(settings, store=canvas_store, verifier=SessionVerifier())
     injected = False
+    snapshots = []
 
     @api.middleware("http")
     async def controlled_race(request, call_next):
@@ -94,7 +97,14 @@ def interop_service(canvas_store, scenario, monkeypatch):
                         course_ids=[],
                         resource_kinds=["assignments"],
                     )
-        return await call_next(request)
+        response = await call_next(request)
+        if (
+            scenario.startswith("assignment_collector_")
+            and request.url.path.endswith("/discovery/finish")
+            and response.status_code == 200
+        ):
+            snapshots.append(collector_snapshot(canvas_store))
+        return response
 
     listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     listener.bind(("127.0.0.1", 0))
@@ -127,7 +137,7 @@ def interop_service(canvas_store, scenario, monkeypatch):
         while not server.started and thread.is_alive() and time.monotonic() < deadline:
             time.sleep(0.01)
         assert server.started and not errors, "Isolated test HTTP service failed to start"
-        yield f"http://127.0.0.1:{port}"
+        yield f"http://127.0.0.1:{port}", snapshots
     finally:
         server.should_exit = True
         thread.join(5)
@@ -140,6 +150,7 @@ def interop_service(canvas_store, scenario, monkeypatch):
 
 @pytest.mark.parametrize("scenario", SCENARIOS)
 def test_actual_client_http_contract(canvas_store, interop_service, scenario, monkeypatch):
+    service_url, snapshots = interop_service
     node = shutil.which("node")
     assert node is not None, "Node is required for actual client interoperability; never skip"
     assert DRIVER.is_file(), "Actual Node client HTTP acceptance driver is not implemented"
@@ -148,7 +159,7 @@ def test_actual_client_http_contract(canvas_store, interop_service, scenario, mo
     assert "WRYTELY_TEST_PARENT_CANARY" not in environment
     completed = subprocess.run(
         [node, str(DRIVER)],
-        input=json.dumps({"loopback": interop_service, "scenario": scenario}),
+        input=json.dumps({"loopback": service_url, "scenario": scenario}),
         capture_output=True,
         text=True,
         timeout=45,
@@ -174,7 +185,10 @@ def test_actual_client_http_contract(canvas_store, interop_service, scenario, mo
         versions = conn.execute(
             "SELECT count(*) AS n FROM wrytely_agent.source_versions"
         ).fetchone()["n"]
-        if scenario.startswith("academic_"):
+        if scenario.startswith("assignment_collector_"):
+            assert catalog == 2 and batches == 12 and versions == 3
+            assert_collector_lifecycle(conn, snapshots)
+        elif scenario.startswith("academic_"):
             assert_academic_state(conn, scenario, catalog, batches, versions)
         elif scenario.startswith("collector_"):
             assert catalog == batches == 2
@@ -225,8 +239,166 @@ def test_actual_client_http_contract(canvas_store, interop_service, scenario, mo
                 "WHERE resource_key='101/assignments'"
             ).fetchall()
             assert [row["coverage"] for row in rows] == ["unsupported"]
-        if not scenario.startswith("academic_"):
+        if not scenario.startswith(("academic_", "assignment_collector_")):
             assert versions == 0
+
+
+def collector_snapshot(store):
+    """Read actual committed state after each successful finish, not child-reported counts."""
+    with store.connection() as conn:
+        result = {}
+        for key, table in (
+            ("versions", "source_versions"),
+            ("events", "canvas_evidence_events"),
+            ("observations", "canvas_evidence_observations"),
+        ):
+            result[key] = conn.execute(
+                f"SELECT count(*) AS n FROM wrytely_agent.{table}"
+            ).fetchone()["n"]
+        result["version_ids"] = {
+            row["id"]
+            for row in conn.execute("SELECT id FROM wrytely_agent.source_versions").fetchall()
+        }
+        result["event_ids"] = {
+            row["id"]
+            for row in conn.execute(
+                "SELECT id FROM wrytely_agent.canvas_evidence_events"
+            ).fetchall()
+        }
+        result["object_count"] = conn.execute(
+            "SELECT count(*) AS n FROM wrytely_agent.canvas_evidence_objects"
+        ).fetchone()["n"]
+        result["immutable"] = conn.execute(
+            "SELECT v.id,v.external_revision,p.content_digest,p.payload FROM "
+            "wrytely_agent.source_versions v LEFT JOIN "
+            "wrytely_agent.canvas_evidence_payloads p ON p.version_id=v.id "
+            "AND p.agent_id=v.agent_id"
+        ).fetchall()
+        result["objects"] = conn.execute(
+            "SELECT o.id,o.course_id,o.provider_id,o.complete_version_id,"
+            "obs.id AS observation_id,obs.version_id,obs.payload,"
+            "obs.content_digest,v.reference,v.content,a.user_id,c.origin FROM "
+            "wrytely_agent.canvas_evidence_objects o JOIN "
+            "wrytely_agent.canvas_evidence_observations obs ON obs.id=o.latest_observation_id JOIN "
+            "wrytely_agent.source_versions v ON v.id=obs.version_id AND v.agent_id=o.agent_id JOIN "
+            "wrytely_agent.agents a ON a.id=o.agent_id JOIN "
+            "wrytely_agent.source_connections c ON c.id=o.connection_id ORDER BY o.course_id"
+        ).fetchall()
+        result["promoted"] = conn.execute(
+            "SELECT count(*) AS n FROM wrytely_agent.academic_sources "
+            "WHERE latest_version_id IS NOT NULL"
+        ).fetchone()["n"]
+        return result
+
+
+def assert_collector_lifecycle(conn, snapshots):
+    assert len(snapshots) == 3
+    assert [(s["versions"], s["events"], s["observations"]) for s in snapshots] == [
+        (2, 2, 2),
+        (2, 2, 4),
+        (3, 3, 6),
+    ]
+    assert snapshots[0]["version_ids"] == snapshots[1]["version_ids"]
+    assert snapshots[0]["event_ids"] == snapshots[1]["event_ids"]
+    assert snapshots[1]["version_ids"] < snapshots[2]["version_ids"]
+    assert snapshots[1]["event_ids"] < snapshots[2]["event_ids"]
+    original_objects = [row["id"] for row in snapshots[0]["objects"]]
+    expected_versions = {}
+    for cycle, snapshot in enumerate(snapshots):
+        assert snapshot["promoted"] == 0
+        assert snapshot["object_count"] == 2
+        assert [row["id"] for row in snapshot["objects"]] == original_objects
+        assert len(snapshot["objects"]) == 2
+        for index, row in enumerate(snapshot["objects"], 17):
+            course = str(index + 84)
+            due = (
+                "2026-11-03T05:59:00.000000Z"
+                if cycle == 2 and index == 17
+                else "2026-11-02T05:59:00.000000Z"
+            )
+            payload = {
+                "digest_version": 1,
+                "kind": "assignment",
+                "title": f"Synthetic collection assignment {index}",
+                "content": f"Read carefully for course {course}\nReference",
+                "fields": {
+                    "due_at": due,
+                    "unlock_at": None,
+                    "lock_at": None,
+                    "points_possible": "20",
+                    "submission_types": ["online_upload"],
+                    "rubric": [],
+                    "published": True,
+                },
+                "coverage": "partial",
+                "missing": ["html_text_only", "linked_content_unread", "nontext_content_unread"],
+            }
+            assert row["course_id"] == course and row["provider_id"] == str(index)
+            assert row["payload"] == payload and row["content_digest"] == source_digest(payload)
+            assert row["reference"] == f"{ORIGIN}/courses/{course}/assignments/{index}"
+            assert row["content"] == payload["content"]
+            assert row["user_id"] == "user_alice" and row["origin"] == ORIGIN
+            assert row["complete_version_id"] is None
+            if row["version_id"] in expected_versions:
+                assert expected_versions[row["version_id"]] == payload
+            else:
+                expected_versions[row["version_id"]] = payload
+        assert len(snapshot["immutable"]) == snapshot["versions"]
+        assert {v["id"] for v in snapshot["immutable"]} == set(expected_versions)
+        for version in snapshot["immutable"]:
+            expected_payload = expected_versions[version["id"]]
+            assert version["payload"] == expected_payload
+            assert (
+                version["external_revision"]
+                == version["content_digest"]
+                == source_digest(expected_payload)
+            )
+    for index in (0, 1):
+        assert (
+            snapshots[0]["objects"][index]["version_id"]
+            == snapshots[1]["objects"][index]["version_id"]
+        )
+    assert snapshots[1]["objects"][0]["version_id"] != snapshots[2]["objects"][0]["version_id"]
+    assert snapshots[1]["objects"][1]["version_id"] == snapshots[2]["objects"][1]["version_id"]
+    events = conn.execute(
+        "SELECT kind FROM wrytely_agent.canvas_evidence_events ORDER BY kind"
+    ).fetchall()
+    assert [row["kind"] for row in events] == [
+        "source_changed",
+        "source_observed",
+        "source_observed",
+    ]
+    changed_events = conn.execute(
+        "SELECT object_id,observation_id FROM wrytely_agent.canvas_evidence_events "
+        "WHERE kind='source_changed'"
+    ).fetchall()
+    changed = snapshots[2]["objects"][0]
+    assert len(changed_events) == 1
+    assert changed_events[0]["object_id"] == changed["id"]
+    assert changed_events[0]["observation_id"] == changed["observation_id"]
+    resources = conn.execute(
+        "SELECT resource_key,coverage,seen_count FROM wrytely_agent.canvas_resources "
+        "ORDER BY resource_key"
+    ).fetchall()
+    assert [(r["resource_key"], r["coverage"], r["seen_count"]) for r in resources] == [
+        ("101/assignments", "partial", 1)
+    ] * 3 + [("102/assignments", "partial", 1)] * 3 + [("courses", "complete", 2)] * 3
+    scans = conn.execute(
+        "SELECT state,checkpoint FROM wrytely_agent.canvas_scans ORDER BY sequence"
+    ).fetchall()
+    assert len(scans) == 3
+    for scan in scans:
+        assert scan["state"] == "finished"
+        assert (
+            scan["checkpoint"]["sequence"] == 4
+            and scan["checkpoint"]["resource"] == "102/assignments"
+        )
+        assert scan["checkpoint"]["next_cursor"] is None
+    finishes = conn.execute(
+        "SELECT response FROM wrytely_agent.canvas_sync_receipts WHERE operation='finish'"
+    ).fetchall()
+    assert len(finishes) == 3
+    assert all(row["response"]["coverage"] == "partial" for row in finishes)
 
 
 def assert_academic_state(conn, scenario, catalog, batches, versions):
