@@ -18,6 +18,7 @@ from shared.canvas_document_publication import CanvasDocumentPublicationStore
 from shared.canvas_document_uploads import CanvasDocumentUploadStore
 from shared.canvas_documents import CanvasDocumentStore
 from shared.canvas_evidence import CanvasEvidenceStore
+from shared.canvas_object_scope import CanvasObjectScopeStore
 from shared.canvas_reads import CanvasReadStore
 from shared.canvas_sync import CanvasSyncStore
 from shared.connection_status import ConnectionStatusStore
@@ -56,6 +57,7 @@ class Store(
     CanvasSyncStore,
     CanvasEvidenceStore,
     CanvasReadStore,
+    CanvasObjectScopeStore,
     CanvasDocumentStore,
     CanvasDocumentUploadStore,
     CanvasDocumentPublicationStore,
@@ -271,7 +273,7 @@ class Store(
 
     def _fence(self, conn, lease: TaskLease):
         row = conn.execute(
-            "SELECT t.id,a.paused FROM wrytely_agent.tasks t "
+            "SELECT t.id,t.responsibility_id,a.paused FROM wrytely_agent.tasks t "
             "JOIN wrytely_agent.agents a ON a.id=t.agent_id "
             "WHERE t.id=%s AND t.agent_id=%s AND a.user_id=%s AND t.status='running' "
             "AND t.lease_token=%s AND t.lease_until>now() "
@@ -283,6 +285,14 @@ class Store(
         ).fetchone()
         if not row or row["paused"]:
             raise LeaseLost("Task lease expired, was superseded, or agent was paused")
+        if row["responsibility_id"] and self._fence_canvas_object_scope(
+            conn, lease.agent_id, row["responsibility_id"]
+        ):
+            if not conn.execute(
+                "SELECT 1 FROM wrytely_agent.tasks WHERE id=%s AND lease_until>clock_timestamp()",
+                (lease.task_id,),
+            ).fetchone():
+                raise LeaseLost("Task lease expired during Canvas scope check")
 
     def heartbeat(self, lease: TaskLease, seconds: int = 300):
         with self.connection() as conn:

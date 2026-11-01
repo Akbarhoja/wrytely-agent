@@ -129,13 +129,9 @@ class CanvasDocumentPublicationStore:
                     Jsonb(changes),
                 ),
             )
-            if obj["source_id"] is not None:
-                for duty in conn.execute(
-                    "SELECT responsibility_id FROM wrytely_agent.responsibility_sources "
-                    "WHERE agent_id=%s AND source_id=%s",
-                    (row["agent_id"], obj["source_id"]),
-                ).fetchall():
-                    self._invalidate_memory(conn, duty["responsibility_id"])
+            self._invalidate_canvas_object_duties(
+                conn, row["agent_id"], obj["id"], obj["source_id"]
+            )
         conn.execute(
             "INSERT INTO wrytely_agent.canvas_resource_items VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)",
             (

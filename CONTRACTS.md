@@ -79,14 +79,47 @@ is no implicit fallback to another observation/root and no document-only task gr
 This helper is not registered as an agent/model tool or connected to generation;
 that consumer wiring remains subject to the separately proposed contract below.
 
-## Proposed document-only task scope and drafting
+## Document-only task scope design and first implementation
 
 [Document-only drafting and task scope v1](docs/contracts/DOCUMENT-DRAFT-SCOPE-v1.md)
-proposes explicit owned object bindings and versioned typed legacy/document evidence
-for claims, policy and rubric. It reuses the existing responsibility/draft machinery;
-it does not create fake text versions. **Awaiting M agreement, not executable.**
-No object capability, new DTO/route or source activation is implied. Current task
-scope and external schemas remain unchanged.
+received M's exact internal design agreement at e9a8fe4 in
+[6560955094](https://github.com/Akbarhoja/wrytely-agent/pull/142#issuecomment-6560955094).
+This does not approve new HTTP/UI shapes or activate source/model/send consumers.
+
+The first internal increment implements create_canvas_draft_responsibility with
+that signature/bounds/errors and canonical replay specification. Migration021 adds
+owned generation-bound responsibility_canvas_objects. Creation atomically validates
+1–8 current owned selected published objects, persists responsibility/intent/object
+bindings/replay specification and a task, then re-reads current authorization before
+commit. Exact replay also rechecks current authority and stored binding generations;
+it never creates another task or silently restores scope after reconnection.
+No text source version or legacy responsibility_sources binding is manufactured.
+
+Existing task list/body/document readers now accept the task's explicit object scope
+as an alternative to a legacy source binding. Every task fence rechecks all explicit
+object bindings against current subject, selection, connection and generation, with
+final credential/task-clock checks. Connection reset/scope changes invalidate scoped
+active duties. Changed document or inline content/coverage reuses memory invalidation
+and revokes old task leases, deduplicating duties bound through both mechanisms.
+Unchanged observations refresh evidence status without new tasks or responsibility
+revisions; old pinned observations remain historical, never silently rebound.
+
+Typed v2 policy/rubric/claim evidence and generation remain the next implementation
+slice. Until then the planner explicitly blocks these object-scoped intents with
+internal reason document_drafting_not_wired **without a model call**. This is a
+staging guard, not completed drafting. Existing legacy flows and external DTOs remain
+unchanged. Migration021 is disposable-test-only; no route or live service enabled.
+
+## Agreed document staging HTTP design; implementation pending
+
+A reviewed and agreed M's exact #14847db193 proposal in
+[6563512653](https://github.com/Akbarhoja/wrytely-agent/pull/148#issuecomment-6563512653):
+POST /v1/source-connections/canvas/documents/{begin,parts,finish}, unchanged schema2
+operations/receipts, ingestion authority, 1MiB streaming limits, document400/empty404/
+controlled409/429, no-store/redaction, Retry-After30 minimum hint and default-off
+trusted extractor injection. M's first app-only base is reviewed #135019d6c7.
+This is design agreement only; no routes/configuration/provider activation supplied.
+M owns that implementation. Host/package #144/#146 review/integration is separate.
 
 The existing generator now treats document_evidence_missing_or_stale and
 document_evidence_failed_at_commit as terminal source failures, alongside legacy
