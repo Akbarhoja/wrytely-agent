@@ -776,3 +776,85 @@ def test_legacy_event_insert_keeps_detail_explicitly_unavailable(device):
         )
     legacy = rows(device, "canvas_evidence_events")[0]
     assert legacy["changes"] is None and legacy["previous_observation_id"] is None
+
+
+@pytest.mark.parametrize("stamp", ["2025-11-02T07:30:00+00:00", "2025-11-02T08:30:00+00:00"])
+def test_equal_instant_canvas_changes_conflict_in_both_dst_folds(device, stamp):
+    from contextlib import contextmanager
+    from uuid import UUID
+
+    from contracts.canvas_evidence import AcademicBatch
+
+    db, linked = device
+    original_connection = db.connection
+
+    @contextmanager
+    def denver_connection():
+        with original_connection() as conn:
+            conn.execute("SET TIME ZONE 'America/Denver'")
+            yield conn
+
+    db.connection = denver_connection
+    first = prepare(device)
+    receipt = upload(device, first, body(device, first))
+    close(device, first, receipt)
+    obj = rows(device, "canvas_evidence_objects")[0]
+    instant = datetime.fromisoformat(stamp)
+    # Pin historical synthetic rows to a deterministic overlap instant; invoke
+    # the transactional staging helper directly to isolate ordering, not the
+    # independent public scan-time window checked before this helper is called.
+    with db.connection() as conn:
+        conn.execute(
+            "UPDATE wrytely_agent.canvas_evidence_observations SET observed_at=%s WHERE id=%s",
+            (instant, obj["latest_observation_id"]),
+        )
+    second = next_scan(device, "fold-second")
+    value = body(device, second)
+    value["items"][0]["content"] = "Conflicting same-instant requirements"
+    batch = AcademicBatch.model_validate(value)
+    before = {
+        table: rows(device, table)
+        for table in (
+            "source_versions",
+            "canvas_evidence_payloads",
+            "canvas_evidence_observations",
+            "canvas_evidence_events",
+            "canvas_evidence_objects",
+        )
+    }
+    with pytest.raises(CanvasSyncConflict, match="ambiguous_observation_time"):
+        with db.connection() as conn:
+            row = conn.execute(
+                "SELECT * FROM wrytely_agent.source_connections WHERE id=%s",
+                (linked["connection_id"],),
+            ).fetchone()
+            scan = conn.execute(
+                "SELECT * FROM wrytely_agent.canvas_scans WHERE id=%s", (UUID(second["scan_id"]),)
+            ).fetchone()
+            db._stage_canvas_item(
+                conn, row, scan, "101/assignments", batch, batch.items[0], instant
+            )
+    for table, records in before.items():
+        assert rows(device, table) == records
+
+    from zoneinfo import ZoneInfo
+
+    other_stamp = "2025-11-02T08:15:00+00:00" if "07:30" in stamp else "2025-11-02T07:45:00+00:00"
+    other = datetime.fromisoformat(other_stamp).astimezone(ZoneInfo("America/Denver"))
+    with db.connection() as conn:
+        row = conn.execute(
+            "SELECT * FROM wrytely_agent.source_connections WHERE id=%s", (linked["connection_id"],)
+        ).fetchone()
+        scan = conn.execute(
+            "SELECT * FROM wrytely_agent.canvas_scans WHERE id=%s", (UUID(second["scan_id"]),)
+        ).fetchone()
+        result = db._stage_canvas_item(
+            conn, row, scan, "101/assignments", batch, batch.items[0], other
+        )
+    historical = other.astimezone(UTC) < instant
+    assert result["historical"] is historical
+    current = rows(device, "canvas_evidence_objects")[0]
+    assert (current["latest_observation_id"] == obj["latest_observation_id"]) is historical
+    assert len(rows(device, "canvas_evidence_events")) == len(before["canvas_evidence_events"]) + (
+        not historical
+    )
