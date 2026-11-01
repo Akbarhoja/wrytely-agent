@@ -61,7 +61,8 @@ class AcademicReadStore:
                 "f.memory_revision<>r.memory_revision AS stale,f.created_at "
                 "FROM wrytely_agent.artifacts f JOIN wrytely_agent.responsibilities r "
                 "ON r.id=f.responsibility_id AND r.agent_id=f.agent_id "
-                "WHERE r.id=%s ORDER BY f.created_at DESC,f.id DESC LIMIT 50",
+                "WHERE r.id=%s AND f.evidence_schema=1 "
+                "ORDER BY f.created_at DESC,f.id DESC LIMIT 50",
                 (owned["id"],),
             ).fetchall()
             return student_json(rows)
@@ -75,7 +76,7 @@ class AcademicReadStore:
                 "ORDER BY c.created_at DESC,c.id DESC LIMIT 1) AS latest_check "
                 "FROM wrytely_agent.artifacts f JOIN wrytely_agent.agents a ON a.id=f.agent_id "
                 "JOIN wrytely_agent.responsibilities r ON r.id=f.responsibility_id "
-                "AND r.agent_id=f.agent_id WHERE a.user_id=%s AND f.id=%s",
+                "AND r.agent_id=f.agent_id WHERE a.user_id=%s AND f.id=%s AND f.evidence_schema=1",
                 (user_id, artifact_id),
             ).fetchone()
             if not row:

@@ -27,6 +27,7 @@ from shared.draft_intents import DraftIntentStore
 from shared.drafting_tasks import DraftingTaskStore
 from shared.responsibilities import ResponsibilityStore
 from shared.source_connections import SourceConnectionStore, canvas_origin
+from shared.typed_evidence_store import TypedEvidenceStore
 from shared.whatsapp_store import WhatsAppStore
 
 
@@ -58,6 +59,7 @@ class Store(
     CanvasEvidenceStore,
     CanvasReadStore,
     CanvasObjectScopeStore,
+    TypedEvidenceStore,
     CanvasDocumentStore,
     CanvasDocumentUploadStore,
     CanvasDocumentPublicationStore,

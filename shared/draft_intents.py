@@ -5,7 +5,9 @@ from datetime import UTC, datetime
 from psycopg.types.json import Jsonb
 
 from contracts.artifacts import CoursePolicy, RubricItem
+from contracts.document_artifacts import CoursePolicyV2, RubricItemV2
 from shared.freshness import legacy_freshness
+from shared.typed_evidence import resolve_evidence
 
 
 class DraftIntentStore:
@@ -38,9 +40,18 @@ class DraftIntentStore:
             intent = self._intent(conn, lease)
             if not intent:
                 raise ValueError("Explicit private-draft intent required")
-            return self._intent_sources(conn, intent)
+            sources = self._intent_sources(conn, intent)
+            return (
+                self._finish_canvas_read(conn, lease, sources)
+                if intent.get("canvas_objects_bound")
+                else sources
+            )
 
     def _intent_sources(self, conn, intent):
+        if intent.get("canvas_objects_bound"):
+            return self._typed_drafting_context(
+                conn, intent["agent_id"], intent["responsibility_id"]
+            )
         return conn.execute(
             "SELECT v.id,v.content,v.coverage,v.retrieved_at FROM "
             "wrytely_agent.responsibility_sources b JOIN wrytely_agent.academic_sources s "
@@ -52,6 +63,19 @@ class DraftIntentStore:
         ).fetchall()
 
     def _validate_draft_assessment(self, conn, intent, result):
+        if intent.get("canvas_objects_bound"):
+            if result.get("evidence_schema") != 2:
+                raise ValueError("Typed evidence assessment required")
+            policy = (
+                CoursePolicyV2.model_validate(result["policy"]) if result.get("policy") else None
+            )
+            rubric = [RubricItemV2.model_validate(r) for r in result["rubric"]]
+            sources = self._intent_sources(conn, intent)
+            for item in ([policy] if policy else []) + rubric:
+                resolve_evidence(item.evidence, sources)
+            return bool(policy and policy.status in ("permitted", "disclosure_required") and rubric)
+        if result.get("evidence_schema", 1) != 1:
+            raise ValueError("Legacy assessment required")
         policy = CoursePolicy.model_validate(result["policy"]) if result.get("policy") else None
         rubric = [RubricItem.model_validate(r) for r in result["rubric"]]
         sources = self._intent_sources(conn, intent)
@@ -85,8 +109,12 @@ class DraftIntentStore:
 
                 if intent["assessment"] != result:
                     raise RequestConflict("Assessment already persisted")
+                if intent.get("canvas_objects_bound"):
+                    self._validate_draft_assessment(conn, intent, result)
                 return result["state"] == "assessed"
             allowed = self._validate_draft_assessment(conn, intent, result)
+            if intent.get("canvas_objects_bound"):
+                self._finish_canvas_read(conn, lease, {})
             if result["state"] != ("assessed" if allowed else "blocked"):
                 raise ValueError("Invalid assessment state")
             conn.execute(
@@ -128,6 +156,8 @@ class DraftIntentStore:
         result = intent["assessment"]
         if not self._validate_draft_assessment(conn, intent, result):
             return "draft_policy_or_rubric_blocked"
+        if intent.get("canvas_objects_bound"):
+            self._finish_canvas_read(conn, lease, {})
         task_id = self._responsibility_task(
             conn,
             lease.agent_id,
@@ -147,6 +177,7 @@ class DraftIntentStore:
                         "policy": result["policy"],
                         "rubric": result["rubric"],
                         "max_revisions": intent["max_revisions"],
+                        **({"evidence_schema": 2} if intent.get("canvas_objects_bound") else {}),
                     }
                 ),
             ),
@@ -175,12 +206,15 @@ class DraftIntentStore:
             "AND f.memory_revision=%s",
             (intent["drafting_task_id"], lease.agent_id, intent["memory_revision"]),
         ).fetchall()
-        return any(
+        ready = any(
             row["report"]
             and row["report"]["passed"]
             and not self._artifact_evidence_failure(conn, row, row["report"])
             for row in candidates
         )
+        if intent.get("canvas_objects_bound"):
+            self._finish_canvas_read(conn, lease, {})
+        return ready
 
     def draft_responsibility_status(self, user_id, responsibility_id):
         with self.connection() as conn:
@@ -197,7 +231,8 @@ class DraftIntentStore:
                 "LEFT JOIN wrytely_agent.tasks t ON t.id=i.drafting_task_id "
                 "LEFT JOIN LATERAL (SELECT id,state FROM wrytely_agent.artifacts "
                 "WHERE task_id=i.drafting_task_id "
-                "AND agent_id=r.agent_id ORDER BY created_at DESC,id DESC LIMIT 1) f ON true "
+                "AND agent_id=r.agent_id AND evidence_schema=1 "
+                "ORDER BY created_at DESC,id DESC LIMIT 1) f ON true "
                 "WHERE a.user_id=%s AND r.id=%s",
                 (user_id, responsibility_id),
             ).fetchone()

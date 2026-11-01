@@ -45,6 +45,62 @@ exact clarification3b86710 in6554751518. Current executable text/reply/delivery
 contracts remain in force until the new implementation is separately reviewed.
 No new paid allowance, migration, runtime, queue or source activation is implied.
 
+## Internal typed v2 document drafting
+
+Under M's exact design agreement6560955094, contracts/document_artifacts.py adds
+internal discriminated legacy/canvas_document evidence for policy, rubric and draft
+claims. Legacy refs retain actual version_id; document refs retain exact object,
+observation, root, segment, page, Unicode offsets and quote. IDs are not interchangeable.
+Public contracts/artifacts.py DTOs remain unchanged. No new HTTP schema is approved.
+
+The existing planner, requirement assessor, private intent, draft generator, format
+checker, independent reviewer, checkpoints/revisions and final completion now share
+this internal v2 path. Explicit Canvas delegation selects it; ordinary conversation
+cannot activate it. No parallel agent or new public intake route is introduced.
+The earlier document_drafting_not_wired staging hold is replaced by source-backed
+assessment and mandatory verification; scope alone still grants no policy permission.
+Unknown/limited/prohibited policy or missing rubric blocks, and sources cannot change
+student consent. Model-assessed completeness/support remains fallible.
+
+TypedEvidenceStore resolves originals under the current agent/task fence. Published
+document-only roots need no fake source_versions or legacy pointer promotion. Actual
+inline Canvas versions can be read through their explicit object scope; their current
+Canvas coverage/control/draft6h policy applies. Direct legacy bound evidence retains
+its24h policy, with known Canvas mappings rechecked against current authorization.
+Source text and original structured fields (including rubric) are supplied together.
+A quote must still match an original text section/version: a criterion present only
+in structured fields cannot acquire an invented section/offset. Such gaps require
+further extraction/investigation, not an assumed complete rubric.
+
+Complete original section context is bounded to80000 code points and512000 serialized
+UTF-8 bytes, at most16 entries across existing legacy and explicit object bindings.
+Oversized evidence returns evidence_context_requires_paged_investigation before a
+model call, never silently truncates or assumes absent policy. General investigative
+retrieval for larger bundles remains future work. Partial/stale/history gaps return
+a refresh/block; current root/section/hash/quote checks precede semantic assessment.
+Inspection24h is never substituted for the server-owned Canvas drafting6h policy.
+An unchanged sync can create a new observation without changing the root/task
+revision. Old pinned references stay historical and require reassessment; this
+increment does not silently re-pin a saved policy/draft to a new observation.
+Automatic reassessment/follow-through remains P4 work.
+Credential expiry, controls, memory revision and lease clocks are rechecked after
+reads and at commits. Late requirements/control changes cannot certify an old draft.
+
+Migration022 adds artifacts.evidence_schema (default1, internal v2=2). Drafts/checks
+remain in the existing immutable request-key/recovery machinery. V2 provenance is
+embedded in the draft; it cannot use the old v1 sidecar. Passing check commit, cached
+recovery and private completion reload current originals and authorization; a previous
+passed report is not fresh authority. Existing word/disclosure checks retain exact
+v2 evidence in their findings. Failed content can take bounded revisions; source
+failures stop. Old artifact(), artifact_review(), responsibility_artifacts() and the
+unversioned status artifact pointer deliberately do not project v2 results. M needs
+a separately reviewed versioned private-result consumer before exposing these rows.
+No old client receives a document root disguised as a legacy citation.
+
+Evidence here is scripted-model/local synthetic publication, not live Meta schema/
+quality acceptance, real Canvas collection, WhatsApp delivery or continuous operation.
+Migration022 is disposable-test-only; no worker, provider call or deployment enabled.
+
 ## P1 internal original-section quote discovery
 
 `runtime/document_quote_search.py` adds internal find_document_quotes and
@@ -104,10 +160,9 @@ and revokes old task leases, deduplicating duties bound through both mechanisms.
 Unchanged observations refresh evidence status without new tasks or responsibility
 revisions; old pinned observations remain historical, never silently rebound.
 
-Typed v2 policy/rubric/claim evidence and generation remain the next implementation
-slice. Until then the planner explicitly blocks these object-scoped intents with
-internal reason document_drafting_not_wired **without a model call**. This is a
-staging guard, not completed drafting. Existing legacy flows and external DTOs remain
+At #150 the planner held new object-scoped intents with internal reason
+document_drafting_not_wired without a model call. The internal typed v2 path above
+now supersedes that staging guard; live/public consumer assembly is still separate. Existing legacy flows and external DTOs remain
 unchanged. Migration021 is disposable-test-only; no route or live service enabled.
 
 ## Agreed document staging HTTP design; implementation pending

@@ -321,23 +321,27 @@ def test_concurrent_replay_creates_exactly_one_intent_task_and_scope(device):
     assert state["responsibility_canvas_objects"] == 1
 
 
-def test_legacy_generator_cannot_run_new_document_only_intent(device):
+def test_document_intent_without_source_policy_cannot_produce_draft(device):
+    from test_drafting import structured
+
     observed = published(device)
     db = device[0]
     duty = create(device, [observed])
-    model = ScriptedModel([])
+    model = ScriptedModel(
+        [
+            structured(
+                "assess_draft_requirements",
+                {
+                    "policy": None,
+                    "rubric": [],
+                    "reason": "No drafting permission or rubric observed.",
+                },
+            )
+        ]
+    )
     assert run_once(db, model, Settings())
-    assert model.histories == []
-    state = db.draft_responsibility_status("user_alice", duty["id"])
-    assert state["status"] == "blocked"
-    with db.connection() as conn:
-        assert (
-            conn.execute(
-                "SELECT status_reason FROM wrytely_agent.responsibilities WHERE id=%s",
-                (duty["id"],),
-            ).fetchone()["status_reason"]
-            == "document_drafting_not_wired"
-        )
+    assert len(model.histories) == 1
+    assert db.draft_responsibility_status("user_alice", duty["id"])["status"] == "blocked"
     assert counts(db)["source_versions"] == 0
 
 

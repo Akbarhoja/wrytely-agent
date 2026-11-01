@@ -8,8 +8,10 @@ from uuid import UUID
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
 from contracts.artifacts import CoursePolicy, RubricItem
+from contracts.document_artifacts import RequirementAssessmentV2
 from runtime.drafting import structured_turn
 from shared.freshness import legacy_freshness
+from shared.typed_evidence import check_context, resolve_evidence
 
 
 class BoundEvidence(BaseModel):
@@ -47,12 +49,44 @@ def _check_freshness(sources):
         raise ValueError("Bound evidence requires freshness review")
 
 
-def assess_draft_requirements(model, sources):
+def assess_draft_requirements(model, sources, *, evidence_schema=1):
     """Caller supplies owned current bound evidence, rechecks lease/revision on commit.
 
     No DB, task, permission or delivery mutation. No silent truncation. Exceptions
     propagate to normal bounded runtime retry; raw provider errors are not results.
     """
+    if evidence_schema == 2:
+        check_context(sources)
+        verdict, usage = structured_turn(
+            model,
+            [
+                {
+                    "role": "system",
+                    "content": INSTRUCTIONS
+                    + " Evidence schema2: use discriminated legacy/canvas_document references. "
+                    "For documents preserve exact root/observation/segment/page/global offsets "
+                    "and quote. Full original sections are supplied; never replace them with "
+                    "summaries or invent source identifiers.",
+                },
+                {"role": "user", "content": json.dumps({"sources": sources}, ensure_ascii=False)},
+            ],
+            "assess_draft_requirements",
+            RequirementAssessmentV2,
+        )
+        check_context(sources)
+        for item in ([verdict.policy] if verdict.policy else []) + verdict.rubric:
+            resolve_evidence(item.evidence, sources)
+        allowed = verdict.policy and verdict.policy.status in ("permitted", "disclosure_required")
+        return {
+            "state": "assessed" if allowed and verdict.rubric else "blocked",
+            "authorizes_drafting": False,
+            "evidence_schema": 2,
+            **verdict.model_dump(mode="json"),
+            **usage,
+            "limits": "Fallible source assessment; delegation and final checks remain mandatory.",
+        }
+    if evidence_schema != 1:
+        raise ValueError("Unknown evidence schema")
     if not isinstance(sources, (list, tuple)) or not 1 <= len(sources) <= 8:
         raise ValueError("One to eight bound sources required")
     evidence = [BoundEvidence.model_validate(source) for source in sources]

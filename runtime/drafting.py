@@ -5,9 +5,12 @@ from datetime import UTC, datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 from contracts.artifacts import CoursePolicy, DraftArtifact, RubricItem
+from contracts.document_artifacts import CoursePolicyV2, DraftArtifactV2, RubricItemV2
 from runtime.verification import verify_artifact
+from shared.canvas_reads import SourceRefreshRequired
 from shared.db import RequestConflict, json_text
 from shared.freshness import legacy_freshness
+from shared.typed_evidence import EvidenceContextLimit, resolve_evidence
 
 
 class DraftingPermission(BaseModel):
@@ -54,14 +57,37 @@ def generate_checked_draft(
     ):
         raise ValueError("Invalid drafting budget/key/rubric")
     context = store.context(lease)
-    sources = store.drafting_sources(lease)
-    indexed = {str(s["id"]): s for s in sources}
-    for item in [policy, *rubric]:
-        source = indexed.get(str(item.version_id))
-        if not source or not item.quote.strip() or item.quote not in source["content"]:
-            raise ValueError("Required policy/rubric evidence unavailable")
-        if not legacy_freshness(source["retrieved_at"], now=datetime.now(UTC)).usable:
-            raise ValueError("Evidence requires freshness review")
+    typed = isinstance(policy, CoursePolicyV2)
+    if typed and not all(isinstance(r, RubricItemV2) for r in rubric):
+        raise ValueError("Consistent typed rubric required")
+    try:
+        sources = (
+            store.drafting_sources(lease, evidence_schema=2)
+            if typed
+            else store.drafting_sources(lease)
+        )
+        if typed:
+            for item in [policy, *rubric]:
+                resolve_evidence(item.evidence, sources)
+        else:
+            indexed = {str(s["id"]): s for s in sources}
+            for item in [policy, *rubric]:
+                source = indexed.get(str(item.version_id))
+                if not source or not item.quote.strip() or item.quote not in source["content"]:
+                    raise ValueError("Required policy/rubric evidence unavailable")
+                if not legacy_freshness(source["retrieved_at"], now=datetime.now(UTC)).usable:
+                    raise ValueError("Evidence requires freshness review")
+    except (SourceRefreshRequired, EvidenceContextLimit) as error:
+        reason = (
+            "evidence_context_requires_paged_investigation"
+            if isinstance(error, EvidenceContextLimit)
+            else "source_refresh_required"
+        )
+        return {"state": "blocked", "reason": reason, "artifact_id": None}
+    except ValueError:
+        if not typed:
+            raise
+        return {"state": "blocked", "reason": "source_refresh_required", "artifact_id": None}
     if policy.status not in ("permitted", "disclosure_required"):
         raise ValueError("Course policy does not permit full drafting")
     spec = {
@@ -69,6 +95,7 @@ def generate_checked_draft(
         "policy": policy.model_dump(mode="json"),
         "rubric": [r.model_dump(mode="json") for r in rubric],
         "max_revisions": max_revisions,
+        **({"evidence_schema": 2} if typed else {}),
     }
     saved = store.drafting_checkpoint(lease, "drafting_spec", workflow_key)
     if saved and saved != spec:
@@ -140,6 +167,14 @@ def generate_checked_draft(
                             "without concealing missing evidence. Never claim "
                             "verification, submission "
                             "or delivery. Return save_review_draft once."
+                            + (
+                                " For schema_version2 use discriminated legacy/canvas_document "
+                                "evidence for each claim; retain exact original observation/root/"
+                                "segment/page/global code-point offsets and quote. Document root "
+                                "IDs are not legacy version IDs."
+                                if typed
+                                else ""
+                            )
                         ),
                     },
                     {
@@ -157,7 +192,7 @@ def generate_checked_draft(
                     },
                 ],
                 "save_review_draft",
-                DraftArtifact,
+                DraftArtifactV2 if typed else DraftArtifact,
             )
             artifact = store.save_draft(lease, draft, key)
             store.event(
@@ -187,6 +222,8 @@ def generate_checked_draft(
             "evidence_unavailable_at_commit",
             "document_evidence_missing_or_stale",
             "document_evidence_failed_at_commit",
+            "typed_evidence_failed_at_commit",
+            "typed_evidence_missing_or_stale",
         }:
             return {"state": "blocked", "artifact_id": artifact["id"], "report": report}
     return {"state": "needs_revision", "artifact_id": artifact["id"], "report": report}
