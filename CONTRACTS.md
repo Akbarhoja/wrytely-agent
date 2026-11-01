@@ -45,6 +45,21 @@ exact clarification3b86710 in6554751518. Current executable text/reply/delivery
 contracts remain in force until the new implementation is separately reviewed.
 No new paid allowance, migration, runtime, queue or source activation is implied.
 
+## Proposed document-only task scope and drafting
+
+[Document-only drafting and task scope v1](docs/contracts/DOCUMENT-DRAFT-SCOPE-v1.md)
+proposes explicit owned object bindings and versioned typed legacy/document evidence
+for claims, policy and rubric. It reuses the existing responsibility/draft machinery;
+it does not create fake text versions. **Awaiting M agreement, not executable.**
+No object capability, new DTO/route or source activation is implied. Current task
+scope and external schemas remain unchanged.
+
+The existing generator now treats document_evidence_missing_or_stale and
+document_evidence_failed_at_commit as terminal source failures, alongside legacy
+source/policy failures. It returns blocked with the saved artifact/report rather
+than generating another revision. Current document evidence can still pass review;
+ordinary content deficiencies retain the bounded revision path.
+
 ## P1 internal draft document provenance
 
 Internal `save_draft(..., document_citations=[...])` can now persist pinned document
