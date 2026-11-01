@@ -231,6 +231,16 @@ object/root/observation denial, corruption, concurrent dedup, rollback, stale/fa
 checks and lease expiry during read. No #118 upload wire, API, parser, source/model
 promotion, cleanup worker or retained migration. Existing #121 failures remain separate.
 
+Latest M resumed/review update: #109baf565e independently64/64 Windows Node pass,
+portability fix cleared; #122b01c3ab independently53 pure-section tests pass, scoped
+no blocker. #12042cb2f7 static review has no blocker, DB execution remains M-untested.
+#118605e501's10 vectors independently pass M's actual JS helper, but exact staging
+versus publication discriminator wording needs clarification before final agreement.
+#11978a3fb7 retains prior behavioral agreement; atomic dispatch consumption, consumed
+offer/different-key decisions and typed health projections need exact wire clarifications.
+M is prioritizing the owned macOS harness fix and preserving his collector worktree.
+New storage #124ee41cb0 is separately awaiting counterpart review; no blanket approval.
+
 ## Next actions
 
 A: obtain #97 Unicode fix review, review/integrate agreed components and add discovery

@@ -24,7 +24,8 @@ supply executable document APIs. The explicit deferred document-consumer gate no
 has a [document-only v2 wire review candidate](docs/contracts/CANVAS-DOCUMENT-WIRE-v2.md)
 with exact upload/publication/receipt shapes, canonical vectors and bounded orphan
 cleanup. It is **proposed, not agreed or implemented**; schema1 and inactive source
-behavior remain unchanged. C4–C7 still require counterpart agreement.
+behavior remain unchanged. C4–C7 behavioral design agreement is retained per M review6554440608; the newer
+exact consumer wire still needs the named clarifications and final agreement.
 
 ## C4–C7 exact review candidate; no consumer agreement yet
 
@@ -34,7 +35,9 @@ private-file and model-accounting boundaries, defaults, and migration/stop/rollb
 order. [Twenty synthetic review cases](tests/fixtures/agent_operations_v1.json)
 cover replay, ownership, stale scope, unknown send, file mismatch and cost races.
 These are proposed examples, not implemented validation or authorization grants.
-M consumer agreement is required; current text/reply/delivery contracts remain in force.
+M reviewed20 cases and retained behavioral design agreement, requesting exact dispatch
+consumption, consumed-offer replay and health DTO clarifications in6554440608.
+Final consumer wire agreement is required; current text/reply/delivery contracts remain in force.
 No new paid allowance, migration, runtime, queue or source activation is implied.
 
 ## P1-A2 internal document section storage and pinned reads
