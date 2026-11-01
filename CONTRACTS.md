@@ -45,6 +45,40 @@ exact clarification3b86710 in6554751518. Current executable text/reply/delivery
 contracts remain in force until the new implementation is separately reviewed.
 No new paid allowance, migration, runtime, queue or source activation is implied.
 
+## P1 internal original-section quote discovery
+
+`runtime/document_quote_search.py` adds internal find_document_quotes and
+find_document_quotes_for_task over the existing authorized pinned section readers.
+User identity must already be verified; task scope is still the existing current
+responsibility binding. No Store/HTTP/model DTO, tool or capability is added.
+
+Inputs pin object_id, observation_id and document_version_id; quote must be exact
+normalized nonblank text1–4000 code points. Search defaults to first_slot0, offset0,
+max_pages2, max_matches10; bounds are slot0–512, section-local offset0–24000,
+max_pages1–8 and max_matches1–30, with bool rejected for integers. Each page uses
+the existing20-slot/40000-character reader. An additional one-slot postflight read
+reauthorizes the pinned source and supplies current coverage/history/inspection
+freshness for every earlier match. Revocation, scope removal, credential expiry or
+a lost task lease prevents returning the result. A newly historical observation
+can remain inspectable but all its matches are labeled unusable for current work.
+
+Matches reuse exact citation proofs: original root/segment, PDF page, global Unicode
+code-point offsets, quote, original section hash and evidence metadata. Unquoted
+section bodies, provider URLs and credentials are not returned. Repeated and overlapping
+occurrences are preserved. Page/match limits return explicit next={first_slot,offset};
+a match-limit continuation can resume inside a section without dropping occurrences.
+Continuations are internal positions, not authorization tokens: callers repeat the
+same pinned IDs/quote and every invocation reauthorizes them.
+
+range_start and range_complete describe only the requested search suffix in the
+stored sections. match_scope is single_section_exact_quotes: quotes are never spliced
+across section/page boundaries. No match, even in a fully searched range, cannot
+establish absence of policy or complete course coverage. Partial/stale/history
+metadata remains explicit; inspection usability is not drafting permission. There
+is no implicit fallback to another observation/root and no document-only task grant.
+This helper is not registered as an agent/model tool or connected to generation;
+that consumer wiring remains subject to the separately proposed contract below.
+
 ## Proposed document-only task scope and drafting
 
 [Document-only drafting and task scope v1](docs/contracts/DOCUMENT-DRAFT-SCOPE-v1.md)
