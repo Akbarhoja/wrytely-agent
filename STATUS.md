@@ -41,7 +41,7 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 | P0-M1 Canvas             | A (reassigned)    | M #64 lifecycle API reviewed/21 cases pass; local diagnostic work reported                 | v5 known PDF read/matched; rubric, remaining session matrix and review pending        |
 | P0-M2 Outlook            | A (reassigned)    | M #54 at4aadc91 offline Graph probe;32 cases independently pass                            | Optional/paused: CSU admin consent required; not a core stage blocker                       |
 | P0-M3 WhatsApp           | M                 | Linking/inbound worked; last delivery failed131031                                         | Business/account resolution and delivered-reply proof                                       |
-| P0-A3 interfaces         | A                 | C1/C2 and C3 short-text design agreed; remaining C4–C7/precise document wire gates open    | Reader fix #98 accepted by M; document/schema2 wire details remain separate                 |
+| P0-A3 interfaces         | A                 | C1/C2, C3 short-text and exact #118/#119 document/C4–C7 DESIGN agreed by M                  | Implementation and counterpart acceptance remain; no activation from design agreement       |
 | P1 collection/memory     | A/M by work order | P1-A1 #58 adds staged academic text/check/event transactions; collectors not assembled     | 633 A backend pass; M transport/journal separately reviewed; live assembly/segments pending |
 | P2 always-on ownership   | A/M by work order | Existing task worker; continuous workers stopped                                           | Supervisor, schedule, hard budgets and bounded deployment                                   |
 | P3/P4 work/adaptation    | A/M by work order | Private drafting/checks scripted; live artifact not produced; A4 parked                    | Real accepted work/delivery, revisions and follow-through                                   |
@@ -281,7 +281,7 @@ instants; regressions cover rejection/rollback and chronological promotion despi
 reversed wall clocks. Final combined backend **964PASS**, zero skips,2 existing
 warnings in51.53s. Ruff lint/format173files, CI format and diff checks pass.
 See [combined evidence](docs/P1-COLLECTION-INTEGRATION.md). Counterpart review of this
-candidate/DST fix/#124 and final #118/#119 agreement remain pending. Full actual
+candidate/DST fix/#124 remains pending; final #118/#119 agreement was subsequently received. Full actual
 collector→extractorHTTP→Store two-course initial/repeat/changed-deadline acceptance
 is M's next sole-editor harness slice, not passed by these component scenarios.
 P0/P1 remain open; no live Canvas/model/WhatsApp, retained migration, install,
@@ -290,8 +290,8 @@ continuous-worker activation, deployment or protected-main merge occurred.
 ## Next actions
 
 A: obtain counterpart review of the combined collection/storage candidate, its narrow
-DST fix and #124 storage; obtain final #118/#119 wire agreement and human baseline
-approval. Continue owned document/runtime work after its specific dependencies clear.
+DST fix and #124 storage; obtain human baseline approval. Exact #118/#119 DESIGN
+agreement is recorded below; continue owned staged-document work in reviewed slices.
 M: next sole-editor harness slice proves actual collector → extraction API → Store
 for synthetic two-course initial/repeat/changed-deadline flows; then remaining Canvas
 resource kinds/documents and installed-host recovery. WhatsApp live delivery remains M-owned.
@@ -315,3 +315,24 @@ and student health DTOs now have exact fields/types/nullability and separate sco
 Four examples plus two health DTO examples supplement the unchanged20 prior cases.
 This branch includes #118's7f4f09f staging/publication clarification. Final M agreement
 is requested; no consumer implementation, budget or activation change.
+
+November1 design gate update: M agreed #118 exact7f4f09f in6554751370 and #119
+exact3b86710 in6554751518. Exact design ambiguities are resolved; prior pending
+statements above are historical. No upload/action implementation or activation is
+implied. #128 exact1cbb61d CI41283546158 completed SUCCESS (all4 jobs), separate from
+its local964 backend/365 extension evidence. M owns active two-course HTTP claim
+6554737880; A does not edit those harness files.
+
+P1-A2 document-root validation on `codex/p1-document-root-validation`, executable
+5d46e73 from #1281cbb61d: agreed #118 exact header/resource/owner/field bounds,
+configured extractor, immutable sections and canonical v1 root/digest implemented
+in a pure helper. Reuses section and schema1 academic-field validators; file fields
+are explicit. Complete/empty/page-gap checks preserve honest coverage; course and
+provider identity remain outside content hash. Ten unchanged root vectors match
+exact bytes/SHA256;98 new tests pass, including200000-character text and deadline/
+rubric changes. Focused section+root151PASS; full disposable backend1062PASS,
+zero skips,2 existing warnings in51.37s; Ruff lint/format176files and diff pass.
+No staged request parser/store, SQL, upload/publication, M source/harness, live source,
+model, send, worker or deployment change. Counterpart review requested.
+M reports #127 two-course actual tests green, final782 full suite still running;
+this is implementer progress, not A review/combined/live acceptance.
