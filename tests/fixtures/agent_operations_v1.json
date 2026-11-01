@@ -274,6 +274,102 @@
         "retain_inflight_liability": true,
         "allow_stop_ingestion": true
       }
+    },
+    {
+      "name": "authorization-consumed-before-return",
+      "boundary": "C4",
+      "input": {
+        "attempt_current": true,
+        "all_current_checks_pass": true
+      },
+      "expect": {
+        "commit_before_permitted": true,
+        "consumed_before_permitted": true,
+        "provider_calls_before_return": 0,
+        "separate_consume_required": false
+      }
+    },
+    {
+      "name": "consumed-offer-different-key-same-decision",
+      "boundary": "C5",
+      "input": {
+        "offer_consumed": true,
+        "same_actor": true,
+        "same_decision": true,
+        "different_replay_key": true
+      },
+      "expect": {
+        "http_status": 409,
+        "code": "offer_consumed",
+        "new_responsibilities": 0,
+        "new_dispatch_authority": false
+      }
+    },
+    {
+      "name": "consumed-offer-different-key-different-decision",
+      "boundary": "C5",
+      "input": {
+        "offer_consumed": true,
+        "same_actor": true,
+        "same_decision": false,
+        "different_replay_key": true
+      },
+      "expect": {
+        "http_status": 409,
+        "code": "offer_consumed",
+        "new_responsibilities": 0,
+        "existing_work_mutated": false
+      }
+    },
+    {
+      "name": "decline-does-not-create-responsibility",
+      "boundary": "C5",
+      "input": {
+        "valid_unconsumed_offer": true,
+        "kind": "decline"
+      },
+      "expect": {
+        "outcome": "declined",
+        "responsibilities_created": 0,
+        "token_consumed": true
+      }
     }
-  ]
+  ],
+  "health_examples": {
+    "operator": {
+      "schema_version": 1,
+      "operator_stop": true,
+      "worker_heartbeats": [
+        {
+          "role": "runtime",
+          "instance_id": "runtime-dev-01",
+          "last_seen_at": null,
+          "ready": false,
+          "state": "unknown"
+        }
+      ],
+      "oldest_due_at": null,
+      "pending_count": 0,
+      "held_count": 0,
+      "unknown_dispatch_count": 0,
+      "last_successful_sync_at": null,
+      "last_delivered_at": null,
+      "budget_remaining_micro_usd": null,
+      "budget_reserved_micro_usd": null
+    },
+    "student": {
+      "schema_version": 1,
+      "paused": false,
+      "service_state": "held",
+      "connection_state": "unknown",
+      "sync_state": "unknown",
+      "last_successful_sync_at": null,
+      "last_delivered_at": null,
+      "next_check_at": null,
+      "pending_count": 0,
+      "held_count": 0,
+      "budget_remaining_micro_usd": null,
+      "budget_reserved_micro_usd": null
+    }
+  }
 }

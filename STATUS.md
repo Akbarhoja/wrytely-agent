@@ -208,3 +208,18 @@ Claims must be posted in #4 before implementation. Nobody takes over the other's
 [Historical detailed status](docs/archive/STATUS-through-2026-10-29.md) preserves
 prior runs, authorizations and limitations. Old stage documents are context; this
 revision's scope and work orders determine new implementation.
+
+P0-A3 #118 exact-key clarification: publication uses schema_version2 plus
+batch_type=canvas_documents; staging uses schema_version2 plus its exact operation
+and forbids batch_type. Endpoint-specific dispatch never guesses from version alone.
+Eight synthetic wire examples supplement the unchanged ten canonical vectors. M final
+review requested; no executable upload or agreement/activation inferred.
+
+P0-A3 #119 clarification: authorize_agent_dispatch itself commits one-use consumption
+and dispatch_at BEFORE returning permitted; no separate M consume operation. Only
+successful acceptance creates a responsibility; consumed-token/different-key reuse
+returns409/offer_consumed without new authority or side effects. Operator, heartbeat
+and student health DTOs now have exact fields/types/nullability and separate scope.
+Four examples plus two health DTO examples supplement the unchanged20 prior cases.
+This branch includes #118's7f4f09f staging/publication clarification. Final M agreement
+is requested; no consumer implementation, budget or activation change.

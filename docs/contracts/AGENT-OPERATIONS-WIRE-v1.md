@@ -84,9 +84,21 @@ Authorization is an exact discriminated union:
 
 Only trusted M assembly receives permitted recipient (the current linked student's
 number); model/public projections never do. dispatch_id is server-issued, one-use,
-bound to attempt/link/payload SHA256, expires min(claim deadline,now+30s). Commit
-consumption/dispatch_at BEFORE network IO. It is not a bearer token exposed in URLs.
-An expired grant cannot be refreshed and reused after an uncertain attempt.
+bound to attempt/link/payload SHA256, expires min(claim deadline,now+30s).
+`authorize_agent_dispatch` itself locks and rechecks the current action/attempt, then
+atomically consumes the one-use authorization and records dispatch_id, payload digest,
+dispatch_at and the applicable quota reservation. Its database transaction MUST commit
+successfully **before it returns state=permitted** to M. There is no separate M-owned
+consume step, and M performs no network IO until that committed permitted result.
+This matches the existing authorize_whatsapp_send transaction boundary.
+
+A second authorization call for that consumed attempt cannot return permitted again:
+raise the existing lease fence internally, mapped to controlled409 at any future HTTP
+boundary. A crash or lost acknowledgment after consumption but before the caller sees
+permitted is conservative dispatch uncertainty; it does not permit another authorize/
+send attempt. Reconcile the immutable dispatch identity without creating fresh authority.
+The returned dispatch identity is not a bearer token exposed in URLs. An expired grant
+cannot be refreshed and reused after an uncertain attempt.
 
 Payload is one of these exact shapes, pending adapter agreement:
 
@@ -165,12 +177,27 @@ Reading, drafting and delivery consents remain separate. Silence never accepts w
 DecisionReceipt: `{schema_version:1,decision_id,action_id,commitment_id,
 commitment_revision,outcome,responsibility_id,replayed}`; nullable IDs when not applicable;
 outcome accepted/student_owned/declined/snoozed/revision_requested/paused/resumed/cancelled.
-Persist consent, offer consumption and exactly one responsibility in one transaction.
-Same owner/key/normalized body returns its original receipt (replayed=true), even if
-controls later change; it does not reauthorize old work or issue a new offer token.
-Changed body/key reuse409, stale/expired offer409, nonowned offer generic404. Revoked
-actor access cannot retrieve prior receipts. Controls/revisions are rechecked before
-later steps, rendering and C4 dispatch, independently of this acceptance receipt.
+For a successful accept_private_work only, persist drafting/delivery consent, offer
+consumption and exactly one new responsibility in one transaction. A successful
+student_will_do/decline/snooze creates no responsibility; request_revision reuses the
+existing authorized responsibility and creates only its bounded revision work.
+
+For the same still-authorized owner, replay key and normalized body, return the original
+receipt with replayed=true, even if offer expiry/control state has since changed; the
+receipt reports history and never reauthorizes work or emits another token. This replay
+lookup follows current actor/access checks but precedes the already-consumed/expiry
+rejection. Same key with a changed normalized body returns controlled409/replay_conflict.
+
+Once a decision consumes an offer/token, a DIFFERENT replay key with that token returns
+controlled409/offer_consumed for both an identical decision and a different decision.
+It creates no responsibility, consent, cancellation, schedule, revision or dispatch
+authority and does not return another key's private receipt. In a race exactly one
+transaction consumes the offer; the other receives offer_consumed. This does not block
+pause/cancel controls, which have their own authenticated control messages without that
+offer token. Snoozed/revised/materially changed work needs a newly issued current token.
+Unconsumed stale/expired offers return409; nonowned offers generic404. Revoked actor
+access cannot retrieve prior receipts. Controls/revisions are rechecked before later
+steps, rendering and C4 dispatch, independently of this acceptance receipt.
 
 ## C6: private immutable checked files
 
@@ -278,17 +305,82 @@ unchanged scans do not buy inference. Earlier urgent evidence may advance a chec
 source replay cannot create a duplicate job/notice. Browser refresh requests disclose
 staleness rather than imagining new source data while the laptop is offline.
 
-Public health exact keys: schema_version,operator_stop,worker_heartbeats,
-oldest_due_at,pending_count,held_count,unknown_dispatch_count,
-last_successful_sync_at,last_delivered_at,budget_remaining_micro_usd,
-budget_reserved_micro_usd. No source/message text, student identifiers, model histories,
-provider exceptions or tokens. Operator aggregate health has restricted access;
-student-scoped UI gets only its own safe projection. No public telemetry endpoint.
+### Exact private health DTOs
+
+These are authenticated projections, not public telemetry or extra model tools.
+No source/message text, user/phone/provider identifiers, histories, exception strings
+or credentials appear. An absent timestamp means unknown/not observed, not success.
+All counts/micro-USD amounts are integers0..2^53-1, never bool/float/string. All known
+timestamps are aware RFC3339 UTC strings. Unknown budget amounts are null, never a
+fabricated zero; a known configured zero allowance remains integer0. Unknown amounts
+hold paid work, not waive the cap. These projections cannot grant budget or readiness.
+
+OperatorHealth has EXACT keys/types:
+
+```text
+{schema_version:1,operator_stop:bool,worker_heartbeats:[WorkerHeartbeat],
+ oldest_due_at:timestamp|null,pending_count:int,held_count:int,
+ unknown_dispatch_count:int,last_successful_sync_at:timestamp|null,
+ last_delivered_at:timestamp|null,budget_remaining_micro_usd:int|null,
+ budget_reserved_micro_usd:int|null}
+```
+
+worker_heartbeats is0–100 records, unique by(role,instance_id), sorted by that pair.
+WorkerHeartbeat has EXACT keys/types:
+
+```text
+{role:"api"|"runtime"|"canvas_ingest"|"outlook_ingest"|"whatsapp_delivery"|"maintenance",
+ instance_id:ASCII identifier1..100,last_seen_at:timestamp|null,ready:bool,
+ state:"unknown"|"starting"|"ready"|"held"|"stopped"|"error"}
+```
+
+instance_id matches `[A-Za-z0-9._:-]{1,100}` and never contains an owner/recipient ID.
+last_seen_at is a persisted server receipt time, not worker-supplied future success.
+ready=true requires state=ready, a known fresh heartbeat and configuration/readiness
+checks for that role; default freshness90s under trusted operator configuration.
+Unknown/stale heartbeat cannot report ready; report unknown/ready=false unless an
+explicit stopped state is recorded. A healthy API heartbeat is not Meta/Canvas/
+WhatsApp acceptance, and Outlook's optional disabled role never means connected.
+
+pending_count counts queued/runnable work; held_count counts explicitly held work;
+unknown_dispatch_count counts unresolved outbound attempts, with no overlap assumptions.
+oldest_due_at is the earliest unfinished persisted due time<=now, or null if none.
+last_successful_sync_at is the last completed complete-coverage sync receipt;
+last_delivered_at requires trusted matched delivered/read evidence. Both may be null.
+Operator counts/times/budgets aggregate only the authenticated operator's authorized
+development/service scope. budget_remaining is max(0, cap minus settled and outstanding
+liability); the full deficit remains recorded in the ledger and blocks new calls, never
+written off. budget_reserved is conservatively retained outstanding liability.
+A failed ledger/configuration read yields unknown/null, not an optimistic cached balance.
+
+StudentHealth is a SEPARATE exact projection for the verified student and selected
+owned Canvas connection context; it is not a redacted operator object:
+
+```text
+{schema_version:1,paused:bool,service_state:"unknown"|"available"|"held"|"unavailable",
+ connection_state:"unknown"|"pending_identity"|"connected"|"reconnect_required"|"disconnected",
+ sync_state:"unknown"|"in_progress"|"partial"|"complete",
+ last_successful_sync_at:timestamp|null,last_delivered_at:timestamp|null,
+ next_check_at:timestamp|null,pending_count:int,held_count:int,
+ budget_remaining_micro_usd:int|null,budget_reserved_micro_usd:int|null}
+```
+
+Counts and budgets are ONLY that student's owned work/allowance/liabilities; they
+never disclose another student's activity, global caps, server instance names,
+worker topology or operator health/balances. Sync state/time comes from the selected
+owned connection; last_delivered_at is only the linked student's matched receipts.
+next_check_at is a persisted authorized student check, null if unknown/not scheduled.
+service_state=available requires required worker/configuration readiness and no applicable
+stop; a configured account alone is insufficient. Student pause or operator stop makes
+applicable work held, without pretending to recall in-flight activity. Authorization
+failure returns the existing generic auth/not-found response, never this DTO for another
+student. UI labels/HTTP routing remain M's implementation after exact agreement.
 
 ## Migrations, activation and rollback order
 
 No numbered migration is allocated by this proposal. Current local branch has001–007,
-009–013;008 belongs to parked A4. Last recorded isolated deployment has001–007+009.
+009–013 at this proposal's original base; later A storage work reserves014/015.
+008 belongs to parked A4. Last recorded isolated deployment has001–007+009.
 Read exact integration/deployment ledgers before reserving the next unused number;
 do not modify or reuse an applied file, or assume all reviewed branches are deployed.
 
