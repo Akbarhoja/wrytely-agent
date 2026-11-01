@@ -30,6 +30,15 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+Current integration candidate: codex/p1-host-integration from #150493a5cd plus
+M #144945d1c5 merged unchanged (six files checked byte-for-byte). A reviewed both
+host modules and independently passed24focused/all389Node on the exact M archive;
+combined candidate389NodePASS. Controller remains inactive until explicitly enabled;
+no real alarms, extension installation or source calls were performed. Full combined
+backend1327PASS/zero skips/2existingwarnings88.44s; Ruff/format208files/diff PASS.
+Counterpart integration review pending. #146 UI/package review/integration and installed-browser proof
+remain separate; current candidate does not include that package.
+
 Latest A P1-A2 increment: explicit Canvas object task scope on
 codex/p1-canvas-object-scope, stacked on #143. M's #142 design agreement6560955094
 received. Atomic scoped delegation, exact/current-authorized replay and existing
@@ -44,7 +53,7 @@ Migration021 test-only; no app/HTTP/extension/source/model/deploy activation.
 
 M update: #144 host and #146 UI/package delivered, both author CI SUCCESS; A exact
 host read review and24focused/all389Node tests PASS on exact945d1c5; host
-integration and #146 package review remain queued. M independently
+integration is now under combined validation; #146 package review remains queued. M independently
 reviewed #129/#131/#133/#135/#142/#143 as scoped evidence, not the entire stack.
 M's #148 document HTTP design now explicitly agreed by A6563512653, with first
 implementation base #135019d6c7; M retains app/producer/UI ownership. P0 baseline
