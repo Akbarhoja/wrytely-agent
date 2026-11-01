@@ -197,6 +197,18 @@ parent-whitelisted environment; reported #116/6553629521. M retains the harness 
 no files changed/bypass performed and HTTP acceptance is not independently certified.
 M's earlier721 backend result remains separate implementer evidence.
 
+P1-A2 structured change details implemented: private existing events now identify
+changed canonical field names and title/content/coverage/missing flags, linked to the
+latest prior observation of the SAME owned object. Additive014 keeps old rows null,
+existing kinds/C2 receipts unchanged; no text/rubric values are copied into events.
+Twelve new transactional cases cover initial/combined changes, replay, Unicode/date
+canonical equivalence, A→A→B→A, failed-batch rollback, cross-object FK denial and
+legacy inserts. Seven first failed for absent columns. Final full disposable backend
+**697 passed**, two existing warnings; Ruff lint/format and diff checks pass. The first
+full run identified only the store test's expected ledger ending at013; A updated its
+explicit expected list to014 without weakening repeat-migration safety.014 applied
+only to disposable tests; no API, source/model activation, send or deployment.
+
 ## Next actions
 
 A: obtain #97 Unicode fix review, review/integrate agreed components and add discovery
