@@ -209,6 +209,16 @@ full run identified only the store test's expected ledger ending at013; A update
 explicit expected list to014 without weakening repeat-migration safety.014 applied
 only to disposable tests; no API, source/model activation, send or deployment.
 
+P1 integration candidate: A42cb2f7 combined with M#11447d076d on isolated
+codex/p1-integration-candidate, preserving A shared/contracts and M app/extension
+byte-for-byte. Academic+connection API components independently74PASS; all8 extension
+suites310PASS. CI foundation now pins Node24 and extension CI covers all8 files.
+Combined full disposable backend804PASS/10FAIL (2existingwarnings): the10 inherited
+actual-client cases all fail at the known Mac environment guard before setup; no
+skip/bypass. Separate diagnostic64PASS, web114PASS and TypeScript, Ruff/format/CI
+format/diff pass. Source collector handoff and M harness fix are still required.
+No deployed/live collection or main merge; see [candidate evidence](docs/P1-INTEGRATION-CANDIDATE.md).
+
 ## Next actions
 
 A: obtain #97 Unicode fix review, review/integrate agreed components and add discovery

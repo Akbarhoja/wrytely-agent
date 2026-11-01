@@ -29,6 +29,9 @@ jobs:
       AGENT_TEST_ALLOW_RESET: "yes"
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
       - uses: astral-sh/setup-uv@v6
         with:
           version: "0.13.6"
@@ -57,3 +60,20 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+  canvas-extension:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: >-
+          node --test
+          extension/canvas-pairing/discovery.test.mjs
+          extension/canvas-pairing/client.test.mjs
+          extension/canvas-feasibility/probe.test.mjs
+          extension/canvas-feasibility/page.test.mjs
+          extension/canvas-pairing/collector.test.mjs
+          extension/canvas-pairing/assignment-page.test.mjs
+          extension/canvas/assignment-observation.test.mjs
+          extension/canvas/source-digest.test.mjs
