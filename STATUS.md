@@ -458,3 +458,17 @@ WhatsApp remains excluded/M-owned, not passed. No P1 code/permission/budget/live
 source/model/send/grant/install/restart/logout/retainedmigration/worker/deploy/main
 merge changed in this audit. Links/provenance/arithmetic/diff checks passed; unchanged
 application suite was not redundantly rerun.
+
+P1-A2 original-section citation helper implemented on `codex/p1-document-citations`,
+executable0c43df1/base#1392b29546. Internal runtime helpers reuse existing authorized
+pinned user/task section reads; exact normalized nonblank quote<=4000codepoints,
+object/observation/root/segment/slot/page/global offsets and UTF8hash checked. No
+new API/Store wire/model tool/source activation or broader task capability. Matches
+retain actual partial/stale/history/inspection freshness, not drafting permission.
+40new focused casesPASS; full combined disposable backend1224PASS/zero skips/
+2existingwarnings76.31s. Ruff/format197files/links/docformat/diffPASS; existing M
+code, schemas, model tool registration and draft paths preserved.
+[Evidence](docs/P1-DOCUMENT-CITATIONS.md). M has no new handoff and retains#136
+inactive Chrome host claim. Review requested when available; P0reviews#139/#46
+remain pending. No monitor/browser/provider/model/send/spend/grant/install/retained
+migration/worker/deploy/mainmerge. P1 remains open.
