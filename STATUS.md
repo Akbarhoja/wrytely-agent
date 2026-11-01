@@ -30,6 +30,22 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+Latest A integration increment: M's browser controls/package #146 exact
+c9deb62434365ce7af22fbc7772f5fafc11cdfcc merged unchanged onto #1524dd8a06 on
+codex/p1-browser-package-integration. All16 delivered files byte-identical; A read
+review has no blocking finding in scope. Exact M archive and combined candidate
+404NodePASS/zero skips; synthetic-only ignored package builds with complete local
+module closure and fixed example.edu origins; default-disabled worker test makes
+zero requests/alarms. Full combined disposable backend1368PASS/zero skips/
+2existingwarnings99.14s. Ruff/format
+217files, delivered UI/doc Prettier and diff checks PASS. A-owned CI command now
+includes host/UI/package tests previously omitted by its static list; candidate CI
+evidence remains separate.
+[Review evidence](docs/P1-BROWSER-PACKAGE-INTEGRATION.md). No independent A rendering,
+installed Chrome/source/session/CSP proof, real pairing, model/send/spend, grant,
+retained migration, worker activation, deployment or mainmerge. Counterpart review
+pending; M retains extension/app/web ownership. P0/P1 remain open.
+
 Latest A internal P1-A2 increment: typed document drafting on
 codex/p1-typed-document-drafting, base #1510345cc8. Existing requirement assessment,
 policy preflight, generation, format/semantic verification, saved artifacts, bounded
@@ -55,8 +71,8 @@ host modules and independently passed24focused/all389Node on the exact M archive
 combined candidate389NodePASS. Controller remains inactive until explicitly enabled;
 no real alarms, extension installation or source calls were performed. Full combined
 backend1327PASS/zero skips/2existingwarnings88.44s; Ruff/format208files/diff PASS.
-Counterpart integration review pending. #146 UI/package review/integration and installed-browser proof
-remain separate; current candidate does not include that package.
+Counterpart integration review pending. #146 package is included in the newer candidate above; installed-browser proof
+remains separate. This host-only candidate did not include the package.
 
 Latest A P1-A2 increment: explicit Canvas object task scope on
 codex/p1-canvas-object-scope, stacked on #143. M's #142 design agreement6560955094
@@ -72,7 +88,8 @@ Migration021 test-only; no app/HTTP/extension/source/model/deploy activation.
 
 M update: #144 host and #146 UI/package delivered, both author CI SUCCESS; A exact
 host read review and24focused/all389Node tests PASS on exact945d1c5; host
-integration is now under combined validation; #146 package review remains queued. M independently
+integration passed the combined checks recorded above; #146 package review/integration
+is recorded in the newer candidate above. M independently
 reviewed #129/#131/#133/#135/#142/#143 as scoped evidence, not the entire stack.
 M's #148 document HTTP design now explicitly agreed by A6563512653, with first
 implementation base #135019d6c7; M retains app/producer/UI ownership. P0 baseline

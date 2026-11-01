@@ -1,0 +1,15 @@
+{
+  "profile": "product-admin",
+  "sourceRoots": ["."],
+  "locale": "en-US",
+  "canonicalMap": "UX-CONTRACT.md",
+  "requiredCapabilities": ["Form", "Scrollbar", "Toast"],
+  "ownership": {
+    "Form": "authored",
+    "Scrollbar": "authored",
+    "Toast": "authored"
+  },
+  "requiredCommands": ["unit"],
+  "commands": { "unit": "node --test ui.test.mjs prepare.test.mjs" },
+  "evidence": { "failurePaths": "ui.test.mjs" }
+}
