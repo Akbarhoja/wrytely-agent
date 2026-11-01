@@ -350,3 +350,28 @@ cover spring-forward, exact limits, rollback and reversed wall-clock history/ord
 [Evidence](docs/P1-FRESHNESS-UTC.md). No M-source/HTTP/schema changes, live access,
 spend/send, retained migration, worker, deployment or main merge. Counterpart review
 requested; document staged transactions/publication remain next A implementation.
+
+P1-A1/A2 private document staging on `codex/p1-document-upload-staging`, executable
+a0b0ac9 from#1314b52c6a: begin_document_upload/put_document_parts implement agreed
+#118 begin/put only. Additive016 stores private headers/parts/original receipts,
+scoped by connection/generation/scan composite FK. Existing actor/agent/connection/
+scan locks fence current identity/scope/lease/expiry before replay and final receipt.
+Exact staging keys/discriminator/1MiB request bounds; immutable declared hashed
+parts, fixed <=30min expiry,4unexpired uploads and8MiB retained UTF8 text quota.
+Expired uncollected text remains counted; no cleanup/publish/ready-root exists yet.
+44 new transactional cases pass; final full disposable backend1121PASS/zero skips/
+2existingwarnings60.42s; root+section151PASS, Ruff/format/diff/link checks pass.016
+applied only to disposable tests. No observations/legacy versions/source readiness
+are produced. [Evidence](docs/P1-DOCUMENT-UPLOAD-STAGING.md). Counterpart review requested.
+
+M reviews now received: #1246554904893 storage/no scoped blocker/96 focused DBPASS;
+#1286554904699 combined+UTC/no blocker/96DB+365NodePASS. #1296554905045 helper
+151purePASS under UTF8 mode, but native Windows fixture default decode failed. A
+fixed original #129 test read explicitlyUTF8 in82697f5, then merged into staging
+5daffed;151 focused tests pass after merge. Native-default Windows rerun remains M
+evidence, not inferred here. Runtime staging code unchanged from1121-pass a0b0ac9.
+M#13200dad2ac two-course handoff received (966Windows backend reported); A exact
+Mac counterpart/combined verification is next separate review, not yet passed.
+No M files/fixture bytes modified; no live source/model/send/spend/grant/install/
+retained migration/continuous worker/deploy/mainmerge. Finish/root publication and
+safe cleanup remain subsequent A slices; P0/P1 stay open.
