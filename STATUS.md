@@ -184,6 +184,19 @@ match Python and Node canonical hashes/offsets;30 existing digest tests pass,
 proposal/fixture formatting and links/diff clean. This addresses M's explicit #78 request,
 not an implemented document upload or completed P0 gate.
 
+P0-A3 C4–C7 now has an exact operations review candidate with20 synthetic cases,
+including one-use dispatch, offer-bound decisions, checked-file streams, conservative
+budget settlement and activation/rollback defaults. Agreement/implementation pending;
+existing consumers and paid authorizations unchanged.
+
+A counterpart review of M #116 exact36c1740:310 extension Node tests pass. The17
+actual loopback/API/Store cases all stop at configuration before client setup on this
+Mac because Node adds __CF_USER_TEXT_ENCODING and the driver rejects its name.
+A isolated the first failure and reproduced the runtime-added name with only the
+parent-whitelisted environment; reported #116/6553629521. M retains the harness fix;
+no files changed/bypass performed and HTTP acceptance is not independently certified.
+M's earlier721 backend result remains separate implementer evidence.
+
 ## Next actions
 
 A: obtain #97 Unicode fix review, review/integrate agreed components and add discovery
