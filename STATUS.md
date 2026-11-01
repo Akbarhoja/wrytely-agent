@@ -30,6 +30,18 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+Latest A independent P1-A2 slice: bounded original-section quote discovery on
+codex/p1-document-quote-search, stacked on #142. Internal search produces exact
+citation proofs from existing scoped readers, preserving Unicode/PDF provenance and
+repeated/overlapping matches with explicit continuation. Postflight reads recheck
+current access/coverage; no-match results cannot prove absence of course policy.
+Focused disposable-Postgres74PASS (34 new search cases); full disposable backend
+1288PASS/zero skips/2existingwarnings100.66s. Ruff lint/format204files and diff checks
+pass; counterpart review pending.
+No Store/HTTP/model DTO, task capability, source activation, migration, generator
+wiring, provider call or M-owned file changed. Document-only drafting proposal still
+awaits M agreement. P0/P1 remain open; workers stay stopped.
+
 Latest A follow-up: P1-A2 document-source recovery on
 codex/p1-document-draft-recovery, stacked on #141. Unavailable/stale document evidence
 now stops the generator instead of spending further prose-revision calls. A proposed
