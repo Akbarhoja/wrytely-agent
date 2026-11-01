@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { sourceDigest } from "../canvas/source-digest.mjs";
 import { createPairingClient, PairingClientError } from "./client.mjs";
 
 const apiOrigin = "https://agent.example.edu",
@@ -180,13 +181,14 @@ function fixture() {
           checkpoint: structuredClone(f.checkpoint),
         };
       } else if (operation === "batch") {
+        const academic = action.startsWith("academic/");
         if (
           JSON.stringify(body.expected_checkpoint) !==
           JSON.stringify(f.checkpoint)
         )
           return json({ detail: { code: "checkpoint_changed" } }, url, 409);
         f.applied++;
-        if (f.context.mode === "all_active")
+        if (!academic && f.context.mode === "all_active")
           for (const item of body.envelope.items) {
             if (item.fields.enrollment_state === "active") {
               if (!f.context.course_ids.includes(item.provider_id))
@@ -209,6 +211,9 @@ function fixture() {
           }
         f.checkpoint = {
           ...f.checkpoint,
+          resource: academic
+            ? `${body.envelope.resource.course_id}/${body.envelope.resource.kind}`
+            : "courses",
           sequence: f.checkpoint.sequence + 1,
           next_cursor: body.envelope.next_cursor,
         };
@@ -222,12 +227,63 @@ function fixture() {
           coverage: body.envelope.coverage.state,
           replayed: false,
         };
+        if (academic) {
+          const row = f.resources.find(
+            (r) => r.resource_key === f.checkpoint.resource,
+          );
+          row.seen_count = body.envelope.coverage.seen_count;
+          row.page_count = (row.page_count ?? 0) + 1;
+          row.incomplete =
+            row.incomplete ||
+            body.envelope.items.some((i) => i.coverage !== "complete") ||
+            f.historical;
+          row.last_page_coverage = body.envelope.coverage.state;
+          row.next_cursor = body.envelope.next_cursor;
+          result.observations = await Promise.all(
+            body.envelope.items.map(async (item, index) => ({
+              provider_id: item.provider_id,
+              kind: "assignment",
+              observation_id: id(500 + f.applied * 50 + index),
+              version_id:
+                item.content.trim() && item.title.trim()
+                  ? id(300 + f.applied * 50 + index)
+                  : null,
+              content_digest: await sourceDigest({
+                digest_version: 1,
+                kind: item.kind,
+                title: item.title,
+                content: item.content,
+                fields: item.fields,
+                coverage: item.coverage,
+                missing: item.missing,
+              }),
+              coverage: item.coverage,
+              historical: !!f.historical,
+            })),
+          );
+          result.source_versions = result.observations
+            .filter((o) => o.version_id !== null)
+            .map(({ provider_id, version_id, content_digest }) => ({
+              provider_id,
+              version_id,
+              content_digest,
+            }));
+        }
       } else if (operation === "resource") {
         const row = f.resources.find(
           (r) => r.resource_key === body.resource_key,
         );
         if (!row)
           return json({ detail: { code: "resource_not_selected" } }, url, 409);
+        if (
+          action.startsWith("academic/") &&
+          body.outcome === "complete" &&
+          (!row.page_count ||
+            row.incomplete ||
+            row.last_page_coverage !== "complete" ||
+            row.next_cursor !== null)
+        )
+          return json({ detail: { code: "incomplete_resource" } }, url, 409);
         row.coverage = body.outcome;
         row.reason = body.reason;
         result = {
@@ -235,10 +291,15 @@ function fixture() {
           resource_key: body.resource_key,
           coverage: body.outcome,
           reason: body.reason,
-          seen_count: f.applied,
+          seen_count: action.startsWith("academic/")
+            ? (row.seen_count ?? 0)
+            : f.applied,
           finished_at: expires,
           checkpoint: structuredClone(f.checkpoint),
-          source_manifest_digest: null,
+          source_manifest_digest:
+            action.startsWith("academic/") && body.outcome === "complete"
+              ? "b".repeat(64)
+              : null,
           replayed: false,
         };
       } else {
@@ -297,7 +358,11 @@ function fixture() {
         return Response.json({ id: f.profiles.shift() ?? "7" });
       },
     });
-  f.rpc = () => f.calls.filter((c) => c.action.startsWith("discovery/"));
+  f.rpc = () =>
+    f.calls.filter(
+      (c) =>
+        c.action.startsWith("discovery/") || c.action.startsWith("academic/"),
+    );
   return f;
 }
 
@@ -309,6 +374,433 @@ const rawCourse = (id, extra = {}) => ({
   time_zone: "America/Denver",
   enrollments: [{ enrollment_state: "active" }],
   ...extra,
+});
+
+const assignmentPage = (id = 17, cursor = null) => ({
+  resource_key: "101/assignments",
+  observed_at: "2026-11-01T00:00:00Z",
+  next_cursor: cursor,
+  coverage: {
+    state: cursor ? "partial" : "complete",
+    reason: cursor ? "more_pages" : null,
+  },
+  items: [
+    {
+      raw: {
+        id,
+        course_id: 101,
+        name: "PRIVATE_ASSIGNMENT_TITLE",
+        description: "PRIVATE_RAW_HTML",
+        due_at: null,
+        unlock_at: null,
+        lock_at: null,
+        points_possible: 20,
+        submission_types: ["online_upload"],
+        rubric: [],
+        published: true,
+      },
+      extracted: {
+        courseId: 101,
+        assignmentId: id,
+        text: "PRIVATE_EXTRACTED_TEXT",
+        coverage: "complete",
+        missing: [],
+      },
+      dateContext: "requesting_student",
+    },
+  ],
+});
+async function readyAssignment(f) {
+  f.context.mode = "all_active";
+  f.context.resource_kinds = ["assignments"];
+  const client = f.client();
+  await client.beginDiscovery();
+  await client.commitDiscoveryPage(page());
+  await client.finishDiscoveryResource({
+    resource_key: "courses",
+    outcome: "complete",
+    reason: null,
+  });
+  return client;
+}
+const closeAssignment = (client, outcome = "complete") =>
+  client.finishAssignmentResource({
+    resource_key: "101/assignments",
+    outcome,
+    reason: outcome === "complete" ? null : "extraction_failed",
+  });
+
+test("assignment journal posts mapped content then validates resource manifest", async () => {
+  const f = fixture(),
+    client = await readyAssignment(f);
+  const result = await client.commitAssignmentPage(assignmentPage());
+  assert.equal(result.checkpoint.resource, "101/assignments");
+  assert.equal(f.data[key].discovery.version, 2);
+  assert.equal(f.data[key].discovery.academic.seen_count, 1);
+  assert.ok(!JSON.stringify(f.data[key]).includes("PRIVATE_RAW_HTML"));
+  assert.ok(!JSON.stringify(result).includes("PRIVATE_EXTRACTED_TEXT"));
+  assert.equal(f.rpc().at(-1).action, "academic/batch");
+  await closeAssignment(client);
+  assert.equal(f.rpc().at(-1).action, "academic/resource");
+  assert.equal((await client.finishDiscovery()).coverage, "complete");
+});
+
+test("legacy pending course acknowledgment upgrades without changing captured body/key", async () => {
+  const f = fixture(),
+    client = f.client();
+  await client.beginDiscovery();
+  f.loss = "after";
+  await assert.rejects(
+    client.commitDiscoveryPage(page()),
+    error("discovery_outcome_unknown"),
+  );
+  const legacy = f.data[key].discovery;
+  legacy.version = 1;
+  delete legacy.academic;
+  const captured = structuredClone(legacy.pending.body);
+  await f.client().retryDiscovery();
+  assert.equal(f.data[key].discovery.version, 2);
+  assert.deepEqual(f.rpc().at(-1).body, captured);
+  assert.equal(f.applied, 1);
+});
+
+for (const operation of ["begin", "resource", "finish", "resume"]) {
+  test(`legacy pending ${operation} preserves its original captured intent through upgrade`, async () => {
+    const f = fixture(),
+      client = f.client();
+    if (operation !== "begin") {
+      await client.beginDiscovery();
+      await client.commitDiscoveryPage(page());
+    }
+    if (operation === "finish")
+      await client.finishDiscoveryResource({
+        resource_key: "courses",
+        outcome: "complete",
+        reason: null,
+      });
+    f.loss = "after";
+    const dispatch =
+      operation === "begin"
+        ? client.beginDiscovery()
+        : operation === "resume"
+          ? client.resumeDiscovery()
+          : operation === "finish"
+            ? client.finishDiscovery()
+            : client.finishDiscoveryResource({
+                resource_key: "courses",
+                outcome: "complete",
+                reason: null,
+              });
+    await assert.rejects(dispatch, error("discovery_outcome_unknown"));
+    const legacy = f.data[key].discovery;
+    legacy.version = 1;
+    delete legacy.academic;
+    const captured = structuredClone(
+      operation === "resume" ? legacy.renewal : legacy.pending.body,
+    );
+    if (operation === "resume") await f.client().resumeDiscovery();
+    else await f.client().retryDiscovery();
+    assert.deepEqual(f.rpc().at(-1).body, captured);
+    assert.equal(f.data[key].discovery.version, 2);
+  });
+}
+
+for (const loss of ["before", "after"]) {
+  test(`assignment capture survives restart after ${loss} dispatch loss`, async () => {
+    const f = fixture(),
+      client = await readyAssignment(f);
+    f.loss = loss;
+    await assert.rejects(
+      client.commitAssignmentPage(assignmentPage()),
+      error("discovery_outcome_unknown"),
+    );
+    const captured = structuredClone(f.data[key].discovery.pending.body);
+    assert.equal(f.data[key].discovery.pending.operation, "academic_batch");
+    await f.client().retryDiscovery();
+    assert.deepEqual(f.rpc().at(-1).body, captured);
+    assert.equal(f.data[key].discovery.academic.seen_count, 1);
+    assert.equal(f.applied, 2);
+  });
+}
+
+test("assignment lost accepted ack reconciles advanced resource checkpoint on resume", async () => {
+  const f = fixture(),
+    client = await readyAssignment(f);
+  f.loss = "after";
+  await assert.rejects(
+    client.commitAssignmentPage(assignmentPage()),
+    error("discovery_outcome_unknown"),
+  );
+  const captured = structuredClone(f.data[key].discovery.pending.body);
+  await f.client().resumeDiscovery();
+  await f.client().retryDiscovery();
+  const sent = f.rpc().at(-1).body;
+  assert.equal(sent.batch_key, captured.batch_key);
+  assert.deepEqual(sent.envelope, captured.envelope);
+  assert.notEqual(sent.lease_token, captured.lease_token);
+  assert.equal(f.data[key].discovery.academic.page_count, 1);
+});
+
+for (const historical of [false, true]) {
+  test(`incomplete assignment evidence cannot be closed complete: historical=${historical}`, async () => {
+    const f = fixture(),
+      client = await readyAssignment(f);
+    f.historical = historical;
+    const first = assignmentPage(17, "PRIVATE_NEXT");
+    if (!historical) first.items[0].raw.rubric = null;
+    await client.commitAssignmentPage(first);
+    f.historical = false;
+    await client.commitAssignmentPage(assignmentPage(18));
+    await assert.rejects(
+      closeAssignment(client),
+      error("invalid_assignment_input"),
+    );
+    await closeAssignment(client, "partial");
+    assert.equal((await client.finishDiscovery()).coverage, "partial");
+  });
+}
+
+for (const variant of [
+  "missing_observation",
+  "wrong_version",
+  "historical_type",
+  "wrong_resource",
+]) {
+  test(`malformed academic receipt retains exact pending page: ${variant}`, async () => {
+    const f = fixture(),
+      client = await readyAssignment(f);
+    f.override = (operation, result) => {
+      if (operation !== "batch" || !result.observations) return result;
+      if (variant === "missing_observation") result.observations = [];
+      if (variant === "wrong_version")
+        result.source_versions[0].version_id = id(999);
+      if (variant === "historical_type")
+        result.observations[0].historical = "false";
+      if (variant === "wrong_resource")
+        result.checkpoint.resource = "102/assignments";
+      return result;
+    };
+    await assert.rejects(
+      client.commitAssignmentPage(assignmentPage()),
+      error("discovery_outcome_unknown"),
+    );
+    const saved = structuredClone(f.data[key].discovery.pending.body);
+    f.override = null;
+    await f.client().retryDiscovery();
+    assert.deepEqual(f.rpc().at(-1).body, saved);
+  });
+}
+
+test("assignment input cannot choose an unselected course or run before courses close", async () => {
+  const f = fixture(),
+    client = f.client();
+  await client.beginDiscovery();
+  await assert.rejects(
+    client.commitAssignmentPage(assignmentPage()),
+    error("invalid_assignment_input"),
+  );
+  const g = fixture(),
+    ready = await readyAssignment(g),
+    input = assignmentPage();
+  input.resource_key = "102/assignments";
+  await assert.rejects(
+    ready.commitAssignmentPage(input),
+    error("invalid_assignment_input"),
+  );
+  assert.equal(
+    g.rpc().filter((c) => c.action.startsWith("academic/")).length,
+    0,
+  );
+});
+
+test("v1 record cannot smuggle an academic checkpoint across migration", async () => {
+  const f = fixture(),
+    client = await readyAssignment(f);
+  const legacy = f.data[key].discovery;
+  legacy.version = 1;
+  delete legacy.academic;
+  legacy.scan.checkpoint.resource = "101/assignments";
+  await assert.rejects(
+    client.readDiscoveryStatus(),
+    error("discovery_journal_invalid"),
+  );
+});
+
+test("stored academic course identity must retain strict wire string type", async () => {
+  const f = fixture(),
+    client = await readyAssignment(f);
+  f.loss = "before";
+  await assert.rejects(client.commitAssignmentPage(assignmentPage()));
+  f.data[key].discovery.pending.body.envelope.resource.course_id = 101;
+  await assert.rejects(
+    f.client().retryDiscovery(),
+    error("discovery_journal_invalid"),
+  );
+});
+
+test("begin receipt cannot jump directly to an academic resource", async () => {
+  const f = fixture(),
+    client = f.client();
+  f.override = (operation, reply) => {
+    if (operation === "begin") reply.checkpoint.resource = "101/assignments";
+    return reply;
+  };
+  await assert.rejects(
+    client.beginDiscovery(),
+    error("discovery_outcome_unknown"),
+  );
+  assert.equal(f.data[key].discovery.pending.operation, "begin");
+  f.override = null;
+  await f.client().retryDiscovery();
+});
+
+test("matching receipt digests cannot substitute another captured source payload", async () => {
+  const f = fixture(),
+    client = await readyAssignment(f);
+  f.override = (operation, reply) => {
+    if (reply.observations) {
+      reply.observations[0].content_digest = "f".repeat(64);
+      reply.source_versions[0].content_digest = "f".repeat(64);
+    }
+    return reply;
+  };
+  await assert.rejects(
+    client.commitAssignmentPage(assignmentPage()),
+    error("discovery_outcome_unknown"),
+  );
+  assert.equal(f.data[key].discovery.academic, null);
+  f.override = null;
+  await f.client().retryDiscovery();
+});
+
+test("academic envelope accounts for server JSON spacing before persisting intent", async () => {
+  const f = fixture(),
+    client = await readyAssignment(f),
+    input = assignmentPage();
+  input.items = Array.from({ length: 50 }, (_, index) => {
+    const item = assignmentPage(index + 1).items[0];
+    item.extracted.text = "x".repeat(20580);
+    return item;
+  });
+  const before = f.rpc().length;
+  await assert.rejects(
+    client.commitAssignmentPage(input),
+    error("invalid_discovery_input"),
+  );
+  assert.equal(f.rpc().length, before);
+  assert.equal(f.data[key].discovery.pending, null);
+});
+
+test("assignment progress starts at zero for each selected course and requires prior closure", async () => {
+  const f = fixture();
+  f.context.course_ids = ["101", "102"];
+  const client = await readyAssignment(f);
+  await client.commitAssignmentPage(assignmentPage());
+  const second = assignmentPage();
+  second.resource_key = "102/assignments";
+  second.items[0].raw.course_id = 102;
+  second.items[0].extracted.courseId = 102;
+  await assert.rejects(
+    client.commitAssignmentPage(second),
+    error("invalid_assignment_input"),
+  );
+  await closeAssignment(client);
+  await client.commitAssignmentPage(second);
+  assert.equal(f.data[key].discovery.academic.seen_count, 1);
+  assert.equal(f.data[key].discovery.academic.page_count, 1);
+  assert.equal(f.data[key].discovery.scan.checkpoint.sequence, 3);
+  await client.finishAssignmentResource({
+    resource_key: "102/assignments",
+    outcome: "complete",
+    reason: null,
+  });
+  assert.equal((await client.finishDiscovery()).coverage, "complete");
+});
+
+for (const control of ["scope", "account", "expiry"]) {
+  test(`assignment replay remains fenced after ${control} change`, async () => {
+    const f = fixture(),
+      client = await readyAssignment(f);
+    f.loss = "after";
+    await assert.rejects(
+      client.commitAssignmentPage(assignmentPage()),
+      error("discovery_outcome_unknown"),
+    );
+    const count = f.rpc().length;
+    if (control === "scope") f.context.scope_revision++;
+    if (control === "account") f.profiles.push("8");
+    if (control === "expiry")
+      f.context.credential_expires_at = "2000-01-01T00:00:00Z";
+    await assert.rejects(f.client().retryDiscovery());
+    assert.equal(f.rpc().length, count);
+  });
+}
+
+test("assignment intent persistence failure prevents dispatch and acknowledgment failure permits exact retry", async () => {
+  const f = fixture(),
+    client = await readyAssignment(f);
+  const count = f.rpc().length;
+  f.storageFailure = (state, when) =>
+    state.pending?.operation === "academic_batch" && when === "before";
+  await assert.rejects(client.commitAssignmentPage(assignmentPage()));
+  assert.equal(f.rpc().length, count);
+  f.storageFailure = (state, when) =>
+    state.academic !== null && state.pending === null && when === "before";
+  await assert.rejects(client.commitAssignmentPage(assignmentPage()));
+  const captured = structuredClone(f.data[key].discovery.pending.body);
+  f.storageFailure = null;
+  await f.client().retryDiscovery();
+  assert.deepEqual(f.rpc().at(-1).body, captured);
+  assert.equal(f.applied, 2);
+});
+
+test("assignment resource receipt requires matching count and manifest before closure", async () => {
+  const f = fixture(),
+    client = await readyAssignment(f);
+  await client.commitAssignmentPage(assignmentPage());
+  f.override = (operation, reply) =>
+    operation === "resource"
+      ? { ...reply, source_manifest_digest: null }
+      : reply;
+  await assert.rejects(
+    closeAssignment(client),
+    error("discovery_outcome_unknown"),
+  );
+  assert.ok(!f.data[key].discovery.closed.includes("101/assignments"));
+  const captured = structuredClone(f.data[key].discovery.pending.body);
+  f.override = null;
+  await f.client().retryDiscovery();
+  assert.deepEqual(f.rpc().at(-1).body, captured);
+  assert.ok(f.data[key].discovery.closed.includes("101/assignments"));
+});
+
+test("assignment resource can close partial without a page but cannot close complete", async () => {
+  const f = fixture(),
+    client = await readyAssignment(f);
+  await assert.rejects(
+    closeAssignment(client),
+    error("invalid_assignment_input"),
+  );
+  await closeAssignment(client, "partial");
+  assert.equal((await client.finishDiscovery()).coverage, "partial");
+});
+
+test("assignment journal rejects another page after terminal capture and enforces page limit", async () => {
+  const f = fixture(),
+    client = await readyAssignment(f);
+  await client.commitAssignmentPage(assignmentPage());
+  await assert.rejects(
+    client.commitAssignmentPage(assignmentPage(18)),
+    error("invalid_assignment_input"),
+  );
+  const g = fixture(),
+    other = await readyAssignment(g);
+  await other.commitAssignmentPage(assignmentPage(17, "opaque"));
+  g.data[key].discovery.academic.page_count = 100;
+  await assert.rejects(
+    other.commitAssignmentPage(assignmentPage(18)),
+    error("invalid_assignment_input"),
+  );
 });
 
 test("collector begins, captures one page, closes courses then awaits academic resources", async () => {
