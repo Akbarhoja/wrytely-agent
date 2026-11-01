@@ -50,7 +50,11 @@ class AcademicMemoryStore:
             "SELECT * FROM wrytely_agent.source_versions WHERE id=%s",
             (source["latest_version_id"],),
         ).fetchone()
-        if promote and current and current["retrieved_at"] == observation.retrieved_at:
+        # Cross-zone equality during a repeated DST hour can be false for the
+        # same instant. Compare UTC instants for both ambiguity and promotion.
+        retrieved_at = observation.retrieved_at.astimezone(UTC)
+        current_at = current["retrieved_at"].astimezone(UTC) if current else None
+        if promote and current_at == retrieved_at:
             raise RequestConflict("Ambiguous version ordering")
         version = conn.execute(
             "INSERT INTO wrytely_agent.source_versions "
@@ -69,7 +73,7 @@ class AcademicMemoryStore:
                 observation.retrieved_at,
             ),
         ).fetchone()
-        if promote and (current is None or version["retrieved_at"] > current["retrieved_at"]):
+        if promote and (current_at is None or retrieved_at > current_at):
             conn.execute(
                 "UPDATE wrytely_agent.academic_sources SET latest_version_id=%s WHERE id=%s",
                 (version["id"], source["id"]),

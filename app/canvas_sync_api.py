@@ -1,0 +1,389 @@
+"""Thin private HTTP assembly for existing Canvas scope and staged C2 transactions."""
+
+import unicodedata
+from typing import Annotated, Literal
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from pydantic import Field, field_validator, model_validator
+
+from app.source_connections import CanvasRoute, StrictBody
+from contracts.canvas_evidence import RESOURCE_TYPES, AcademicBatch, AcademicResource
+from contracts.canvas_sync import REASONS, Checkpoint, DiscoveryBatch, course_id, replay_key
+from contracts.models import Identity
+from integrations.canvas.html_extract import extract_html
+from shared.canvas_sync import CanvasSyncConflict
+from shared.db import Store
+from shared.source_connections import SourceCredentialRejected
+
+CONFLICT_CODES = frozenset(
+    {
+        "checkpoint_changed",
+        "course_not_discovered",
+        "course_scope_limit",
+        "cursor_cycle",
+        "duplicate_course_page",
+        "generation_changed",
+        "identity_required",
+        "incomplete_resource",
+        "lease_expired",
+        "lease_replaced",
+        "pagination_complete_or_limit",
+        "reconnect_required",
+        "replay_conflict",
+        "resource_not_selected",
+        "resource_terminal",
+        "resources_open",
+        "resume_existing_scan",
+        "scan_terminal",
+        "scope_changed",
+        "subject_changed",
+        "ambiguous_observation_time",
+        "duplicate_resource_item",
+        "finish_previous_resource",
+        "resource_rewind",
+    }
+)
+
+
+class DiscoveryBatchRoute(CanvasRoute):
+    # Envelope remains limited to1MiB by the Store; allow its control/checkpoint wrapper.
+    body_limit = 2 * 1024 * 1024
+
+
+class MetadataControlRoute(CanvasRoute):
+    # Full1000-course selection and JSON-escaped4000-character checkpoints fit.
+    body_limit = 64 * 1024
+
+
+class Control(StrictBody):
+    generation: int = Field(ge=1)
+
+    @field_validator("connection_id", "scan_id", "lease_token", check_fields=False)
+    @classmethod
+    def valid_uuid(cls, value):
+        UUID(value)
+        return value
+
+    @field_validator("begin_key", "resume_key", "batch_key", "finish_key", check_fields=False)
+    @classmethod
+    def valid_key(cls, value):
+        return replay_key(value)
+
+
+class ScopeIn(Control):
+    connection_id: str = Field(min_length=1, max_length=128)
+    mode: Literal["explicit_set", "all_active"]
+    course_ids: list[str] = Field(max_length=1000)
+    resource_kinds: list[str] = Field(max_length=9)
+
+
+class BeginIn(Control):
+    connection_id: str = Field(min_length=1, max_length=128)
+    subject: str = Field(min_length=1, max_length=1024)
+    scope_revision: int = Field(ge=0)
+    begin_key: str
+
+
+class ScanIn(Control):
+    scan_id: str = Field(min_length=1, max_length=128)
+
+
+class ResumeIn(ScanIn):
+    resume_key: str
+
+
+class LeasedIn(ScanIn):
+    lease_token: str = Field(min_length=1, max_length=128)
+
+
+class BatchIn(LeasedIn):
+    batch_key: str
+    expected_checkpoint: Checkpoint
+    envelope: DiscoveryBatch
+
+
+class AcademicBatchIn(LeasedIn):
+    batch_key: str
+    expected_checkpoint: Checkpoint
+    envelope: AcademicBatch
+
+    @model_validator(mode="after")
+    def normalized_http_text_bounds(self):
+        # HTTP transport bound only; shared C2 owns canonicalization/persistence.
+        # Also protects historical partial/no-title validators before #98 consolidation.
+        for item in self.envelope.items:
+            for text, limit in ((item.title, 300), (item.content, 24000)):
+                normalized = unicodedata.normalize(
+                    "NFC", text.replace("\r\n", "\n").replace("\r", "\n")
+                )
+                if len(normalized) > limit:
+                    raise ValueError("Normalized academic text limit")
+        return self
+
+
+class AssignmentHtml(StrictBody):
+    assignment_id: str
+    html: str | None
+
+    @field_validator("assignment_id")
+    @classmethod
+    def valid_id(cls, value):
+        return course_id(value)
+
+
+class AssignmentExtractIn(Control):
+    origin: str = Field(min_length=1, max_length=2048)
+    connection_id: str
+    scope_revision: int = Field(ge=0)
+    course_id: str
+    items: list[AssignmentHtml] = Field(max_length=50)
+
+    @field_validator("course_id")
+    @classmethod
+    def valid_course(cls, value):
+        return course_id(value)
+
+    @model_validator(mode="after")
+    def bounded_html(self):
+        if len({item.assignment_id for item in self.items}) != len(self.items):
+            raise ValueError("Duplicate assignment")
+        if (
+            sum(len(item.html.encode("utf-8")) for item in self.items if item.html is not None)
+            > 1024 * 1024
+        ):
+            raise ValueError("HTML size limit")
+        return self
+
+
+class ResourceControlIn(LeasedIn):
+    resource_key: str = Field(min_length=1, max_length=128)
+    finish_key: str
+    expected_checkpoint: Checkpoint
+    outcome: Literal["complete", "partial", "restricted", "unsupported"]
+    reason: str | None = None
+
+
+class ResourceIn(ResourceControlIn):
+    @model_validator(mode="after")
+    def discovery_outcome(self):
+        if self.outcome == "complete":
+            if self.reason is not None or self.resource_key != "courses":
+                raise ValueError("Only course metadata completion is supported")
+        elif self.reason not in REASONS:
+            raise ValueError("Controlled failure reason required")
+        return self
+
+
+class AcademicResourceIn(ResourceControlIn):
+    @model_validator(mode="after")
+    def academic_outcome(self):
+        course, separator, kind = self.resource_key.partition("/")
+        if not separator or kind not in RESOURCE_TYPES:
+            raise ValueError("Unsupported academic resource")
+        # Reuse the typed resource's canonical course-ID validation.
+        AcademicResource(course_id=course, kind=kind)
+        if self.outcome == "complete":
+            if self.reason is not None:
+                raise ValueError("Complete resource has no failure reason")
+        elif self.reason not in REASONS:
+            raise ValueError("Controlled failure reason required")
+        return self
+
+
+class FinishIn(LeasedIn):
+    finish_key: str
+
+
+def register_canvas_sync(api, *, identity_dependency, database_dependency, canvas_origins):
+    prefix = "/v1/source-connections/canvas"
+    controls = APIRouter(prefix=prefix, route_class=CanvasRoute)
+    metadata_controls = APIRouter(prefix=prefix, route_class=MetadataControlRoute)
+    batches = APIRouter(prefix=prefix, route_class=DiscoveryBatchRoute)
+    User = Annotated[Identity, Depends(identity_dependency)]
+    DB = Annotated[Store, Depends(database_dependency)]
+    Credential = Annotated[
+        HTTPAuthorizationCredentials | None, Depends(HTTPBearer(auto_error=False))
+    ]
+
+    def actor(credentials: Credential):
+        if credentials is None:
+            raise HTTPException(401, "Reconnect Canvas", headers={"WWW-Authenticate": "Bearer"})
+        return credentials.credentials
+
+    Actor = Annotated[str, Depends(actor)]
+
+    def dispatch(request, operation):
+        if not canvas_origins:
+            raise HTTPException(503, "Canvas sync is not configured")
+        if request.query_params:
+            raise HTTPException(422, "Invalid Canvas request")
+        try:
+            return operation()
+        except SourceCredentialRejected:
+            raise HTTPException(
+                401, "Reconnect Canvas", headers={"WWW-Authenticate": "Bearer"}
+            ) from None
+        except CanvasSyncConflict as exc:
+            code = exc.code if exc.code in CONFLICT_CODES else "state_changed"
+            raise HTTPException(409, {"code": code}) from None
+        except LookupError:
+            raise HTTPException(404, "Not found") from None
+        except ValueError:
+            raise HTTPException(422, "Invalid Canvas request") from None
+
+    @batches.post("/academic/extract")
+    def extract_assignments(body: AssignmentExtractIn, request: Request, token: Actor, db: DB):
+        def check_context():
+            context = db.canvas_connection_context(token, body.origin)
+            if context["connection_id"] != body.connection_id:
+                raise SourceCredentialRejected()
+            if context["generation"] != body.generation:
+                raise CanvasSyncConflict("generation_changed")
+            if context["scope_revision"] != body.scope_revision:
+                raise CanvasSyncConflict("scope_changed")
+            if context["state"] != "connected":
+                raise CanvasSyncConflict("identity_required")
+            if (
+                body.course_id not in context["course_ids"]
+                or "assignments" not in context["resource_kinds"]
+            ):
+                raise CanvasSyncConflict("resource_not_selected")
+
+        def convert():
+            check_context()
+            items = []
+            for item in body.items:
+                result = (
+                    extract_html(item.html.encode("utf-8"), max_chars=24000)
+                    if item.html is not None
+                    else None
+                )
+                items.append(
+                    {
+                        "assignment_id": item.assignment_id,
+                        "text": result.text if result else "",
+                        "coverage": "partial",
+                        "missing": list(result.reasons) if result else ["description_not_observed"],
+                    }
+                )
+            check_context()
+            return {"course_id": body.course_id, "items": items}
+
+        return dispatch(request, convert)
+
+    @metadata_controls.post("/scope")
+    def scope(body: ScopeIn, request: Request, user: User, db: DB):
+        return dispatch(
+            request,
+            lambda: db.set_canvas_scope(
+                user.user_id,
+                body.connection_id,
+                body.generation,
+                mode=body.mode,
+                course_ids=body.course_ids,
+                resource_kinds=body.resource_kinds,
+            ),
+        )
+
+    @controls.post("/discovery/begin")
+    def begin(body: BeginIn, request: Request, token: Actor, db: DB):
+        return dispatch(
+            request,
+            lambda: db.begin_sync(
+                token,
+                body.connection_id,
+                body.generation,
+                body.subject,
+                body.scope_revision,
+                body.begin_key,
+            ),
+        )
+
+    @controls.post("/discovery/resume")
+    def resume(body: ResumeIn, request: Request, token: Actor, db: DB):
+        return dispatch(
+            request, lambda: db.resume_sync(token, body.scan_id, body.generation, body.resume_key)
+        )
+
+    @batches.post("/discovery/batch")
+    def batch(body: BatchIn, request: Request, token: Actor, db: DB):
+        return dispatch(
+            request,
+            lambda: db.commit_sync_batch(
+                token,
+                body.scan_id,
+                body.generation,
+                body.lease_token,
+                body.batch_key,
+                body.expected_checkpoint.model_dump(),
+                body.envelope.model_dump(),
+            ),
+        )
+
+    @metadata_controls.post("/discovery/resource")
+    def resource(body: ResourceIn, request: Request, token: Actor, db: DB):
+        return dispatch(
+            request,
+            lambda: db.finish_resource(
+                token,
+                body.scan_id,
+                body.generation,
+                body.lease_token,
+                body.resource_key,
+                body.finish_key,
+                body.expected_checkpoint.model_dump(),
+                outcome=body.outcome,
+                reason=body.reason,
+            ),
+        )
+
+    @controls.post("/discovery/finish")
+    def finish(body: FinishIn, request: Request, token: Actor, db: DB):
+        return dispatch(
+            request,
+            lambda: db.finish_sync(
+                token,
+                body.scan_id,
+                body.generation,
+                body.lease_token,
+                body.finish_key,
+            ),
+        )
+
+    @batches.post("/academic/batch")
+    def academic_batch(body: AcademicBatchIn, request: Request, token: Actor, db: DB):
+        return dispatch(
+            request,
+            lambda: db.commit_sync_batch(
+                token,
+                body.scan_id,
+                body.generation,
+                body.lease_token,
+                body.batch_key,
+                body.expected_checkpoint.model_dump(),
+                body.envelope.model_dump(),
+            ),
+        )
+
+    @metadata_controls.post("/academic/resource")
+    def academic_resource(body: AcademicResourceIn, request: Request, token: Actor, db: DB):
+        return dispatch(
+            request,
+            lambda: db.finish_resource(
+                token,
+                body.scan_id,
+                body.generation,
+                body.lease_token,
+                body.resource_key,
+                body.finish_key,
+                body.expected_checkpoint.model_dump(),
+                outcome=body.outcome,
+                reason=body.reason,
+            ),
+        )
+
+    api.include_router(controls)
+    api.include_router(metadata_controls)
+    api.include_router(batches)
