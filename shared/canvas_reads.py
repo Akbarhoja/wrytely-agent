@@ -133,7 +133,7 @@ class CanvasReadStore:
             ),
         ).fetchall()
 
-    def _evidence_projection(self, conn, connection, row):
+    def _evidence_projection(self, conn, connection, row, *, purpose="inspect"):
         kind = (
             "files"
             if row["kind"] == "file"
@@ -168,6 +168,7 @@ class CanvasReadStore:
             or row["observation_generation"] != connection["generation"]
         )
         freshness = canvas_freshness(
+            purpose=purpose,
             observed_at=row["observed_at"],
             received_at=row["received_at"],
             connection_state=state,
