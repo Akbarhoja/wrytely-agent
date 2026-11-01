@@ -38,7 +38,7 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 | Pause recovery #42       | A                 | 224bc96 (code a7db006), scoped review;385 backend/113 web CI reported                      | Included in #46; combined CI391/114 passed, review pending                                  |
 | Murtazo #28              | M                 | a344642 UI; latest a383782 Canvas proposal;114 local web reported                          | Reuse proposal findings; extension supersedes initial OAuth path                            |
 | P0-A2 Meta               | A                 | P0 real tool/saved-result/continuation proof passed in #50; academic M2 remains open       | Two-call probe passed (see #50); failed-call reservation retained                           |
-| P0-M1 Canvas             | A (reassigned)    | M #64 lifecycle API reviewed/21 cases pass; local diagnostic work reported                 | Current-session operator report received; linked files/rubric/session matrix pending        |
+| P0-M1 Canvas             | A (reassigned)    | M #64 lifecycle API reviewed/21 cases pass; local diagnostic work reported                 | v5 known PDF read/matched; rubric, remaining session matrix and review pending        |
 | P0-M2 Outlook            | A (reassigned)    | M #54 at4aadc91 offline Graph probe;32 cases independently pass                            | Optional/paused: CSU admin consent required; not a core stage blocker                       |
 | P0-M3 WhatsApp           | M                 | Linking/inbound worked; last delivery failed131031                                         | Business/account resolution and delivered-reply proof                                       |
 | P0-A3 interfaces         | A                 | C1/C2 and C3 short-text design agreed; remaining C4–C7/precise document wire gates open    | Reader fix #98 accepted by M; document/schema2 wire details remain separate                 |
@@ -151,6 +151,29 @@ records the evidence; no additional call implied. Browser access restored, but r
 aggregate usage did not reconcile the failed request. Available$150 credits do not
 increase spending authorization. Original M2 scope remains one synthetic workflow,
 <=10 requests/<= $1.50 within$2, no WhatsApp sends, continuous workers stopped.
+
+P0 Canvas document access: the operator's v5 live report reads the known syllabus
+PDF (**398346 bytes**, one manually validated redirect, PDF signature true, private
+SHA256 matches the separately saved/local-parsed sample). Both existing file and CDN
+host grants report true. Seven courses discovered; two selected courses have22/23
+assignments and12/9 instruction bodies. Four assignment detail samples read but no
+rubric criteria were observed. One discussion topic view read; whole discussion
+coverage remains partial. This passes the bounded PDF retrieval check, not the whole
+P0/collector gate. Live account-switch/natural session-expiry and unattended worker
+recovery evidence remain unproved; M reviewed the scoped implementation and found a Windows test-path defect; A fixed
+it with fileURLToPath and refreshed the PR description; Windows re-review pending.
+64 synthetic Node tests
+and685 disposable backend tests passed on100d5a2 before the operator run. No P1
+collector/scheduler/runtime behavior changed; see the dated access record for history.
+
+Latest M handoff: #116 at36c1740 reports17 actual assignment HTTP/Store scenarios
+and721 backend/310 extension tests; A has read the handoff, not independently
+validated those results. M now claims assignment collection; no takeover. A's
+Canvas rubric UI attempt initially hit an origin-approval block; supervisor approved
+inspection and normal CSU NetID navigation recovered Canvas through existing SSO.
+Two additional selected-course assignment pages showed no visible rubric. A known
+positive rubric sample is requested; no new positive rubric proof.
+The dated access record now consolidates the session/content evidence matrix.
 
 ## Next actions
 

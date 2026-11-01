@@ -4,6 +4,25 @@ Owner: Akbar/Codex. Claim: [#104](https://github.com/Akbarhoja/wrytely-agent/iss
 Base: 59c074e8c9cb8a8cb902a4fa6631b5fbd86fcfe6; branch: codex/p0-local-access.
 This record contains redacted access classifications, not source data or credentials.
 
+## Current Canvas evidence matrix
+
+| Check | Evidence/classification | Remaining limit |
+| --- | --- | --- |
+| Signed-in selected-course reads | Operator reports:7 discovered,2 selected; assignment lists22/23, instruction bodies12/9 | Bounded sample, not all-course collection |
+| Known syllabus PDF | v5 operator report:398346 bytes, one validated hop, signature and local sample match | Extension text parsing separate; no automatic linked-file discovery |
+| Rubric criteria | Four details read, no rubric observed | Positive real rubric access unproved; do not infer denial or course-wide absence |
+| Discussion | First course21 topics, one view/one top-level entry; second list0 | Full entry/reply pagination unproved |
+| Canvas tab closed, browser running | Operator repeat succeeded while worker Console open | Debugger may keep worker awake; not suspension/scheduling proof |
+| Actual browser restart | Operator reports blocked/login_required before Canvas reopened | Does not establish unattended signed-in recovery |
+| Explicit Canvas logout | Operator reports blocked/login_required | Separate from university SSO termination |
+| Login recovery | After manual login, same sampled reads succeeded | Natural timed expiry not observed |
+| Real account switch | No second consenting Canvas account available | Synthetic fencing only; live test unavailable |
+
+P0 access acceptance requires these classifications and content gaps to be reviewed;
+it does not require inventing a passing outcome for unavailable live conditions.
+The full collector's browser suspension/scheduling/recovery remains a P1/P2/P5
+implementation/reliability responsibility. This matrix does not close P0 unilaterally.
+
 ## Current supervisor decision: optional email
 
 Outlook is now optional. Keep the existing registration/probe and future connection
@@ -290,3 +309,203 @@ No additional diagnostic recovery run is claimed after this second restoration.
 The tested single-account authentication sequence is recorded; account-switch and
 natural timed-expiry coverage remain separate. No further disruptive browser action
 is implied by the earlier bounded restart/logout approval.
+
+## Bounded document/rubric diagnostic v2 (prepared, not run live)
+
+Supervisor explicitly requested continuing the P0 document/rubric check. Under #104,
+`scripts/canvas-access/` reuses the existing reviewed core probe and its 12 tests
+unchanged, adding a separate bounded detail module. It is operator-only and does not
+implement M's P1 collector, source storage, scheduler or model tools.
+
+- At most two selected consenting courses; details sampled from at most two assignments
+  per course, preferring visible rubric candidates. Criteria require actual description
+  text. No rubric found is explicitly no_rubric_observed_in_sample, not access denial.
+- One known syllabus PDF gets metadata through the same-session course File API. Only
+  the exact reviewed Canvas storage origin is accepted for file reads; redirects are
+  rejected, file-host credentials omitted, stream capped at5MiB, PDF MIME/signature
+  checked. SHA256 is compared privately with the already locally parsed sample. A byte
+  match links retrieval to that known sample; the extension does not itself parse PDF text.
+- Identity checks surround reads and fence the entire report on account change. Only
+  counts/fixed status leave the worker; no source text, IDs, metadata URL, token or hash
+  enters the report. Source/PDF bytes stay in memory; no cloud upload or model call.
+- A local popup starts the check explicitly and displays JSON. It needs no storage,
+  cookie, debugger or clipboard permission. Keep the popup open during the check.
+  Closing/interruption is not completion; reruns are explicit read-only operations.
+- The manifest adds exact Canvas file-storage host access. The supervisor/operator must
+  review and approve installing/loading this local extension before any live read.
+  The previous v1 package remains unchanged. New private scope and unpacked v2 output
+  are ignored and inactive until loaded; no installed extension was silently replaced.
+
+API references: [Canvas files](https://developerdocs.instructure.com/services/canvas/resources/files)
+and [assignment details](https://developerdocs.instructure.com/services/canvas/resources/assignments).
+Configured host permission is not proof that the file URL/redirect path will work; report
+an actual controlled failure if the institution serves it differently. P0 stays open.
+
+Synthetic Node evidence: 35 passed (12 inherited +23 new), including unauthorized sender,
+exact prepared permissions, identity changes, unsafe file destinations, access failures,
+redirects, PDF MIME/signature, size limits, content secrecy and sample mismatch. A new
+isolated Node24 CI job runs both suites. No claim of live PDF/rubric access is made.
+
+## v2 live report and narrow URL-resolution correction
+
+The operator loaded/approved v2 and supplied:7 discovered/2 selected; assignment lists
+22 and23, instruction bodies12 and9; two detail samples per course read with no rubric
+criteria observed. First course discussion list21/one view read; second course list0.
+Both inline syllabus bodies read. The one linked PDF failed as unsafe_file_url before
+any file-host fetch. This is not evidence of institutional denial or inaccessible rubrics.
+
+A independently inspected the known file's metadata through normal browser navigation,
+returning only URL shape/origin classifications (no signed values). Metadata was an
+unlocked PDF with a university Canvas `/files/ID/download?download_frd=1` wrapper, not
+a direct storage URL. The documented read-only `/api/v1/files/ID/public_url` returned
+the already-approved exact Canvas storage origin and `/files/` path. The signed URL
+was not printed, retained, published or handed to another service.
+
+v3 narrowly supports this observed two-step form: validate metadata file/access scope,
+exact institution origin, matching file-ID download path and only download_frd=1;
+request that fixed file's preview-link API; recheck identity; then apply unchanged exact
+storage-host/path, credentials-omit, redirect rejection, size/signature/SHA256 checks.
+Unexpected wrappers/hosts and locked files still reject. No new host permission and no
+arbitrary redirect following. Code uses the existing authorized local operator scope.
+
+Synthetic diagnostic tests now45 (12 inherited+33 new), including exact wrapper
+resolution, wrong file/path/query, malicious resolver destination, locked metadata and
+account switch during resolution preventing file download. The local package was rebuilt
+as0.0.3 in the same ignored folder; operator reload/run remains required. No corrected
+live PDF result or positive rubric-access proof has been claimed.
+
+## v3 live result; v4 failure classification
+
+The operator supplied a v3 report with the same7 discovered/2 selected courses,
+assignment counts22/23 and instruction counts12/9. Four assignment details read;
+none contained rubric criteria. Inline syllabus and bounded discussion results were
+unchanged. The known linked PDF reached the storage-fetch stage but failed as
+file_network_or_redirect_blocked. This does not prove a redirect, institution denial,
+or working extension PDF access. The separately saved/local-parsed PDF remains
+separate evidence. P0 remains open.
+
+v4 keeps the same host grants and selected scope. The storage fetch now uses manual
+redirect handling: an opaque redirect or3xx response is classified file_redirect_blocked
+without following or reading its destination; a thrown fetch is file_network_failed.
+Chrome's existing permissions.contains API adds only a fileHostPermissionGranted
+boolean to the local report, without requesting permissions. This narrows diagnosis;
+a granted host alone cannot prove successful file access. No private exception strings,
+URLs, tokens, source text, storage or upload were added.
+
+References: [Fetch redirect behavior](https://fetch.spec.whatwg.org/) and
+[Chrome extension cross-origin requests](https://developer.chrome.com/docs/extensions/develop/concepts/network-requests).
+Synthetic Node tests47 pass (12 inherited+35 new). v4 still requires operator reload
+and live run; no live redirect classification is claimed yet.
+
+## v4 live result: redirect confirmed
+
+The operator supplied diagnosticVersion4 with fileHostPermissionGranted=true and
+linkedPdf incomplete/file_redirect_blocked. Course discovery, two selected course
+counts and four rubric-detail reads match the prior report, with no rubric criteria
+observed. This isolates a redirect response rather than a missing existing file-host
+grant or a thrown fetch. The redirect destination and chain remain unknown; no
+institution denial, successful extension PDF retrieval or positive rubric proof follows.
+
+A reopened the known file's normal Canvas preview through browser navigation and
+confirmed the Download control remains available. Visible page asset inspection did
+not identify the PDF redirect destination. Native Chrome inspection exposed no usable
+window/DevTools controls, so A could not inspect the redirect headers directly. No new
+hosts or webRequest permission were granted; no arbitrary follow mode was enabled.
+Next evidence needed: the redirect Location hostname only from the diagnostic request
+in the extension worker's Network panel. Do not share signed URLs, query values,
+cookies, headers, HAR exports or course content. This is an inspection blocker, not
+a reason to repeat unchanged diagnostic runs. P0 remains open.
+
+## Operator CDN evidence and prepared v5
+
+The supervisor supplied a Network screenshot of a failed/cancelled request to the
+exact hostname cdn.inst-fs-iad-prod.inscloudgate.net and its signed PDF URL. The
+selected row was a Request URL, not a successful response or independently verified
+Location header. Only the hostname and URL form were used for implementation; the
+provided signed values were not saved to source, config, logs or GitHub.
+
+v5 is prepared but not authorized/loaded/run yet. Its changed manifest requires
+operator review of exact CDN-host access plus observational webRequest permission.
+The worker installs a temporary onHeadersReceived listener only for the active
+known storage request, matching exact URL, GET and its own extension initiator.
+It requests responseHeaders, never blocking/extraHeaders/requestBody, and retains
+only one Location in memory. Listener cleanup covers success/error/timeout paths;
+no request headers/cookies/source logging, persistent storage or uploads are added.
+
+All file fetches remain manual redirects, credentials omitted, cache disabled and
+referrer omitted. Exactly one observed storage-to-CDN hop can be performed: only
+the exact CDN origin, UUID/PDF path and bounded token/content_type query form pass.
+Any other host, malformed destination, extra hop or unobserved header blocks before
+following it. Canvas identity is checked again before the CDN request. Final bytes
+still face the5MiB limit, PDF MIME/signature and private SHA256 sample comparison.
+No pasted signed URL is replayed; each run resolves fresh metadata through Canvas.
+
+64 synthetic Node tests pass, including manual-hop success, unexpected hosts/schemes/
+paths/queries, second-hop rejection, session change before CDN access, header-event
+correlation, delayed header dispatch, duplicate Location and listener cleanup. These
+are implementation tests, not live browser proof. Chrome observation behavior with
+manual redirects still requires the operator run. No P1 collector changes were made.
+Reference: [Chrome webRequest](https://developer.chrome.com/docs/extensions/reference/api/webRequest).
+
+## v5 operator live result: bounded PDF retrieval passes
+
+The supervisor supplied diagnosticVersion5 after reloading/running the prepared
+package. Both fileHostPermissionGranted and cdnHostPermissionGranted are true.
+The selected known PDF reports state=read, byteLength=398346, redirectsFollowed=1,
+pdfSignature=true and matchesOperatorSample=true. This demonstrates successful
+extension retrieval through the validated hop and equality with the PDF separately
+saved and parsed locally (three pages with extractable text). The extension itself
+does not extract text; textExtraction remains separate_local_sample_only.
+
+Seven courses were discovered and two selected. Their assignment counts are22/23
+with12/9 instruction bodies; two detail samples per course read with zero rubric
+criteria. This is not proof of absent rubrics throughout the courses or denied rubric
+access. First-course discussion list21, one view read/one top-level entry; second
+list0. Inline syllabus bodies read; linkedDocumentsRead=false remains the original
+core probe's fixed partial-coverage field. The separate linkedPdf success establishes
+only the configured PDF retrieval, not automatic discovery of every linked document.
+
+Evidence is the operator-provided redacted report, not an independently observed
+full production sync. The prepared source is100d5a2; its64 synthetic Node and685
+disposable backend tests passed before the run. This update changes evidence/docs
+only; no additional source read, model call, upload, scheduling or deployment.
+
+Bounded PDF retrieval is now passed. P0 remains open for counterpart review, the
+positive rubric/content coverage gap and remaining session/account-switch limitations;
+separate baseline/interface/WhatsApp gates retain their existing states. A second
+Canvas login is not available for the live account-switch test; synthetic fencing
+cases are separate evidence. No further operator diagnostic rerun is needed for
+the now-passed PDF sample. M can reuse the reviewed approach in his P1 collector
+without taking this operator diagnostic as the completed academic connector.
+
+## Counterpart review follow-up and next live attempt
+
+M reviewed exact7dbeea3/source100d5a2:63/64 offline Node cases passed on Windows;
+the prepared-extension child executable path used URL.pathname and failed there.
+A replaced it with node:url fileURLToPath and reran64 local cases successfully.
+The current PR description was rewritten around v5's actual permissions, manual hop,
+operator live evidence and remaining limits. Windows re-review is requested; local
+macOS success is not a Windows rerun. Installed runtime/package is unchanged.
+
+A attempted normal navigation to the first selected course's Assignments page for
+a positive rubric sample. Canvas redirected toward canvas.colostate.edu and browser
+automatic approval rejected observation because the new origin was outside the
+previously authorized institution origin. No workaround or alternate-surface retry
+was attempted. Supervisor approval was requested before inspection of that sign-in
+page; no new rubric/session evidence is claimed from this attempt.
+
+The supervisor then explicitly approved inspecting canvas.colostate.edu. A followed
+the visible NetID Login link and reached the signed-in Canvas dashboard using the
+existing university SSO session, without entering a password or completing Duo.
+This resolves the origin-inspection blocker; it is not proof of the cause/duration
+of the earlier redirect or natural session expiry. No logout/restart was performed.
+
+Within the same two previously selected courses A inspected the normal assignment
+lists, then one project assignment and one lab assignment. Neither had a visible
+Canvas rubric control/table. Hidden rubric-finder/create templates were excluded
+from evidence. The lab's visible file links are not equivalent to a Canvas rubric;
+those additional files were not downloaded or parsed. No expanded course/API probe
+was run. A requested a known positive rubric assignment from the supervisor rather
+than treating more rubric-free pages as a pass. Positive rubric access remains
+unproved. Current follow-up validation:64 local Node,685 disposable backend (two
+existing warnings), Ruff lint/format, Prettier and diff checks pass.
