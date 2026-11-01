@@ -23,6 +23,8 @@ def _search(
     offset,
     max_pages,
     max_matches,
+    *,
+    matcher=None,
 ):
     object_id, observation_id, document_version_id = map(
         lambda value: str(_uuid(value)), (object_id, observation_id, document_version_id)
@@ -38,6 +40,13 @@ def _search(
             raise ValueError("Quote must match original normalized text")
     except UnicodeError:
         raise ValueError("Invalid quote Unicode") from None
+
+    def find(text, start):
+        if matcher is not None:
+            return matcher(text, start)
+        position = text.find(quote, start)
+        return None if position < 0 else (position, position + len(quote))
+
     pinned = dict(
         object_id=object_id, observation_id=observation_id, document_version_id=document_version_id
     )
@@ -82,16 +91,17 @@ def _search(
             _bound(local_offset, 0, len(validated.text))
             sections_scanned += 1
             last_slot = section["slot"]
-            position = validated.text.find(quote, local_offset)
-            while position >= 0:
+            found = find(validated.text, local_offset)
+            while found is not None:
+                position, end = found
                 citation = {
                     **pinned,
                     "segment_id": section["segment_id"],
                     "slot": section["slot"],
                     "page": section["page"],
                     "start": section["start"] + position,
-                    "end": section["start"] + position + len(quote),
-                    "quote": quote,
+                    "end": section["start"] + end,
+                    "quote": validated.text[position:end],
                 }
                 proof = verify_citation_page({**page, "sections": [section]}, citation)
                 matches.append(proof)
@@ -101,7 +111,7 @@ def _search(
                 if len(matches) == max_matches:
                     continuation = {"first_slot": section["slot"], "offset": position}
                     break
-                position = validated.text.find(quote, position)
+                found = find(validated.text, position)
             local_offset = 0
             if continuation:
                 break
