@@ -43,6 +43,30 @@ exact clarification3b86710 in6554751518. Current executable text/reply/delivery
 contracts remain in force until the new implementation is separately reviewed.
 No new paid allowance, migration, runtime, queue or source activation is implied.
 
+## P1 ready document finish transaction
+
+`Store.finish_document_upload(actor,body,*,extractor_versions)` consumes the agreed
+exact schema2/operation finish body (upload_id, no parts). It reuses current owned
+scan/credential/subject/generation/scope/lease/open-resource/expiry checks, loads all
+immutable parts, and runs full `validate_canvas_document`, including whole-text NFC
+across section boundaries. Missing text or corrupt manifests reject before a root
+or receipt commits. Zero-text unsupported evidence remains explicitly incomplete.
+
+Additive017 extends015 private roots with nullable canonical protocol_payload and
+uploads with same-agent/object/root foreign-key pointers. Legacy internal fingerprints
+are unchanged when protocol_payload is null. Protocol root fingerprints additionally
+bind the canonical document digest, so changed dates/rubrics create a different root
+even with identical sections. Same owned A→B→A roots deduplicate without changing
+history or observation time. Stored section reads recompute this integrity identity.
+
+Finish creates/reuses an owned shell object and private015 sections, then atomically
+saves a ready receipt with document_version_id/document_digest. A shell without an
+observation is absent from evidence readers; no observation, binding, checkpoint,
+event, legacy text version, current source pointer or source freshness is created.
+The existing final receipt authority/expiry check rolls back shell/root/parts on
+late failure. Concurrent identical finishes commit one root and original receipt.
+Publication and bounded orphan cleanup remain separate.017 ran only in disposable tests.
+
 ## P1 private document upload staging — begin and put only
 
 `Store.begin_document_upload(actor,body,*,extractor_versions)` and

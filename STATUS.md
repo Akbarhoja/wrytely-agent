@@ -387,3 +387,15 @@ refetch. No scoped blocker; [review](docs/P1-TWO-COURSE-ACCEPTANCE.md). Not inst
 MV3/restart/live/all-source/modelactivation acceptance. A document finish/publication
 continues separately; no M implementation edit, live/send/spend/retainedmigration/
 worker/deploy/mainmerge. P0/P1 remain open.
+
+P1 finish transaction implemented on `codex/p1-document-finish`, executable340b599
+from#13481f000a. Existing immutable staged parts reassemble through agreed full-root
+validation;015 sections reused with017 protocol identity, preserving old internal
+fingerprints and distinguishing changed dates/rubrics. Same-object A→B→A deduplicates
+ready roots; no observation/source/checkpoint/event is published. Final current
+authority/expiry fence rolls back shell/root on failure.13new cases,86focused
+upload+storagePASS; full disposable backend1136PASS/zero skips/2existingwarnings
+63.36s; Ruff/format184files/diff pass.017 is test-only; counterpart review requested.
+Zero-text gaps, cross-section NFC, missing parts, scope/revocation/expiry, parallel
+finish, changed fields and atomic rollback checked. Publication follows separately;
+no M API/collector edit, live/send/spend/retainedmigration/worker/deploy/mainmerge.
