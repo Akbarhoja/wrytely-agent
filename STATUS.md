@@ -209,6 +209,16 @@ full run identified only the store test's expected ledger ending at013; A update
 explicit expected list to014 without weakening repeat-migration safety.014 applied
 only to disposable tests; no API, source/model activation, send or deployment.
 
+P1-A2 internal document sections implemented on codex/p1-document-sections from
+A#12042cb2f7, NOT the known-failing #121 candidate. Pure whole-text normalization,
+immutable bounded sections, exact manifest/part validation, code-point offsets,
+UTF-8 hashes and bounded original-section paging follow M's accepted architecture.
+PDF page gaps remain explicit; no parser, root hash/wire, storage/API or source/model
+consumer added.53 new focused cases pass; standalone full disposable backend750PASS,
+2existingwarnings in29.64s; Ruff lint/format127files and diff checks pass. Existing
+#121804PASS/10FAIL Mac-harness evidence remains separate and unresolved. M's collector,
+parser, harness and all files unchanged. #118 agreement still gates upload consumers.
+
 ## Next actions
 
 A: obtain #97 Unicode fix review, review/integrate agreed components and add discovery
