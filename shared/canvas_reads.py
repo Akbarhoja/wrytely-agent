@@ -114,7 +114,10 @@ class CanvasReadStore:
             "AND o.subject_digest=%s AND (%s::text IS NULL OR o.course_id=%s) "
             "AND (%s::uuid IS NULL OR o.id>%s) AND (%s::uuid IS NULL OR o.id=%s) "
             "AND (NOT %s OR EXISTS (SELECT 1 FROM wrytely_agent.responsibility_sources b "
-            "WHERE b.agent_id=o.agent_id AND b.responsibility_id=%s AND b.source_id=o.source_id)) "
+            "WHERE b.agent_id=o.agent_id AND b.responsibility_id=%s AND b.source_id=o.source_id) "
+            "OR EXISTS (SELECT 1 FROM wrytely_agent.responsibility_canvas_objects b "
+            "WHERE b.agent_id=o.agent_id AND b.responsibility_id=%s AND b.object_id=o.id "
+            "AND b.connection_id=o.connection_id AND b.connection_generation=%s)) "
             "ORDER BY o.id LIMIT %s",
             (
                 observation_id,
@@ -129,6 +132,8 @@ class CanvasReadStore:
                 object_id,
                 task,
                 duty,
+                duty,
+                connection["generation"],
                 limit,
             ),
         ).fetchall()

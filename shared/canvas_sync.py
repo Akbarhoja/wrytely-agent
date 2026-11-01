@@ -65,6 +65,7 @@ class CanvasSyncStore:
             )
 
     def _reset_canvas_context(self, conn, connection_id):
+        self._invalidate_canvas_connection_duties(conn, connection_id)
         self._abort_canvas_scans(conn, connection_id, "connection_changed")
         conn.execute(
             "UPDATE wrytely_agent.source_connections SET scope_revision=scope_revision+1, "
@@ -177,6 +178,7 @@ class CanvasSyncStore:
                 ids,
                 kinds,
             ):
+                self._invalidate_canvas_connection_duties(conn, row["id"])
                 self._abort_canvas_scans(conn, row["id"], "scope_changed")
                 conn.execute(
                     "INSERT INTO wrytely_agent.canvas_catalog "

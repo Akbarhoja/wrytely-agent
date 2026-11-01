@@ -195,15 +195,9 @@ class CanvasEvidenceStore:
                         Jsonb(_change_details(prior, payload)),
                     ),
                 )
-                if obj["source_id"] is not None:
-                    duties = conn.execute(
-                        "SELECT responsibility_id FROM "
-                        "wrytely_agent.responsibility_sources WHERE source_id=%s "
-                        "AND agent_id=%s",
-                        (obj["source_id"], row["agent_id"]),
-                    ).fetchall()
-                    for duty in duties:
-                        self._invalidate_memory(conn, duty["responsibility_id"])
+                self._invalidate_canvas_object_duties(
+                    conn, row["agent_id"], obj["id"], obj["source_id"]
+                )
         complete = item.coverage == "complete" and not historical
         conn.execute(
             "INSERT INTO wrytely_agent.canvas_resource_items VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)",

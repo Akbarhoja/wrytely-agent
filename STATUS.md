@@ -30,6 +30,26 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+Latest A P1-A2 increment: explicit Canvas object task scope on
+codex/p1-canvas-object-scope, stacked on #143. M's #142 design agreement6560955094
+received. Atomic scoped delegation, exact/current-authorized replay and existing
+leased object reads work with actual document-only publication and zero fake legacy
+versions. Control/content changes fence old work; unchanged sync preserves task and
+revision while old pinned observations remain historical. New document intents are
+explicitly held without inference until typed v2 generation is wired.39new scope
+cases PASS; prior focused140PASS plus final new-generation case. Full disposable
+backend1327PASS/zero skips/2existingwarnings88.71s; Ruff/format206files/diff PASS.
+Counterpart review pending.
+Migration021 test-only; no app/HTTP/extension/source/model/deploy activation.
+
+M update: #144 host and #146 UI/package delivered, both author CI SUCCESS; A exact
+host read review and24focused/all389Node tests PASS on exact945d1c5; host
+integration and #146 package review remain queued. M independently
+reviewed #129/#131/#133/#135/#142/#143 as scoped evidence, not the entire stack.
+M's #148 document HTTP design now explicitly agreed by A6563512653, with first
+implementation base #135019d6c7; M retains app/producer/UI ownership. P0 baseline
+human review/WhatsApp and full P1 live collection remain open; Outlook optional.
+
 Latest A independent P1-A2 slice: bounded original-section quote discovery on
 codex/p1-document-quote-search, stacked on #142. Internal search produces exact
 citation proofs from existing scoped readers, preserving Unicode/PDF provenance and

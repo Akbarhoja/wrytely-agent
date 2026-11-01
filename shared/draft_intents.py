@@ -11,7 +11,9 @@ from shared.freshness import legacy_freshness
 class DraftIntentStore:
     def _intent(self, conn, lease):
         return conn.execute(
-            "SELECT i.* FROM wrytely_agent.private_draft_intents i "
+            "SELECT i.*,EXISTS (SELECT 1 FROM wrytely_agent.responsibility_canvas_objects b "
+            "WHERE b.agent_id=i.agent_id AND b.responsibility_id=i.responsibility_id) "
+            "AS canvas_objects_bound FROM wrytely_agent.private_draft_intents i "
             "JOIN wrytely_agent.tasks t ON t.responsibility_id=i.responsibility_id "
             "AND t.agent_id=i.agent_id WHERE t.id=%s AND i.agent_id=%s",
             (lease.task_id, lease.agent_id),

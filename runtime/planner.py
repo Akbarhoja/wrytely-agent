@@ -39,6 +39,19 @@ def run_planning_episode(store, model, settings, lease):
     instructions = PLANNER_INSTRUCTIONS
     tool = PLAN_TOOL
     if intent:
+        if intent.get("canvas_objects_bound"):
+            # Object authorization exists; typed document policy/rubric/generation
+            # does not yet. Never fall back to an empty legacy context or infer permission.
+            store.apply_plan(
+                lease,
+                DraftPlannerDecision(
+                    action="blocked",
+                    reason="document_drafting_not_wired",
+                    step_key="await-document-drafting",
+                    instruction="",
+                ),
+            )
+            return
         if intent["assessment"] is None:
             store.heartbeat(lease, settings.lease_seconds)
             candidate = assess_draft_requirements(model, store.draft_intent_sources(lease))
