@@ -173,7 +173,7 @@ class CanvasDocumentUploadStore:
             count = conn.execute(
                 "SELECT count(*) AS n FROM wrytely_agent.canvas_document_uploads WHERE "
                 "connection_id=%s "
-                "AND expires_at>clock_timestamp()",
+                "AND expires_at>clock_timestamp() AND published_at IS NULL",
                 (row["id"],),
             ).fetchone()["n"]
             if count >= 4:

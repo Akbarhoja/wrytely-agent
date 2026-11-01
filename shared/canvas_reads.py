@@ -101,6 +101,9 @@ class CanvasReadStore:
             "SELECT o.*,n.id AS observation_id,n.generation AS observation_generation,"
             "n.observed_at,n.received_at,n.provider_updated_at,n.version_id,n.reference,"
             "n.coverage AS item_coverage,n.historical,n.resource_key,"
+            "(SELECT b.document_version_id FROM wrytely_agent.canvas_document_bindings b "
+            "WHERE b.observation_id=n.id AND b.agent_id=o.agent_id AND b.object_id=o.id) "
+            "AS document_version_id,"
             "(SELECT v.version_id FROM wrytely_agent.canvas_evidence_observations v "
             "WHERE v.id=o.latest_observation_id AND v.agent_id=o.agent_id) AS current_version_id,"
             "n.payload->>'title' AS title," + payload + " AS private_payload "
@@ -131,7 +134,11 @@ class CanvasReadStore:
         ).fetchall()
 
     def _evidence_projection(self, conn, connection, row):
-        kind = next((k for k, v in RESOURCE_TYPES.items() if row["kind"] in v), None)
+        kind = (
+            "files"
+            if row["kind"] == "file"
+            else next((k for k, v in RESOURCE_TYPES.items() if row["kind"] in v), None)
+        )
         selected = (
             row["course_id"] in self._courses(conn, connection)
             and kind in connection["resource_kinds"]
@@ -183,7 +190,7 @@ class CanvasReadStore:
             "title": row["title"],
             "latest_version_id": row["current_version_id"],
             "latest_observation_id": row["latest_observation_id"],
-            "document_version_id": None,
+            "document_version_id": row["document_version_id"],
             "coverage": row["item_coverage"],
             "resource_coverage": coverage,
             "missing_pending_confirmation": row["missing_pending_confirmation"],
@@ -359,6 +366,8 @@ class CanvasReadStore:
                 or row["observation_generation"] != connection["generation"]
             ):
                 raise SourceRefreshRequired()
+            if row["private_payload"]["kind"] == "document":
+                raise ValueError("Use the pinned document section reader")
             text = row["private_payload"]["content"]
             if offset > len(text):
                 raise ValueError("Invalid read bounds")
