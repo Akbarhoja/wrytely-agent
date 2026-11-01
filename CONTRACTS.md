@@ -23,11 +23,12 @@ architecture, recorded in comments6541105179 and6541182136. These agreements do 
 supply executable document APIs. The explicit deferred document-consumer gate now
 has a [document-only v2 wire review candidate](docs/contracts/CANVAS-DOCUMENT-WIRE-v2.md)
 with exact upload/publication/receipt shapes, canonical vectors and bounded orphan
-cleanup. It is **proposed, not agreed or implemented**; schema1 and inactive source
-behavior remain unchanged. C4–C7 behavioral design agreement is retained per M review6554440608; the newer
-exact consumer wire still needs the named clarifications and final agreement.
+cleanup. M agreed exact7f4f09f as DESIGN in [6554751370](https://github.com/Akbarhoja/wrytely-agent/pull/118#issuecomment-6554751370).
+Schema1 and inactive source behavior remain unchanged; upload/publication is not yet
+implemented. M also agreed exact C4–C7 wire3b86710 as DESIGN in
+[6554751518](https://github.com/Akbarhoja/wrytely-agent/pull/119#issuecomment-6554751518).
 
-## C4–C7 exact review candidate; no consumer agreement yet
+## C4–C7 agreed wire design; implementation pending
 
 [Agent operations wire v1](docs/contracts/AGENT-OPERATIONS-WIRE-v1.md) supplements the
 existing architecture with exact action/authorization/result, student-decision,
@@ -37,9 +38,33 @@ cover replay, ownership, stale scope, unknown send, file mismatch and cost races
 These are proposed examples, not implemented validation or authorization grants.
 M reviewed20 cases and retained behavioral design agreement in6554440608. Revision
 3b86710 now answers its dispatch-consumption, consumed-offer and typed-health questions;
-24 review cases/two health samples accompany the final wire agreement request.
-Final consumer wire agreement is required; current text/reply/delivery contracts remain in force.
+24 review cases/two health samples accompany the final agreement. M confirmed the
+exact clarification3b86710 in6554751518. Current executable text/reply/delivery
+contracts remain in force until the new implementation is separately reviewed.
 No new paid allowance, migration, runtime, queue or source activation is implied.
+
+## P1-A2 agreed document root validation
+
+`shared/canvas_document_wire.py::validate_canvas_document` validates a fully assembled
+long-document root under the agreed #118 design. It accepts exact resource/owner/
+metadata fields, object_fields, manifest, parts and a trusted configured extractor
+ID tuple/frozenset. It reuses `validate_document_sections`, `EvidenceItem.payload`
+for assignment/syllabus/page field validation and `canonical_source_bytes` for the
+root digest. Files require a numeric provider ID, normalized bounded filename without
+path separators/NUL, and one of the three agreed MIME types. No duplicate parser or
+alternate canonical hash algorithm is introduced.
+
+All text/section/page bounds and LF/NFC/hash/offset reconstruction checks remain.
+Complete requires nonblank text/title, no missing evidence and all PDF pages present.
+Empty or page-gapped evidence requires explicit missing reasons. Owner kind and
+structured academic fields participate in the document digest; a deadline/rubric
+change changes identity even if long text does not. Course/provider identity and
+provider_updated_at remain validated separate provenance outside the root hash.
+The frozen result holds immutable sections/UTF-8 bytes/digest; payload returns a
+fresh detached dict. This validator is not authority, persisted staging, schema2
+request/receipt parsing, an HTTP endpoint, an extractor, or source/model activation.
+The next staged publisher must enforce current owned scan/lease/scope/expiry/quotas
+and invoke validation at finish; no legacy storage behavior changes here.
 
 ## P1-A2 internal document section storage and pinned reads
 
