@@ -57,19 +57,14 @@ class ValidatedCanvasDocument:
         return json.loads(self.canonical_bytes)
 
 
-def validate_canvas_document(
-    *, resource, owner_object, object_fields, metadata, manifest, parts, extractor_versions
+def validate_canvas_document_header(
+    *, resource, owner_object, object_fields, metadata, manifest, extractor_versions
 ):
-    """Validate a fully assembled root against the agreed #118 design.
-
-    Configured extractor IDs come from a trusted caller, never from the source.
-    Identity/scan/lease/expiry/quota checks and staged wire parsing remain separate.
-    No raw file or URL fetching, extraction, source activation or clipping occurs.
-    """
+    """Validate/detach immutable upload metadata; text integrity is deferred to finish."""
     _keys(resource, ("course_id", "kind"))
     _keys(owner_object, ("kind", "provider_id"))
     _keys(metadata, _METADATA)
-    selected_course = course_id(resource["course_id"])
+    course_id(resource["course_id"])
     kind = owner_object["kind"]
     if (
         not isinstance(resource["kind"], str)
@@ -104,9 +99,6 @@ def validate_canvas_document(
     total_pages = metadata["total_pages"]
     if (format_name == "pdf_text") != (total_pages is not None):
         raise ValueError("Document format/page mismatch")
-    document = validate_document_sections(
-        manifest, parts, total_characters=metadata["total_characters"], total_pages=total_pages
-    )
     coverage, missing = metadata["coverage"], metadata["missing"]
     if (
         not isinstance(coverage, str)
@@ -119,14 +111,6 @@ def validate_canvas_document(
         )
     ):
         raise ValueError("Invalid document coverage")
-    has_text = any(section.text.strip() for section in document.sections)
-    if coverage == "complete" and (
-        missing or not title.strip() or not has_text or document.unrepresented_pages
-    ):
-        raise ValueError("Complete document requires text, title and all pages without gaps")
-    if (not has_text or document.unrepresented_pages) and not missing:
-        raise ValueError("Empty or page-gapped document requires missing evidence")
-
     if kind == "file":
         _keys(object_fields, ("filename", "content_type"))
         filename = _bounded_text(object_fields["filename"], 300, nonblank=True)
@@ -152,6 +136,112 @@ def validate_canvas_document(
             coverage="partial",
             missing=[],
         ).payload(kind)["fields"]
+    # Header validation cannot verify text hashes until parts arrive. It still
+    # rejects malformed offsets, page provenance and section bounds at begin.
+    if (
+        type(metadata["total_characters"]) is not int
+        or not 0 <= metadata["total_characters"] <= 200000
+    ):
+        raise ValueError("Invalid document character count")
+    if total_pages is not None and (type(total_pages) is not int or not 1 <= total_pages <= 200):
+        raise ValueError("Invalid document page count")
+    if type(manifest) is not list or len(manifest) > 512:
+        raise ValueError("Invalid document manifest")
+    end, last_page, pages = 0, 0, set()
+    for index, slot in enumerate(manifest):
+        _keys(slot, ("slot", "start", "end", "page", "text_sha256"))
+        if (
+            any(type(slot[k]) is not int for k in ("slot", "start", "end"))
+            or slot["slot"] != index
+            or slot["start"] != end
+            or not 1 <= slot["end"] - slot["start"] <= 24000
+            or slot["end"] > 200000
+            or not isinstance(slot["text_sha256"], str)
+            or not re.fullmatch(r"[0-9a-f]{64}", slot["text_sha256"])
+        ):
+            raise ValueError("Invalid document manifest")
+        page = slot["page"]
+        if total_pages is None:
+            if page is not None:
+                raise ValueError("Non-PDF document page")
+        elif type(page) is not int or not max(1, last_page) <= page <= total_pages:
+            raise ValueError("Invalid document page provenance")
+        if page is not None:
+            last_page = page
+            pages.add(page)
+        end = slot["end"]
+    if end != metadata["total_characters"]:
+        raise ValueError("Document manifest total mismatch")
+    gaps = total_pages is not None and len(pages) != total_pages
+    if coverage == "complete" and (not title.strip() or not end or gaps or missing):
+        raise ValueError("Complete document header has gaps")
+    if (not end or gaps) and not missing:
+        raise ValueError("Document header requires missing evidence")
+    # JSON roundtrip detaches all nested inputs and rejects non-JSON values.
+    return json.loads(
+        json.dumps(
+            {
+                "resource": resource,
+                "owner_object": owner_object,
+                "object_fields": fields,
+                "metadata": {**metadata, "title": title, "extractor_version": version},
+                "manifest": manifest,
+            },
+            ensure_ascii=False,
+            allow_nan=False,
+        )
+    )
+
+
+def validate_canvas_document(
+    *, resource, owner_object, object_fields, metadata, manifest, parts, extractor_versions
+):
+    """Validate a fully assembled root against the agreed #118 design.
+
+    Configured extractor IDs come from a trusted caller, never from the source.
+    Identity/scan/lease/expiry/quota checks and staged wire parsing remain separate.
+    No raw file or URL fetching, extraction, source activation or clipping occurs.
+    """
+    header = validate_canvas_document_header(
+        resource=resource,
+        owner_object=owner_object,
+        object_fields=object_fields,
+        metadata=metadata,
+        manifest=manifest,
+        extractor_versions=extractor_versions,
+    )
+    resource, owner_object, metadata, manifest = (
+        header["resource"],
+        header["owner_object"],
+        header["metadata"],
+        header["manifest"],
+    )
+    selected_course, kind, provider_id = (
+        resource["course_id"],
+        owner_object["kind"],
+        owner_object["provider_id"],
+    )
+    title, format_name, version = (
+        metadata["title"],
+        metadata["format"],
+        metadata["extractor_version"],
+    )
+    updated_at = metadata["provider_updated_at"]
+    coverage, missing, fields = metadata["coverage"], metadata["missing"], header["object_fields"]
+    document = validate_document_sections(
+        manifest,
+        parts,
+        total_characters=metadata["total_characters"],
+        total_pages=metadata["total_pages"],
+    )
+    has_text = any(section.text.strip() for section in document.sections)
+    if coverage == "complete" and (
+        missing or not title.strip() or not has_text or document.unrepresented_pages
+    ):
+        raise ValueError("Complete document requires text, title and all pages without gaps")
+    if (not has_text or document.unrepresented_pages) and not missing:
+        raise ValueError("Empty or page-gapped document requires missing evidence")
+
     encoded = canonical_source_bytes(
         {
             "digest_version": 1,

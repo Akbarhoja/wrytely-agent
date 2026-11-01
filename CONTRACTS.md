@@ -43,6 +43,51 @@ exact clarification3b86710 in6554751518. Current executable text/reply/delivery
 contracts remain in force until the new implementation is separately reviewed.
 No new paid allowance, migration, runtime, queue or source activation is implied.
 
+## P1 private document upload staging — begin and put only
+
+`Store.begin_document_upload(actor,body,*,extractor_versions)` and
+`Store.put_document_parts(actor,body)` implement the agreed #118 begin_document and
+put_document_parts operations internally. They are not HTTP endpoints. Staging bodies
+require integer schema_version2 and the exact operation, forbid batch_type and all
+unknown keys, and are bounded to1MiB UTF-8 JSON. Context UUIDs and generation are
+strict; user/agent IDs are never accepted as authority. The trusted caller supplies
+configured extractor identifiers. Body text enters only through declared parts.
+
+Migration016 adds private uploads, parts and immutable original receipts. The scan/
+connection/generation composite FK and agent/connection FK retain ownership. Existing
+Store actor/agent/connection locks and scan helpers fence credentials, provider subject,
+selected scope/generation, open resource, current lease and scan expiry. The same
+checks run before replay and again before saving a new receipt. Expiry is fixed at
+min(scan expiry,begin time+30minutes); replay/put/resume never extend it.
+
+The header validator is factored from #129's root validator, preserving all ten
+canonical vectors. It validates/detaches exact metadata/owner/resource/academic fields
+and manifest offsets, slot/hash/page bounds before persistence. Parts are1–50 unique
+slots, match declared hashes and normalized text, and retain slot immutability even
+under a new request key. Whole-text reconstruction/NFC and ready-root validation
+remain required at the future finish operation. No prefix or staged bytes are marked
+ready by begin/put.
+
+Replay identity is a SHA256 of sorted request JSON excluding only lease_token.
+The operation/scan/request key namespace retains the original receipt; changed
+payload conflicts. Current authority is required even for an old receipt. Cumulative
+received_slots reflect that original operation's commit, not present upload state.
+A new current lease can replay the same captured body without acquiring new source
+readiness. Responses contain no source text, subject or credentials.
+
+At most4 unexpired unpublished uploads exist per connection. Sum of retained staged
+UTF-8 text, including expired uncollected uploads, is capped at8MiB; conservative
+expired-byte accounting prevents storage growth before cleanup exists. Quotas and
+writes share existing agent/connection serialization. Exceeding either raises
+CanvasDocumentUploadLimited for a future controlled429 mapping. Invalid/nonowned
+upload IDs miss generically; expired uploads/changed text raise controlled conflicts.
+
+Finish/root materialization, schema2 publication/checkpoints/evidence, orphan cleanup,
+HTTP/extractor/collector consumers and deployment remain separate increments. No
+observation, source version,015 root/binding, resource coverage/freshness, task or
+model readiness is created or advanced by these methods.016 ran only in disposable
+tests. Retention/cleanup must preserve receipt tombstones and every referenced root.
+
 ## P1-A2 agreed document root validation
 
 `shared/canvas_document_wire.py::validate_canvas_document` validates a fully assembled
