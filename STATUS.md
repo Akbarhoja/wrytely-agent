@@ -416,3 +416,18 @@ verified. [Evidence](docs/P1-DOCUMENT-PUBLICATION.md).017/018 test-only; indepen
 review and M consumer/installed/live assembly remain required; safe cleanup pending.
 No M API/collector edit, live/model/send/spend/grant/install/retainedmigration/worker/
 deploy/mainmerge. #134/#135 counterpart review requests remain distinct.
+
+P1 safe staging cleanup implemented on `codex/p1-document-cleanup`, executable
+8f8d1e3/base#137afc42c9. Explicit operator-only method selects<=100 expired uploads
+and<=100 old orphan protocol roots, agent-before-row SKIP LOCKED with reference/
+expiry rechecks and atomic rollback. Scrubs headers/parts/ready pointers, retains
+content-free upload tombstones and exact original receipts. All bindings/history/
+matching observation payloads and retained upload pointers protect roots; root age
+>=24h, legacy internal roots excluded. No source/event/freshness mutation.
+21focusedPASS; full combined disposable backend1184PASS/zero skips/2existingwarnings
+69.82s. Ruff/format191files/diff/link checks pass.019 applied only to disposable
+tests; no maintenance was run on retained data. [Evidence](docs/P1-DOCUMENT-CLEANUP.md).
+Previous #137 exactafc42c9 CI41288720692/41288717315 SUCCESS; new cleanup CI separate.
+Counterpart reviews/consumer assembly remain pending. M retains host/HTTP/extractor/
+extension work; no M file edit/live/model/send/spend/grant/install/retainedmigration/
+worker/deploy/mainmerge. P0/P1 remain open.
