@@ -1,5 +1,5 @@
 // Private worker helper. Public callers receive neither credentials nor writer leases.
-import { collectCourseTick } from "./collector.mjs";
+import { collectCourseTick, collectAssignmentTick } from "./collector.mjs";
 import { sourceDigest } from "../canvas/source-digest.mjs";
 import {
   assignmentKey,
@@ -116,6 +116,7 @@ export function discoveryOperations({
   canvasOrigin,
   validExpiry,
   readCoursePage,
+  readAssignmentPage,
 }) {
   function checkpoint(value, revision) {
     if (
@@ -1110,24 +1111,121 @@ export function discoveryOperations({
       return status(j);
     },
   };
+  const inspectCollection = async () => {
+    const { j, context } = await prepare();
+    return {
+      ...status(j),
+      checkpoint: j?.scan ? clone(j.scan.checkpoint) : null,
+      last_page_coverage: j?.last_page_coverage ?? null,
+      incomplete: j?.incomplete_resource ?? false,
+      courses_closed: j?.closed.includes("courses") ?? false,
+      open_resources: j
+        ? j.required.filter((key) => !j.closed.includes(key)).length
+        : 0,
+      open_keys: j ? j.required.filter((key) => !j.closed.includes(key)) : [],
+      academic: j?.academic ? clone(j.academic) : null,
+      selected_courses: [...context.course_ids],
+    };
+  };
   operations.collectCoursePage = () =>
     collectCourseTick({
       operations,
       origin: canvasOrigin,
       conflicts: discoveryConflicts,
       readPage: readCoursePage,
-      inspect: async () => {
-        const { j } = await prepare();
-        return {
-          ...status(j),
-          checkpoint: j?.scan ? clone(j.scan.checkpoint) : null,
-          last_page_coverage: j?.last_page_coverage ?? null,
-          incomplete: j?.incomplete_resource ?? false,
-          courses_closed: j?.closed.includes("courses") ?? false,
-          open_resources: j
-            ? j.required.filter((key) => !j.closed.includes(key)).length
-            : 0,
-        };
+      inspect: inspectCollection,
+    });
+  operations.collectAssignmentPage = () =>
+    collectAssignmentTick({
+      operations,
+      inspect: inspectCollection,
+      courseTick: operations.collectCoursePage,
+      readPage: readAssignmentPage,
+      conflicts: discoveryConflicts,
+      extractPage: async (course, rows) => {
+        const p = await prepare();
+        available(p.j);
+        if (
+          !p.context.course_ids.includes(course) ||
+          !p.context.resource_kinds.includes("assignments")
+        )
+          fail("discovery_resource_not_selected");
+        let inputs;
+        try {
+          inputs = rows.map((raw) => {
+            if (
+              raw.description !== null &&
+              raw.description !== undefined &&
+              typeof raw.description !== "string"
+            )
+              throw Error();
+            return {
+              assignment_id: String(raw.id),
+              html:
+                raw.locked_for_user === true ? null : (raw.description ?? null),
+            };
+          });
+        } catch {
+          fail("invalid_assignment_input");
+        }
+        const result = await rpc(p, "academic_extract", {
+          origin: canvasOrigin,
+          connection_id: p.j.binding.connection_id,
+          generation: p.j.binding.generation,
+          scope_revision: p.j.binding.scope_revision,
+          course_id: course,
+          items: inputs,
+        });
+        await prepare();
+        try {
+          if (
+            !exact(result, ["course_id", "items"]) ||
+            result.course_id !== course ||
+            !Array.isArray(result.items) ||
+            result.items.length !== rows.length
+          )
+            throw Error();
+          const mapped = new Map();
+          for (const item of result.items) {
+            if (
+              !exact(item, ["assignment_id", "text", "coverage", "missing"]) ||
+              typeof item.assignment_id !== "string" ||
+              mapped.has(item.assignment_id) ||
+              !inputs.some(
+                (input) => input.assignment_id === item.assignment_id,
+              ) ||
+              !chars(item.text, 24000) ||
+              item.coverage !== "partial" ||
+              !Array.isArray(item.missing) ||
+              item.missing.length < 1 ||
+              item.missing.length > 50 ||
+              item.missing.some(
+                (reason) =>
+                  typeof reason !== "string" ||
+                  !/^[a-z0-9][a-z0-9_.:-]{0,127}$/.test(reason),
+              )
+            )
+              throw Error();
+            mapped.set(item.assignment_id, item);
+          }
+          return rows.map((raw) => {
+            const item = mapped.get(String(raw.id));
+            if (raw.locked_for_user === true && item.text !== "") throw Error();
+            return {
+              raw,
+              dateContext: "requesting_student",
+              extracted: {
+                courseId: course,
+                assignmentId: String(raw.id),
+                text: item.text,
+                coverage: item.coverage,
+                missing: item.missing,
+              },
+            };
+          });
+        } catch {
+          fail("assignment_extraction_invalid");
+        }
       },
     });
   // All operations, including the whole capture/commit tick, share the original lock.

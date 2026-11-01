@@ -212,7 +212,66 @@ export function makeReader(originValue, fetchImpl = fetch, maxPages = 10) {
     if (next_cursor === url) throw new ProbeError("pagination_cycle");
     return { data, next_cursor };
   }
-  return { get, list, coursePage };
+  async function assignmentPage(course, cursor = null) {
+    if (typeof course !== "string" || !/^[1-9][0-9]{0,19}$/.test(course))
+      throw new ProbeError("invalid_provider_id");
+    const path = `/api/v1/courses/${course}/assignments`;
+    function checked(value) {
+      try {
+        if (
+          typeof value !== "string" ||
+          [...value].length > 4000 ||
+          /[\u0000-\u0020\u007f\uD800-\uDFFF]/u.test(value)
+        )
+          throw Error();
+        const url = new URL(value);
+        if (safeURL(value, origin, path) !== url.href) throw Error();
+        const allowed = ["per_page", "override_assignment_dates", "page"];
+        if (
+          [...url.searchParams.keys()].some((k) => !allowed.includes(k)) ||
+          allowed.some((k) => url.searchParams.getAll(k).length > 1) ||
+          url.searchParams.get("per_page") !== "50" ||
+          url.searchParams.get("override_assignment_dates") !== "true" ||
+          (url.searchParams.has("page") && !url.searchParams.get("page"))
+        )
+          throw Error();
+        return url.href;
+      } catch {
+        throw new ProbeError("unsafe_pagination");
+      }
+    }
+    const url = checked(
+      cursor ?? `${origin}${path}?per_page=50&override_assignment_dates=true`,
+    );
+    const { data, link } = await read(url, true);
+    const ids = new Set();
+    if (
+      !Array.isArray(data) ||
+      data.length > 50 ||
+      data.some((row) => {
+        if (!row || typeof row !== "object" || Array.isArray(row)) return true;
+        for (const value of [row.id, row.course_id])
+          if (
+            !["string", "number"].includes(typeof value) ||
+            (typeof value === "number" && !Number.isSafeInteger(value)) ||
+            !/^[1-9][0-9]{0,19}$/.test(String(value))
+          )
+            return true;
+        if (String(row.course_id) !== course || ids.has(String(row.id)))
+          return true;
+        ids.add(String(row.id));
+        return false;
+      })
+    )
+      throw new ProbeError("invalid_collection");
+    if (new TextEncoder().encode(link).length > 16384)
+      throw new ProbeError("invalid_pagination");
+    const following = nextLink(link),
+      next_cursor = following === null ? null : checked(following);
+    if (next_cursor === url) throw new ProbeError("pagination_cycle");
+    return { data, next_cursor };
+  }
+  return { get, list, coursePage, assignmentPage };
 }
 
 const id = (value) => {
