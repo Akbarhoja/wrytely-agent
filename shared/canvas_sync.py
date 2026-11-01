@@ -393,6 +393,12 @@ class CanvasSyncStore:
     def commit_sync_batch(
         self, actor, scan_id, generation, lease_token, batch_key, expected_checkpoint, envelope
     ):
+        if isinstance(envelope, dict) and (
+            envelope.get("schema_version") == 2 or "batch_type" in envelope
+        ):
+            return self._commit_document_batch(
+                actor, scan_id, generation, lease_token, batch_key, expected_checkpoint, envelope
+            )
         if (
             isinstance(envelope, dict)
             and isinstance(envelope.get("resource"), dict)

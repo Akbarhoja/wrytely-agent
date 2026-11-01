@@ -37,6 +37,20 @@ def _change_details(prior, payload):
     }
 
 
+def _validate_canvas_reference(origin, course, value):
+    reference = urlsplit(value)
+    path = unquote(reference.path)
+    base = f"/courses/{course}"
+    if (
+        reference.scheme != "https"
+        or "https://" + reference.netloc != origin
+        or not (path == base or path.startswith(base + "/"))
+        or any(p in (".", "..") for p in path.split("/"))
+        or any(ord(char) < 32 for char in path)
+    ):
+        raise ValueError("Evidence reference outside course")
+
+
 class CanvasEvidenceStore:
     def _stage_canvas_item(self, conn, row, scan, resource_key, batch, item, observed):
         kind = item.kind or (
@@ -46,17 +60,7 @@ class CanvasEvidenceStore:
         )
         payload = item.payload(kind)
         digest = source_digest(payload)
-        reference = urlsplit(item.reference)
-        path = unquote(reference.path)
-        base = f"/courses/{batch.resource.course_id}"
-        if (
-            reference.scheme != "https"
-            or "https://" + reference.netloc != row["origin"]
-            or not (path == base or path.startswith(base + "/"))
-            or any(p in (".", "..") for p in path.split("/"))
-            or any(ord(char) < 32 for char in path)
-        ):
-            raise ValueError("Evidence reference outside course")
+        _validate_canvas_reference(row["origin"], batch.resource.course_id, item.reference)
         if conn.execute(
             "SELECT 1 FROM wrytely_agent.canvas_resource_items WHERE scan_id=%s "
             "AND resource_key=%s AND kind=%s AND provider_id=%s",
@@ -258,6 +262,13 @@ class CanvasEvidenceStore:
                 raise CanvasSyncConflict("resource_not_selected")
             if resource["coverage"] != "open":
                 raise CanvasSyncConflict("resource_terminal")
+            if resource["content_mode"] == "documents":
+                raise CanvasSyncConflict("resource_format_conflict")
+            conn.execute(
+                "UPDATE wrytely_agent.canvas_resources SET content_mode='inline' "
+                "WHERE scan_id=%s AND resource_key=%s",
+                (scan["id"], resource_key),
+            )
             if scan["checkpoint"]["resource"] != resource_key:
                 previous = conn.execute(
                     "SELECT coverage FROM wrytely_agent.canvas_resources "
@@ -335,7 +346,12 @@ class CanvasEvidenceStore:
         ):
             raise CanvasSyncConflict("incomplete_resource")
         course, kind = resource_key.split("/", 1)
-        if kind not in RESOURCE_TYPES:
+        resource_types = (
+            {**RESOURCE_TYPES, "files": {"file"}}
+            if resource["content_mode"] == "documents"
+            else RESOURCE_TYPES
+        )
+        if kind not in resource_types:
             raise CanvasSyncConflict("incomplete_resource")
         items = conn.execute(
             "SELECT kind,provider_id,content_digest FROM "
@@ -355,7 +371,7 @@ class CanvasEvidenceStore:
                 row["id"],
                 subject_digest,
                 course,
-                list(RESOURCE_TYPES[kind]),
+                list(resource_types[kind]),
                 scan["started_at"],
                 scan["id"],
                 resource_key,
