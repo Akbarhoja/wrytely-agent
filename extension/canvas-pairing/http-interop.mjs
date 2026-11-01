@@ -12,6 +12,8 @@ const allowedPaths = new Set(
     "bind",
     "context",
     "scope",
+    "academic/batch",
+    "academic/resource",
     ...["begin", "resume", "batch", "resource", "finish"].map(
       (p) => `discovery/${p}`,
     ),
@@ -28,6 +30,13 @@ const scenarios = [
   "cross_account",
   "collector_two_page",
   "collector_lost_after",
+  "academic_complete",
+  "academic_lost_before",
+  "academic_lost_after",
+  "academic_partial",
+  "academic_scope_changed",
+  "academic_revoke",
+  "academic_cross_account",
 ];
 const environment = new Set([
   "PATH",
@@ -71,6 +80,7 @@ try {
   );
   let injected = false;
   const batchBodies = [];
+  const academicBodies = [];
 
   async function transport(url, init) {
     const requested = new URL(url);
@@ -87,7 +97,17 @@ try {
     assert.equal(init.redirect, "error");
     assert.equal(init.cache, "no-store");
     const isBatch = requested.pathname.endsWith("/discovery/batch");
+    const isAcademic = requested.pathname.endsWith("/academic/batch");
     if (isBatch) batchBodies.push(JSON.parse(init.body));
+    if (isAcademic) academicBodies.push(JSON.parse(init.body));
+    if (
+      isAcademic &&
+      !injected &&
+      ["academic_lost_before", "academic_cross_account"].includes(scenario)
+    ) {
+      injected = true;
+      throw Error("synthetic academic loss before dispatch");
+    }
     if (
       isBatch &&
       !injected &&
@@ -98,6 +118,18 @@ try {
     }
     const response = await fetch(`${target.origin}${requested.pathname}`, init);
     assert.equal(response.headers.get("cache-control"), "no-store");
+    if (
+      isAcademic &&
+      !injected &&
+      scenario === "academic_lost_after" &&
+      response.ok
+    ) {
+      injected = true;
+      await response.arrayBuffer();
+      throw Error(
+        "synthetic academic acknowledgment loss after actual server commit",
+      );
+    }
     if (
       isBatch &&
       !injected &&
@@ -236,9 +268,205 @@ try {
     });
   }
   phase = "begin";
-  if (!scenario.startsWith("collector_")) await alice.client.beginDiscovery();
+  if (!scenario.startsWith("collector_") && !scenario.startsWith("academic_"))
+    await alice.client.beginDiscovery();
 
-  if (scenario.startsWith("collector_")) {
+  if (scenario.startsWith("academic_")) {
+    phase = "academic_scope";
+    const context = await alice.client.readCurrentContext();
+    assert.equal(
+      (
+        await request(`${root}/scope`, "alice", {
+          connection_id: context.connection_id,
+          generation: context.generation,
+          mode: "all_active",
+          course_ids: [],
+          resource_kinds: ["assignments"],
+        })
+      ).status,
+      200,
+    );
+    await alice.fresh().beginDiscovery();
+    await alice.fresh().commitDiscoveryPage(page());
+    await completeCourses(alice.fresh());
+    const assignment = (id, next) => ({
+      resource_key: "101/assignments",
+      observed_at: new Date().toISOString(),
+      next_cursor: next,
+      coverage: {
+        state: next ? "partial" : "complete",
+        reason: next ? "more_pages" : null,
+      },
+      items: [
+        {
+          raw: {
+            id,
+            course_id: 101,
+            name: `Synthetic assignment ${id}`,
+            description: "Synthetic excluded raw HTML",
+            due_at: "2026-11-02T05:59:00Z",
+            unlock_at: null,
+            lock_at: null,
+            points_possible: 20,
+            submission_types: ["online_upload"],
+            rubric: scenario === "academic_partial" && id === 17 ? null : [],
+            published: true,
+          },
+          extracted: {
+            courseId: 101,
+            assignmentId: id,
+            text: `Synthetic extracted instructions ${id}`,
+            coverage: "complete",
+            missing: [],
+          },
+          dateContext: "requesting_student",
+        },
+      ],
+    });
+    phase = "academic_first_page";
+    if (["academic_scope_changed", "academic_revoke"].includes(scenario)) {
+      await assert.rejects(
+        alice.fresh().commitAssignmentPage(assignment(17, "opaque-next")),
+        rejection(
+          scenario === "academic_revoke"
+            ? "reconnect_required"
+            : "discovery_generation_changed",
+        ),
+      );
+      if (scenario === "academic_revoke") assert.deepEqual(alice.data, {});
+      else
+        await assert.rejects(
+          alice.fresh().retryDiscovery(),
+          rejection("discovery_context_changed"),
+        );
+    } else {
+      const lost = [
+        "academic_lost_before",
+        "academic_lost_after",
+        "academic_cross_account",
+      ].includes(scenario);
+      if (lost) {
+        await assert.rejects(
+          alice.fresh().commitAssignmentPage(assignment(17, "opaque-next")),
+          rejection("discovery_outcome_unknown"),
+        );
+        const capture = structuredClone(alice.record().discovery.pending.body);
+        assert.deepEqual(academicBodies[0], capture);
+        assert.ok(
+          !JSON.stringify(alice.record()).includes("excluded raw HTML"),
+        );
+        if (scenario === "academic_cross_account") {
+          phase = "academic_cross_account_denial";
+          const bob = await setup("bob", "8");
+          for (const [path, body] of [
+            ["batch", capture],
+            [
+              "resource",
+              {
+                scan_id: capture.scan_id,
+                generation: capture.generation,
+                lease_token: capture.lease_token,
+                expected_checkpoint: capture.expected_checkpoint,
+                finish_key: "bob-cannot-close-alice",
+                resource_key: "101/assignments",
+                outcome: "complete",
+                reason: null,
+              },
+            ],
+          ]) {
+            const denied = await request(
+              `${root}/academic/${path}`,
+              bob.record().ingestion_bearer,
+              body,
+            );
+            assert.equal(denied.status, 401);
+            for (const secret of [
+              capture.scan_id,
+              capture.envelope.items[0].content,
+              alice.record().ingestion_bearer,
+            ])
+              assert.ok(!JSON.stringify(denied.body).includes(secret));
+          }
+          assert.deepEqual(alice.record().discovery.pending.body, capture);
+        }
+        if (scenario === "academic_lost_after") {
+          phase = "academic_resume_accepted_page";
+          const resumed = await alice.fresh().resumeDiscovery();
+          assert.equal(resumed.checkpoint.resource, "101/assignments");
+          assert.equal(resumed.checkpoint.sequence, 2);
+        }
+        phase = "academic_exact_replay";
+        const recovered = await alice.fresh().retryDiscovery();
+        assert.equal(recovered.checkpoint.sequence, 2);
+        const resent = academicBodies.at(-1);
+        if (scenario === "academic_lost_after") {
+          assert.notEqual(resent.lease_token, capture.lease_token);
+          assert.deepEqual(
+            { ...resent, lease_token: capture.lease_token },
+            capture,
+          );
+        } else assert.deepEqual(resent, capture);
+        assert.equal(alice.record().discovery.academic.page_count, 1);
+      } else
+        await alice.fresh().commitAssignmentPage(assignment(17, "opaque-next"));
+      phase = "academic_terminal_page";
+      const result = await alice
+        .fresh()
+        .commitAssignmentPage(assignment(18, null));
+      assert.equal(result.checkpoint.sequence, 3);
+      assert.equal(alice.record().discovery.academic.seen_count, 2);
+      for (const secret of [
+        "Synthetic",
+        "subject",
+        "lease_token",
+        "ingestion_bearer",
+      ])
+        assert.ok(!JSON.stringify(result).includes(secret));
+      const finish = {
+        resource_key: "101/assignments",
+        outcome: "complete",
+        reason: null,
+      };
+      if (scenario === "academic_partial") {
+        phase = "academic_incomplete_denial";
+        await assert.rejects(
+          alice.fresh().finishAssignmentResource(finish),
+          rejection("invalid_assignment_input"),
+        );
+        assert.equal(alice.record().discovery.pending, null);
+        const record = alice.record(),
+          j = record.discovery;
+        const denied = await request(
+          `${root}/academic/resource`,
+          record.ingestion_bearer,
+          {
+            scan_id: j.scan.scan_id,
+            generation: j.binding.generation,
+            lease_token: j.scan.lease_token,
+            expected_checkpoint: j.scan.checkpoint,
+            finish_key: "cannot-hide-earlier-gap",
+            ...finish,
+          },
+        );
+        assert.equal(denied.status, 409);
+        assert.equal(denied.body.detail.code, "incomplete_resource");
+        finish.outcome = "partial";
+        finish.reason = "extraction_failed";
+      }
+      phase = "academic_resource_manifest";
+      await alice.fresh().finishAssignmentResource(finish);
+      phase = "academic_scan_finish";
+      assert.equal(
+        (await alice.fresh().finishDiscovery()).coverage,
+        scenario === "academic_partial" ? "partial" : "complete",
+      );
+      assert.equal(
+        new Set(academicBodies.map((body) => body.batch_key)).size,
+        2,
+      );
+      assert.equal(alice.courseRequests.length, 0); // Inputs are synthetic; no source collection claim.
+    }
+  } else if (scenario.startsWith("collector_")) {
     phase = "collector_scope";
     const context = await alice.client.readCurrentContext();
     const selected = await request(`${root}/scope`, "alice", {
