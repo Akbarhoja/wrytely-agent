@@ -30,6 +30,20 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+Latest A independent P1-A2 retrieval increment: bounded literal-term discovery on
+codex/p1-document-term-search from #157bc717cf. Existing authorized quote pager
+now supplies exact original proofs for literal terms without known capitalization,
+with bounded continuation, longest/overlapping matches and final access/history
+recheck. New term plus old exact-quote suites: 61 passed (27 new), zero skips, 4.45s.
+Full combined fresh disposable backend: 1,449 passed, zero skips, two existing
+warnings, 106.71s; all 404 extension tests pass. Ruff lint/format (227 files),
+new-doc Prettier/links and diff checks pass. [Evidence](docs/P1-DOCUMENT-TERM-SEARCH.md).
+Internal helper only: no model tool, HTTP/Store/DTO/schema, generator activation or
+M file changes; oversized drafting-context hold remains. #157 still awaits M
+consumer agreement; no dependent read implementation started. M retains #149.
+No live source/model/send/spend/grant/install/retained migration/worker/deploy/main
+merge. P0/P1 remain open; counterpart implementation review pending.
+
 Latest A design slice: private v2 artifact reads proposed on
 codex/p1-private-artifact-read-design from #156cba2073, responding to M's #152
 consumer request. Three scoped list/detail/saved-evidence operations distinguish
