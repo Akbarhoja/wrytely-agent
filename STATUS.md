@@ -30,6 +30,15 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+Latest A follow-up: P1-A2 document-source recovery on
+codex/p1-document-draft-recovery, stacked on #141. Unavailable/stale document evidence
+now stops the generator instead of spending further prose-revision calls. A proposed
+[document-only scope/drafting boundary](docs/contracts/DOCUMENT-DRAFT-SCOPE-v1.md)
+awaits M agreement before task-capability/typed-consumer implementation. No generator
+reference production, document-only activation, HTTP/extension change or deployment
+is claimed. Focused disposable-Postgres38PASS (8 new recovery tests); full disposable backend1254PASS/zero skips/2existingwarnings82.48s. Ruff
+lint/format202files and diff checks pass. Counterpart review pending; P0/P1 remain open.
+
 Latest A increment: **P1-A2 pinned-document draft verification** on
 codex/p1-draft-document-verification, stacked on #140. Internal immutable
 provenance now feeds exact original-section checks before model review and is

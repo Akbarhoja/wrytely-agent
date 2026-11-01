@@ -185,6 +185,8 @@ def generate_checked_draft(
             "rubric_evidence_missing_or_stale",
             "evidence_freshness_failed_at_commit",
             "evidence_unavailable_at_commit",
+            "document_evidence_missing_or_stale",
+            "document_evidence_failed_at_commit",
         }:
             return {"state": "blocked", "artifact_id": artifact["id"], "report": report}
     return {"state": "needs_revision", "artifact_id": artifact["id"], "report": report}
