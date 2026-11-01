@@ -440,5 +440,259 @@
       "canonical_utf8": "{\"content\":\"\",\"coverage\":\"complete\",\"digest_version\":1,\"fields\":{\"extractor_version\":\"fixture.v1\",\"format\":\"text\",\"object_fields\":{\"module_ids\":null,\"page_id\":\"2\",\"source_format\":\"text\"},\"owner_kind\":\"syllabus\",\"slots\":[{\"end\":9,\"page\":null,\"slot\":0,\"start\":0,\"text_sha256\":\"43ff3bf150823915ce847115607ae4b7abe037614f2d69d00384fb9ab69bca27\"}],\"total_characters\":9,\"total_pages\":null},\"kind\":\"document\",\"missing\":[],\"title\":\"Synthetic document\"}",
       "sha256": "2ab8bf7e7adeb45938527ddb230779a906e5f1d60eb150501c355fa49cf2c42e"
     }
+  ],
+  "wire_cases": [
+    {
+      "name": "stage-begin",
+      "input": {
+        "schema_version": 2,
+        "connection_id": "00000000-0000-4000-8000-000000000001",
+        "generation": 1,
+        "scan_id": "00000000-0000-4000-8000-000000000002",
+        "subject": "synthetic-subject",
+        "lease_token": "00000000-0000-4000-8000-000000000003",
+        "request_key": "synthetic-begin",
+        "operation": "begin_document",
+        "resource": {
+          "course_id": "101",
+          "kind": "syllabus"
+        },
+        "owner_object": {
+          "kind": "syllabus",
+          "provider_id": "101"
+        },
+        "object_fields": {
+          "page_id": null,
+          "module_ids": null,
+          "source_format": "text"
+        },
+        "metadata": {
+          "title": "Synthetic document",
+          "format": "text",
+          "extractor_version": "fixture.v1",
+          "provider_updated_at": null,
+          "total_pages": null,
+          "total_characters": 6,
+          "coverage": "complete",
+          "missing": []
+        },
+        "manifest": [
+          {
+            "slot": 0,
+            "start": 0,
+            "end": 6,
+            "page": null,
+            "text_sha256": "73e9053ebabaab674df6a9062f83a8e77e85034de72d150899e979edffb914cb"
+          }
+        ]
+      },
+      "accepted": true,
+      "parser": "staging"
+    },
+    {
+      "name": "stage-put",
+      "input": {
+        "schema_version": 2,
+        "connection_id": "00000000-0000-4000-8000-000000000001",
+        "generation": 1,
+        "scan_id": "00000000-0000-4000-8000-000000000002",
+        "subject": "synthetic-subject",
+        "lease_token": "00000000-0000-4000-8000-000000000003",
+        "request_key": "synthetic-put",
+        "operation": "put_document_parts",
+        "upload_id": "00000000-0000-4000-8000-000000000004",
+        "parts": [
+          {
+            "slot": 0,
+            "text": "Café\n📚"
+          }
+        ]
+      },
+      "accepted": true,
+      "parser": "staging"
+    },
+    {
+      "name": "stage-finish",
+      "input": {
+        "schema_version": 2,
+        "connection_id": "00000000-0000-4000-8000-000000000001",
+        "generation": 1,
+        "scan_id": "00000000-0000-4000-8000-000000000002",
+        "subject": "synthetic-subject",
+        "lease_token": "00000000-0000-4000-8000-000000000003",
+        "request_key": "synthetic-finish",
+        "operation": "finish_document",
+        "upload_id": "00000000-0000-4000-8000-000000000004"
+      },
+      "accepted": true,
+      "parser": "staging"
+    },
+    {
+      "name": "publish-documents",
+      "input": {
+        "schema_version": 2,
+        "batch_type": "canvas_documents",
+        "connection_id": "00000000-0000-4000-8000-000000000001",
+        "generation": 1,
+        "scan_id": "00000000-0000-4000-8000-000000000002",
+        "batch_key": "synthetic-publish",
+        "subject": "synthetic-subject",
+        "resource": {
+          "course_id": "101",
+          "kind": "syllabus"
+        },
+        "observed_at": "2026-11-01T12:00:00Z",
+        "items": [
+          {
+            "kind": "syllabus",
+            "provider_id": "101",
+            "provider_updated_at": null,
+            "title": "Synthetic document",
+            "reference": "https://canvas.example.edu/courses/101/assignments/syllabus",
+            "upload_id": "00000000-0000-4000-8000-000000000004"
+          }
+        ],
+        "coverage": {
+          "state": "complete",
+          "reason": null,
+          "seen_count": 1
+        },
+        "next_cursor": null
+      },
+      "accepted": true,
+      "parser": "publication"
+    },
+    {
+      "name": "staging-forbids-batch-type",
+      "input": {
+        "schema_version": 2,
+        "connection_id": "00000000-0000-4000-8000-000000000001",
+        "generation": 1,
+        "scan_id": "00000000-0000-4000-8000-000000000002",
+        "subject": "synthetic-subject",
+        "lease_token": "00000000-0000-4000-8000-000000000003",
+        "request_key": "synthetic-begin",
+        "operation": "begin_document",
+        "resource": {
+          "course_id": "101",
+          "kind": "syllabus"
+        },
+        "owner_object": {
+          "kind": "syllabus",
+          "provider_id": "101"
+        },
+        "object_fields": {
+          "page_id": null,
+          "module_ids": null,
+          "source_format": "text"
+        },
+        "metadata": {
+          "title": "Synthetic document",
+          "format": "text",
+          "extractor_version": "fixture.v1",
+          "provider_updated_at": null,
+          "total_pages": null,
+          "total_characters": 6,
+          "coverage": "complete",
+          "missing": []
+        },
+        "manifest": [
+          {
+            "slot": 0,
+            "start": 0,
+            "end": 6,
+            "page": null,
+            "text_sha256": "73e9053ebabaab674df6a9062f83a8e77e85034de72d150899e979edffb914cb"
+          }
+        ],
+        "batch_type": "canvas_documents"
+      },
+      "accepted": false,
+      "parser": "staging"
+    },
+    {
+      "name": "publication-requires-batch-type",
+      "input": {
+        "schema_version": 2,
+        "connection_id": "00000000-0000-4000-8000-000000000001",
+        "generation": 1,
+        "scan_id": "00000000-0000-4000-8000-000000000002",
+        "batch_key": "synthetic-publish",
+        "subject": "synthetic-subject",
+        "resource": {
+          "course_id": "101",
+          "kind": "syllabus"
+        },
+        "observed_at": "2026-11-01T12:00:00Z",
+        "items": [
+          {
+            "kind": "syllabus",
+            "provider_id": "101",
+            "provider_updated_at": null,
+            "title": "Synthetic document",
+            "reference": "https://canvas.example.edu/courses/101/assignments/syllabus",
+            "upload_id": "00000000-0000-4000-8000-000000000004"
+          }
+        ],
+        "coverage": {
+          "state": "complete",
+          "reason": null,
+          "seen_count": 1
+        },
+        "next_cursor": null
+      },
+      "accepted": false,
+      "parser": "publication"
+    },
+    {
+      "name": "publication-forbids-staging-operation",
+      "input": {
+        "schema_version": 2,
+        "batch_type": "canvas_documents",
+        "connection_id": "00000000-0000-4000-8000-000000000001",
+        "generation": 1,
+        "scan_id": "00000000-0000-4000-8000-000000000002",
+        "batch_key": "synthetic-publish",
+        "subject": "synthetic-subject",
+        "resource": {
+          "course_id": "101",
+          "kind": "syllabus"
+        },
+        "observed_at": "2026-11-01T12:00:00Z",
+        "items": [
+          {
+            "kind": "syllabus",
+            "provider_id": "101",
+            "provider_updated_at": null,
+            "title": "Synthetic document",
+            "reference": "https://canvas.example.edu/courses/101/assignments/syllabus",
+            "upload_id": "00000000-0000-4000-8000-000000000004"
+          }
+        ],
+        "coverage": {
+          "state": "complete",
+          "reason": null,
+          "seen_count": 1
+        },
+        "next_cursor": null,
+        "operation": "finish_document"
+      },
+      "accepted": false,
+      "parser": "publication"
+    },
+    {
+      "name": "staging-requires-operation",
+      "input": {
+        "schema_version": 2,
+        "connection_id": "00000000-0000-4000-8000-000000000001",
+        "generation": 1,
+        "scan_id": "00000000-0000-4000-8000-000000000002",
+        "subject": "synthetic-subject",
+        "lease_token": "00000000-0000-4000-8000-000000000003",
+        "request_key": "synthetic-begin"
+      },
+      "accepted": false,
+      "parser": "staging"
+    }
   ]
 }

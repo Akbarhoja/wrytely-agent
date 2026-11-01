@@ -195,3 +195,9 @@ Claims must be posted in #4 before implementation. Nobody takes over the other's
 [Historical detailed status](docs/archive/STATUS-through-2026-10-29.md) preserves
 prior runs, authorizations and limitations. Old stage documents are context; this
 revision's scope and work orders determine new implementation.
+
+P0-A3 #118 exact-key clarification: publication uses schema_version2 plus
+batch_type=canvas_documents; staging uses schema_version2 plus its exact operation
+and forbids batch_type. Endpoint-specific dispatch never guesses from version alone.
+Eight synthetic wire examples supplement the unchanged ten canonical vectors. M final
+review requested; no executable upload or agreement/activation inferred.
