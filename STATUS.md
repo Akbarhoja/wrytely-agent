@@ -30,6 +30,17 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+Latest A design slice: private v2 artifact reads proposed on
+codex/p1-private-artifact-read-design from #156cba2073, responding to M's #152
+consumer request. Three scoped list/detail/saved-evidence operations distinguish
+saved check state from current inspection status and preserve exact mixed refs,
+current source authority, source paging and pause semantics. [Proposal](docs/contracts/PRIVATE-ARTIFACT-READ-v2.md)
+awaits counterpart agreement; no application behavior/route/DTO changed. Existing
+v1 projections remain unchanged. Relative document links, Prettier, diff and documentation-only changed-path
+checks pass; no redundant runtime suite or live source/model/send/spend/install/
+deploy was run. M retains
+#149 producer and HTTP/UI ownership; P0/P1 remain open.
+
 Latest A integration: M document staging HTTP #155 exact647c5032014af444eea114992773cbb3b438bb1c
 merged unchanged onto #153f62fb0c on codex/p1-document-api-integration. All5 M files,
 including app/main.py, byte-identical; read review found no blocking issue in scope.
