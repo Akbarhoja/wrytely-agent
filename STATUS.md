@@ -219,6 +219,18 @@ consumer added.53 new focused cases pass; standalone full disposable backend750P
 #121804PASS/10FAIL Mac-harness evidence remains separate and unresolved. M's collector,
 parser, harness and all files unchanged. #118 agreement still gates upload consumers.
 
+P1-A2 internal document storage on codex/p1-document-storage: additive015 stores
+owned immutable section versions/segment IDs and exact observation bindings. Trusted
+transaction-only staging/binding helpers and pinned verified-user/task reads reuse
+current scope/generation/subject/expiry/freshness/lease fences. Unbound/partial writes
+are unreadable; failures roll back all parts/bindings; same-body A→B→A reuses immutable
+sections with distinct checks. Internal section fingerprints are not protocol digests.
+29 new DB tests (first25 focused pass) and full standalone disposable backend779PASS,
+2existingwarnings in36.60s; Ruff lint/format129files/diff clean. Includes cross-account/
+object/root/observation denial, corruption, concurrent dedup, rollback, stale/failed
+checks and lease expiry during read. No #118 upload wire, API, parser, source/model
+promotion, cleanup worker or retained migration. Existing #121 failures remain separate.
+
 ## Next actions
 
 A: obtain #97 Unicode fix review, review/integrate agreed components and add discovery
