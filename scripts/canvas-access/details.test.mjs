@@ -4,7 +4,7 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   CDN_ORIGIN,
   FILE_ORIGIN,
@@ -355,7 +355,7 @@ test("prepared extension has exact permissions and accepts only its own popup", 
       output = join(directory, "unpacked");
     await writeFile(source, JSON.stringify(config));
     execFileSync(process.execPath, [
-      new URL("prepare.mjs", import.meta.url).pathname,
+      fileURLToPath(new URL("prepare.mjs", import.meta.url)),
       source,
       output,
     ]);

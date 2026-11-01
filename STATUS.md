@@ -160,9 +160,20 @@ assignments and12/9 instruction bodies. Four assignment detail samples read but 
 rubric criteria were observed. One discussion topic view read; whole discussion
 coverage remains partial. This passes the bounded PDF retrieval check, not the whole
 P0/collector gate. Live account-switch/natural session-expiry and unattended worker
-recovery evidence remain unproved; counterpart review pending.64 synthetic Node tests
+recovery evidence remain unproved; M reviewed the scoped implementation and found a Windows test-path defect; A fixed
+it with fileURLToPath and refreshed the PR description; Windows re-review pending.
+64 synthetic Node tests
 and685 disposable backend tests passed on100d5a2 before the operator run. No P1
 collector/scheduler/runtime behavior changed; see the dated access record for history.
+
+Latest M handoff: #116 at36c1740 reports17 actual assignment HTTP/Store scenarios
+and721 backend/310 extension tests; A has read the handoff, not independently
+validated those results. M now claims assignment collection; no takeover. A's
+Canvas rubric UI attempt initially hit an origin-approval block; supervisor approved
+inspection and normal CSU NetID navigation recovered Canvas through existing SSO.
+Two additional selected-course assignment pages showed no visible rubric. A known
+positive rubric sample is requested; no new positive rubric proof.
+The dated access record now consolidates the session/content evidence matrix.
 
 ## Next actions
 

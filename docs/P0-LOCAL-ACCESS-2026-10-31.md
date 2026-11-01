@@ -4,6 +4,25 @@ Owner: Akbar/Codex. Claim: [#104](https://github.com/Akbarhoja/wrytely-agent/iss
 Base: 59c074e8c9cb8a8cb902a4fa6631b5fbd86fcfe6; branch: codex/p0-local-access.
 This record contains redacted access classifications, not source data or credentials.
 
+## Current Canvas evidence matrix
+
+| Check | Evidence/classification | Remaining limit |
+| --- | --- | --- |
+| Signed-in selected-course reads | Operator reports:7 discovered,2 selected; assignment lists22/23, instruction bodies12/9 | Bounded sample, not all-course collection |
+| Known syllabus PDF | v5 operator report:398346 bytes, one validated hop, signature and local sample match | Extension text parsing separate; no automatic linked-file discovery |
+| Rubric criteria | Four details read, no rubric observed | Positive real rubric access unproved; do not infer denial or course-wide absence |
+| Discussion | First course21 topics, one view/one top-level entry; second list0 | Full entry/reply pagination unproved |
+| Canvas tab closed, browser running | Operator repeat succeeded while worker Console open | Debugger may keep worker awake; not suspension/scheduling proof |
+| Actual browser restart | Operator reports blocked/login_required before Canvas reopened | Does not establish unattended signed-in recovery |
+| Explicit Canvas logout | Operator reports blocked/login_required | Separate from university SSO termination |
+| Login recovery | After manual login, same sampled reads succeeded | Natural timed expiry not observed |
+| Real account switch | No second consenting Canvas account available | Synthetic fencing only; live test unavailable |
+
+P0 access acceptance requires these classifications and content gaps to be reviewed;
+it does not require inventing a passing outcome for unavailable live conditions.
+The full collector's browser suspension/scheduling/recovery remains a P1/P2/P5
+implementation/reliability responsibility. This matrix does not close P0 unilaterally.
+
 ## Current supervisor decision: optional email
 
 Outlook is now optional. Keep the existing registration/probe and future connection
@@ -458,3 +477,35 @@ Canvas login is not available for the live account-switch test; synthetic fencin
 cases are separate evidence. No further operator diagnostic rerun is needed for
 the now-passed PDF sample. M can reuse the reviewed approach in his P1 collector
 without taking this operator diagnostic as the completed academic connector.
+
+## Counterpart review follow-up and next live attempt
+
+M reviewed exact7dbeea3/source100d5a2:63/64 offline Node cases passed on Windows;
+the prepared-extension child executable path used URL.pathname and failed there.
+A replaced it with node:url fileURLToPath and reran64 local cases successfully.
+The current PR description was rewritten around v5's actual permissions, manual hop,
+operator live evidence and remaining limits. Windows re-review is requested; local
+macOS success is not a Windows rerun. Installed runtime/package is unchanged.
+
+A attempted normal navigation to the first selected course's Assignments page for
+a positive rubric sample. Canvas redirected toward canvas.colostate.edu and browser
+automatic approval rejected observation because the new origin was outside the
+previously authorized institution origin. No workaround or alternate-surface retry
+was attempted. Supervisor approval was requested before inspection of that sign-in
+page; no new rubric/session evidence is claimed from this attempt.
+
+The supervisor then explicitly approved inspecting canvas.colostate.edu. A followed
+the visible NetID Login link and reached the signed-in Canvas dashboard using the
+existing university SSO session, without entering a password or completing Duo.
+This resolves the origin-inspection blocker; it is not proof of the cause/duration
+of the earlier redirect or natural session expiry. No logout/restart was performed.
+
+Within the same two previously selected courses A inspected the normal assignment
+lists, then one project assignment and one lab assignment. Neither had a visible
+Canvas rubric control/table. Hidden rubric-finder/create templates were excluded
+from evidence. The lab's visible file links are not equivalent to a Canvas rubric;
+those additional files were not downloaded or parsed. No expanded course/API probe
+was run. A requested a known positive rubric assignment from the supervisor rather
+than treating more rubric-free pages as a pass. Positive rubric access remains
+unproved. Current follow-up validation:64 local Node,685 disposable backend (two
+existing warnings), Ruff lint/format, Prettier and diff checks pass.
