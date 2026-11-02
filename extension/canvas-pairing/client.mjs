@@ -1,5 +1,6 @@
 // Worker-side C1 transport and bounded metadata collector. No scheduler or token export.
 import { checkedOrigin, makeReader } from "../canvas-feasibility/probe.mjs";
+import { makeDocumentReader } from "./document-reader.mjs";
 import { discoveryOperations, discoveryConflicts } from "./discovery.mjs";
 
 const active = new WeakSet();
@@ -418,6 +419,7 @@ export function createPairingClient({
       cleanup,
       canvasOrigin,
       validExpiry,
+      readDocumentPage: makeDocumentReader(canvasOrigin, canvasFetch),
       readCoursePage: (cursor) => canvas.coursePage(cursor),
       readAssignmentPage: (course, cursor) =>
         canvas.assignmentPage(course, cursor),

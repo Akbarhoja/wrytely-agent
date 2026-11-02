@@ -81,7 +81,7 @@ async function boundedText(response, maxBytes, strict = false) {
   return new TextDecoder("utf-8", { fatal: strict }).decode(bytes);
 }
 
-function nextLink(link) {
+export function nextLink(link) {
   // Consume the whole header; a valid relation must not hide trailing garbage.
   // Commas inside an opaque URL are preserved.
   const links = link
@@ -271,7 +271,10 @@ export function makeReader(originValue, fetchImpl = fetch, maxPages = 10) {
     if (next_cursor === url) throw new ProbeError("pagination_cycle");
     return { data, next_cursor };
   }
-  return { get, list, coursePage, assignmentPage };
+  async function getStrict(path, query = "") {
+    return read(safeURL(path + query, origin, path), true);
+  }
+  return { get, getStrict, list, coursePage, assignmentPage };
 }
 
 const id = (value) => {

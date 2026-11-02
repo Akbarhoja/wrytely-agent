@@ -31,9 +31,73 @@ at most50 slots, including a tested512-slot document. Checked-empty pages work.
 Pagination progress alone does not become a permanent content gap. An actual
 partial document or historical observation still prevents complete coverage.
 
-The browser package includes the journal/producer import closure. Automatic host
-collection still uses the earlier assignment collector; these new methods consume
-already-extracted input. No claim of full automatic Canvas collection follows.
+The browser package includes the journal/producer import closure. The next
+implementation on this same branch connects automatic assignment, syllabus and
+course-page reading as described below. Other source kinds remain unfinished;
+this is not full automatic Canvas coverage.
+
+## Automatic document collection
+
+The host now selects `collectDocumentPage` on the actual pairing client. It
+discovers courses through the existing course collector, then reads selected
+assignments, syllabus HTML and course pages without manually entered course IDs
+or assignment uploads. List pages contain at most four objects; assignment/page
+detail endpoints supply original bodies rather than treating a list row as complete.
+Assignment detail uses effective dates and retains rubric/constraint mapping through
+the existing mapper. The provider behavior follows the official
+[Canvas assignment API](https://developerdocs.instructure.com/services/canvas/resources/assignments).
+
+Every course/detail read checks the expected signed-in profile before and after
+the request. All reads use exact Canvas origin/path, included browser credentials,
+GET, redirect-error and no-store. Pagination reuses the original strict Link parser,
+rejects unknown/duplicate query keys and follows opaque page tokens only within
+the selected course/resource. Provider credentials never leave the browser.
+
+`POST /v1/source-connections/canvas/documents/extract` now reuses the bounded inert
+HTML parser with its full200000-character ceiling, not the earlier24000-character
+assignment projection. It accepts at most four selected-course HTML inputs, exact
+schema2/operation extract_document and current origin/connection/generation/scope.
+The actual trusted implementation `canvas.html.v1` must be enabled by the server's
+extractor configuration. Context is rechecked after conversion. This endpoint
+stores nothing and runs no model. Scripts/embedded/hidden/linked content and parse
+limitations remain explicit partial gaps. Locked bodies are withheld entirely.
+
+Extraction request keys are exactly schema_version, operation, origin, connection_id,
+generation, scope_revision, resource and items. Resource is {course_id,kind}, with
+kind assignments/syllabus/pages. Items are {provider_id,html}, with html string/null.
+Response is {schema_version:2,extractor_version:"canvas.html.v1",resource,items};
+each result item has provider_id,text,coverage:"partial",missing. This is conversion
+only; document begin/parts/finish/batch retain their existing exact wire formats.
+
+The collector feeds converted originals into the existing producer and durable
+upload journal. A suspended worker continues saved document phases or replays the
+pending receipt before another source read. Older unfinished schema1 assignment
+resources finish on their original collector rather than mixing formats mid-resource.
+The host uses the earlier collector only for such compatibility or source kinds
+outside the new document path. No second scheduler, store or source journal exists.
+
+Two additional actual-client/loopback-HTTP/Store scenarios exercise automatic
+two-course collection over three scans each: ten documents initially; unchanged
+second sync reuses roots/events; one changed assignment due date creates one new
+root/event. Thirty observations, eleven roots/events and no fake legacy versions
+are verified. Instructions exceed24000characters and retain their rubric. The
+second scenario loses an accepted publication response and recovers the exact
+request. Every tick recreates the client from persisted worker state. Scans finish
+partial because known extraction/module/file gaps remain; they never claim fully
+up-to-date content.
+
+Validation of this automatic-collection checkpoint:1,599backend tests pass on fresh
+disposable Postgres, zero skips/two existing warnings138.08s;481Node tests pass;
+Ruff lint/format244files, changed-file Prettier and diff checks pass. Thirteen new
+extraction tests plus two real-client loopback scenarios account for the15additional
+backend cases;21new Node cases cover reader, collector and actual host selection.
+The website has no new code in this checkpoint; its previous120tests/TypeScript
+result remains the last evidence. No installed or live collection is claimed.
+
+Files/PDFs and linked document contents, modules, announcements, discussions/replies,
+submissions/grades, student coverage/results screens and installed/live validation
+remain required P1 work. The three source kinds above do not substitute for them.
+The extractor remains default-off; no development server or live browser was enabled.
 
 ## Private result HTTP
 

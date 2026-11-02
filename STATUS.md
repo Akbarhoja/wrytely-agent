@@ -30,6 +30,32 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+Latest P1 collection checkpoint on codex/p1-completion: the actual background host
+now uses the connected document collector for assignments, syllabus HTML and course
+pages. It reuses course discovery, full detail reads, the original rubric/date mapper,
+bounded inert extraction, producer, durable journal and publication. Profile identity
+is checked around each new provider read; redirect/cursor/scope fences remain.
+Scoped POST documents/extract reuses the existing parser with its200000-character
+ceiling and trusted canvas.html.v1 identifier; server configuration stays default-off.
+Known HTML, linked-file and module gaps remain partial. No completeness relaxation.
+
+Two new actual-JS/loopback-HTTP/Store scenarios automatically discover two fixture
+courses and collect ten documents over three scans: unchanged roots/events dedupe;
+one changed due date creates one root/event. Thirty observations, eleven roots/events,
+retained rubric, instructions longer than24000characters, and lost-publication recovery
+pass with a recreated client each tick. Thirteen new extraction HTTP tests and21new
+Node reader/collector/host tests cover bounds, identity changes, selected scope and
+recovery. Full fresh disposable backend1,599PASS/zero skips/2existingwarnings138.08s;
+all481NodePASS; Ruff lint/format244files and diff checks pass. Web code is unchanged
+from the previous120PASS/TypeScript checkpoint. [Details](docs/P1-CONNECTED-PUBLICATION.md).
+
+P1 remains open: files/PDFs and linked contents, modules, announcements, discussions/
+replies, submissions/grades, connections/coverage/private-result UI and combined
+installed/live acceptance remain. No live source/model/send/spend/grant/install,
+retained migration, continuous-worker activation, deployment or main merge occurred.
+The older statement below that the host only uses the short-text assignment path
+is superseded; the remaining source kinds are still not automatically collected.
+
 P1 connected implementation checkpoint on codex/p1-completion: added actual private
 document batch publication HTTP and document phases inside the existing durable
 client journal. Staging parts are bounded to50/request;512 slots and five documents

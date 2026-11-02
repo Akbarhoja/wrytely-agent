@@ -2,6 +2,19 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createCanvasHost, HOST_ALARMS } from "./host.mjs";
 
+test("background host uses the connected document collector when available", async () => {
+  const f = fixture();
+  let documents = 0;
+  f.options.client.collectDocumentPage = async () => {
+    documents++;
+    return { state: "progress", action: "document_step", seen_count: 2 };
+  };
+  await f.host.enable();
+  await f.host.collect();
+  assert.equal(documents, 1);
+  assert.ok(!f.events.includes("collect"));
+});
+
 function fixture() {
   const data = {},
     events = [],

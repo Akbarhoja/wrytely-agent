@@ -16,7 +16,9 @@ const allowedPaths = new Set(
     "academic/batch",
     "academic/resource",
     "academic/extract",
-    ...["begin", "parts", "finish", "batch"].map((p) => `documents/${p}`),
+    ...["begin", "parts", "finish", "batch", "extract"].map(
+      (p) => `documents/${p}`,
+    ),
     ...["begin", "resume", "batch", "resource", "finish"].map(
       (p) => `discovery/${p}`,
     ),
@@ -42,6 +44,8 @@ const scenarios = [
   "academic_cross_account",
   "assignment_collector_lifecycle",
   "assignment_collector_lost_after",
+  "auto_documents_lifecycle",
+  "auto_documents_lost_batch",
   "document_complete",
   "document_empty",
   "document_syllabus",
@@ -133,7 +137,9 @@ try {
     if (
       documentAction &&
       !injected &&
-      scenario === `document_lost_${documentAction}` &&
+      (scenario === `document_lost_${documentAction}` ||
+        (scenario === "auto_documents_lost_batch" &&
+          documentAction === "batch")) &&
       response.ok
     ) {
       injected = true;
@@ -234,8 +240,82 @@ try {
           assert.equal(init.redirect, "error");
           assert.equal(init.cache, "no-store");
           assert.ok(init.signal instanceof AbortSignal);
-          if (url === `${canvasOrigin}/api/v1/users/self/profile`)
-            return Response.json({ id: provider });
+          if (url === `${canvasOrigin}/api/v1/users/self/profile`) {
+            const response = Response.json({ id: provider });
+            Object.defineProperty(response, "url", { value: url });
+            return response;
+          }
+          if (scenario.startsWith("auto_documents_")) {
+            const parsed = new URL(url),
+              match = parsed.pathname.match(
+                /^\/api\/v1\/courses\/(101|102)(?:\/(assignments|pages)(?:\/(\d+))?)?$/,
+              );
+            if (match) {
+              const [, course, kind, id] = match;
+              const assignment = (n) => ({
+                id: n,
+                course_id: Number(course),
+                name: `Automatic assignment ${n}`,
+                description: `<p>${"Long instruction. ".repeat(1800)}</p><script>PRIVATE_SCRIPT</script>`,
+                due_at:
+                  collectionRound === 2 && n === 17
+                    ? "2026-11-04T00:00:00Z"
+                    : "2026-11-03T00:00:00Z",
+                unlock_at: null,
+                lock_at: null,
+                points_possible: 20,
+                submission_types: ["online_upload"],
+                published: true,
+                rubric: [
+                  {
+                    id: "criterion",
+                    description: "Explain evidence",
+                    points: 20,
+                    ratings: [],
+                  },
+                ],
+              });
+              let body,
+                link = "";
+              if (!kind)
+                body = {
+                  id: Number(course),
+                  name: `Automatic course ${course}`,
+                  syllabus_body: "<p>Attendance is required.</p>",
+                };
+              else if (kind === "assignments") {
+                if (id) body = assignment(Number(id));
+                else {
+                  const second = parsed.searchParams.get("page") === "2";
+                  assert.equal(parsed.searchParams.get("per_page"), "4");
+                  assert.equal(
+                    parsed.searchParams.get("override_assignment_dates"),
+                    "true",
+                  );
+                  body =
+                    course === "101"
+                      ? second
+                        ? [assignment(21)]
+                        : [17, 18, 19, 20].map(assignment)
+                      : [assignment(30)];
+                  if (course === "101" && !second)
+                    link = `<${url}&page=2>; rel="next"`;
+                }
+              } else
+                body = id
+                  ? {
+                      page_id: Number(id),
+                      title: "Course page",
+                      body: "<p>Office hours on Tuesday.</p>",
+                    }
+                  : [{ page_id: 40 }];
+              const response = Response.json(body, {
+                headers: link ? { link } : {},
+              });
+              Object.defineProperty(response, "url", { value: url });
+              return response;
+            }
+          }
           if (scenario.startsWith("assignment_collector_")) {
             const match = new URL(url).pathname.match(
               /^\/api\/v1\/courses\/(101|102)\/assignments$/,
@@ -272,7 +352,8 @@ try {
           }
           assert.ok(
             scenario.startsWith("collector_") ||
-              scenario.startsWith("assignment_collector_"),
+              scenario.startsWith("assignment_collector_") ||
+              scenario.startsWith("auto_documents_"),
           );
           assert.ok([courseStart, courseNext].includes(url));
           courseRequests.push(url);
@@ -352,11 +433,52 @@ try {
     !scenario.startsWith("collector_") &&
     !scenario.startsWith("academic_") &&
     !scenario.startsWith("assignment_collector_") &&
-    !scenario.startsWith("document_")
+    !scenario.startsWith("document_") &&
+    !scenario.startsWith("auto_documents_")
   )
     await alice.client.beginDiscovery();
 
-  if (scenario.startsWith("document_")) {
+  if (scenario.startsWith("auto_documents_")) {
+    const context = await alice.fresh().readCurrentContext();
+    assert.equal(
+      (
+        await request(`${root}/scope`, "alice", {
+          connection_id: context.connection_id,
+          generation: context.generation,
+          mode: "all_active",
+          course_ids: [],
+          resource_kinds: ["assignments", "syllabus", "pages"],
+        })
+      ).status,
+      200,
+    );
+    for (collectionRound = 0; collectionRound < 3; collectionRound++) {
+      if (collectionRound) await alice.fresh().beginDiscovery();
+      let finished = false;
+      for (let tick = 0; tick < 120; tick++) {
+        phase = "automatic_document_tick";
+        const result = await alice.fresh().collectDocumentPage();
+        if (result.state === "blocked") {
+          assert.equal(scenario, "auto_documents_lost_batch");
+          assert.equal(result.reason, "discovery_outcome_unknown");
+          continue; // Next tick replays durable pending request before re-reading.
+        }
+        assert.ok(!JSON.stringify(result).includes("Long instruction"));
+        if (result.state === "finished") {
+          assert.equal(result.coverage, "partial");
+          finished = true;
+          break;
+        }
+      }
+      assert.ok(finished);
+    }
+    assert.equal(alice.record().discovery.document, null);
+    if (scenario === "auto_documents_lost_batch") {
+      assert.ok(injected);
+      const requests = documentBodies.filter((x) => x.action === "batch");
+      assert.deepEqual(requests[0], requests[1]);
+    }
+  } else if (scenario.startsWith("document_")) {
     phase = "document_scope";
     await alice.fresh().beginDiscovery();
     await alice.fresh().commitDiscoveryPage(page());

@@ -53,6 +53,15 @@ No new paid allowance, migration, runtime, queue or source activation is implied
 
 ## Implemented private v2 artifact Store reads
 
+P1 collection assembly now also registers POST
+`/v1/source-connections/canvas/documents/extract`. Exact schema2/operation
+extract_document, current ingestion connection/generation/scope and selected-course
+resource are required. At most four HTML items pass through the original bounded
+parser; actual extractor canvas.html.v1 must be enabled by server configuration.
+It returns text and explicit partial gaps, stores nothing and rechecks context after
+conversion. The host connects assignment/syllabus/page reads to the original document
+producer/journal/publication. [Scope and remaining gaps](docs/P1-CONNECTED-PUBLICATION.md).
+
 November1 P1 reassignment implementation: the proposed `/v2` list/detail/evidence
 HTTP routes are now registered with verified sessions, no-store, strict queries and
 bounded encoded cursors. The website proxy explicitly forwards these GET routes;

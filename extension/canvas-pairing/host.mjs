@@ -255,7 +255,9 @@ export function createCanvasHost({
             completion:
               current.state === "finished"
                 ? client.beginDiscovery()
-                : client.collectAssignmentPage(),
+                : (
+                    client.collectDocumentPage ?? client.collectAssignmentPage
+                  ).call(client),
           };
         });
         if (dispatch.cancelled) return dispatch.status;

@@ -42,6 +42,8 @@ SCENARIOS = (
     "academic_cross_account",
     "assignment_collector_lifecycle",
     "assignment_collector_lost_after",
+    "auto_documents_lifecycle",
+    "auto_documents_lost_batch",
     "document_complete",
     "document_empty",
     "document_syllabus",
@@ -74,7 +76,11 @@ def interop_service(canvas_store, scenario, monkeypatch):
             settings,
             store=canvas_store,
             verifier=SessionVerifier(),
-            canvas_document_extractors=("fixture.v1",) if scenario.startswith("document_") else (),
+            canvas_document_extractors=("canvas.html.v1",)
+            if scenario.startswith("auto_documents_")
+            else ("fixture.v1",)
+            if scenario.startswith("document_")
+            else (),
         )
     injected = False
     snapshots = []
@@ -202,7 +208,43 @@ def test_actual_client_http_contract(canvas_store, interop_service, scenario, mo
         versions = conn.execute(
             "SELECT count(*) AS n FROM wrytely_agent.source_versions"
         ).fetchone()["n"]
-        if scenario.startswith("document_"):
+        if scenario.startswith("auto_documents_"):
+            assert versions == 0 and catalog == 2 and batches == 27
+            assert (
+                conn.execute(
+                    "SELECT count(*) AS n FROM wrytely_agent.canvas_evidence_observations"
+                ).fetchone()["n"]
+                == 30
+            )
+            assert (
+                conn.execute(
+                    "SELECT count(*) AS n FROM wrytely_agent.canvas_evidence_events"
+                ).fetchone()["n"]
+                == 11
+            )
+            assert (
+                conn.execute(
+                    "SELECT count(*) AS n FROM wrytely_agent.canvas_document_versions"
+                ).fetchone()["n"]
+                == 11
+            )
+            text = conn.execute(
+                "SELECT text FROM wrytely_agent.canvas_document_sections "
+                "ORDER BY length(text) DESC LIMIT 1"
+            ).fetchone()["text"]
+            assert "PRIVATE_SCRIPT" not in text
+            long_root = conn.execute(
+                "SELECT total_characters FROM wrytely_agent.canvas_document_versions "
+                "ORDER BY total_characters DESC LIMIT 1"
+            ).fetchone()["total_characters"]
+            assert long_root > 24000
+            rubric = conn.execute(
+                "SELECT payload->'fields'->'object_fields'->'rubric' AS rubric "
+                "FROM wrytely_agent.canvas_evidence_observations "
+                "WHERE resource_key LIKE '%%/assignments' LIMIT 1"
+            ).fetchone()["rubric"]
+            assert rubric[0]["description"] == "Explain evidence"
+        elif scenario.startswith("document_"):
             assert versions == 0
             observations = conn.execute(
                 "SELECT count(*) AS n FROM wrytely_agent.canvas_evidence_observations"

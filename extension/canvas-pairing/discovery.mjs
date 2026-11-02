@@ -1,6 +1,7 @@
 // Private worker helper. Public callers receive neither credentials nor writer leases.
 import { collectCourseTick, collectAssignmentTick } from "./collector.mjs";
 import { documentPipeline, documentOperation } from "./document-journal.mjs";
+import { collectDocumentTick } from "./document-collector.mjs";
 import { sourceDigest } from "../canvas/source-digest.mjs";
 import {
   assignmentKey,
@@ -122,6 +123,7 @@ export function discoveryOperations({
   validExpiry,
   readCoursePage,
   readAssignmentPage,
+  readDocumentPage,
 }) {
   function checkpoint(value, revision) {
     if (
@@ -1170,6 +1172,8 @@ export function discoveryOperations({
         : 0,
       open_keys: j ? j.required.filter((key) => !j.closed.includes(key)) : [],
       academic: j?.academic ? clone(j.academic) : null,
+      document_active: !!j?.document,
+      document_journal: j?.version === 3,
       selected_courses: [...context.course_ids],
     };
   };
@@ -1272,6 +1276,46 @@ export function discoveryOperations({
         } catch {
           fail("assignment_extraction_invalid");
         }
+      },
+    });
+  operations.collectDocumentPage = () =>
+    collectDocumentTick({
+      operations,
+      inspect: inspectCollection,
+      origin: canvasOrigin,
+      conflicts: discoveryConflicts,
+      readPage: async (course, kind, cursor) => {
+        const p = await prepare();
+        available(p.j);
+        if (
+          !p.context.course_ids.includes(course) ||
+          !p.context.resource_kinds.includes(kind)
+        )
+          fail("discovery_resource_not_selected");
+        const page = await readDocumentPage(
+          course,
+          kind,
+          cursor,
+          p.j.binding.subject,
+        );
+        await prepare();
+        return page;
+      },
+      extract: async (course, kind, items) => {
+        const p = await prepare();
+        available(p.j);
+        const extracted = await rpc(p, "document_extract", {
+          schema_version: 2,
+          operation: "extract_document",
+          origin: canvasOrigin,
+          connection_id: p.j.binding.connection_id,
+          generation: p.j.binding.generation,
+          scope_revision: p.j.binding.scope_revision,
+          resource: { course_id: course, kind },
+          items,
+        });
+        await prepare();
+        return extracted;
       },
     });
   Object.assign(operations, documents.operations);
