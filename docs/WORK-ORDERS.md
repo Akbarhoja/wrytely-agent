@@ -6,19 +6,24 @@ A = Akbar with Codex; M = Murtazo. Each item has exactly one accountable enginee
 the other reviews. Akbar's account/legal/product decisions are separate from M's
 technical ownership. No item grants new live permissions or spending automatically.
 
-## Execution rules
+## Execution rules — streamlined by Akbar November 1
 
-1. Read AGENTS.md, TEAM.md, STATUS.md, CONTRACTS.md, this work order, and issue #4.
-2. Claim one item in GitHub with owner, exact branch/base, file list, dependencies and
-   acceptance. Existing claims cannot be duplicated. Do not push another owner's branch.
-3. Agree changed interfaces before dependent implementation. A owns storage/schema/contracts;
-   M owns HTTP/provider assembly. M requests shared methods, never creates a parallel store.
-4. Implement one coherent slice, focused tests, applicable CI and opposite-owner review.
-   A large work order can use several small sequential PRs under the same owner.
-5. Record evidence as code/scripted/live separately. Exact combined-head tests are required
-   after integration; component suites do not prove the assembled system works.
-6. Update one status row and post a concise handoff in #4: interface, commit, evidence,
-   remaining blocker and next eligible item. Never take over because the other person waits.
+1. Follow current scope/ownership and check active work before editing.
+2. Record one brief owner/branch/feature entry; no acknowledgment, issue or exact-file
+   claim is needed for each routine substep. Do not duplicate work or push another branch.
+3. Interface owners version/document decisions and implement within their scope.
+   Notify consumers asynchronously; mandatory agreement rounds are removed, including
+   #157. Stop affected work only for concrete incompatibility/conflicting edits.
+4. Deliver complete reviewable features, with focused checks while building and combined
+   regression checks at integration. Avoid separate PRs for every helper/proposal.
+5. Keep counterpart feature review and actual required human approval/CI/main protection.
+   Code/scripted/live evidence remain distinct; tests do not prove live acceptance.
+6. Update STATUS/#4 on meaningful handoffs, blockers and completion. Ownership changes,
+   live access/spending/deployment and release still require applicable authorization.
+
+This supervisor decision overrides older agreement/claim prerequisites throughout
+these work orders and linked proposals. It does not mark unimplemented APIs available
+or remove correctness, privacy, account isolation and actual acceptance requirements.
 
 October31 latest supervisor decision reassigns P0-M1 and P0-M2 access completion
 to A under #104, superseding the prior return to M. M acknowledged and paused duplicate

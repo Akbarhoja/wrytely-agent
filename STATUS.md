@@ -30,6 +30,16 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+Supervisor execution update: Akbar explicitly removed mandatory routine agreement
+and exact-file claim gates. Owners proceed with versioned interfaces and asynchronous
+coordination; changes are batched into complete features. Required human merge review,
+CI, correctness, privacy and live budgets remain. This overrides older “#157 awaiting
+agreement” notes: A may implement private v2 result reads now. Ownership is unchanged;
+M retains document journal/upload/publication HTTP and UI assembly. Next product
+priority is the connected Canvas document pipeline and visible private results, then
+P2 supervision—not additional standalone helpers. No application behavior changed
+in this process update; stage/live completion remains unchanged.
+
 Latest A runtime investigation on codex/p1-task-handoff-audit from #161e696be0:
 100 isolated synthetic typed plan→academic handoffs passed (18.86s); original
 intermittent claim failure was not reproduced and is not marked fixed. Added

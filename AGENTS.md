@@ -22,7 +22,7 @@ stage exists in a document.
 - Runtime/shared/contracts: lead engineer owns design and integration review.
 - Integrations/app/web/deploy: Murtazo owns the integration work orders.
 - `app/` connects concrete implementations; runtime depends on contracts.
-- One coherent PR per stage/fix. Use `codex/` for Codex branches.
+- One coherent PR per complete feature or substantial fix. Use `codex/` for Codex branches.
 - Review Murtazo's diff, tests, interface compliance and integrated behavior
   before merging. Report observations to Akbar without claiming unseen work passed.
 - Murtazo is murtazokhon-tech. Project communication in GitHub issues/PRs is
@@ -52,30 +52,38 @@ Live provider calls require a configured development key and explicit test budge
 Continue until all work-order checks pass or record the precise remaining blocker.
 Update STATUS.md with actual evidence and limits. Do not commit `.env` or `.venv`.
 
-## Mandatory ownership and coordination gate
+## Streamlined execution — supervisor decision November 1
 
-Before implementation, read TEAM.md and the pinned coordination issue linked
-there. Claim one work item with owner, branch, files and acceptance checks. Check
-other active claims. Codex may implement runtime/shared/contracts and their tests;
-Murtazo implements messaging/sources/app/web/deploy and their tests. Existing
-scaffolds must be reused. Never duplicate another owner's module or take over
-because they are absent, blocked or slow. Only Akbar may explicitly reassign work;
-record his authorization in the issue before crossing scope.
+Akbar explicitly removed routine agreement gates and excessive coordination overhead.
+This section supersedes older mandatory claim/consumer-agreement wording in plans,
+proposals and historical issue comments, including the pending #157 design gate.
 
-If a dependency or shared file is needed, post the precise requested interface or
-change in the coordination issue and wait for agreement from its owner. Continue
-unblocked work inside your own scope. A file claim with another owner blocks edits
-until they release it or Akbar reassigns it. Do not push into another's branch.
-Every implementation PR links its claimed issue and documents tests, interface
-changes, limits and handoff. Review the other engineer's changes and integrate
-through PRs. Mark done only after acceptance evidence and review. Existing draft
-baseline PR #3 predates this claim gate; the gate applies to new implementation.
+Keep one owner per implementation area and check active work before editing. Record
+one concise owner/branch/feature entry at the start of a substantial feature; an
+acknowledgment, issue number or exact-file claim is not permission to begin owned work.
+Do not duplicate active work, silently take another engineer's files or push their branch.
+Only Akbar reassigns ownership; his current instruction does not reassign M's journal.
+
+The interface owner may decide, document and implement a versioned boundary in their
+scope immediately. Notify the consumer asynchronously with concrete signatures,
+examples and tests; do not wait for a ceremonial agreement. Pause only the affected
+work for a concrete incompatibility, conflicting active edits or an actual required
+external decision. A owns Store/contracts/runtime; M owns HTTP/extension/UI assembly.
+Existing code must be reused; no parallel store, journal or runtime.
+
+Batch related changes into complete, reviewable features. Do not create a separate
+proposal/PR/handoff for each utility or routine substep. Use focused checks while
+building and combined regression checks before feature review/integration. Preserve
+required independent human approval, CI and protected-branch rules for merging.
+Update STATUS and #4 at meaningful handoffs, blockers or feature completion; no
+repeated approval prompts or unchanged-status comments. Mark capability complete
+only with its actual acceptance evidence.
 
 ## Current execution order
 
 Follow P0–P6 in docs/WORK-ORDERS.md. Read the code audit before replacing existing
-modules. New shared interfaces require counterpart agreement; planned names are not
-implemented methods. Tests belong to the implementation owner. Preserve historical
+modules. Interface owners publish versioned decisions and proceed; planned names are not
+implemented methods until code exists. Tests belong to the implementation owner. Preserve historical
 evidence, active budget limits and current blockers when shortening status notes.
 Documentation-only changes require formatting/link/diff checks; unchanged application
 code does not need a redundant local executable suite. CI evidence remains separate.
