@@ -30,6 +30,24 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+Latest A integration: M document-parts producer #159 exact95465a82c99e481cebd42a64f1f245152ee2b37b
+merged unchanged onto #158385d5b2 on codex/p1-document-parts-integration. All five
+M files byte-identical; scoped read review found no blocker. All 460 extension
+Node cases and 14 actual JavaScript/Python validator cases pass (0.18s). Full
+combined fresh disposable backend: 1,463 passed, zero skips, two existing warnings,
+103.26s. Ruff lint/format (230 files), scoped Prettier,
+byte/diff checks pass. [Review](docs/P1-DOCUMENT-PARTS-INTEGRATION.md).
+Producer remains unbundled/unwired; M retains journal/upload/publication assembly.
+No new source/model/send/spend/grant/install/retained migration/worker/deploy/main
+merge. Counterpart implementation review/new CI remain separate.
+
+P0 Canvas classification now has M's separate technical acceptance6565232797:
+signed-in/tab/session-required, all live gaps retained. Closure record updated;
+this is not unattended operation or human baseline approval. Fresh #46 remains
+open/unmerged/blocked with no formal reviews; baseline approval/merge and WhatsApp
+remain open. #157 private-result agreement is still pending; no dependent consumer
+implementation started. P0/P1 remain open; Outlook optional/paused.
+
 Latest A independent P1-A2 retrieval increment: bounded literal-term discovery on
 codex/p1-document-term-search from #157bc717cf. Existing authorized quote pager
 now supplies exact original proofs for literal terms without known capitalization,
