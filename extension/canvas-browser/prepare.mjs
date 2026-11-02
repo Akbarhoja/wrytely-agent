@@ -20,6 +20,7 @@ const runtimeFiles = [
   "canvas-pairing/document-journal.mjs",
   "canvas-pairing/document-reader.mjs",
   "canvas-pairing/document-collector.mjs",
+  "canvas-pairing/submission-documents.mjs",
   "canvas/document-parts.mjs",
   "canvas-pairing/collector.mjs",
   "canvas-pairing/assignment-page.mjs",

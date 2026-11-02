@@ -44,6 +44,7 @@ const scenarios = [
   "academic_cross_account",
   "assignment_collector_lifecycle",
   "assignment_collector_lost_after",
+  "auto_documents_status",
   "auto_documents_restricted",
   "auto_documents_topics",
   "auto_documents_lifecycle",
@@ -248,6 +249,47 @@ try {
             return response;
           }
           if (scenario.startsWith("auto_documents_")) {
+            const statusMatch = new URL(url).pathname.match(
+              /^\/api\/v1\/courses\/(101|102)\/students\/submissions$/,
+            );
+            if (statusMatch) {
+              const course = statusMatch[1],
+                assignment_id = course === "101" ? 17 : 30;
+              assert.equal(
+                new URL(url).searchParams.get("include[]"),
+                "assignment",
+              );
+              assert.equal(
+                new URL(url).searchParams.has("student_ids[]"),
+                false,
+              );
+              const response = Response.json([
+                {
+                  id: 90,
+                  assignment_id,
+                  user_id: Number(provider),
+                  assignment: {
+                    id: assignment_id,
+                    course_id: Number(course),
+                    name: "Status assignment",
+                    points_possible: 20,
+                    grading_type: "points",
+                  },
+                  submitted_at: "2026-11-01T00:00:00Z",
+                  workflow_state: "graded",
+                  attempt: 1,
+                  late: false,
+                  missing: false,
+                  score: collectionRound === 2 && course === "101" ? 18 : 12,
+                  grade:
+                    collectionRound === 2 && course === "101" ? "18" : "12",
+                  body: "PRIVATE_SUBMISSION_BODY",
+                  submission_comments: [{ comment: "PRIVATE_FEEDBACK" }],
+                },
+              ]);
+              Object.defineProperty(response, "url", { value: url });
+              return response;
+            }
             const parsed = new URL(url),
               match = parsed.pathname.match(
                 /^\/api\/v1\/courses\/(101|102)(?:\/(assignments|pages|discussion_topics)(?:\/(\d+))?)?$/,
@@ -484,7 +526,9 @@ try {
             "pages",
             ...(scenario === "auto_documents_topics"
               ? ["announcements", "discussions"]
-              : []),
+              : scenario === "auto_documents_status"
+                ? ["submissions", "grades"]
+                : []),
           ],
         })
       ).status,

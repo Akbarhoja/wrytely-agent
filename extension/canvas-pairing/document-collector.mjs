@@ -1,8 +1,9 @@
 // One durable connector step. No independent scheduler, journal or raw-body cache.
+import { prepareSubmissionDocuments } from "./submission-documents.mjs";
 import { mapAssignmentObservation } from "../canvas/assignment-observation.mjs";
 
 const supported = (key) =>
-  /^[1-9][0-9]{0,19}\/(assignments|syllabus|pages|announcements|discussions)$/.test(
+  /^[1-9][0-9]{0,19}\/(assignments|syllabus|pages|announcements|discussions|submissions|grades)$/.test(
     key,
   );
 const controlled = new Set([
@@ -101,6 +102,8 @@ export async function prepareCollectedDocuments({
     page.data.length > 4
   )
     throw Error();
+  if (["submissions", "grades"].includes(kind))
+    return prepareSubmissionDocuments({ resource_key, page, origin });
   const inputs = page.data.map((raw) => {
     const provider_id = String(
       kind === "syllabus" ? course : kind === "pages" ? raw.page_id : raw.id,

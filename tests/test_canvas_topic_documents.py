@@ -11,7 +11,13 @@ from test_canvas_sync import device as device
 
 
 @pytest.mark.parametrize(
-    "resource,kind", [("announcements", "announcement"), ("discussions", "discussion")]
+    "resource,kind",
+    [
+        ("announcements", "announcement"),
+        ("discussions", "discussion"),
+        ("submissions", "submission"),
+        ("grades", "grade"),
+    ],
 )
 def test_topic_originals_keep_resource_identity_gaps_replay_and_access_controls(
     device, resource, kind
@@ -31,6 +37,24 @@ def test_topic_originals_keep_resource_identity_gaps_replay_and_access_controls(
             "due_at": None,
         }
     )
+    if kind == "submission":
+        body["object_fields"] = {
+            "assignment_id": "50",
+            "submitted_at": None,
+            "workflow_state": "unsubmitted",
+            "attempt": 0,
+            "late": False,
+            "missing": True,
+        }
+    elif kind == "grade":
+        body["object_fields"] = {
+            "assignment_id": "50",
+            "score": None,
+            "points_possible": "20",
+            "grading_type": "points",
+            "grade": None,
+            "grade_basis": "provider_reported_attempt_unverified",
+        }
     body["metadata"].update(coverage="partial", missing=["linked_content_unread"])
     api = client_for(device)
     upload = checked(post(api, device, "/begin", body))
@@ -39,7 +63,9 @@ def test_topic_originals_keep_resource_identity_gaps_replay_and_access_controls(
     value = page(device, scan, body, upload)
     value["resource"]["kind"] = resource
     value["coverage"].update(state="partial", reason="extraction_failed")
-    value["items"][0]["reference"] = "https://canvas.example.edu/courses/101/discussion_topics/50"
+    value["items"][0]["reference"] = "https://canvas.example.edu/courses/101/" + (
+        "assignments/50" if kind in {"submission", "grade"} else "discussion_topics/50"
+    )
     wrapper = {
         "scan_id": scan["scan_id"],
         "generation": body["generation"],

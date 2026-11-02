@@ -162,6 +162,59 @@ TypeScript pass. These are local/synthetic results, not installed/live validatio
 Discussion replies, modules, files/PDFs and linked contents, submissions/grades,
 student screens and installed/live acceptance remain P1 work.
 
+## Read-only submission status and assignment grades
+
+The document pipeline now also accepts submissions/submission and grades/grade,
+using the existing EvidenceItem field sets. The host reads the course-scoped
+students/submissions GET endpoint with include[]=assignment, four items per page.
+It omits student_ids so Canvas uses the calling student, then independently checks
+every returned user_id against the paired signed-in subject. Included assignment
+ID/course must match; missing/mismatched assignment context rejects. Pagination
+cannot add student_ids=all or escape into a different course, quiz or attempt path.
+The documented read behavior comes from the official
+[Canvas submissions API](https://developerdocs.instructure.com/services/canvas/resources/submissions).
+
+Submission projection stores assignment ID, submitted time, workflow state, attempt
+number and observed late/missing booleans. Missing flags remain null with explicit
+gaps. Grade projection stores the provider's assignment score, points possible,
+grading type and grade. A null grade remains unknown; it is never zero or a guessed
+course total. grade_basis distinguishes provider_reported_current_attempt,
+provider_reported_previous_attempt and provider_reported_attempt_unverified using
+Canvas's observed grade_matches_current_submission flag. Missing verification is
+not treated as true. Excusal and no-longer-visible-assignment flags remain explicit
+gaps, with unknown flags separately marked. No weighted average or pass/fail
+inference is introduced.
+
+These are explicit selected-field JSON projections, marked partial, rather than
+claims to have read full submissions or feedback. The trusted local formatter is
+canvas.json.v1 and must be enabled in server extractor configuration before document
+staging; defaults remain off. It reuses the producer, canonical numeric formatter,
+durable journal, original-section storage and publication. JSON projection omits
+provider user IDs, submission bodies, feedback and uncollected extra fields. It
+does not pass JSON through the HTML converter or add another persistence layer.
+
+The synthetic automatic status scenario discovers two courses, collects status and
+grade documents, repeats unchanged input, then changes one grade and one assignment
+deadline. Original projections stay private and source changes create distinct
+roots/events. Additional actual Store/HTTP cases cover these new owner pairs,
+source retrieval, replay and account isolation. Node cases verify current-user-only
+GETs, no quiz navigation, unknown grades/flags and projection bounds.
+
+Final validation:1,607backend tests pass on fresh disposable Postgres with zero skips
+and two existing warnings157.60s;512Node tests pass. Ruff lint/format245files,
+changed-file Prettier, documentation links and diff checks pass. Three backend
+cases are added (one actual-client scenario and two new Store/HTTP owner pairs),
+plus nineteen Node cases. The earlier full run before grade-attempt refinement
+passed1,607tests152.50s; the final run includes that refinement. Website code is
+unchanged from the prior120tests/TypeScript pass. These results are synthetic/local,
+not live collection proof. Submission bodies/feedback, complete course grade basis,
+modules, discussion replies, files/linked contents and student screens remain work.
+
+Quiz handling is passive-only as recorded in BUILD-PLAN/WORK-ORDERS. Existing quiz
+assignment/status information can be read without starting an attempt. No quiz
+start/resume/question/attempt endpoints or provider writes are called. Quiz-specific
+time-limit/question support is not claimed by these status reads.
+
 ## Private result HTTP
 
 These verified-session GET routes now call the existing private v2 Store methods:

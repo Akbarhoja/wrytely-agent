@@ -14,12 +14,23 @@ PAIRS = {
     "files": "file",
     "announcements": "announcement",
     "discussions": "discussion",
+    "submissions": "submission",
+    "grades": "grade",
 }
 
 
 class DocumentResource(Strict):
     course_id: str
-    kind: Literal["assignments", "syllabus", "pages", "files", "announcements", "discussions"]
+    kind: Literal[
+        "assignments",
+        "syllabus",
+        "pages",
+        "files",
+        "announcements",
+        "discussions",
+        "submissions",
+        "grades",
+    ]
 
     @field_validator("course_id")
     @classmethod
@@ -28,7 +39,16 @@ class DocumentResource(Strict):
 
 
 class DocumentItem(Strict):
-    kind: Literal["assignment", "syllabus", "page", "file", "announcement", "discussion"]
+    kind: Literal[
+        "assignment",
+        "syllabus",
+        "page",
+        "file",
+        "announcement",
+        "discussion",
+        "submission",
+        "grade",
+    ]
     provider_id: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z0-9._:-]+$")
     provider_updated_at: str | None
     title: str = Field(max_length=300)

@@ -53,6 +53,16 @@ No new paid allowance, migration, runtime, queue or source activation is implied
 
 ## Implemented private v2 artifact Store reads
 
+November2 status/grade continuation adds schema2 pairs submissions/submission and
+grades/grade using existing academic fields. Own-student course submissions GETs
+validate returned student/assignment/course IDs and feed explicit partial JSON
+projections into the existing producer/journal/publication. Trusted canvas.json.v1
+formatting requires server configuration; defaults stay off. No model, provider
+write, quiz attempt read or new schema/HTTP extraction route. Null grades remain
+unknown; grade_basis distinguishes verified current/previous/unverified attempt;
+excusal/visibility and omitted body/feedback/course-total/policy gaps remain explicit.
+[Exact scope](docs/P1-CONNECTED-PUBLICATION.md#read-only-submission-status-and-assignment-grades).
+
 November2 P1 extension: schema2 document header/publication now also accepts
 announcements/announcement and discussions/discussion with the existing canonical
 EvidenceItem fields. The existing documents/extract endpoint accepts those selected

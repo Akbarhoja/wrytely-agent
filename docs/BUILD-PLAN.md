@@ -15,6 +15,17 @@ activate services, authorize account access/spending, or change executable contr
 - [Implemented interfaces](../CONTRACTS.md)
 - [Historical revision 6](archive/BUILD-PLAN-r6-2026-10-29.md)
 
+### Quiz boundary — clarified November 2
+
+Quiz support is passive preparation and tracking. Collect titles, deadlines, time
+limits and instructions only where Canvas exposes them before an attempt. Never
+start, resume or submit an attempt, launch a timed quiz, or fetch attempt/question
+endpoints to discover hidden content. Autonomous solving/submission of graded quizzes
+is outside this plan. Topic explanation and practice questions are distinct from
+taking the graded quiz. Hidden questions stay explicitly unread; the student is
+not asked to open a quiz merely to refresh the agent's data. Quiz-specific metadata
+collection is not complete merely because its assignment title/date was discovered.
+
 ## 1. Required outcome
 
 Each college student has a private academic agent hosted by Wrytely. It discovers

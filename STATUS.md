@@ -30,6 +30,38 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+Latest November2 P1 continuation on codex/p1-completion adds read-only own-student
+submission status and assignment-grade collection through the existing host,
+producer, durable document journal and publication. Course-scoped submissions GETs
+omit student_ids (current user default), verify every returned user/assignment/course
+ID and paginate within the exact selected endpoint. Schema2 adds submissions/
+submission and grades/grade with original EvidenceItem fields; no new SQL or Store.
+Trusted canvas.json.v1 formats explicit selected-field JSON projections and requires
+server configuration; defaults remain off. Bodies/feedback/user IDs are not stored.
+Grades remain partial: null is unknown, grade_basis distinguishes current/previous/
+unverified attempts, excusal/visibility gaps persist, and course totals/weighting/
+policy are not inferred. Full submissions/feedback remain unread.
+
+The new actual-client/loopback-HTTP/Store status scenario discovers two courses,
+collects14documents per scan, repeats unchanged data, then changes one grade and one
+deadline:42observations/16roots/events. Tests assert private-body/feedback/user-ID
+omission and original grade values. Two new real Store/HTTP owner-pair cases cover
+original retrieval, replay and account denial. Nineteen new Node cases cover projection
+types/bounds, null/old/current marks, safe pagination and course/student identity.
+Final full fresh disposable backend1,607PASS/zero skips/2existingwarnings157.60s;
+all512NodePASS; Ruff lint/format245files, scoped Prettier/docs/links/diff pass. Initial
+full run before the added grade-attempt refinement also passed1,607/152.50s. Web
+unchanged from prior120PASS/TypeScript. [Implementation](docs/P1-CONNECTED-PUBLICATION.md#read-only-submission-status-and-assignment-grades).
+
+Quiz boundary is recorded in BUILD-PLAN/WORK-ORDERS: passive pre-attempt metadata
+only; no start/resume/question/attempt access, graded solving or submission. Own
+assignment/status GET tests never navigate to quiz-attempt endpoints. Quiz-specific
+metadata support is not claimed complete. No M handoff at turn start. P1 remains open
+for discussion replies, modules, files/PDF/linked contents, submission feedback/full
+content, student screens and installed/live acceptance. No provider/model calls,
+spend, new consent, installation, retained migration, worker activation, deployment
+or main merge occurred.
+
 November2 P1 continuation on codex/p1-completion adds automatic announcement and
 discussion-prompt list/detail reads to the existing document collector. Schema2
 header/publication shares one extended resource/owner mapping, reuses existing

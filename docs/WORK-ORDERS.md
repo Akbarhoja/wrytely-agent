@@ -191,6 +191,11 @@ sync on startup/availability and approximately 30-minute opportunities with back
 Validate origins/redirects, bounded downloads and HTML conversion; never execute content.
 Handle hidden/initial-post-required/external-system content as coverage limitations.
 
+November2 quiz clarification: passive pre-attempt metadata only. No quiz start,
+resume, question/attempt access, graded solving or submission. Safe assignment and
+own-submission status GETs do not count as complete quiz metadata support. Keep
+hidden questions/time-limit gaps visible; never launch a timer to inspect content.
+
 Done when: two controlled courses automatically collected without manual IDs; repeat
 sync creates no new content/events; changed item appears once; session expiry and
 browser restart resume accurately. Real CSU validation and synthetic fixture tests

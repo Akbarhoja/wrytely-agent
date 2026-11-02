@@ -27,6 +27,8 @@ export function makeDocumentReader(originValue, fetchImpl = fetch) {
         "pages",
         "announcements",
         "discussions",
+        "submissions",
+        "grades",
       ].includes(kind)
     )
       throw new ProbeError("invalid_collection");
@@ -50,9 +52,10 @@ export function makeDocumentReader(originValue, fetchImpl = fetch) {
         throw new ProbeError("invalid_collection");
       return { data: [data], next_cursor: null };
     }
+    const submission = ["submissions", "grades"].includes(kind);
     const topic = ["announcements", "discussions"].includes(kind);
-    const path = `${base}/${topic ? "discussion_topics" : kind}`;
-    const initial = `${origin}${path}?per_page=4${kind === "assignments" ? "&override_assignment_dates=true" : topic ? `&only_announcements=${kind === "announcements" ? "true" : "false"}` : ""}`;
+    const path = `${base}/${submission ? "students/submissions" : topic ? "discussion_topics" : kind}`;
+    const initial = `${origin}${path}?per_page=4${kind === "assignments" ? "&override_assignment_dates=true" : topic ? `&only_announcements=${kind === "announcements" ? "true" : "false"}` : submission ? "&include[]=assignment" : ""}`;
     function checked(value) {
       try {
         if (
@@ -67,6 +70,7 @@ export function makeDocumentReader(originValue, fetchImpl = fetch) {
           "page",
           ...(kind === "assignments" ? ["override_assignment_dates"] : []),
           ...(topic ? ["only_announcements"] : []),
+          ...(submission ? ["include[]"] : []),
         ];
         if (
           url.origin !== origin ||
@@ -82,6 +86,7 @@ export function makeDocumentReader(originValue, fetchImpl = fetch) {
           (topic &&
             url.searchParams.get("only_announcements") !==
               (kind === "announcements" ? "true" : "false")) ||
+          (submission && url.searchParams.get("include[]") !== "assignment") ||
           (url.searchParams.has("page") && !url.searchParams.get("page"))
         )
           throw Error();
@@ -102,11 +107,28 @@ export function makeDocumentReader(originValue, fetchImpl = fetch) {
       details = [];
     for (const item of data) {
       if (!row(item)) throw new ProbeError("invalid_collection");
-      const id = identifier(kind === "pages" ? item.page_id : item.id);
+      const id = identifier(
+        submission
+          ? item.assignment_id
+          : kind === "pages"
+            ? item.page_id
+            : item.id,
+      );
       if (seen.has(id)) throw new ProbeError("invalid_collection");
       seen.add(id);
       if (kind === "assignments" && identifier(item.course_id) !== course)
         throw new ProbeError("invalid_collection");
+      if (submission) {
+        if (
+          identifier(item.user_id) !== expectedSubject ||
+          !row(item.assignment) ||
+          identifier(item.assignment.id) !== id ||
+          identifier(item.assignment.course_id) !== course
+        )
+          throw new ProbeError("invalid_collection");
+        details.push(item);
+        continue;
+      }
       // List rows may omit rubric/body. Read each authoritative detail, never guess.
       const detail = (
         await get(

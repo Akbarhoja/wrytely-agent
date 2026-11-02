@@ -1,5 +1,13 @@
 # Canvas document-only wire v2 — review candidate
 
+November2 status amendment on the same P1 branch: schema2 additionally accepts
+submissions/submission and grades/grade, using their existing EvidenceItem fields.
+The collector creates explicit selected-field JSON projections with trusted
+canvas.json.v1 formatting, partial coverage and uncollected-body/policy/total gaps.
+No new HTTP extraction route or database schema is added. The configured trusted
+extractor list must include the formatter for staging; defaults remain off.
+[Status/grade collection](../P1-CONNECTED-PUBLICATION.md#read-only-submission-status-and-assignment-grades).
+
 November2 implementation amendment under Akbar's P1 reassignment: schema2 now also
 accepts announcements/announcement and discussions/discussion, using their existing
 EvidenceItem field sets/canonicalization. This is an additive pair extension, not

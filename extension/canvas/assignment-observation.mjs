@@ -268,3 +268,6 @@ export function mapAssignmentObservation(raw, options) {
     digestPayload,
   };
 }
+
+// Shared numeric canonicalization for read-only submission/grade projections.
+export { decimal as canvasDecimal };
