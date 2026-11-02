@@ -10,6 +10,8 @@ import {
   readDiscussionThread,
   discussionContinuation,
 } from "./discussion-thread.mjs";
+import { readModulePage } from "./module-reader.mjs";
+import { readFilePage } from "./file-documents.mjs";
 const identifier = (x) => {
   if (
     !["string", "number"].includes(typeof x) ||
@@ -20,7 +22,11 @@ const identifier = (x) => {
   return String(x);
 };
 const row = (x) => x && typeof x === "object" && !Array.isArray(x);
-export function makeDocumentReader(originValue, fetchImpl = fetch) {
+export function makeDocumentReader(
+  originValue,
+  fetchImpl = fetch,
+  fileTransport,
+) {
   const origin = checkedOrigin(originValue),
     api = makeReader(origin, fetchImpl);
   return async function documentPage(course, kind, cursor, expectedSubject) {
@@ -34,6 +40,8 @@ export function makeDocumentReader(originValue, fetchImpl = fetch) {
         "discussions",
         "submissions",
         "grades",
+        "modules",
+        "files",
       ].includes(kind)
     )
       throw new ProbeError("invalid_collection");
@@ -50,6 +58,17 @@ export function makeDocumentReader(originValue, fetchImpl = fetch) {
       return response;
     }
     const base = `/api/v1/courses/${course}`;
+    if (kind === "files")
+      return readFilePage({
+        course,
+        cursor,
+        origin,
+        get,
+        transport: fileTransport,
+        identity,
+      });
+    if (kind === "modules")
+      return readModulePage({ course, cursor, origin, get });
     if (kind === "discussions" && isDiscussionCursor(cursor))
       return readDiscussionThread({ course, cursor, origin, get });
     if (kind === "syllabus") {
@@ -133,7 +152,21 @@ export function makeDocumentReader(originValue, fetchImpl = fetch) {
           identifier(item.assignment.course_id) !== course
         )
           throw new ProbeError("invalid_collection");
-        details.push(item);
+        if (kind === "submissions" && !item.assignment.quiz_id) {
+          const detail = (
+            await get(
+              `${base}/assignments/${id}/submissions/self`,
+              "?include[]=submission_comments",
+            )
+          ).data;
+          if (
+            !row(detail) ||
+            identifier(detail.user_id) !== expectedSubject ||
+            identifier(detail.assignment_id) !== id
+          )
+            throw new ProbeError("invalid_collection");
+          details.push({ ...detail, assignment: item.assignment });
+        } else details.push(item);
         continue;
       }
       // List rows may omit rubric/body. Read each authoritative detail, never guess.

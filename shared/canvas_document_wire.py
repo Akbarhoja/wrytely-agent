@@ -116,12 +116,19 @@ def validate_canvas_document_header(
         _keys(object_fields, ("filename", "content_type"))
         filename = _bounded_text(object_fields["filename"], 300, nonblank=True)
         content_type = object_fields["content_type"]
-        if any(c in filename for c in ("/", "\\", "\x00")) or content_type not in (
-            "application/pdf",
-            "text/plain",
-            "text/html",
+        if (
+            any(c in filename for c in ("/", "\\", "\x00"))
+            or not isinstance(content_type, str)
+            or not re.fullmatch(r"[a-z0-9.+-]{1,64}/[a-z0-9.+-]{1,128}", content_type)
         ):
             raise ValueError("Invalid document file fields")
+        if content_type not in {"application/pdf", "text/plain", "text/html"} and (
+            coverage != "unsupported"
+            or manifest
+            or metadata["total_characters"] != 0
+            or "unsupported_format" not in missing
+        ):
+            raise ValueError("Unsupported file must remain an empty explicit gap")
         fields = {"filename": filename, "content_type": content_type}
     else:
         # Reuse schema1 academic field validation/canonicalization, without its

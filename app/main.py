@@ -92,9 +92,11 @@ def create_app(
     *,
     store: Store | None = None,
     verifier: SessionVerifier | None = None,
-    canvas_document_extractors: tuple[str, ...] = (),
+    canvas_document_extractors: tuple[str, ...] | None = None,
 ) -> FastAPI:
     settings = settings or Settings()
+    if canvas_document_extractors is None:
+        canvas_document_extractors = settings.canvas_document_extractors
     api = FastAPI(title="Wrytely Academic Agent", version="0.1.0")
     bearer = HTTPBearer(auto_error=False)
     verifier = verifier or ClerkSessionVerifier(settings)

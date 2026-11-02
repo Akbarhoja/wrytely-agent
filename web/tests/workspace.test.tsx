@@ -73,14 +73,14 @@ describe("student workspace", () => {
     );
     render(<Workspace mode="signed-in" userId="user_alice" />);
     await screen.findByRole("button", { name: "Pause agent" });
-    fireEvent.click(screen.getByRole("button", { name: "Academic context" }));
+    fireEvent.click(screen.getByRole("button", { name: "Source troubleshooting" }));
     fireEvent.change(screen.getByLabelText("Pasted text"), {
       target: { value: "Unsaved private text" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Private results" }));
     fireEvent.click(await screen.findByRole("button", { name: "Open work: Private comparison" }));
     await screen.findByRole("heading", { name: "Your session expired" });
-    expect(screen.queryByRole("button", { name: "Academic context" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Source troubleshooting" })).toBeNull();
     expect(screen.queryByLabelText("Pasted text")).toBeNull();
     expect(screen.queryByText("Private comparison")).toBeNull();
   });
@@ -94,13 +94,13 @@ describe("student workspace", () => {
     vi.stubGlobal("fetch", fetcher);
     render(<Workspace mode="signed-in" userId="user_alice" name="Alice" />);
     await screen.findByRole("button", { name: "Pause agent" });
-    fireEvent.click(screen.getByRole("button", { name: "Academic context" }));
+    fireEvent.click(screen.getByRole("button", { name: "Source troubleshooting" }));
     fireEvent.change(screen.getByLabelText("Pasted text"), {
       target: { value: "Unsaved synthetic source" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Overview" }));
     expect(screen.queryByRole("textbox", { name: "Pasted text" })).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Academic context" }));
+    fireEvent.click(screen.getByRole("button", { name: "Source troubleshooting" }));
     expect((screen.getByLabelText("Pasted text") as HTMLTextAreaElement).value).toBe(
       "Unsaved synthetic source",
     );
@@ -139,7 +139,7 @@ describe("student workspace", () => {
     );
     expect(screen.queryByRole("textbox", { name: "Message Wrytely" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: /See connections/ }));
-    expect(screen.getByText("No courses or chats are connected yet.")).toBeTruthy();
+    expect(screen.getByText("Sign in to connect your courses.")).toBeTruthy();
     expect(fetch).not.toHaveBeenCalled();
   });
   it("offers real auth routes when configured but signed out", () => {

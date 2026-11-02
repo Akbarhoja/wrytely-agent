@@ -12,8 +12,8 @@ checked delegated work, revisions and follow-through. Hermes deferred. Cloud age
 must stay available while laptop is off; Canvas collection still depends on browser
 and session availability. No manual-paste substitute for connector completion.
 
-We are at **P0: live access gates open; P1 storage implementation started**, with reusable
-task/draft foundations. No completed
+We are at **P0: remaining live/review gates open; P1 connected implementation candidate
+under final validation**, with reusable task/draft foundations. No completed
 24/7 academic agent, Canvas extension, Outlook connection or semester supervisor yet.
 Historical M1/M2 live gates remain incomplete; renumbering the plan does not pass them.
 
@@ -29,6 +29,49 @@ Outlook remains unverified but is now optional and paused by explicit supervisor
 it no longer gates the core product. No new/duplicate CSU approval request will be submitted.
 
 ## Current work and evidence
+
+Latest November2 connected P1 candidate on codex/p1-completion adds module/item
+pagination, bounded authorized course-file downloads and text/HTML/PDF conversion,
+own non-quiz submission bodies/feedback, Canvas pairing/scope/course-coverage UI
+and private v2 draft/original-evidence UI. Original host, producer, journal,
+Store/publication and private readers are reused; no parallel runtime or migration.
+Schema1 modules/files remain rejected; schema2 uses the document resource boundary.
+Converters are explicitly operator-configured and remain default-off. Files stay
+within two exact Canvas storage hosts, with identity/scope/size/MIME/redirect fences.
+PDF has text/page/CPU/time/memory controls; no OCR/layout or unsupported-format claim.
+Missing/inaccessible/unlisted linked content remains a gap, not a completed read.
+
+Final fresh disposable backend **1,637PASS**, zero skips,2existingwarnings202.64s;
+all **545NodePASS**; **132webPASS**, zero skips; TypeScript and production Next build pass. Ruff251files, full web
+Prettier, local documentation file links and diff checks pass. First full run
+caught schema1 module-surface widening (1failure/1,634pass); the original inline
+literal is retained and final regression passes. The combined real-JS/loopback-HTTP/
+Store scenario collects all9resource kinds over2discovered courses/3scans:
+156observations/57roots/events/99batches; exact unchanged/change behavior verified.
+A separate real PDF pipeline stores original synthetic page text across3scans:
+36observations/13roots/events/33batches. Revoke-during-conversion discards content;
+coverage/account/proxy/StrictMode/original-paging tests pass. Code details,
+limits, development target and remaining acceptance are in
+[P1 completion candidate](docs/P1-COMPLETION-CANDIDATE.md).
+
+The inactive CSU/development-API package is prepared locally but not installed or
+enabled. Local browser error-state visual validation confirms the old development
+backend lacks the new Canvas routes; current session is the second test participant,
+so do not pair Akbar's Canvas under it. Railway read-only CLI inventory verifies the
+isolated wrytely-agent-development/agent-api service still runs the old M2 build.
+Hosted Railway plugin authentication repeated without yielding access; existing
+project-scoped CLI read succeeded. No service/config/migration change occurred.
+
+**P1 remains open:** installed/live two-course collection and recovery/isolation
+acceptance, any institution-specific access fixes, counterpart review/CI and existing
+protected-main gates. The effective privacy notice still says no Canvas connection;
+[factual Canvas amendment](docs/P1-CANVAS-PRIVACY-AMENDMENT.md) is prepared for review,
+not silently substituted. A concrete deployment/live-read approval and owner's
+Chrome/account steps are next. No real course upload, model/send/spend, connector
+permission grant, retained migration, deployment or continuous worker activation.
+P0 WhatsApp remains M-owned; optional Outlook paused; no P2 started. M had no new
+handoff after #4comment6572062369 when checked. Earlier narrower remaining-item
+lists below are historical and superseded by this candidate record.
 
 Latest P1 continuation on codex/p1-completion implements discussion entries and
 full paginated replies as separate source documents, using the original producer,

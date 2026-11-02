@@ -22,6 +22,7 @@ import { useWorkspace } from "@/lib/use-workspace";
 import { Overview } from "./overview";
 import { WhatsAppConnection } from "./whatsapp-connection";
 import { useWhatsAppConnection } from "../lib/use-whatsapp-connection";
+import { CanvasConnection } from "./canvas-connection";
 import { AcademicContext } from "./academic-context";
 import { AcademicResults } from "./academic-results";
 
@@ -123,7 +124,7 @@ function WorkspaceSession({
               aria-current={view === "context" ? "page" : undefined}
             >
               <BookOpen size={20} aria-hidden />
-              Academic context
+              Source troubleshooting
             </button>
             <button
               className={view === "results" ? "nav-item selected" : "nav-item"}
@@ -171,7 +172,7 @@ function WorkspaceSession({
                 : view === "conversation"
                   ? "Conversation"
                   : view === "context"
-                    ? "Academic context"
+                    ? "Source troubleshooting"
                     : view === "results"
                       ? "Private results"
                       : "Connections"}
@@ -216,7 +217,7 @@ function WorkspaceSession({
                 : view === "conversation"
                   ? "Talk things through with Wrytely."
                   : view === "context"
-                    ? "The context behind your coursework."
+                    ? "Inspect source troubleshooting."
                     : view === "results"
                       ? "Your work, ready to inspect."
                       : "Your semester, connected."}
@@ -227,7 +228,7 @@ function WorkspaceSession({
                 : view === "conversation"
                   ? "Give your agent context, ask a question, or talk about the next step."
                   : view === "context"
-                    ? "Keep assignment instructions and source excerpts together, ready for work you choose to delegate."
+                    ? "Canvas collection starts in Connections. Manual snapshots here are for troubleshooting, not normal onboarding."
                     : view === "results"
                       ? "Read saved drafts alongside their evidence, checks and limitations."
                       : "Bring your courses and conversations into your agent’s world."}
@@ -275,55 +276,16 @@ function WorkspaceSession({
             />
           ) : view === "connections" ? (
             <div className="connections-layout">
+              <CanvasConnection
+                userId={ready ? userId : undefined}
+                enabled={!data.expired}
+                onSessionExpired={data.retry}
+              />
               <WhatsAppConnection
                 key={userId || "guest"}
                 {...whatsapp}
                 mode={data.expired ? "expired" : mode === "signed-in" ? whatsapp.mode : mode}
               />
-              <section className="connections-panel">
-                <div className="section-heading">
-                  <h2>Bring your semester together</h2>
-                  <span>Course integrations</span>
-                </div>
-                <p className="body-copy">
-                  Your connections will help Wrytely understand what’s happening across your
-                  courses.
-                </p>
-                {[
-                  {
-                    name: "Canvas",
-                    detail: "Assignments, deadlines and course discussions",
-                    icon: BookOpen,
-                  },
-                  {
-                    name: "Microsoft Teams",
-                    detail: "Team conversations and shared work",
-                    icon: ChatCircle,
-                  },
-                  {
-                    name: "Calendar",
-                    detail: "Classes, meetings and study time",
-                    icon: CalendarBlank,
-                  },
-                ].map(({ name: label, detail, icon: Icon }) => (
-                  <div className="connection-row" key={label}>
-                    <div className="connection-icon">
-                      <Icon size={23} aria-hidden />
-                    </div>
-                    <div>
-                      <h3>{label}</h3>
-                      <p>{detail}</p>
-                    </div>
-                    <span className="coming">Coming soon</span>
-                  </div>
-                ))}
-                <p className="privacy-note">
-                  <Check size={16} aria-hidden />
-                  {signedIn
-                    ? "Course connections are not available yet."
-                    : "No courses or chats are connected yet."}
-                </p>
-              </section>
             </div>
           ) : (
             <div className="workspace-grid">

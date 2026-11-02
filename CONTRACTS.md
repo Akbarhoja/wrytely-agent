@@ -13,6 +13,24 @@
 > action, freshness relaxation or proactive send permission exists merely because
 > the plan names it. Existing private-draft and policy gates remain effective.
 
+## Connected P1 candidate — November 2
+
+On codex/p1-completion, modules/module-items are additional schema2 document owner
+pairs using shared typed field validation. Schema1 inline resource literals remain
+unchanged. Credential-scoped `/documents/resource` closes selected document
+resources; `/documents/file-extract` accepts bounded base64 PDF/plain-text/HTML
+bytes with exact connection/generation/scope/course/file context, not a remote URL.
+Trusted converter Settings default to an empty tuple and allow only local
+canvas.html.v1/json.v1/text.v1/pdf.v1 implementations. Authority is rechecked after
+conversion. Existing source publication/read behavior and protected-main gates remain.
+
+Session-owned connection listing, configured Canvas origins and paginated course/
+resource coverage are assembled on `/v1/source-connections`; student proxy access
+excludes ingestion routes. Web v2 document-result reads use the exact existing
+artifact/check/reference identities and never coerce schema2 into legacy v1 IDs.
+[Exact candidate boundaries and acceptance](docs/P1-COMPLETION-CANDIDATE.md).
+These routes/UI are locally tested; they are not yet deployed/live-accepted.
+
 ## Agreed connection and sync design; implementation pending
 
 [C1/C2 v1 proposal](docs/contracts/CONNECTION-SYNC-v1.md) (#47) defines pairing,

@@ -201,6 +201,7 @@ export function createPairingClient({
   storageArea,
   fetchImpl = fetch,
   canvasFetch = fetch,
+  fileTransport,
 } = {}) {
   const apiOrigin = origin(apiInput),
     canvasOrigin = origin(canvasInput);
@@ -419,7 +420,11 @@ export function createPairingClient({
       cleanup,
       canvasOrigin,
       validExpiry,
-      readDocumentPage: makeDocumentReader(canvasOrigin, canvasFetch),
+      readDocumentPage: makeDocumentReader(
+        canvasOrigin,
+        canvasFetch,
+        fileTransport,
+      ),
       readCoursePage: (cursor) => canvas.coursePage(cursor),
       readAssignmentPage: (course, cursor) =>
         canvas.assignmentPage(course, cursor),
@@ -427,7 +432,7 @@ export function createPairingClient({
         post(
           operation.startsWith("document_")
             ? operation === "document_resource"
-              ? "academic/resource"
+              ? "documents/resource"
               : `documents/${operation.slice(9)}`
             : operation.startsWith("academic_")
               ? `academic/${operation.slice(9)}`

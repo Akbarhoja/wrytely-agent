@@ -1,4 +1,4 @@
-// Read-only selected-field projection, not full submission content or a course total.
+// Read-only own-submission content/status and grade projections, never quiz attempts.
 import { canvasDecimal } from "../canvas/assignment-observation.mjs";
 const normalize = (x) => x.replace(/\r\n?/g, "\n").normalize("NFC");
 function text(value, limit = 1024) {
@@ -38,7 +38,7 @@ export function prepareSubmissionDocuments({ resource_key, page, origin }) {
       if (!Object.hasOwn(raw, name)) missing.push(name + "_not_observed");
       return convert(raw[name]);
     };
-    let fields, kind;
+    let fields, kind, contents;
     if (resource === "submissions") {
       kind = "submission";
       fields = {
@@ -53,7 +53,32 @@ export function prepareSubmissionDocuments({ resource_key, page, origin }) {
         late: field("late", boolean),
         missing: field("missing", boolean),
       };
-      missing.push("submission_body_unread", "submission_feedback_unread");
+      const extracted = raw._wrytely_submission;
+      if (extracted && !raw.assignment.quiz_id) {
+        const body = text(extracted.text, 200000);
+        missing.push(...extracted.missing);
+        const comments = raw.submission_comments;
+        if (!Array.isArray(comments) || comments.length > 1000) throw Error();
+        const feedback = comments.map((comment) => {
+          if (!comment || typeof comment !== "object" || Array.isArray(comment))
+            throw Error();
+          if ((comment.attachments?.length ?? 0) > 0 || comment.media_comment)
+            missing.push("feedback_attachment_unread");
+          return {
+            text: text(comment.comment, 20000),
+            created_at: text(comment.created_at),
+          };
+        });
+        contents = { ...fields, body, feedback };
+        if ((raw.attachments?.length ?? 0) > 0)
+          missing.push("submission_attachment_unread");
+        if (raw.url) missing.push("external_submission_unread");
+      } else
+        missing.push(
+          "submission_body_unread",
+          "submission_feedback_unread",
+          ...(raw.assignment.quiz_id ? ["quiz_attempt_not_opened"] : []),
+        );
     } else {
       kind = "grade";
       fields = {
@@ -87,20 +112,19 @@ export function prepareSubmissionDocuments({ resource_key, page, origin }) {
     }
     const title = text(raw.assignment.name, 270);
     if (!title?.trim()) throw Error();
-    // This explicit JSON projection is the source representation; omitted provider
-    // fields, bodies/comments, passwords and other students never enter the journal.
+    // Explicit data-only JSON; user/author IDs, credentials and download URLs omitted.
     return {
       owner_object: { kind, provider_id },
       object_fields: fields,
       metadata: {
-        title: `${title}: ${kind === "grade" ? "grade" : "submission status"}`,
+        title: `${title}: ${kind === "grade" ? "grade" : "submission"}`,
         format: "text",
         extractor_version: "canvas.json.v1",
         provider_updated_at: raw.updated_at ?? null,
-        coverage: "partial",
+        coverage: missing.length ? "partial" : "complete",
         missing: [...new Set(missing)].sort(),
       },
-      source: { text: JSON.stringify(fields, null, 2) },
+      source: { text: JSON.stringify(contents ?? fields, null, 2) },
       reference: `${origin}/courses/${course}/assignments/${provider_id}`,
     };
   });

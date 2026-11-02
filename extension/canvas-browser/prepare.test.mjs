@@ -31,7 +31,7 @@ async function fixture(t) {
     canvasOrigin: "https://canvas.example.edu",
   };
 }
-test("package pins two origins, minimal permissions/CSP and copies only explicit assets", async (t) => {
+test("package pins API, Canvas and two file origins with bounded redirect observation and copies only explicit assets", async (t) => {
   const f = await fixture(t);
   await prepareCanvasPackage(f);
   const manifest = JSON.parse(
@@ -39,10 +39,12 @@ test("package pins two origins, minimal permissions/CSP and copies only explicit
   );
   assert.equal(manifest.manifest_version, 3);
   assert.equal(manifest.minimum_chrome_version, "120");
-  assert.deepEqual(manifest.permissions, ["storage", "alarms"]);
+  assert.deepEqual(manifest.permissions, ["storage", "alarms", "webRequest"]);
   assert.deepEqual(manifest.host_permissions, [
     f.apiOrigin + "/*",
     f.canvasOrigin + "/*",
+    "https://inst-fs-iad-prod.inscloudgate.net/*",
+    "https://cdn.inst-fs-iad-prod.inscloudgate.net/*",
   ]);
   assert.deepEqual(manifest.background, {
     service_worker: "worker.mjs",

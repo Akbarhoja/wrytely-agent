@@ -16,14 +16,23 @@ const allowedPaths = new Set(
     "academic/batch",
     "academic/resource",
     "academic/extract",
-    ...["begin", "parts", "finish", "batch", "extract"].map(
-      (p) => `documents/${p}`,
-    ),
+    ...[
+      "begin",
+      "parts",
+      "finish",
+      "batch",
+      "extract",
+      "file-extract",
+      "resource",
+    ].map((p) => `documents/${p}`),
     ...["begin", "resume", "batch", "resource", "finish"].map(
       (p) => `discovery/${p}`,
     ),
   ].map((p) => `${root}/${p}`),
 );
+// Generated from a synthetic one-page PDF; no student content.
+const syntheticPdf =
+  "JVBERi0xLjMKJeLjz9MKMSAwIG9iago8PAovUHJvZHVjZXIgKHB5cGRmKQo+PgplbmRvYmoKMiAwIG9iago8PAovVHlwZSAvUGFnZXMKL0NvdW50IDEKL0tpZHMgWyA0IDAgUiBdCj4+CmVuZG9iagozIDAgb2JqCjw8Ci9UeXBlIC9DYXRhbG9nCi9QYWdlcyAyIDAgUgo+PgplbmRvYmoKNCAwIG9iago8PAovVHlwZSAvUGFnZQovUmVzb3VyY2VzIDw8Ci9Gb250IDw8Ci9GMSA1IDAgUgo+Pgo+PgovTWVkaWFCb3ggWyAwLjAgMC4wIDMwMCAzMDAgXQovUGFyZW50IDIgMCBSCi9Db250ZW50cyA2IDAgUgo+PgplbmRvYmoKNSAwIG9iago8PAovVHlwZSAvRm9udAovU3VidHlwZSAvVHlwZTEKL0Jhc2VGb250IC9IZWx2ZXRpY2EKPj4KZW5kb2JqCjYgMCBvYmoKPDwKL0xlbmd0aCA1MAo+PgpzdHJlYW0KQlQgL0YxIDEyIFRmIDIwIDI1MCBUZCAoU3ludGhldGljIHN5bGxhYnVzLikgVGogRVQKZW5kc3RyZWFtCmVuZG9iagp4cmVmCjAgNwowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMTUgMDAwMDAgbiAKMDAwMDAwMDA1NCAwMDAwMCBuIAowMDAwMDAwMTEzIDAwMDAwIG4gCjAwMDAwMDAxNjIgMDAwMDAgbiAKMDAwMDAwMDI5NCAwMDAwMCBuIAowMDAwMDAwMzY0IDAwMDAwIG4gCnRyYWlsZXIKPDwKL1NpemUgNwovUm9vdCAzIDAgUgovSW5mbyAxIDAgUgo+PgpzdGFydHhyZWYKNDY0CiUlRU9GCg==";
 const scenarios = [
   "lost_before",
   "lost_after",
@@ -44,6 +53,10 @@ const scenarios = [
   "academic_cross_account",
   "assignment_collector_lifecycle",
   "assignment_collector_lost_after",
+  "auto_documents_pdf",
+  "auto_documents_all",
+  "auto_documents_files",
+  "auto_documents_modules",
   "auto_documents_replies",
   "auto_documents_replies_lost",
   "auto_documents_status",
@@ -244,6 +257,32 @@ try {
         canvasOrigin,
         storageArea,
         fetchImpl: transport,
+        fileTransport: {
+          location: () => null,
+          fetch: async (url, init) => {
+            assert.ok(
+              url.startsWith("https://cdn.inst-fs-iad-prod.inscloudgate.net/"),
+            );
+            assert.equal(init.credentials, "omit");
+            assert.equal(init.redirect, "manual");
+            const response = new Response(
+              scenario === "auto_documents_pdf"
+                ? Uint8Array.from(atob(syntheticPdf), (x) => x.charCodeAt(0))
+                : "Syllabus reading. " +
+                    (collectionRound === 2 ? "Updated." : "Original."),
+              {
+                headers: {
+                  "content-type":
+                    scenario === "auto_documents_pdf"
+                      ? "application/pdf"
+                      : "text/plain",
+                },
+              },
+            );
+            Object.defineProperty(response, "url", { value: url });
+            return response;
+          },
+        },
         canvasFetch: async (url, init) => {
           assert.equal(init.method, "GET");
           assert.equal(init.credentials, "include");
@@ -256,11 +295,70 @@ try {
             return response;
           }
           if (scenario.startsWith("auto_documents_")) {
+            const fileMatch = new URL(url).pathname.match(
+              /^\/api\/v1\/courses\/(101|102)\/files(?:\/(\d+))?$/,
+            );
+            if (fileMatch) {
+              const file = {
+                id: 92,
+                filename:
+                  scenario === "auto_documents_pdf"
+                    ? "Syllabus.pdf"
+                    : "Syllabus.txt",
+                "content-type":
+                  scenario === "auto_documents_pdf"
+                    ? "application/pdf"
+                    : "text/plain",
+                size: 40,
+                url:
+                  scenario === "auto_documents_pdf"
+                    ? "https://cdn.inst-fs-iad-prod.inscloudgate.net/12345678-1234-1234-1234-123456789abc/Syllabus.pdf?token=synthetic&content_type=application%2Fpdf"
+                    : "https://cdn.inst-fs-iad-prod.inscloudgate.net/12345678-1234-1234-1234-123456789abc/Syllabus.txt?token=synthetic&content_type=text%2Fplain",
+              };
+              const response = Response.json(fileMatch[2] ? file : [file]);
+              Object.defineProperty(response, "url", { value: url });
+              return response;
+            }
+            const module = new URL(url).pathname.match(
+              /^\/api\/v1\/courses\/(101|102)\/modules(?:\/90\/items)?$/,
+            );
+            if (module) {
+              const items = url.includes("/items");
+              const response = Response.json(
+                items
+                  ? [
+                      {
+                        id: 91,
+                        module_id: 90,
+                        title: "Quiz reference",
+                        type: "Quiz",
+                        content_id: 80,
+                        position: 1,
+                      },
+                    ]
+                  : [
+                      {
+                        id: 90,
+                        name: "Week 1",
+                        position: 1,
+                        unlock_at: null,
+                        require_sequential_progress: true,
+                        prerequisite_module_ids: [],
+                        state: "started",
+                      },
+                    ],
+              );
+              Object.defineProperty(response, "url", { value: url });
+              return response;
+            }
             const thread = new URL(url).pathname.match(
               /^\/api\/v1\/courses\/(101|102)\/discussion_topics\/60\/entries(?:\/(\d+)\/replies)?$/,
             );
             if (thread) {
-              assert.ok(scenario.startsWith("auto_documents_replies"));
+              assert.ok(
+                scenario.startsWith("auto_documents_replies") ||
+                  scenario === "auto_documents_all",
+              );
               const [, course, parent] = thread,
                 start = Number(course) * 10;
               const page = Number(new URL(url).searchParams.get("page") ?? "1");
@@ -285,6 +383,34 @@ try {
                         link: `<${url.replace(/&page=\d+$/, "")}&page=${page + 1}>; rel="next"`,
                       }
                     : {},
+              });
+              Object.defineProperty(response, "url", { value: url });
+              return response;
+            }
+            const ownSubmission = new URL(url).pathname.match(
+              /^\/api\/v1\/courses\/(101|102)\/assignments\/(17|30)\/submissions\/self$/,
+            );
+            if (ownSubmission) {
+              assert.equal(
+                new URL(url).searchParams.get("include[]"),
+                "submission_comments",
+              );
+              const response = Response.json({
+                assignment_id: Number(ownSubmission[2]),
+                user_id: Number(provider),
+                submitted_at: "2026-11-01T00:00:00Z",
+                workflow_state: "graded",
+                attempt: 1,
+                late: false,
+                missing: false,
+                body: "<p>OWN_SUBMISSION_BODY</p><script>PRIVATE_SCRIPT</script>",
+                submission_comments: [
+                  {
+                    comment: "OWN_FEEDBACK",
+                    created_at: "2026-11-01T01:00:00Z",
+                  },
+                ],
+                attachments: [],
               });
               Object.defineProperty(response, "url", { value: url });
               return response;
@@ -394,7 +520,8 @@ try {
                   require_initial_post: !announcement,
                   user_can_see_posts:
                     announcement ||
-                    scenario.startsWith("auto_documents_replies"),
+                    scenario.startsWith("auto_documents_replies") ||
+                    scenario === "auto_documents_all",
                   discussion_subentry_count: 0,
                 };
                 body = id ? value : [value];
@@ -566,13 +693,29 @@ try {
             "assignments",
             "syllabus",
             "pages",
-            ...(scenario === "auto_documents_topics"
-              ? ["announcements", "discussions"]
-              : scenario === "auto_documents_status"
-                ? ["submissions", "grades"]
-                : scenario.startsWith("auto_documents_replies")
-                  ? ["discussions"]
-                  : []),
+            ...(scenario === "auto_documents_all"
+              ? [
+                  "announcements",
+                  "discussions",
+                  "submissions",
+                  "grades",
+                  "modules",
+                  "files",
+                ]
+              : scenario === "auto_documents_topics"
+                ? ["announcements", "discussions"]
+                : scenario === "auto_documents_status"
+                  ? ["submissions", "grades"]
+                  : scenario.startsWith("auto_documents_replies") ||
+                      scenario === "auto_documents_all"
+                    ? ["discussions"]
+                    : scenario === "auto_documents_modules"
+                      ? ["modules"]
+                      : ["auto_documents_files", "auto_documents_pdf"].includes(
+                            scenario,
+                          )
+                        ? ["files"]
+                        : []),
           ],
         })
       ).status,

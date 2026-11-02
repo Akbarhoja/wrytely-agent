@@ -13,6 +13,8 @@ const transient = new Set([
   "provider_error",
   "network_or_redirect_blocked",
   "discovery_outcome_unknown",
+  "file_network_failed",
+  "file_access_failed",
 ]);
 const reasons = new Set([
   ...transient,
@@ -33,6 +35,7 @@ export function createCanvasHost({
   canvasOrigin,
   storageArea,
   alarms,
+  fileTransport,
   client,
   now = Date.now,
   randomUUID = () => crypto.randomUUID(),
@@ -49,7 +52,12 @@ export function createCanvasHost({
     ["get", "create", "clear"].some((k) => typeof alarms[k] !== "function")
   )
     throw error("invalid_configuration");
-  client ??= createPairingClient({ apiOrigin, canvasOrigin, storageArea });
+  client ??= createPairingClient({
+    apiOrigin,
+    canvasOrigin,
+    storageArea,
+    fileTransport,
+  });
   const key = `wrytely.canvas.host.v1:${apiOrigin}:${canvasOrigin}`;
   let busy = false,
     identityBusy = false,

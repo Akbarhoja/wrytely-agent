@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { DocumentResults } from "./document-results";
 import { ApiError } from "../lib/client";
 import { PrivateDraftStatus } from "./private-draft-status";
 import {
@@ -231,6 +232,11 @@ function ResultSession({
             <span>{workState[selected.status]}</span>
           </div>
           <p className="body-copy">{selected.objective}</p>
+          <DocumentResults
+            responsibilityId={selected.id}
+            enabled={enabled}
+            onSessionExpired={() => failed(new ApiError(401, "Expired"), "")}
+          />
           <PrivateDraftStatus
             responsibilityId={selected.id}
             enabled={enabled}
@@ -241,8 +247,8 @@ function ResultSession({
           />
           {drafts?.length === 0 && (
             <p>
-              No saved drafts were found in the last refresh. Refresh drafts after work status
-              changes.
+              No legacy snapshot drafts were found in the last refresh. Refresh drafts after work
+              status changes.
             </p>
           )}
           <ul className="academic-sources">

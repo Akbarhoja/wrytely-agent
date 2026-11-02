@@ -16,11 +16,16 @@ PAIRS = {
     "discussions": "discussion",
     "submissions": "submission",
     "grades": "grade",
+    "modules": "module",
 }
 
 
 def document_kind_allowed(resource, kind):
-    return kind == PAIRS.get(resource) or (resource == "discussions" and kind == "entry")
+    return (
+        kind == PAIRS.get(resource)
+        or (resource == "discussions" and kind == "entry")
+        or (resource == "modules" and kind == "module_item")
+    )
 
 
 class DocumentResource(Strict):
@@ -34,6 +39,7 @@ class DocumentResource(Strict):
         "discussions",
         "submissions",
         "grades",
+        "modules",
     ]
 
     @field_validator("course_id")
@@ -53,6 +59,8 @@ class DocumentItem(Strict):
         "submission",
         "grade",
         "entry",
+        "module",
+        "module_item",
     ]
     provider_id: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z0-9._:-]+$")
     provider_updated_at: str | None

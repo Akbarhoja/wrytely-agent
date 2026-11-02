@@ -5,33 +5,34 @@ existing Wrytely handwriting product for the Meta Global AI Developer Hackathon.
 
 ## Current implementation
 
-The reviewed M2 integration candidate includes a Python/FastAPI API, real Clerk
-sign-in, one private agent per verified user, scoped Postgres storage, a durable
-bounded Meta task loop, academic responsibilities and versioned source memory.
-Students can save manual academic snapshots, explicitly delegate one private draft,
-and inspect saved artifacts, source citations and verification findings. The
-planner chooses internal steps; policy/rubric assessment and mandatory draft checks
-constrain readiness. Supported quoted word ranges and disclosure placement have
-deterministic checks; semantic model assessments remain fallible.
+The P1 completion candidate on `codex/p1-completion` connects the existing Canvas
+extension to document storage and a student connection/coverage interface. It
+collects discovered courses, assignment instructions/rubrics, syllabus text,
+announcements, discussion threads/replies, modules/items, pages, own submissions/
+feedback, assignment grades and readable course files. PDF support extracts text;
+images, restricted or external content and unsupported formats remain explicit gaps.
+Students can choose course/content scope, inspect coverage and disconnect. Manual
+snapshots remain troubleshooting, not the normal connection flow.
 
-Official WhatsApp linking, webhook handling and delivery controls are implemented.
-Partial live M1 evidence exists, but reply delivery/business requirements and other
-acceptance checks remain open. The bounded live M2 attempt saved real authenticated
-snapshots/delegation, then failed on its first Meta assessment call with NotFoundError;
-no live checked draft was produced. Development workers remain stopped outside
-explicitly bounded tests. No assignment submission or classmate-sharing tool exists.
+Existing foundations include Clerk sign-in, a private agent per verified account,
+scoped Postgres memory, durable bounded Meta tasks, explicit delegation and checked
+private drafts. Document-based saved drafts now have an explicit v2 inspection view
+with pinned original evidence and current access checks. Saved checks do not grant
+permission to send or submit work.
 
-Canvas extension and Outlook email connectors, automatic commitment discovery,
-requirement adaptation acceptance and public pilot are still pending. Manual
-snapshots do not monitor course changes. This candidate is on
-`codex/m2-integration-review`; protected main has not received the combined baseline.
-The required first version uses our own Meta-powered runtime with Canvas, Outlook
-and WhatsApp. Teams, handwriting and Hermes adoption are outside its current build
-scope. See [ordered work orders](docs/WORK-ORDERS.md),
-[the reuse/gap audit](docs/IMPLEMENTATION-AUDIT.md),
-[STATUS.md](STATUS.md), [the shared plan](docs/BUILD-PLAN.md),
-[the M2 checkpoint](docs/M2-INTEGRATION-CHECKPOINT.md) and
-[the live attempt](docs/M2-RUN-2026-10-29.md) for evidence and limits.
+**P1 is not complete yet.** Local synthetic integration checks are separate from
+installed Chrome and live two-course acceptance. The new candidate has not been
+deployed; the existing isolated development service still runs the older M2 build.
+Independent review/CI and protected-main merge status remain separate. See
+[the P1 candidate and live checklist](docs/P1-COMPLETION-CANDIDATE.md),
+[STATUS.md](STATUS.md) and [work orders](docs/WORK-ORDERS.md).
+
+Continuous semester supervision and follow-through are later P2–P6 work. Development
+model and WhatsApp workers stay stopped outside separately authorized tests; no
+completed 24/7 academic agent is claimed. WhatsApp live-delivery acceptance remains
+open. Outlook email is optional and paused; Teams, handwriting and Hermes are outside
+the first-version scope. The existing handwriting product and its production
+configuration are not changed by this repository.
 
 ## Setup
 

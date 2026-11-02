@@ -1,0 +1,165 @@
+# Connected P1 completion candidate — November 2, 2026
+
+Owner: Akbar/Codex under the explicit remaining-P1 reassignment in [TEAM.md](../TEAM.md).
+Branch: `codex/p1-completion`, based on #164 `31f3f8b`; prior progress `a8915a8`.
+This is a connected implementation and validation candidate, **not completed P1**.
+[Work-order acceptance](WORK-ORDERS.md#p1--automatic-collection-and-usable-memory)
+remains required. Outlook is optional/paused; P0 WhatsApp remains Murtazo's.
+
+## What this candidate adds
+
+The original host, paired client, durable discovery/upload journal, document producer,
+Store and publication boundary are reused. There is no second agent/runtime/journal.
+
+| Source                    | What is collected                                                                            | Explicit limits                                                                                                      |
+| ------------------------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Courses                   | Paginated active-course discovery, no manual course IDs                                      | Selected account/origin only; disappeared rows need confirmation                                                     |
+| Assignments               | Authoritative instructions, rubric fields and effective dates                                | No submission/write; hidden/external requirements remain gaps                                                        |
+| Syllabus/pages            | Original inert HTML text with provenance                                                     | Linked, image or external content is not inferred from visible text                                                  |
+| Announcements/discussions | Prompts, paginated entries and full reply pages                                              | Never post to unlock; author roles/attachments may remain unknown                                                    |
+| Modules                   | Paginated modules plus separately paginated item lists                                       | References do not launch quizzes or external tools; inline item sample is insufficient                               |
+| Submissions               | Own status and read-only detail, inert body text and comment text/timestamps                 | No other students or author IDs; quiz bodies/attempts are skipped; attachments/external submissions stay gaps        |
+| Grades                    | Original own-assignment marks, points possible and current/previous/unverified attempt basis | Null means unknown; no invented course total, weighting or pass prediction                                           |
+| Files                     | Paginated authorized course-file list and each file's contents within limits                 | PDF/plain text/HTML; inaccessible or unlisted linked files cannot be certified read; DOCX/images/OCR not implemented |
+
+Files use exact approved Canvas storage hosts only, omitted credentials, one approved
+file-host-to-CDN redirect, strict MIME/size/signature checks and identity checks
+before network and before returning bytes. Signed URLs/bytes do not enter the local
+upload journal. The production package includes `webRequest` plus the two exact
+storage hosts; this expands the older diagnostic/package permissions and requires
+operator review and user installation consent.
+
+Conversion is credential/generation/scope-fenced before and after work. PDF parsing
+runs in a child with an 8-second CPU limit, 12-second parent deadline, bounded pypdf
+decoding and at most 200 pages/200,000 characters from a 5 MiB file. Linux has a
+512 MiB address-space limit; macOS uses a sampled RSS watchdog because that OS
+rejects the hard address-space limit. It is not an absolute macOS RAM guarantee.
+Blank/image pages and layout remain gaps. No executable document content, external
+decoder, source URL fetch or OCR is enabled.
+
+Unknown MIME files can be published only as empty unsupported documents with an
+explicit unsupported-format gap. Restricted unsupported files remain unsupported,
+not falsely parsed. Existing schema-1 inline resource routes still reject modules
+and files; new document resources close through the schema-2 document boundary.
+
+## Student interface and private reads
+
+The Connections view now has Canvas pairing, account connection metadata, all-active
+or explicit course/content scope, paginated discovered courses, scan/discovery times,
+resource coverage and retained incomplete-item counts. It distinguishes a finished
+scan from complete content and current knowledge. The agent cannot read new Canvas
+changes while Chrome is stopped or the Canvas session is unavailable. Optional
+Outlook is visibly disconnected/paused. Manual snapshots moved to source troubleshooting.
+
+New session-only routes:
+
+```text
+GET /v1/source-connections?limit=20&cursor=<owned connection UUID>
+GET /v1/source-connections/canvas/setup
+GET /v1/source-connections/<UUID>/canvas/coverage?limit=20&after=<course ID>
+```
+
+They return no ingestion bearer, provider subject, private body or signed download URL.
+The existing same-origin web proxy allowlists these reads, pairing/scope/revoke and
+private v2 reads. Ingestion bind/redeem/context/document operations are not forwarded
+through the student session proxy. Ownership is always the verified session.
+
+Document-backed results use the existing private v2 list/detail/evidence APIs.
+The view shows saved checks separately from current evidence and renders draft and
+original text inertly. Citation and pinned-check policy/rubric reads page the same
+original source; a 409 authority change clears displayed content. Account/component
+changes abort old requests. Strict Mode cleanup/replay is tested; linking expiry has
+a timer only while a challenge is displayed, rather than rerendering courses forever.
+
+Operator configuration is default-off:
+
+```text
+AGENT_CANVAS_ORIGINS=["https://colostate.instructure.com"]
+AGENT_CANVAS_DOCUMENT_EXTRACTORS=["canvas.html.v1","canvas.json.v1","canvas.text.v1","canvas.pdf.v1"]
+```
+
+Settings only accept the four local extractor identifiers. No source can choose a
+parser or grant a scope. Explicit factory overrides used by tests remain separate.
+New bounded ingestion operations are `/documents/file-extract` and `/documents/resource`.
+A file-extract request is schema2/operation `extract_file` with origin, connection,
+generation, scope_revision, course_id, file_id, content_type and base64 data. It is
+not an arbitrary URL-fetch endpoint. Maximum transport is 8 MiB and decoded file 5 MiB.
+
+## Local evidence
+
+Tests use synthetic source responses, real JS production clients, loopback FastAPI
+and disposable Postgres. No provider/model API, real course upload or WhatsApp send
+is needed for them.
+
+- The combined nine-resource scenario discovers two courses and runs three scans,
+  recreating clients on each tick. It verifies **156 observations, 57 immutable
+  roots/events and 99 committed batches**; unchanged data dedupes, and changed
+  deadline/reply/grade/two file texts create only their expected new roots/events.
+- A separate real JS/HTTP PDF case verifies actual synthetic PDF bytes through
+  isolated conversion, publication and stored original page text: 36 observations,
+  13 roots/events, 33 batches; two unchanged PDF roots across all three scans.
+- Module tests enforce separate item pagination and parent/continuation validation,
+  with quiz references never visited. File tests cover host/redirect/MIME/size,
+  account changes, PDF signature and restricted unsupported formats. A revocation
+  during PDF extraction must discard the converted private result.
+- Coverage HTTP tests verify private ownership, controls, strict pagination and
+  no secret/content projection. Web tests cover scope/pairing account changes,
+  Strict Mode recovery, source paging and content clearing after authority loss.
+- Final complete suite results are recorded in [STATUS.md](../STATUS.md).
+
+The first full run found schema-1 modules were accidentally widened by the shared
+resource map: 1 failure/1,634 pass. Keeping the original inline resource literal
+fixed that regression; focused compatibility/module/coverage checks pass. A PDF
+acceptance assertion initially used a nonexistent metadata column; the existing
+format column is now used. These are not provider failures or permission workarounds.
+
+## Concrete development target; not activated
+
+Read-only CLI inventory confirms project `wrytely-agent-development`
+`b089bb4d-23a5-4897-9ecb-084965e498ba`, environment named `production`
+`7ab2c8b9-a691-49bc-9922-a0a912cb51e2`, service `agent-api`
+`4e3d17a0-a8ce-4563-9509-11caf14ad6fa`. The environment's name is Railway's default;
+the project is the isolated agent development project, not the handwriting product.
+Its existing endpoint is `https://agent-api-production-409f.up.railway.app`.
+
+The deployed service still runs the older M2 candidate and has a predeploy migration
+command. A new deploy would apply pending 010–022 agent-schema migrations after
+checking its actual ledger. There is no migration008 in this candidate. Additive
+schema rollback must preserve data; do not drop the schema to revert an app build.
+Model/delivery workers remain stopped, and this API deployment does not start them.
+
+An inactive local package is prepared at `.local/canvas-packages/p1-completion-20261102`
+for the exact development API and CSU Canvas origins. It has not been installed,
+paired, granted permissions or enabled. Regenerate it after any runtime changes.
+No retained migration, service change, public signup or protected-main merge occurred.
+
+The browser visual check used the existing local frontend and current second
+participant session. It correctly reports that the new Canvas backend setup is not
+installed. This is an error-state layout check, not live coverage/result acceptance.
+Do not pair Akbar's Canvas account under that second participant's Wrytely account.
+
+## Remaining P1 acceptance — next execution, not assumed passed
+
+1. Complete candidate review/CI. M reviews delivered code; he does not resume overlapping
+   P1 implementation. Main approval/merge protections stay in place.
+2. Obtain scoped approval for the isolated development deploy, pending agent migrations,
+   exact Canvas origin/converter configuration, and the real course-data test below.
+3. Review/publish the factual Canvas privacy amendment before real pilot ingestion;
+   the current approved notice still says Canvas is not connected. The prepared
+   [amendment](P1-CANVAS-PRIVACY-AMENDMENT.md) is a draft, not the effective notice.
+4. Sign into Wrytely with the actual source owner's account. Review/load the prepared
+   unpacked package in Chrome. Pair and verify Canvas identity without exporting
+   passwords, cookies or session credentials.
+5. Discover courses, choose two controlled courses in the UI, then read them through
+   the extension. Inspect actual syllabus/assignment/rubric/thread/file/submission
+   results and gaps, not only successful course counts. A restricted listing/linked
+   file or institution-specific response may require further code; do not mark it read.
+6. Repeat unchanged sync and verify no new immutable content/events. Use a controlled
+   changed item or a consenting controlled course for change proof; never alter a real
+   academic deadline or discussion to manufacture test evidence.
+7. Verify installed worker suspension/browser restart and expired-session recovery,
+   disconnect/scope-change fencing and two-account isolation with the actual paired
+   host. Coordinate disruptive Chrome/session tests and human Duo sign-in.
+8. Record live and local evidence separately. Keep model/delivery workers stopped and
+   collection paused after the bounded acceptance run. Only mark P1 complete after
+   its required checks and reviews are resolved; stop before P2 per Akbar's instruction.

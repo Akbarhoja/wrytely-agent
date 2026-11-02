@@ -273,3 +273,38 @@ describe("authenticated API boundary", () => {
     expect(await response.text()).not.toContain("sensitive");
   });
 });
+
+describe("session Canvas connection proxy", () => {
+  it("forwards bounded coverage queries using the verified session", async () => {
+    const deps = dependencies();
+    const path = "source-connections/00000000-0000-4000-8000-000000000001/canvas/coverage";
+    const response = await forward(
+      request(path + "?limit=20&after=101", "GET"),
+      path.split("/"),
+      deps,
+    );
+    expect(response.status).toBe(202);
+    expect(String(deps.fetch.mock.calls[0][0])).toContain("/v1/" + path + "?limit=20&after=101");
+    expect(new Headers(deps.fetch.mock.calls[0][1]?.headers).get("authorization")).toBe(
+      "Bearer verified-session-token",
+    );
+  });
+  it.each([
+    "source-connections/canvas/redeem",
+    "source-connections/canvas/bind",
+    "source-connections/canvas/context",
+    "source-connections/canvas/documents/file-extract",
+  ])("never forwards ingestion operation %s", async (path) => {
+    const deps = dependencies();
+    expect((await forward(request(path), path.split("/"), deps)).status).toBe(404);
+    expect(deps.fetch).not.toHaveBeenCalled();
+  });
+  it("rejects owner overrides and duplicate queries before fetching", async () => {
+    for (const suffix of ["?user_id=bob", "?limit=1&limit=2"]) {
+      const deps = dependencies();
+      const path = "source-connections";
+      expect((await forward(request(path + suffix, "GET"), [path], deps)).status).toBe(400);
+      expect(deps.fetch).not.toHaveBeenCalled();
+    }
+  });
+});

@@ -222,3 +222,68 @@ test("malformed grade attempt flags cannot certify current marks", () => {
   value.grade_matches_current_submission = "true";
   assert.throws(() => prepare("grades", value));
 });
+
+test("own submission detail is read without opening a quiz or retaining author IDs", async () => {
+  const value = raw();
+  delete value.assignment.quiz_id;
+  value.body = "<p>Original own answer</p>";
+  value.submission_comments = [
+    {
+      comment: "Original feedback",
+      created_at: "2026-11-01T01:00:00Z",
+      author_id: 8,
+    },
+  ];
+  const calls = [];
+  const reader = makeDocumentReader(origin, async (url) => {
+    calls.push(url);
+    const result = Response.json(
+      url.endsWith("/profile")
+        ? { id: 7 }
+        : url.includes("/submissions/self")
+          ? value
+          : [value],
+    );
+    Object.defineProperty(result, "url", { value: url });
+    return result;
+  });
+  const page = await reader("101", "submissions", null, "7");
+  assert.ok(
+    calls.includes(
+      origin +
+        "/api/v1/courses/101/assignments/17/submissions/self?include[]=submission_comments",
+    ),
+  );
+  const transformed = {
+    ...page.data[0],
+    _wrytely_submission: {
+      text: "Original own answer",
+      missing: ["html_text_only"],
+    },
+  };
+  const document = prepare("submissions", transformed);
+  const source = JSON.parse(document.source.text);
+  assert.equal(source.body, "Original own answer");
+  assert.equal(source.feedback[0].text, "Original feedback");
+  assert.ok(!JSON.stringify(document).includes("author_id"));
+  assert.ok(!document.metadata.missing.includes("submission_body_unread"));
+});
+test("a different student returned by detail is rejected", async () => {
+  const value = raw();
+  delete value.assignment.quiz_id;
+  const reader = makeDocumentReader(origin, async (url) => {
+    const response = Response.json(
+      url.endsWith("/profile")
+        ? { id: 7 }
+        : url.includes("/submissions/self")
+          ? { ...value, user_id: 8 }
+          : [value],
+    );
+    Object.defineProperty(response, "url", { value: url });
+    return response;
+  });
+  await assert.rejects(
+    reader("101", "submissions", null, "7"),
+    /invalid_collection/,
+  );
+});

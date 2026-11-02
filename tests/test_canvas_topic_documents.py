@@ -18,6 +18,7 @@ from test_canvas_sync import device as device
         ("discussions", "entry"),
         ("submissions", "submission"),
         ("grades", "grade"),
+        ("modules", "module"),
     ],
 )
 def test_topic_originals_keep_resource_identity_gaps_replay_and_access_controls(
@@ -38,6 +39,14 @@ def test_topic_originals_keep_resource_identity_gaps_replay_and_access_controls(
             "due_at": None,
         }
     )
+    if kind == "module":
+        body["object_fields"] = {
+            "position": "1",
+            "unlock_at": None,
+            "require_sequential_progress": True,
+            "prerequisite_module_ids": [],
+            "state": "started",
+        }
     if kind == "entry":
         body["object_fields"]["parent_entry_id"] = "49"
     if kind == "submission":

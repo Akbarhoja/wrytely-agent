@@ -1301,6 +1301,24 @@ export function discoveryOperations({
         await prepare();
         return page;
       },
+      extractFile: async (course, file_id, content_type, data) => {
+        const p = await prepare();
+        available(p.j);
+        const result = await rpc(p, "document_file-extract", {
+          schema_version: 2,
+          operation: "extract_file",
+          origin: canvasOrigin,
+          connection_id: p.j.binding.connection_id,
+          generation: p.j.binding.generation,
+          scope_revision: p.j.binding.scope_revision,
+          course_id: course,
+          file_id,
+          content_type,
+          data,
+        });
+        await prepare();
+        return result;
+      },
       extract: async (course, kind, items) => {
         const p = await prepare();
         available(p.j);

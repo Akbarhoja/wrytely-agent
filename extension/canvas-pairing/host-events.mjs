@@ -17,7 +17,13 @@ const failed = () => ({
   enabled: false,
 });
 
-export function registerCanvasHost({ chrome, apiOrigin, canvasOrigin, host }) {
+export function registerCanvasHost({
+  chrome,
+  apiOrigin,
+  canvasOrigin,
+  host,
+  fileTransport,
+}) {
   const prior = registrations.get(chrome);
   if (prior) {
     if (
@@ -35,6 +41,7 @@ export function registerCanvasHost({ chrome, apiOrigin, canvasOrigin, host }) {
       canvasOrigin,
       storageArea: chrome.storage.local,
       alarms: chrome.alarms,
+      fileTransport,
     });
   const trustedPages = new Set(
     ["popup.html", "options.html"].map((path) => chrome.runtime.getURL(path)),

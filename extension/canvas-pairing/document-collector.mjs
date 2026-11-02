@@ -2,8 +2,10 @@
 import { prepareSubmissionDocuments } from "./submission-documents.mjs";
 import { mapAssignmentObservation } from "../canvas/assignment-observation.mjs";
 
+import { prepareModuleDocuments } from "./module-reader.mjs";
+import { prepareFileDocuments } from "./file-documents.mjs";
 const supported = (key) =>
-  /^[1-9][0-9]{0,19}\/(assignments|syllabus|pages|announcements|discussions|submissions|grades)$/.test(
+  /^[1-9][0-9]{0,19}\/(assignments|syllabus|pages|announcements|discussions|submissions|grades|modules|files)$/.test(
     key,
   );
 const controlled = new Set([
@@ -28,6 +30,10 @@ const controlled = new Set([
   "login_or_non_json",
   "invalid_response",
   "provider_error",
+  "file_network_failed",
+  "file_access_failed",
+  "unsafe_file_url",
+  "unsafe_file_redirect",
 ]);
 const summary = (s, action) => ({
   state: "progress",
@@ -94,6 +100,7 @@ export async function prepareCollectedDocuments({
   page,
   origin,
   extract,
+  extractFile,
 }) {
   const [course, kind] = resource_key.split("/");
   if (
@@ -102,8 +109,50 @@ export async function prepareCollectedDocuments({
     page.data.length > 4
   )
     throw Error();
-  if (["submissions", "grades"].includes(kind))
+  if (kind === "files")
+    return prepareFileDocuments({ resource_key, page, origin, extractFile });
+  if (kind === "modules")
+    return prepareModuleDocuments({ resource_key, page, origin });
+  if (["submissions", "grades"].includes(kind)) {
+    if (kind === "submissions") {
+      const inputs = page.data
+        .filter((raw) => !raw.assignment?.quiz_id)
+        .map((raw) => ({
+          provider_id: String(raw.assignment_id),
+          html: raw.body ?? null,
+        }));
+      const extracted = inputs.length
+        ? await extract(course, kind, inputs)
+        : null;
+      if (
+        inputs.length &&
+        (extracted?.schema_version !== 2 ||
+          extracted.extractor_version !== "canvas.html.v1" ||
+          extracted.resource?.course_id !== course ||
+          extracted.resource?.kind !== kind ||
+          extracted.items?.length !== inputs.length)
+      )
+        throw Error();
+      page = {
+        ...page,
+        data: page.data.map((raw) => {
+          if (raw.assignment?.quiz_id)
+            return { ...raw, _wrytely_submission: null };
+          const item = extracted.items.find(
+            (item) => item.provider_id === String(raw.assignment_id),
+          );
+          if (
+            !item ||
+            typeof item.text !== "string" ||
+            !Array.isArray(item.missing)
+          )
+            throw Error();
+          return { ...raw, _wrytely_submission: item };
+        }),
+      };
+    }
     return prepareSubmissionDocuments({ resource_key, page, origin });
+  }
   const inputs = page.data.map((raw) => {
     const provider_id = String(
       kind === "syllabus" ? course : kind === "pages" ? raw.page_id : raw.id,
@@ -290,6 +339,7 @@ export async function collectDocumentTick({
   inspect,
   readPage,
   extract,
+  extractFile,
   origin,
   conflicts,
 }) {
@@ -372,6 +422,7 @@ export async function collectDocumentTick({
       page,
       origin,
       extract,
+      extractFile,
     });
     await operations.commitDocumentPage(input);
     current = await inspect();

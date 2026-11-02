@@ -42,6 +42,10 @@ SCENARIOS = (
     "academic_cross_account",
     "assignment_collector_lifecycle",
     "assignment_collector_lost_after",
+    "auto_documents_pdf",
+    "auto_documents_all",
+    "auto_documents_files",
+    "auto_documents_modules",
     "auto_documents_replies",
     "auto_documents_replies_lost",
     "auto_documents_status",
@@ -81,7 +85,12 @@ def interop_service(canvas_store, scenario, monkeypatch):
             settings,
             store=canvas_store,
             verifier=SessionVerifier(),
-            canvas_document_extractors=("canvas.html.v1", "canvas.json.v1")
+            canvas_document_extractors=(
+                "canvas.html.v1",
+                "canvas.json.v1",
+                "canvas.text.v1",
+                "canvas.pdf.v1",
+            )
             if scenario.startswith("auto_documents_")
             else ("fixture.v1",)
             if scenario.startswith("document_")
@@ -219,10 +228,15 @@ def test_actual_client_http_contract(canvas_store, interop_service, scenario, mo
                 and catalog == 2
                 and batches
                 == (
-                    63
+                    99
+                    if scenario == "auto_documents_all"
+                    else 33
+                    if scenario in {"auto_documents_files", "auto_documents_pdf"}
+                    else 63
                     if scenario.startswith("auto_documents_replies")
                     else 39
-                    if scenario in {"auto_documents_topics", "auto_documents_status"}
+                    if scenario
+                    in {"auto_documents_topics", "auto_documents_status", "auto_documents_modules"}
                     else 24
                     if scenario == "auto_documents_restricted"
                     else 27
@@ -231,10 +245,15 @@ def test_actual_client_http_contract(canvas_store, interop_service, scenario, mo
             assert conn.execute(
                 "SELECT count(*) AS n FROM wrytely_agent.canvas_evidence_observations"
             ).fetchone()["n"] == (
-                120
+                156
+                if scenario == "auto_documents_all"
+                else 36
+                if scenario in {"auto_documents_files", "auto_documents_pdf"}
+                else 120
                 if scenario.startswith("auto_documents_replies")
                 else 42
-                if scenario in {"auto_documents_topics", "auto_documents_status"}
+                if scenario
+                in {"auto_documents_topics", "auto_documents_status", "auto_documents_modules"}
                 else 27
                 if scenario == "auto_documents_restricted"
                 else 30
@@ -242,12 +261,18 @@ def test_actual_client_http_contract(canvas_store, interop_service, scenario, mo
             assert conn.execute(
                 "SELECT count(*) AS n FROM wrytely_agent.canvas_evidence_events"
             ).fetchone()["n"] == (
-                42
+                57
+                if scenario == "auto_documents_all"
+                else 13
+                if scenario == "auto_documents_pdf"
+                else 15
+                if scenario == "auto_documents_files"
+                else 42
                 if scenario.startswith("auto_documents_replies")
                 else 16
                 if scenario == "auto_documents_status"
                 else 15
-                if scenario == "auto_documents_topics"
+                if scenario in {"auto_documents_topics", "auto_documents_modules"}
                 else 10
                 if scenario == "auto_documents_restricted"
                 else 11
@@ -255,12 +280,18 @@ def test_actual_client_http_contract(canvas_store, interop_service, scenario, mo
             assert conn.execute(
                 "SELECT count(*) AS n FROM wrytely_agent.canvas_document_versions"
             ).fetchone()["n"] == (
-                42
+                57
+                if scenario == "auto_documents_all"
+                else 13
+                if scenario == "auto_documents_pdf"
+                else 15
+                if scenario == "auto_documents_files"
+                else 42
                 if scenario.startswith("auto_documents_replies")
                 else 16
                 if scenario == "auto_documents_status"
                 else 15
-                if scenario == "auto_documents_topics"
+                if scenario in {"auto_documents_topics", "auto_documents_modules"}
                 else 10
                 if scenario == "auto_documents_restricted"
                 else 11
@@ -299,7 +330,17 @@ def test_actual_client_http_contract(canvas_store, interop_service, scenario, mo
                 assert "PRIVATE_RECENT_SAMPLE_ONLY" not in json.dumps(texts)
                 assert any("Reply 10112" in row["text"] for row in texts)
                 assert any("Reply 10101 changed" in row["text"] for row in texts)
-            if scenario == "auto_documents_status":
+            if scenario == "auto_documents_pdf":
+                originals = conn.execute(
+                    "SELECT text FROM wrytely_agent.canvas_document_sections"
+                ).fetchall()
+                assert "Synthetic syllabus." in json.dumps(originals)
+                roots = conn.execute(
+                    "SELECT count(*) AS n FROM wrytely_agent.canvas_document_versions "
+                    "WHERE format='pdf_text'"
+                ).fetchone()
+                assert roots["n"] == 2
+            if scenario in {"auto_documents_status", "auto_documents_all"}:
                 rows = conn.execute(
                     "SELECT payload FROM wrytely_agent.canvas_evidence_observations "
                     "WHERE resource_key IN ('101/grades','102/grades',"
@@ -311,6 +352,13 @@ def test_actual_client_http_contract(canvas_store, interop_service, scenario, mo
                     and "PRIVATE_FEEDBACK" not in serialized
                 )
                 assert "user_id" not in serialized
+                contents = json.dumps(
+                    conn.execute(
+                        "SELECT text FROM wrytely_agent.canvas_document_sections"
+                    ).fetchall()
+                )
+                assert "OWN_SUBMISSION_BODY" in contents and "OWN_FEEDBACK" in contents
+                assert "PRIVATE_SCRIPT" not in contents
                 scores = [row["payload"]["fields"]["object_fields"].get("score") for row in rows]
                 assert "12" in scores and "18" in scores
         elif scenario.startswith("document_"):

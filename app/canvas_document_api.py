@@ -1,15 +1,19 @@
 """Default-off private HTTP assembly for existing document staging transactions."""
 
+import base64
 import unicodedata
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Request, Response
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.canvas_sync_api import CONFLICT_CODES
 from app.source_connections import CanvasRoute
-from contracts.canvas_sync import course_id
+from contracts.canvas_document_publication import DocumentResource
+from contracts.canvas_sync import course_id, replay_key
 from integrations.canvas.html_extract import extract_html
+from integrations.canvas.pdf_extract import extract_pdf
 from shared.canvas_document_uploads import CanvasDocumentUploadLimited
 from shared.canvas_sync import CanvasSyncConflict
 from shared.db import Store
@@ -138,7 +142,14 @@ def register_canvas_documents(api, *, database_dependency, canvas_origins, extra
                 or resource.keys() != {"course_id", "kind"}
                 or type(resource["kind"]) is not str
                 or resource["kind"]
-                not in {"assignments", "syllabus", "pages", "announcements", "discussions"}
+                not in {
+                    "assignments",
+                    "syllabus",
+                    "pages",
+                    "announcements",
+                    "discussions",
+                    "submissions",
+                }
             ):
                 raise ValueError()
             course_id(resource["course_id"])
@@ -264,4 +275,153 @@ def register_canvas_documents(api, *, database_dependency, canvas_origins, extra
 
         return dispatch(request, credentials, body, None, commit)
 
+    @router.post("/resource")
+    def document_resource(
+        request: Request, credentials: Credential, db: DB, body: Annotated[dict, Body(strict=True)]
+    ):
+        def finish(token):
+            if body.keys() != {
+                "scan_id",
+                "generation",
+                "lease_token",
+                "resource_key",
+                "finish_key",
+                "expected_checkpoint",
+                "outcome",
+                "reason",
+            }:
+                raise ValueError()
+            if (
+                type(body["generation"]) is not int
+                or body["generation"] < 1
+                or type(body["resource_key"]) is not str
+            ):
+                raise ValueError()
+            course, separator, kind = body["resource_key"].partition("/")
+            if not separator:
+                raise ValueError()
+            DocumentResource(course_id=course, kind=kind)
+            for key in ["scan_id", "lease_token"]:
+                if type(body[key]) is not str or str(UUID(body[key])) != body[key]:
+                    raise ValueError()
+            replay_key(body["finish_key"])
+            return db.finish_resource(
+                token,
+                body["scan_id"],
+                body["generation"],
+                body["lease_token"],
+                body["resource_key"],
+                body["finish_key"],
+                body["expected_checkpoint"],
+                outcome=body["outcome"],
+                reason=body["reason"],
+            )
+
+        return dispatch(request, credentials, body, None, finish)
+
+    class FileRoute(DocumentRoute):
+        body_limit = 8 * 1024 * 1024
+
+    files = APIRouter(prefix="/v1/source-connections/canvas/documents", route_class=FileRoute)
+
+    @files.post("/file-extract")
+    def file_extract(
+        request: Request, credentials: Credential, db: DB, body: Annotated[dict, Body(strict=True)]
+    ):
+        def convert(token):
+            if (
+                body.keys()
+                != {
+                    "operation",
+                    "schema_version",
+                    "origin",
+                    "connection_id",
+                    "generation",
+                    "scope_revision",
+                    "course_id",
+                    "file_id",
+                    "content_type",
+                    "data",
+                }
+                or type(body["schema_version"]) is not int
+                or body["schema_version"] != 2
+            ):
+                raise ValueError()
+            course_id(body["course_id"])
+            course_id(body["file_id"])
+            if (
+                type(body["content_type"]) is not str
+                or body["content_type"] not in {"application/pdf", "text/plain", "text/html"}
+                or type(body["data"]) is not str
+            ):
+                raise ValueError()
+            version = {
+                "application/pdf": "canvas.pdf.v1",
+                "text/plain": "canvas.text.v1",
+                "text/html": "canvas.html.v1",
+            }[body["content_type"]]
+            if version not in extractor_versions:
+                raise HTTPException(503, "Canvas file extraction is not configured")
+
+            def context():
+                current = db.canvas_connection_context(token, body["origin"])
+                if current["connection_id"] != body["connection_id"]:
+                    raise SourceCredentialRejected()
+                if (
+                    type(body["generation"]) is not int
+                    or current["generation"] != body["generation"]
+                ):
+                    raise CanvasSyncConflict("generation_changed")
+                if (
+                    type(body["scope_revision"]) is not int
+                    or current["scope_revision"] != body["scope_revision"]
+                ):
+                    raise CanvasSyncConflict("scope_changed")
+                if (
+                    current["state"] != "connected"
+                    or body["course_id"] not in current["course_ids"]
+                    or "files" not in current["resource_kinds"]
+                ):
+                    raise CanvasSyncConflict("resource_not_selected")
+
+            context()
+            try:
+                content = base64.b64decode(body["data"], validate=True)
+            except Exception:
+                raise ValueError() from None
+            if len(content) > 5 * 1024 * 1024:
+                raise HTTPException(413, "Canvas file exceeds limit")
+            if body["content_type"] == "application/pdf":
+                result = extract_pdf(content)
+                source = {"pages": result["pages"]} if result["pages"] else {"text": ""}
+                missing = result["missing"]
+                if not result["pages"]:
+                    version = "canvas.text.v1"
+                    if version not in extractor_versions:
+                        raise HTTPException(503, "Canvas text extraction is not configured")
+            elif body["content_type"] == "text/html":
+                result = extract_html(content)
+                source, missing = {"text": result.text}, list(result.reasons)
+            else:
+                text = (
+                    content.decode("utf-8-sig", errors="strict")
+                    .replace("\r\n", "\n")
+                    .replace("\r", "\n")
+                )
+                text = unicodedata.normalize("NFC", text)
+                if len(text) > 200000 or "\x00" in text:
+                    raise ValueError()
+                source, missing = {"text": text}, (["empty_file"] if not text.strip() else [])
+            context()
+            return {
+                "schema_version": 2,
+                "extractor_version": version,
+                "source": source,
+                "coverage": "partial" if missing else "complete",
+                "missing": missing,
+            }
+
+        return dispatch(request, credentials, body, "extract_file", convert)
+
+    api.include_router(files)
     api.include_router(router)

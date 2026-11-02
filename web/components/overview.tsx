@@ -228,16 +228,18 @@ export function Overview({
         <section className="semester-panel">
           <BookOpen size={24} aria-hidden />
           <h2>Bring your semester together.</h2>
-          <p>Canvas for your courses. Teams for your people. One agent to help connect the dots.</p>
+          <p>
+            Connect Canvas to discover your courses and read assignments, discussions and documents.
+          </p>
           <div className="integration-names">
             <span>Canvas</span>
-            <span>Teams</span>
-            <span>Calendar</span>
+            <span>WhatsApp</span>
+            <span>Outlook · Optional</span>
           </div>
           <button className="text-button" onClick={onConnections}>
             See connections <ArrowUpRight size={16} aria-hidden />
           </button>
-          <p className="connection-footnote">Connections are coming soon.</p>
+          <p className="connection-footnote">Choose what Wrytely can read in Connections.</p>
         </section>
         <p className="rail-footnote">
           Your agent should carry the work forward. You shouldn’t have to manage every step.

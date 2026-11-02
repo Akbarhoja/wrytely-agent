@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     clerk_jwt_key: SecretStr | None = None
     authorized_parties: list[str] = Field(default_factory=list)
     canvas_origins: Annotated[tuple[str, ...], NoDecode] = Field(default=(), max_length=20)
+    canvas_document_extractors: Annotated[tuple[str, ...], NoDecode] = ()
     meta_api_key: SecretStr | None = None
     meta_model: str = "muse-spark-1.3"
     whatsapp_approved_templates: list[ApprovedTemplate] = Field(default_factory=list, max_length=20)
@@ -47,6 +48,27 @@ class Settings(BaseSettings):
         if len(set(validated)) != len(validated):
             raise ValueError("Duplicate Canvas origin")
         return validated
+
+    @field_validator("canvas_document_extractors", mode="before")
+    @classmethod
+    def validate_extractors(cls, versions):
+        if isinstance(versions, str):
+            try:
+                versions = json.loads(versions)
+            except ValueError:
+                raise ValueError("Canvas extractors require a JSON list") from None
+        if (
+            not isinstance(versions, (list, tuple))
+            or len(versions) > 4
+            or any(
+                type(v) is not str
+                or v not in {"canvas.html.v1", "canvas.json.v1", "canvas.text.v1", "canvas.pdf.v1"}
+                for v in versions
+            )
+            or len(set(versions)) != len(versions)
+        ):
+            raise ValueError("Invalid Canvas extractor configuration")
+        return tuple(versions)
 
     def readiness(self) -> dict[str, bool]:
         return {
