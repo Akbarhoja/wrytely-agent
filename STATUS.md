@@ -30,6 +30,20 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+Latest complete A feature: private v2 artifact Store reads on
+codex/private-artifact-results from #163027da3f. Metadata-only keyset list, draft/
+validated saved check detail and exact original citation/policy/rubric reads are
+implemented, with real mixed refs, current authority/final expiry checks and separate
+inspection status. Existing v1 filters remain unchanged. Controls expose actual
+agent_paused/responsibility_status. New46focusedPASS/zero skips8.28s; full fresh
+disposable backend1,531PASS/zero skips/2existingwarnings116.63s, all460NodePASS and
+Ruff lint/format238 pass.
+[Feature evidence](docs/P1-PRIVATE-ARTIFACT-READS.md). M now has concrete Store methods
+for HTTP/UI assembly; no mandatory #157 agreement pause remains. No M file, public
+route, schema, source/model/send/spend/grant/install/retained migration/worker/deploy/
+mainmerge changed. Review/new CI and the collection journal/publication gap remain;
+P0/P1 are open.
+
 Supervisor execution update: Akbar explicitly removed mandatory routine agreement
 and exact-file claim gates. Owners proceed with versioned interfaces and asynchronous
 coordination; changes are batched into complete features. Required human merge review,

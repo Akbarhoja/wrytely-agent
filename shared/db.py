@@ -25,6 +25,7 @@ from shared.connection_status import ConnectionStatusStore
 from shared.delivery_store import DeliveryStore
 from shared.draft_intents import DraftIntentStore
 from shared.drafting_tasks import DraftingTaskStore
+from shared.private_artifact_reads import PrivateArtifactReadStore
 from shared.responsibilities import ResponsibilityStore
 from shared.source_connections import SourceConnectionStore, canvas_origin
 from shared.typed_evidence_store import TypedEvidenceStore
@@ -52,6 +53,7 @@ class Store(
     DraftingTaskStore,
     ConnectionStatusStore,
     AcademicReadStore,
+    PrivateArtifactReadStore,
     BoundResponsibilityStore,
     DraftIntentStore,
     SourceConnectionStore,
