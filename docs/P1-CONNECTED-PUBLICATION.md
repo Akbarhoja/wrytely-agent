@@ -1,5 +1,10 @@
 # Connected P1 document publication and private reads
 
+November2 continuation adds announcement and discussion-prompt documents to the
+automatic collector. This supersedes the three-kind scope described in the older
+checkpoint below; discussion replies are still unfinished. No installed/live
+collection, worker activation or deployment is implied.
+
 Akbar/Codex implements the reassigned P1 completion on `codex/p1-completion`,
 using Murtazo's existing client, journal, host, package and document producer.
 This record supersedes the missing-publication and pending-ownership descriptions
@@ -98,6 +103,64 @@ Files/PDFs and linked document contents, modules, announcements, discussions/rep
 submissions/grades, student coverage/results screens and installed/live validation
 remain required P1 work. The three source kinds above do not substitute for them.
 The extractor remains default-off; no development server or live browser was enabled.
+
+## Announcements, discussion prompts and resource failures
+
+The existing schema2 document discriminator now accepts two additional exact
+resource/owner pairs: announcements/announcement and discussions/discussion.
+Their object fields reuse the existing schema1 announcement/discussion validators,
+including posted_at and required_initial_post. Existing schema1 routes and all
+original document pairs retain their meaning; no database migration is needed.
+Header and publication parsers share one resource/owner mapping. Extraction accepts
+these additional selected resource kinds through the same default-off trusted
+canvas.html.v1 implementation.
+
+Both are collected from the course-scoped discussion_topics list/detail API, using
+only_announcements=true for announcements and false for discussions. All four-item
+pagination, origin/path/query restrictions, identity checks around each request,
+full-body extraction and durable staging/publication rules remain. No recent-only
+announcement date window is introduced. API behavior follows the official
+[discussion topics documentation](https://developerdocs.instructure.com/services/canvas/resources/discussion_topics)
+and [announcement documentation](https://developerdocs.instructure.com/services/canvas/resources/announcements).
+The detail's is_announcement must match the requested resource to prevent mixing.
+
+Announcement posted_at is normalized to the same UTC microsecond representation
+as the existing server field validator before the immutable document digest is
+computed. Invalid dates reject rather than roll over into another day. Author roles
+remain unknown rather than inferred from display names. Discussion dates remain
+unverified/null until effective assignment-date reading is connected for them.
+
+Discussion prompt reads do not request entries/view endpoints or post anything to
+unlock replies. They retain discussion_replies_unread, author_role_not_observed and
+student_specific_dates_unverified. If an initial post is required and posts are not
+visible, initial_post_required remains explicit. Announcements with unknown/nonzero
+reply count retain announcement_replies_unread. These gaps are not complete coverage;
+the saved prompt is not proof that replies were collected.
+
+A provider403 on one selected resource now closes only that resource as
+restricted/permission_denied, allowing other courses to continue. A404 records
+partial/extraction_failed; it is neither deletion evidence nor a fabricated claim
+about permissions. Session loss/account changes still stop collection. These gap
+closures use the existing journal/replay machinery and never invent empty complete
+content or delete earlier source history.
+
+Additional connected scenarios exercise five resource kinds across two automatically
+discovered courses over three scans:42observations,15roots/events, unchanged-root
+deduplication and one changed due date. A separate403 scenario retains a restricted
+course-page resource while collecting the other course and source kinds. Real Store
+tests independently cover new topic publication/read/replay, exact resource-kind
+pairing, cross-account denial and unselected-topic rejection. New Node checks cover
+endpoint selection, hidden replies, unknown role/date gaps, microseconds, malformed
+dates, resource-level restriction and session-loss handling. Combined regression:
+1,604backend tests pass on fresh disposable Postgres, zero skips and two existing
+warnings147.78s;493Node tests pass. Ruff lint/format245files, changed-file Prettier,
+documentation links and diff checks pass. Three new Store/HTTP cases and two new
+actual-client scenarios add five backend cases; twelve new Node cases add source
+and failure-handling coverage. Website code is unchanged from its prior120tests/
+TypeScript pass. These are local/synthetic results, not installed/live validation.
+
+Discussion replies, modules, files/PDFs and linked contents, submissions/grades,
+student screens and installed/live acceptance remain P1 work.
 
 ## Private result HTTP
 

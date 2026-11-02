@@ -42,6 +42,8 @@ SCENARIOS = (
     "academic_cross_account",
     "assignment_collector_lifecycle",
     "assignment_collector_lost_after",
+    "auto_documents_restricted",
+    "auto_documents_topics",
     "auto_documents_lifecycle",
     "auto_documents_lost_batch",
     "document_complete",
@@ -209,24 +211,44 @@ def test_actual_client_http_contract(canvas_store, interop_service, scenario, mo
             "SELECT count(*) AS n FROM wrytely_agent.source_versions"
         ).fetchone()["n"]
         if scenario.startswith("auto_documents_"):
-            assert versions == 0 and catalog == 2 and batches == 27
             assert (
-                conn.execute(
-                    "SELECT count(*) AS n FROM wrytely_agent.canvas_evidence_observations"
-                ).fetchone()["n"]
-                == 30
+                versions == 0
+                and catalog == 2
+                and batches
+                == (
+                    39
+                    if scenario == "auto_documents_topics"
+                    else 24
+                    if scenario == "auto_documents_restricted"
+                    else 27
+                )
             )
-            assert (
-                conn.execute(
-                    "SELECT count(*) AS n FROM wrytely_agent.canvas_evidence_events"
-                ).fetchone()["n"]
-                == 11
+            assert conn.execute(
+                "SELECT count(*) AS n FROM wrytely_agent.canvas_evidence_observations"
+            ).fetchone()["n"] == (
+                42
+                if scenario == "auto_documents_topics"
+                else 27
+                if scenario == "auto_documents_restricted"
+                else 30
             )
-            assert (
-                conn.execute(
-                    "SELECT count(*) AS n FROM wrytely_agent.canvas_document_versions"
-                ).fetchone()["n"]
-                == 11
+            assert conn.execute(
+                "SELECT count(*) AS n FROM wrytely_agent.canvas_evidence_events"
+            ).fetchone()["n"] == (
+                15
+                if scenario == "auto_documents_topics"
+                else 10
+                if scenario == "auto_documents_restricted"
+                else 11
+            )
+            assert conn.execute(
+                "SELECT count(*) AS n FROM wrytely_agent.canvas_document_versions"
+            ).fetchone()["n"] == (
+                15
+                if scenario == "auto_documents_topics"
+                else 10
+                if scenario == "auto_documents_restricted"
+                else 11
             )
             text = conn.execute(
                 "SELECT text FROM wrytely_agent.canvas_document_sections "

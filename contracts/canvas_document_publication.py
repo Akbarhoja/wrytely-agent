@@ -7,12 +7,19 @@ from pydantic import Field, field_validator, model_validator
 
 from contracts.canvas_sync import DiscoveryBatch, Strict, course_id
 
-PAIRS = {"assignments": "assignment", "syllabus": "syllabus", "pages": "page", "files": "file"}
+PAIRS = {
+    "assignments": "assignment",
+    "syllabus": "syllabus",
+    "pages": "page",
+    "files": "file",
+    "announcements": "announcement",
+    "discussions": "discussion",
+}
 
 
 class DocumentResource(Strict):
     course_id: str
-    kind: Literal["assignments", "syllabus", "pages", "files"]
+    kind: Literal["assignments", "syllabus", "pages", "files", "announcements", "discussions"]
 
     @field_validator("course_id")
     @classmethod
@@ -21,7 +28,7 @@ class DocumentResource(Strict):
 
 
 class DocumentItem(Strict):
-    kind: Literal["assignment", "syllabus", "page", "file"]
+    kind: Literal["assignment", "syllabus", "page", "file", "announcement", "discussion"]
     provider_id: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z0-9._:-]+$")
     provider_updated_at: str | None
     title: str = Field(max_length=300)

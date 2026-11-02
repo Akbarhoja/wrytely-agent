@@ -1,6 +1,6 @@
 # Engineering status
 
-Updated November 1, 2026. [Plan revision7](docs/BUILD-PLAN.md) ·
+Updated November 2, 2026. [Plan revision7](docs/BUILD-PLAN.md) ·
 [Work orders](docs/WORK-ORDERS.md) · [Code audit](docs/IMPLEMENTATION-AUDIT.md) ·
 [Team coordination](https://github.com/Akbarhoja/wrytely-agent/issues/4)
 
@@ -29,6 +29,33 @@ Outlook remains unverified but is now optional and paused by explicit supervisor
 it no longer gates the core product. No new/duplicate CSU approval request will be submitted.
 
 ## Current work and evidence
+
+November2 P1 continuation on codex/p1-completion adds automatic announcement and
+discussion-prompt list/detail reads to the existing document collector. Schema2
+header/publication shares one extended resource/owner mapping, reuses existing
+academic field validation, and needs no SQL migration. Announcements retain exact
+UTC microsecond posted_at before hashing; malformed dates reject. Topic content
+is not confused with replies, author roles are unknown, and effective discussion
+dates remain unverified/null. Initial-post restrictions remain explicit; no entry
+read or write is used to bypass them. Parser/source permissions stay default-off.
+
+One403 now closes only its selected resource as restricted; a404 records a partial
+read failure, never deletion. Other courses continue. Authentication/account loss
+still stops collection. Five-kind/two-course synthetic actual-client HTTP/Store
+acceptance produces42observations/15roots/events over3scans with unchanged sync
+deduplication and one changed due date. A separate restricted-resource scenario
+continues the remaining sources. Three new topic Store/HTTP tests cover originals,
+replay, scope and account isolation; twelve new Node checks cover resource URLs,
+hidden replies, canonical/invalid dates and failure classification.
+
+Full fresh disposable backend1,604PASS/zero skips/2existingwarnings147.78s;
+all493NodePASS; Ruff lint/format245files, scoped Prettier/docs/links/diff pass.
+Web unchanged from prior120PASS/TypeScript. [Exact behavior and limits](docs/P1-CONNECTED-PUBLICATION.md#announcements-discussion-prompts-and-resource-failures).
+No new M handoff at either coordination check. P1 remains open for discussion
+replies, modules, files/PDFs/linked contents, submissions/grades, student screens and
+installed/live acceptance. No live source/model/send/spend/grant/install, retained
+migration, worker activation, deployment or main merge. Earlier three-kind scope
+and whole-host-on403 descriptions are superseded by this continuation.
 
 Latest P1 collection checkpoint on codex/p1-completion: the actual background host
 now uses the connected document collector for assignments, syllabus HTML and course

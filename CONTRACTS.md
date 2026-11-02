@@ -53,6 +53,16 @@ No new paid allowance, migration, runtime, queue or source activation is implied
 
 ## Implemented private v2 artifact Store reads
 
+November2 P1 extension: schema2 document header/publication now also accepts
+announcements/announcement and discussions/discussion with the existing canonical
+EvidenceItem fields. The existing documents/extract endpoint accepts those selected
+resource kinds using the same trusted canvas.html.v1 parser. The host automatically
+collects full announcement/discussion-prompt text through course-scoped list/detail
+GETs. Replies remain explicitly unread; author roles and effective discussion dates
+are not inferred. A403 closes only that resource as restricted; a404 records partial
+read failure rather than deletion. [Exact behavior](docs/P1-CONNECTED-PUBLICATION.md#announcements-discussion-prompts-and-resource-failures).
+No schema migration, new permission, external write or deployment is introduced.
+
 P1 collection assembly now also registers POST
 `/v1/source-connections/canvas/documents/extract`. Exact schema2/operation
 extract_document, current ingestion connection/generation/scope and selected-course

@@ -44,6 +44,8 @@ const scenarios = [
   "academic_cross_account",
   "assignment_collector_lifecycle",
   "assignment_collector_lost_after",
+  "auto_documents_restricted",
+  "auto_documents_topics",
   "auto_documents_lifecycle",
   "auto_documents_lost_batch",
   "document_complete",
@@ -248,10 +250,22 @@ try {
           if (scenario.startsWith("auto_documents_")) {
             const parsed = new URL(url),
               match = parsed.pathname.match(
-                /^\/api\/v1\/courses\/(101|102)(?:\/(assignments|pages)(?:\/(\d+))?)?$/,
+                /^\/api\/v1\/courses\/(101|102)(?:\/(assignments|pages|discussion_topics)(?:\/(\d+))?)?$/,
               );
             if (match) {
               const [, course, kind, id] = match;
+              if (
+                scenario === "auto_documents_restricted" &&
+                course === "102" &&
+                kind === "pages"
+              ) {
+                const response = Response.json(
+                  { error: "permission_denied" },
+                  { status: 403 },
+                );
+                Object.defineProperty(response, "url", { value: url });
+                return response;
+              }
               const assignment = (n) => ({
                 id: n,
                 course_id: Number(course),
@@ -283,7 +297,24 @@ try {
                   name: `Automatic course ${course}`,
                   syllabus_body: "<p>Attendance is required.</p>",
                 };
-              else if (kind === "assignments") {
+              else if (kind === "discussion_topics") {
+                const announcement = id
+                  ? id === "50"
+                  : parsed.searchParams.get("only_announcements") === "true";
+                const value = {
+                  id: announcement ? 50 : 60,
+                  title: announcement ? "Deadline update" : "Weekly discussion",
+                  message: announcement
+                    ? "<p>The exam moved to Friday.</p>"
+                    : "<p>Discuss the reading.</p>",
+                  posted_at: "2026-11-01T00:00:00Z",
+                  is_announcement: announcement,
+                  require_initial_post: !announcement,
+                  user_can_see_posts: announcement,
+                  discussion_subentry_count: 0,
+                };
+                body = id ? value : [value];
+              } else if (kind === "assignments") {
                 if (id) body = assignment(Number(id));
                 else {
                   const second = parsed.searchParams.get("page") === "2";
@@ -447,7 +478,14 @@ try {
           generation: context.generation,
           mode: "all_active",
           course_ids: [],
-          resource_kinds: ["assignments", "syllabus", "pages"],
+          resource_kinds: [
+            "assignments",
+            "syllabus",
+            "pages",
+            ...(scenario === "auto_documents_topics"
+              ? ["announcements", "discussions"]
+              : []),
+          ],
         })
       ).status,
       200,
@@ -459,6 +497,8 @@ try {
         phase = "automatic_document_tick";
         const result = await alice.fresh().collectDocumentPage();
         if (result.state === "blocked") {
+          phase =
+            "automatic_" + result.reason + "_" + documentBodies.at(-1)?.action;
           assert.equal(scenario, "auto_documents_lost_batch");
           assert.equal(result.reason, "discovery_outcome_unknown");
           continue; // Next tick replays durable pending request before re-reading.

@@ -132,3 +132,159 @@ test("a response for a different course cannot become this course's evidence", a
     }),
   );
 });
+
+test("a forbidden resource is recorded as restricted so other courses can continue", async () => {
+  let outcome;
+  const current = inspection();
+  const result = await collectDocumentTick({
+    inspect: async () => current,
+    conflicts: [],
+    origin,
+    readPage: async () => {
+      throw Object.assign(Error(), { code: "permission_denied" });
+    },
+    operations: {
+      finishDiscoveryResource: async (input) => {
+        outcome = input;
+      },
+    },
+  });
+  assert.deepEqual(outcome, {
+    resource_key: "101/pages",
+    outcome: "restricted",
+    reason: "permission_denied",
+  });
+  assert.equal(result.action, "restricted_documents");
+});
+
+test("login loss is not mislabeled a course restriction or silently skipped", async () => {
+  const result = await collectDocumentTick({
+    inspect: async () => inspection(),
+    conflicts: [],
+    origin,
+    readPage: async () => {
+      throw Object.assign(Error(), { code: "login_required" });
+    },
+    operations: {
+      finishDiscoveryResource: async () =>
+        assert.fail("must stop for reauthentication"),
+    },
+  });
+  assert.deepEqual(result, { state: "blocked", reason: "login_required" });
+});
+
+for (const kind of ["announcements", "discussions"]) {
+  test(`maps ${kind} text without inventing author roles or reading hidden replies`, async () => {
+    const raw = {
+      id: 50,
+      title: "Source prompt",
+      message: "<p>Read this.</p>",
+      posted_at: "2026-11-01T09:30:01.123456+01:00",
+      require_initial_post: true,
+      user_can_see_posts: false,
+      assignment: { due_at: "2026-11-03T00:00:00Z" },
+    };
+    const result = await prepareCollectedDocuments({
+      origin,
+      resource_key: `101/${kind}`,
+      page: { data: [raw], next_cursor: null },
+      extract: async (course_id, kind, inputs) => {
+        assert.equal(inputs[0].html, raw.message);
+        return {
+          schema_version: 2,
+          extractor_version: "canvas.html.v1",
+          resource: { course_id, kind },
+          items: [
+            {
+              provider_id: "50",
+              text: "Read this.",
+              coverage: "partial",
+              missing: ["html_text_only"],
+            },
+          ],
+        };
+      },
+    });
+    const document = result.documents[0];
+    assert.equal(document.object_fields.author_role, null);
+    assert.equal(document.metadata.coverage, "partial");
+    assert.equal(document.source.text, "Read this.");
+    if (kind === "announcements") {
+      assert.equal(
+        document.object_fields.posted_at,
+        "2026-11-01T08:30:01.123456Z",
+      );
+      assert.ok(
+        document.metadata.missing.includes("announcement_replies_unread"),
+      );
+    } else {
+      assert.equal(document.object_fields.due_at, null);
+      assert.ok(document.metadata.missing.includes("initial_post_required"));
+      assert.ok(
+        document.metadata.missing.includes("discussion_replies_unread"),
+      );
+    }
+  });
+}
+
+for (const posted_at of [
+  "2026-02-30T00:00:00Z",
+  "2026-11-01",
+  1234,
+  "2026-11-01T00:00:00+24:00",
+]) {
+  test(`rejects malformed announcement date rather than silently rolling it forward: ${posted_at}`, async () => {
+    await assert.rejects(
+      prepareCollectedDocuments({
+        origin,
+        resource_key: "101/announcements",
+        page: {
+          data: [
+            {
+              id: 50,
+              title: "Announcement",
+              message: "<p>Prompt</p>",
+              posted_at,
+            },
+          ],
+          next_cursor: null,
+        },
+        extract: async (course_id, kind) => ({
+          schema_version: 2,
+          extractor_version: "canvas.html.v1",
+          resource: { course_id, kind },
+          items: [
+            {
+              provider_id: "50",
+              text: "Prompt",
+              coverage: "partial",
+              missing: ["html_text_only"],
+            },
+          ],
+        }),
+      }),
+    );
+  });
+}
+
+test("a missing resource records an incomplete read, not a deletion or permission claim", async () => {
+  let outcome;
+  await collectDocumentTick({
+    inspect: async () => inspection(),
+    conflicts: [],
+    origin,
+    readPage: async () => {
+      throw Object.assign(Error(), { code: "not_found" });
+    },
+    operations: {
+      finishDiscoveryResource: async (value) => {
+        outcome = value;
+      },
+    },
+  });
+  assert.deepEqual(outcome, {
+    resource_key: "101/pages",
+    outcome: "partial",
+    reason: "extraction_failed",
+  });
+});

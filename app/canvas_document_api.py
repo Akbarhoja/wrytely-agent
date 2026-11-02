@@ -137,7 +137,8 @@ def register_canvas_documents(api, *, database_dependency, canvas_origins, extra
                 type(resource) is not dict
                 or resource.keys() != {"course_id", "kind"}
                 or type(resource["kind"]) is not str
-                or resource["kind"] not in {"assignments", "syllabus", "pages"}
+                or resource["kind"]
+                not in {"assignments", "syllabus", "pages", "announcements", "discussions"}
             ):
                 raise ValueError()
             course_id(resource["course_id"])

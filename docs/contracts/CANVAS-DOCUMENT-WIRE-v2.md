@@ -1,5 +1,15 @@
 # Canvas document-only wire v2 — review candidate
 
+November2 implementation amendment under Akbar's P1 reassignment: schema2 now also
+accepts announcements/announcement and discussions/discussion, using their existing
+EvidenceItem field sets/canonicalization. This is an additive pair extension, not
+mixed inline/document publication. All original pairs, discriminator, authority,
+bounded staging, digest and replay semantics remain. HTTP extraction/collector
+support is implemented on codex/p1-completion; discussion replies remain unread and
+explicitly partial. [Connected implementation](../P1-CONNECTED-PUBLICATION.md).
+This supersedes the four-pair-only scope and old preimplementation ownership wording
+below; the historical vectors remain unchanged and continue to apply.
+
 Owner A; consumer reviewer M. Tracks [#77](https://github.com/Akbarhoja/wrytely-agent/issues/77)
 and the [explicit follow-up gate](https://github.com/Akbarhoja/wrytely-agent/pull/78#issuecomment-6551693307).
 **Proposed, not agreed, implemented, deployed or permission to upload.**

@@ -160,3 +160,55 @@ test("an account change during the response blocks return of its content", async
     /canvas_account_changed/,
   );
 });
+
+for (const kind of ["announcements", "discussions"]) {
+  test(`reads full ${kind} prompt through exact selected-course discussion API`, async () => {
+    const calls = [],
+      announcement = kind === "announcements";
+    const reader = makeDocumentReader(origin, async (url) => {
+      calls.push(url);
+      if (url.endsWith("/profile")) return response(url, { id: 7 });
+      assert.ok(
+        url.startsWith(origin + "/api/v1/courses/101/discussion_topics"),
+      );
+      assert.ok(!url.includes("/entries") && !url.includes("/view"));
+      return response(
+        url,
+        url.includes("/50")
+          ? {
+              id: 50,
+              is_announcement: announcement,
+              message: "<p>Full prompt</p>",
+              require_initial_post: true,
+              user_can_see_posts: false,
+            }
+          : [{ id: 50, is_announcement: announcement }],
+      );
+    });
+    const page = await reader("101", kind, null, "7");
+    assert.equal(page.data[0].message, "<p>Full prompt</p>");
+    assert.ok(
+      calls.includes(
+        origin +
+          `/api/v1/courses/101/discussion_topics?per_page=4&only_announcements=${announcement}`,
+      ),
+    );
+  });
+}
+
+test("an announcement cannot be mislabeled as a discussion prompt", async () => {
+  const reader = makeDocumentReader(origin, async (url) =>
+    response(
+      url,
+      url.endsWith("/profile")
+        ? { id: 7 }
+        : url.includes("/50")
+          ? { id: 50, is_announcement: true }
+          : [{ id: 50 }],
+    ),
+  );
+  await assert.rejects(
+    reader("101", "discussions", null, "7"),
+    /invalid_collection/,
+  );
+});

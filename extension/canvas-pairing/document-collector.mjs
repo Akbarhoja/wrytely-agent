@@ -2,7 +2,9 @@
 import { mapAssignmentObservation } from "../canvas/assignment-observation.mjs";
 
 const supported = (key) =>
-  /^[1-9][0-9]{0,19}\/(assignments|syllabus|pages)$/.test(key);
+  /^[1-9][0-9]{0,19}\/(assignments|syllabus|pages|announcements|discussions)$/.test(
+    key,
+  );
 const controlled = new Set([
   "login_required",
   "permission_denied",
@@ -32,6 +34,49 @@ const summary = (s, action) => ({
   seen_count: s.seen_count ?? 0,
   coverage: s.coverage ?? null,
 });
+function postedTimestamp(value) {
+  if (value == null) return null;
+  if (typeof value !== "string") throw Error();
+  const match =
+    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?(Z|[+-]\d{2}:\d{2})$/.exec(
+      value,
+    );
+  if (!match) throw Error();
+  const [, y, m, d, h, min, sec, fraction = "", zone] = match;
+  const [year, month, day, hour, minute, second] = [y, m, d, h, min, sec].map(
+    Number,
+  );
+  const days = [
+    31,
+    year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0) ? 29 : 28,
+    31,
+    30,
+    31,
+    30,
+    31,
+    31,
+    30,
+    31,
+    30,
+    31,
+  ];
+  if (
+    year < 1 ||
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > days[month - 1] ||
+    hour > 23 ||
+    minute > 59 ||
+    second > 59 ||
+    (zone !== "Z" &&
+      (Number(zone.slice(1, 3)) > 23 || Number(zone.slice(4)) > 59))
+  )
+    throw Error();
+  return new Date(value)
+    .toISOString()
+    .replace(/\.\d{3}Z$/, "." + fraction.padEnd(6, "0") + "Z");
+}
 const normal = (s) => s.replace(/\r\n?/g, "\n").normalize("NFC");
 function validText(x, max) {
   if (
@@ -58,14 +103,16 @@ export async function prepareCollectedDocuments({
     throw Error();
   const inputs = page.data.map((raw) => {
     const provider_id = String(
-      kind === "assignments" ? raw.id : kind === "pages" ? raw.page_id : course,
+      kind === "syllabus" ? course : kind === "pages" ? raw.page_id : raw.id,
     );
     const html =
       kind === "assignments"
         ? raw.description
         : kind === "pages"
           ? raw.body
-          : raw.syllabus_body;
+          : kind === "syllabus"
+            ? raw.syllabus_body
+            : raw.message;
     if (html != null && typeof html !== "string") throw Error();
     return {
       provider_id,
@@ -131,6 +178,44 @@ export async function prepareCollectedDocuments({
       }).digestPayload;
       ({ title, fields, coverage, missing } = mapped);
       reference = `${origin}/courses/${course}/assignments/${provider_id}`;
+    } else if (["announcements", "discussions"].includes(kind)) {
+      title = raw.title;
+      reference = `${origin}/courses/${course}/discussion_topics/${provider_id}`;
+      if (kind === "announcements") {
+        fields = {
+          author_role: null,
+          posted_at: postedTimestamp(raw.posted_at),
+          announcement_id: provider_id,
+        };
+        missing.push("author_role_not_observed");
+        if (raw.discussion_subentry_count !== 0)
+          missing.push("announcement_replies_unread");
+      } else {
+        fields = {
+          topic_id: provider_id,
+          parent_entry_id: null,
+          author_role: null,
+          required_initial_post:
+            typeof raw.require_initial_post === "boolean"
+              ? raw.require_initial_post
+              : null,
+          due_at: null,
+        };
+        missing.push(
+          "discussion_replies_unread",
+          "author_role_not_observed",
+          "student_specific_dates_unverified",
+        );
+        if (
+          raw.require_initial_post === true &&
+          raw.user_can_see_posts !== true
+        )
+          missing.push("initial_post_required");
+      }
+      if (raw.locked_for_user === true) {
+        coverage = "restricted";
+        missing.push("content_locked");
+      }
     } else {
       title =
         kind === "syllabus" ? `${raw.name ?? "Course"} syllabus` : raw.title;
@@ -153,7 +238,11 @@ export async function prepareCollectedDocuments({
             ? "assignment"
             : kind === "pages"
               ? "page"
-              : "syllabus",
+              : kind === "announcements"
+                ? "announcement"
+                : kind === "discussions"
+                  ? "discussion"
+                  : "syllabus",
         provider_id,
       },
       object_fields: fields,
@@ -239,13 +328,30 @@ export async function collectDocumentTick({
           current.academic.seen_count >= 5000))
     )
       throw Object.assign(Error(), { code: "size_limit" });
-    const page = await readPage(
-      course,
-      kind,
-      current.academic?.resource_key === resource
-        ? current.checkpoint.next_cursor
-        : null,
-    );
+    let page;
+    try {
+      page = await readPage(
+        course,
+        kind,
+        current.academic?.resource_key === resource
+          ? current.checkpoint.next_cursor
+          : null,
+      );
+    } catch (error) {
+      if (!["permission_denied", "not_found"].includes(error?.code))
+        throw error;
+      // Only this selected resource is unavailable. Persist the gap so other
+      // courses can continue; no missing page becomes deletion or complete data.
+      await operations.finishDiscoveryResource({
+        resource_key: resource,
+        outcome: error.code === "permission_denied" ? "restricted" : "partial",
+        reason:
+          error.code === "permission_denied"
+            ? "permission_denied"
+            : "extraction_failed",
+      });
+      return summary(await inspect(), "restricted_documents");
+    }
     const input = await prepareCollectedDocuments({
       resource_key: resource,
       page,

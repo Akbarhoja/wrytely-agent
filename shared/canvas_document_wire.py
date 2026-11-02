@@ -5,12 +5,13 @@ import json
 import re
 from dataclasses import dataclass
 
+from contracts.canvas_document_publication import PAIRS
 from contracts.canvas_evidence import EvidenceItem
 from contracts.canvas_sync import DiscoveryBatch, course_id
 from contracts.source_digest import _text, canonical_source_bytes
 from shared.document_sections import DocumentSections, validate_document_sections
 
-_PAIRS = {"assignments": "assignment", "syllabus": "syllabus", "pages": "page", "files": "file"}
+_PAIRS = PAIRS
 _METADATA = {
     "title",
     "format",
