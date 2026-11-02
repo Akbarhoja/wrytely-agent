@@ -30,6 +30,25 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+Latest A cross-layer acceptance on codex/p1-document-pipeline-acceptance from
+#1603ae1fc6: actual local JS producer output → real private ASGI staging API →
+explicit internal Store publication → original retrieval → scoped scripted checked
+v2 draft passes without fake legacy versions. Nine new focused cases pass (zero
+skips, one existing warning, 2.44s), including response loss/replay, PDF gaps/partial
+blocking, unchanged/changed-due events, revocation and account isolation. Full
+combined first run: 1,471 passed, one existing typed-workflow claim failure;
+its targeted/adjacent rerun passed34. Full fresh disposable rerun passed all1,472
+tests (zero skips, two existing warnings,107.54s). Earlier cause unestablished,
+recorded without workaround/skip. All 460 extension tests and Ruff lint/format232 pass.
+[Evidence](docs/P1-DOCUMENT-PIPELINE-ACCEPTANCE.md).
+A temporary capability probe found document publication HTTP is still missing:
+existing academic/batch rejects schema2 with422/no-store, while Store publication
+works. Finding6567672597 handed to M; he retains journal/upload/publication wiring.
+No M module/test/fixture or application behavior changed, no duplicate journal.
+#157 still awaits agreement. No live source/model/send/spend/grant/install/retained
+migration/worker/deploy/mainmerge. Provider-realism review/new CI separate; P0/P1
+remain open.
+
 Latest A integration: M document-parts producer #159 exact95465a82c99e481cebd42a64f1f245152ee2b37b
 merged unchanged onto #158385d5b2 on codex/p1-document-parts-integration. All five
 M files byte-identical; scoped read review found no blocker. All 460 extension
