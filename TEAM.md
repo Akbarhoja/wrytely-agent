@@ -70,28 +70,33 @@ Use codex/<step>-<description> for Codex branches; Murtazo uses his own scoped b
 One coherent slice per PR; split large work orders into sequential small PRs. Never
 push to the other engineer's branch, force shared history, or bypass main protection.
 
-## Mandatory coordination and review
+## Streamlined coordination and review — supervisor decision November 1
 
-Before implementation, claim the work order in an issue with owner, branch/base,
-files, dependency contracts and acceptance. Read existing claims first. Nobody
-inherits work because the other engineer is absent, blocked or slow. Only Akbar
-can reassign it; record that decision before crossing ownership.
+Akbar removed routine agreement gates and unnecessary bureaucracy. This decision
+supersedes earlier mandatory exact-file claims and consumer-agreement prerequisites,
+including #157. Ownership and actual review/merge protections remain unchanged.
 
-An unresolved shared interface blocks dependent edits, not unrelated owned work.
-A proposes payloads, identity/error/replay/migration semantics; M agrees the consumer
-boundary in #4/PR before dependent implementation. CONTRACTS.md then records the
-agreed version. A plan's proposed operation is not an existing API.
+Check active work, then proceed within the assigned area. One brief feature-level
+owner/branch entry is enough; no acknowledgment or new issue is required before
+routine implementation. Do not duplicate active work or take another owner's files.
+Only Akbar reassigns ownership. No journal/publication ownership transfer is implied.
 
-The opposite engineer reviews implementation and evidence. Codex and Murtazo's
-assistant may both post through Akbarhoja: those comments do not create independent
-human GitHub approval. Required human approval and configured CI remain mandatory.
-CODEOWNERS routes review; it is not permission to edit another person's files.
+A can finalize/version Store and runtime contracts and implement them without waiting
+for M's explicit agreement. M can assemble the documented interface in owned HTTP/UI/
+extension code without another agreement round. Communicate concrete decisions and
+changes asynchronously. Raise actual incompatibilities promptly and stop only the
+affected conflicting work. Do not invent a parallel store or journal to avoid a dependency.
 
-At session end update STATUS and #4 with completed work, exact tested commit,
-next eligible step, blockers and interface changes. GitHub is the shared record,
-not separate chats. Akbar has authorized project communication in issues/PRs;
-that authorization does not extend to email/Discord or unrelated channels.
-Do not create a duplicate scheduled monitor. Check GitHub during active work sessions.
+Group related implementation, tests and evidence into complete features. Use focused
+checks during development and combined checks before integration. The opposite engineer
+reviews the feature. Assistant comments are not independent human approval; required
+human review, configured CI and protected-main rules still apply.
+
+Update STATUS/#4 at a meaningful handoff, blocker or completed feature, not each helper.
+GitHub remains the shared record; project issues/PR communication is authorized.
+No email/Discord messages or recurring monitor are implied. Preserve evidence,
+privacy, permissions and live-budget limits; fewer process gates do not create live
+activation or release authorization.
 
 ## Evidence and operation
 

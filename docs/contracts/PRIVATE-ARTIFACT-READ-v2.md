@@ -1,7 +1,8 @@
 # Private document-backed artifact reads — v2 proposal
 
-**Design only. Not implemented or agreed.** A proposes the Store/DTO boundary;
-M reviews it and owns HTTP/UI assembly. Requested by M in
+**Design specified; implementation pending.** Akbar removed the mandatory agreement
+gate November 1. A may finalize and implement this Store/DTO boundary now; M reviews
+and owns HTTP/UI assembly, with concrete compatibility changes communicated asynchronously. Requested by M in
 [#152 comment6564664188](https://github.com/Akbarhoja/wrytely-agent/pull/152#issuecomment-6564664188).
 Claim: [6565297576](https://github.com/Akbarhoja/wrytely-agent/issues/4#issuecomment-6565297576).
 Base: #156 `cba20736d8a22f085042f6e86d0d97222a763621`.
@@ -14,7 +15,7 @@ submission, public sharing or worker activation.
 
 ## 1. Proposed operations and assembly
 
-A implements the following Store methods after agreement. verified_user is the
+A implements the following Store methods under the updated owner-decision process. verified_user is the
 server-verified user ID, never a request body field or ingestion bearer identity.
 
 ```text
@@ -197,9 +198,10 @@ Authentication failure is401; database unavailable503, unexpected redacted500.
 No exception/source text in response/log. Every response, including401/404/413, is
 no-store. No refresh/send/model/other external IO is implicit in any read.
 
-Delivery sequence: M reviews/amends this exact proposal; A implements typed Store
-projections and their tests; M independently reviews, then implements owned session
-routes and UI against the agreed DTO. A reviews/integrates the combined consumer.
+Delivery sequence: A finalizes the versioned contract and implements typed Store
+projections/tests. M reviews concrete code and implements owned session routes/UI
+against it; incompatibilities are raised asynchronously, without a mandatory design
+agreement pause. A reviews/integrates the combined consumer.
 Existing v1 filters stay until an explicit later migration decision. No new SQL is
 assumed necessary; justify any discovered schema need separately.
 
@@ -213,7 +215,6 @@ labels and exact source display, with no body injection or internal JSON leakage
 Run combined HTTP/Store/UI tests before exposing results. Scripted evidence is not
 live Meta quality, installed Canvas or WhatsApp/continuous-agent acceptance.
 
-Requested decision: agree/amend the three methods/routes, metadata-only list,
-source-denial versus authorized historical inspection, saved-check projection,
-pause behavior and source paging. Silence is not agreement. Until agreement, this
-file changes no application behavior; M's producer and other independent work continue.
+Requested review: flag concrete method/DTO/paging/authority incompatibilities while
+A proceeds with owned implementation. There is no mandatory acknowledgment gate.
+The document itself changes no application behavior; M's independent work continues.

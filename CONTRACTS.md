@@ -1,5 +1,11 @@
 # Contracts — implemented boundaries and historical increments
 
+> November 1 supervisor execution update: mandatory preimplementation consumer
+> agreement is removed. The interface owner may version/document and implement
+> owned boundaries, notifying consumers asynchronously. Historical “await agreement”
+> notes (including #157) no longer block this work. A proposal is still not an
+> implemented API; required code review, compatibility, access and merge gates remain.
+
 > Revision7 planning note (October 30): this file describes implemented contracts
 > and their historical increments. New C1–C7 interfaces in
 > [WORK-ORDERS.md](docs/WORK-ORDERS.md#shared-interface-checklist-proposed-not-executable-yet)
