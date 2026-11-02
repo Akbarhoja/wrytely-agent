@@ -5,6 +5,11 @@ import {
   ProbeError,
   nextLink,
 } from "../canvas-feasibility/probe.mjs";
+import {
+  isDiscussionCursor,
+  readDiscussionThread,
+  discussionContinuation,
+} from "./discussion-thread.mjs";
 const identifier = (x) => {
   if (
     !["string", "number"].includes(typeof x) ||
@@ -45,6 +50,8 @@ export function makeDocumentReader(originValue, fetchImpl = fetch) {
       return response;
     }
     const base = `/api/v1/courses/${course}`;
+    if (kind === "discussions" && isDiscussionCursor(cursor))
+      return readDiscussionThread({ course, cursor, origin, get });
     if (kind === "syllabus") {
       if (cursor !== null) throw new ProbeError("unsafe_pagination");
       const { data } = await get(base, "?include[]=syllabus_body");
@@ -144,11 +151,17 @@ export function makeDocumentReader(originValue, fetchImpl = fetch) {
         throw new ProbeError("invalid_collection");
       if (topic && detail.is_announcement !== (kind === "announcements"))
         throw new ProbeError("invalid_collection");
-      details.push(detail);
+      details.push(topic ? { ...detail, _wrytely_entry: null } : detail);
     }
     const following = nextLink(link);
     const next_cursor = following === null ? null : checked(following).href;
     if (next_cursor === url.href) throw new ProbeError("pagination_cycle");
-    return { data: details, next_cursor };
+    return {
+      data: details,
+      next_cursor:
+        kind === "discussions"
+          ? discussionContinuation(course, details, next_cursor, origin)
+          : next_cursor,
+    };
   };
 }

@@ -165,7 +165,17 @@ export async function prepareCollectedDocuments({
       coverage = extracted.coverage,
       missing = [...extracted.missing],
       reference;
-    if (kind === "assignments") {
+    if (kind === "discussions" && raw._wrytely_entry) {
+      title = `Discussion entry ${provider_id}`;
+      fields = { ...raw._wrytely_entry, author_role: null, due_at: null };
+      missing.push(
+        "author_role_not_observed",
+        "student_specific_dates_unverified",
+      );
+      if (raw.attachment || raw.attachments?.length)
+        missing.push("entry_attachment_unread");
+      reference = `${origin}/courses/${course}/discussion_topics/${fields.topic_id}#entry-${provider_id}`;
+    } else if (kind === "assignments") {
       // Reuse the existing provider mapper for dates/rubrics/constraints. The full
       // body goes only through document segmentation, never its short-text field.
       const mapped = mapAssignmentObservation(raw, {
@@ -237,15 +247,17 @@ export async function prepareCollectedDocuments({
     return {
       owner_object: {
         kind:
-          kind === "assignments"
-            ? "assignment"
-            : kind === "pages"
-              ? "page"
-              : kind === "announcements"
-                ? "announcement"
-                : kind === "discussions"
-                  ? "discussion"
-                  : "syllabus",
+          kind === "discussions" && raw._wrytely_entry
+            ? "entry"
+            : kind === "assignments"
+              ? "assignment"
+              : kind === "pages"
+                ? "page"
+                : kind === "announcements"
+                  ? "announcement"
+                  : kind === "discussions"
+                    ? "discussion"
+                    : "syllabus",
         provider_id,
       },
       object_fields: fields,

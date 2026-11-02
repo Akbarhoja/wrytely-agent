@@ -44,6 +44,8 @@ const scenarios = [
   "academic_cross_account",
   "assignment_collector_lifecycle",
   "assignment_collector_lost_after",
+  "auto_documents_replies",
+  "auto_documents_replies_lost",
   "auto_documents_status",
   "auto_documents_restricted",
   "auto_documents_topics",
@@ -142,7 +144,12 @@ try {
       !injected &&
       (scenario === `document_lost_${documentAction}` ||
         (scenario === "auto_documents_lost_batch" &&
-          documentAction === "batch")) &&
+          documentAction === "batch") ||
+        (scenario === "auto_documents_replies_lost" &&
+          documentAction === "batch" &&
+          JSON.parse(init.body).envelope.items.some(
+            (x) => x.kind === "entry",
+          ))) &&
       response.ok
     ) {
       injected = true;
@@ -249,6 +256,39 @@ try {
             return response;
           }
           if (scenario.startsWith("auto_documents_")) {
+            const thread = new URL(url).pathname.match(
+              /^\/api\/v1\/courses\/(101|102)\/discussion_topics\/60\/entries(?:\/(\d+)\/replies)?$/,
+            );
+            if (thread) {
+              assert.ok(scenario.startsWith("auto_documents_replies"));
+              const [, course, parent] = thread,
+                start = Number(course) * 10;
+              const page = Number(new URL(url).searchParams.get("page") ?? "1");
+              const entry = (id) => ({
+                id,
+                message: `<p>Reply ${id}${collectionRound === 2 && id === 10101 ? " changed" : ""}</p>`,
+                recent_replies: [
+                  { id: 999999, message: "PRIVATE_RECENT_SAMPLE_ONLY" },
+                ],
+              });
+              const body = parent
+                ? Number(parent) === start
+                  ? Array.from({ length: 4 }, (_, i) =>
+                      entry(Number(course) * 100 + (page - 1) * 4 + i + 1),
+                    )
+                  : []
+                : [entry(start), entry(start + 1)];
+              const response = Response.json(body, {
+                headers:
+                  parent && Number(parent) === start && page < 3
+                    ? {
+                        link: `<${url.replace(/&page=\d+$/, "")}&page=${page + 1}>; rel="next"`,
+                      }
+                    : {},
+              });
+              Object.defineProperty(response, "url", { value: url });
+              return response;
+            }
             const statusMatch = new URL(url).pathname.match(
               /^\/api\/v1\/courses\/(101|102)\/students\/submissions$/,
             );
@@ -352,7 +392,9 @@ try {
                   posted_at: "2026-11-01T00:00:00Z",
                   is_announcement: announcement,
                   require_initial_post: !announcement,
-                  user_can_see_posts: announcement,
+                  user_can_see_posts:
+                    announcement ||
+                    scenario.startsWith("auto_documents_replies"),
                   discussion_subentry_count: 0,
                 };
                 body = id ? value : [value];
@@ -528,7 +570,9 @@ try {
               ? ["announcements", "discussions"]
               : scenario === "auto_documents_status"
                 ? ["submissions", "grades"]
-                : []),
+                : scenario.startsWith("auto_documents_replies")
+                  ? ["discussions"]
+                  : []),
           ],
         })
       ).status,
@@ -537,13 +581,18 @@ try {
     for (collectionRound = 0; collectionRound < 3; collectionRound++) {
       if (collectionRound) await alice.fresh().beginDiscovery();
       let finished = false;
-      for (let tick = 0; tick < 120; tick++) {
+      for (let tick = 0; tick < 500; tick++) {
         phase = "automatic_document_tick";
         const result = await alice.fresh().collectDocumentPage();
         if (result.state === "blocked") {
           phase =
             "automatic_" + result.reason + "_" + documentBodies.at(-1)?.action;
-          assert.equal(scenario, "auto_documents_lost_batch");
+          assert.ok(
+            [
+              "auto_documents_lost_batch",
+              "auto_documents_replies_lost",
+            ].includes(scenario),
+          );
           assert.equal(result.reason, "discovery_outcome_unknown");
           continue; // Next tick replays durable pending request before re-reading.
         }
@@ -557,9 +606,18 @@ try {
       assert.ok(finished);
     }
     assert.equal(alice.record().discovery.document, null);
-    if (scenario === "auto_documents_lost_batch") {
+    if (
+      ["auto_documents_lost_batch", "auto_documents_replies_lost"].includes(
+        scenario,
+      )
+    ) {
       assert.ok(injected);
-      const requests = documentBodies.filter((x) => x.action === "batch");
+      const requests = documentBodies.filter(
+        (x) =>
+          x.action === "batch" &&
+          (scenario !== "auto_documents_replies_lost" ||
+            x.body.envelope.items.some((i) => i.kind === "entry")),
+      );
       assert.deepEqual(requests[0], requests[1]);
     }
   } else if (scenario.startsWith("document_")) {

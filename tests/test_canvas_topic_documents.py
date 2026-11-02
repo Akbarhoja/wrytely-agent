@@ -15,6 +15,7 @@ from test_canvas_sync import device as device
     [
         ("announcements", "announcement"),
         ("discussions", "discussion"),
+        ("discussions", "entry"),
         ("submissions", "submission"),
         ("grades", "grade"),
     ],
@@ -37,6 +38,8 @@ def test_topic_originals_keep_resource_identity_gaps_replay_and_access_controls(
             "due_at": None,
         }
     )
+    if kind == "entry":
+        body["object_fields"]["parent_entry_id"] = "49"
     if kind == "submission":
         body["object_fields"] = {
             "assignment_id": "50",

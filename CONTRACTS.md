@@ -53,6 +53,16 @@ No new paid allowance, migration, runtime, queue or source activation is implied
 
 ## Implemented private v2 artifact Store reads
 
+Latest P1 continuation adds discussion entry documents: discussions permits both
+discussion and entry owner kinds with original EvidenceItem fields. Shared header
+and publication validators use one kind predicate. The existing host/reader follows
+topic entries and each top-level entry's full paginated replies, keeping content-free
+topic/parent/page continuation in the existing private scan cursor. Derived topic/
+parent context is checked and cannot come from a provider-forged marker. Every page
+refreshes topic visibility; no initial-post/locked-content bypass or quiz/write route.
+Original text, identity, source authority, partial gaps and replay fences remain.
+[Implemented behavior](docs/P1-CONNECTED-PUBLICATION.md#durable-discussion-entries-and-replies).
+
 November2 status/grade continuation adds schema2 pairs submissions/submission and
 grades/grade using existing academic fields. Own-student course submissions GETs
 validate returned student/assignment/course IDs and feed explicit partial JSON

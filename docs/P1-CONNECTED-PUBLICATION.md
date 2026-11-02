@@ -1,5 +1,9 @@
 # Connected P1 document publication and private reads
 
+Latest November2 continuation adds paginated discussion entries and replies as
+separate immutable documents. It supersedes older prompt-only scope notes below;
+known extraction/attachment/role/date gaps and live acceptance remain unfinished.
+
 November2 continuation adds announcement and discussion-prompt documents to the
 automatic collector. This supersedes the three-kind scope described in the older
 checkpoint below; discussion replies are still unfinished. No installed/live
@@ -161,6 +165,68 @@ TypeScript pass. These are local/synthetic results, not installed/live validatio
 
 Discussion replies, modules, files/PDFs and linked contents, submissions/grades,
 student screens and installed/live acceptance remain P1 work.
+
+## Durable discussion entries and replies
+
+The discussions resource now permits both discussion and entry owners in the
+existing schema2 document protocol. Entry fields reuse the original EvidenceItem
+entry schema: topic_id, parent_entry_id, author_role, required_initial_post and
+due_at. Header/publication validation uses the same kind predicate; all other
+resource pairs stay exact. No database schema or new endpoint is introduced.
+
+The prompt collector creates a content-free continuation in the original sync
+cursor for topics whose posts are explicitly visible and not locked for the user.
+It then reads GET discussion_topics/{topic}/entries in four-item pages, followed
+by GET discussion_topics/{topic}/entries/{entry}/replies for every top-level entry.
+It never treats recent_replies as the whole thread: the official
+[discussion API](https://developerdocs.instructure.com/services/canvas/resources/discussion_topics)
+documents that those embedded samples include only the ten most recent replies.
+Each reply list follows its own validated pagination until exhausted.
+
+The wrytely-discussion-v1 cursor stores only version, selected course, up to four
+topic IDs, topic-list continuation, phase, entry-list continuation, up to four
+pending parent IDs and reply continuation. It is at most4000characters, is private
+scan state rather than another journal, and contains no message text. Exact shape,
+canonical serialization, IDs and every course/topic/parent endpoint/query are
+validated before network access. Cursor continuation cannot change course/origin,
+introduce writes or invoke quiz endpoints. Existing batch persistence, replay keys,
+leases, scan/generation/subject/scope fences and size/page ceilings remain active.
+
+Before every entry/reply page, the reader refreshes topic detail and rechecks post
+visibility. Profile identity checks still wrap every provider request. Hidden or
+locked topics are skipped without requesting their entries; a provider403 preserves
+the existing restricted-resource behavior. No post is written to unlock content.
+Session/account loss remains a stop. Initial-post-required gaps are retained.
+
+Each entry/reply becomes its own document with the original converted message,
+stable entry ID, verified request-topic context, and parent entry ID for replies.
+The reader overwrites its derived marker and strips it from ordinary prompt data;
+provider content cannot forge that internal binding. A conflicting returned parent
+rejects. Recent-reply samples are ignored for publication. Author role and effective
+dates remain unknown; unread attachments remain explicit gaps. Missing/deleted text
+is not fabricated, and a missing entry is not automatically deletion evidence.
+Prompt documents remain partial with their separate-thread gap; collected entries
+do not silently certify the entire course up to date.
+
+Two new actual-JS/loopback-HTTP/Store scenarios discover two fixture courses and
+collect top-level entries plus twelve replies per sampled thread over three scans,
+recreating the client each tick. Each scenario verifies120observations/42roots/events,
+84entry observations, exact parent links and original texts beyond the first ten
+replies. Unchanged scans dedupe; one changed reply plus one changed deadline creates
+two new roots/events. The second scenario loses an accepted entry publication and
+replays its exact request before continuing. A new Store/HTTP entry-owner case covers
+original retrieval/replay/account isolation. Thirteen new Node cases cover cursor
+shape/content isolation, visibility, pagination, parent binding and forged markers.
+
+Validation: full fresh disposable backend1,610PASS, zero skips/two existing warnings,
+171.52s; all525NodePASS; Ruff lint/format245files, changed-file Prettier, documentation
+links and diff pass. Focused nine backend cases pass22.29s. Three backend cases
+(two actual-client scenarios and one additional owner-pair case) and thirteen Node
+cases are added. Website code is unchanged from its prior120tests/TypeScript pass.
+
+Installed/live collection and sustained browser recovery are separate acceptance;
+these are synthetic tests. Modules, files/PDF/linked contents, submission bodies/
+feedback, student coverage/results screens and live validation remain P1 work.
 
 ## Read-only submission status and assignment grades
 

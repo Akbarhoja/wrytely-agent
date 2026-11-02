@@ -19,6 +19,10 @@ PAIRS = {
 }
 
 
+def document_kind_allowed(resource, kind):
+    return kind == PAIRS.get(resource) or (resource == "discussions" and kind == "entry")
+
+
 class DocumentResource(Strict):
     course_id: str
     kind: Literal[
@@ -48,6 +52,7 @@ class DocumentItem(Strict):
         "discussion",
         "submission",
         "grade",
+        "entry",
     ]
     provider_id: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z0-9._:-]+$")
     provider_updated_at: str | None
@@ -78,7 +83,7 @@ class DocumentBatch(DiscoveryBatch):
 
     @model_validator(mode="after")
     def document_kinds(self):
-        if any(item.kind != PAIRS[self.resource.kind] for item in self.items):
+        if any(not document_kind_allowed(self.resource.kind, item.kind) for item in self.items):
             raise ValueError("Document kind/resource mismatch")
         if len({item.upload_id for item in self.items}) != len(self.items):
             raise ValueError("Duplicate document upload")

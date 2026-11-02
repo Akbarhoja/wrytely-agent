@@ -1,5 +1,11 @@
 # Canvas document-only wire v2 — review candidate
 
+November2 discussion-reply amendment: resource discussions now accepts owner kinds
+discussion and entry. Entry uses the existing EvidenceItem entry field set, including
+topic_id and parent_entry_id; all other resource/owner combinations remain exact.
+No discriminator, staging/replay/authority semantics, schema1 shape or database
+schema changes. [Durable entry/reply collection](../P1-CONNECTED-PUBLICATION.md#durable-discussion-entries-and-replies).
+
 November2 status amendment on the same P1 branch: schema2 additionally accepts
 submissions/submission and grades/grade, using their existing EvidenceItem fields.
 The collector creates explicit selected-field JSON projections with trusted

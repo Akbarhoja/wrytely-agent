@@ -5,7 +5,7 @@ import json
 import re
 from dataclasses import dataclass
 
-from contracts.canvas_document_publication import PAIRS
+from contracts.canvas_document_publication import PAIRS, document_kind_allowed
 from contracts.canvas_evidence import EvidenceItem
 from contracts.canvas_sync import DiscoveryBatch, course_id
 from contracts.source_digest import _text, canonical_source_bytes
@@ -71,7 +71,7 @@ def validate_canvas_document_header(
         not isinstance(resource["kind"], str)
         or resource["kind"] not in _PAIRS
         or not isinstance(kind, str)
-        or _PAIRS[resource["kind"]] != kind
+        or not document_kind_allowed(resource["kind"], kind)
     ):
         raise ValueError("Invalid document resource/owner pair")
     provider_id = owner_object["provider_id"]

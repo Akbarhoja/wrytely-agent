@@ -30,6 +30,31 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+Latest P1 continuation on codex/p1-completion implements discussion entries and
+full paginated replies as separate source documents, using the original producer,
+upload journal/publication and HTML extractor. Discussions accepts owner discussion
+or entry with existing academic entry fields; header/publication share one predicate.
+The original private scan cursor stores bounded content-free topic/parent/phase/page
+state, so recreated workers continue without another journal. Each page refreshes
+topic visibility and retains profile checks. No posting, view bypass or quiz action.
+Hidden/locked posts are skipped; author roles/dates/attachments remain explicit gaps.
+
+Two new actual-client/loopback-HTTP/Store scenarios over two discovered courses and
+three scans each verify120observations/42roots/events,84entry observations, exact
+parent/topic links and twelve replies beyond the recent-ten sample. Unchanged sync
+dedupes; one changed reply and deadline create two roots/events. Lost entry-publication
+response replays the exact request. One added Store/HTTP entry-owner case proves
+original retrieval/replay/account isolation; thirteen new Node cases cover cursor
+validation, visibility, pagination, forged markers and parent mismatch. Focused nine
+backend cases pass22.29s. Full fresh disposable backend1,610PASS/zero skips/
+2existingwarnings171.52s; all525NodePASS; Ruff lint/format245files, scoped Prettier,
+documentation links and diff pass. Web code unchanged from prior120PASS/TypeScript.
+[Implementation](docs/P1-CONNECTED-PUBLICATION.md#durable-discussion-entries-and-replies).
+Earlier prompt-only descriptions below are superseded. P1 remains open for modules,
+files/PDF/linked contents, submission bodies/feedback, student screens and installed/
+live acceptance. No new M handoff at turn start. No live provider/model/send/spend/
+grant/install, retained migration, worker activation, deployment or main merge.
+
 Latest November2 P1 continuation on codex/p1-completion adds read-only own-student
 submission status and assignment-grade collection through the existing host,
 producer, durable document journal and publication. Course-scoped submissions GETs
