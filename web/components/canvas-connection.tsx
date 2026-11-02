@@ -191,6 +191,16 @@ function CanvasSession({
         Closing your laptop pauses course collection. The agent can use saved information, but
         cannot see changes until the next sync.
       </p>
+      <p>
+        <a
+          className="text-button"
+          href="https://github.com/Akbarhoja/wrytely-agent/blob/codex/p1-completion/docs/PRIVACY.md"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Canvas pilot privacy notice
+        </a>
+      </p>
       {error && (
         <p role="alert" className="connection-error">
           {error}
