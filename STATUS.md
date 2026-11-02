@@ -30,6 +30,16 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+Supervisor reassignment: A/Codex now owns all remaining P1 completion on
+codex/p1-completion from #16431f3f8b, including collector/journal/publication HTTP,
+resource/file coverage, package and private results/connections web wiring and tests.
+M was asked to pause overlap and share unpublished work/findings; prior delivered
+code is retained. Outlook remains paused; P0 WhatsApp and P2–P6 default owners are
+unchanged. Next execution order is document publication/journal → missing resource
+collection/package → results/coverage UI → integrated and authorized live acceptance.
+No application behavior or stage completion changed in this reassignment. No new
+live grant/spend/restart/migration/deployment/main-merge authorization is inferred.
+
 Latest complete A feature: private v2 artifact Store reads on
 codex/private-artifact-results from #163027da3f. Metadata-only keyset list, draft/
 validated saved check detail and exact original citation/policy/rubric reads are

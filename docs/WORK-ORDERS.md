@@ -156,6 +156,14 @@ webhooks require their appropriate verification; a contract example is not autho
 
 ## P1 — Automatic collection and usable memory
 
+**Current supervisor reassignment:** A (Akbar/Codex) owns every remaining P1 item,
+including P1-M1 and P1-M3 implementation/tests and final integration. Stable M1/M2/M3
+IDs below retain their original labels; the current accountable engineer is A.
+P1-M2 Outlook remains optional/paused. M pauses duplicate P1 work and hands over
+unpublished changes, while retaining P0 WhatsApp and later-stage default ownership.
+Use codex/p1-completion from #164 and deliver the connected workflow, not separate
+helper/proposal increments. Existing acceptance checks remain required.
+
 ### P1-A1 — Connection and sync persistence (A)
 
 Depends: P0-A3 C1/C2. Files: shared/ connection/sync stores, contracts/ models/SQL,

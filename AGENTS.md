@@ -10,6 +10,13 @@ WhatsApp. Old stage documents are historical context, not competing instructions
 Codex owns runtime/shared/contracts; Murtazo owns extension/integrations/app/web/deploy.
 Do not silently narrow required behavior to meet a deadline or provider blocker.
 
+Current supervisor exception: Akbar/Codex owns **all remaining P1 completion**,
+including the extension, provider/HTTP assembly and web work normally owned by M.
+See TEAM.md's current P1 ownership. M pauses overlapping P1 implementation and
+hands off unpublished work; reuse his delivered code. Optional Outlook stays paused,
+P0 WhatsApp stays M-owned, and P2–P6 default ownership is unchanged. This explicit
+reassignment removes the cross-surface edit restriction for P1 only.
+
 Reuse existing Wrytely services as agreed, but do not change the existing product
 repository or production configuration as a side effect. Agent migrations stay
 inside `wrytely_agent`. Use isolated Postgres for tests. No production migrations,

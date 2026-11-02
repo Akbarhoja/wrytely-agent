@@ -4,6 +4,26 @@ Updated October 30, 2026. Active scope/order: [revision 7](docs/BUILD-PLAN.md).
 Read [work orders](docs/WORK-ORDERS.md), [status](STATUS.md), [contracts](CONTRACTS.md)
 and [coordination issue #4](https://github.com/Akbarhoja/wrytely-agent/issues/4) before work.
 
+## Current P1 completion ownership — supervisor reassignment
+
+Akbar assigned all remaining P1 work to Akbar/Codex in the current session.
+[Supervisor coordination record](https://github.com/Akbarhoja/wrytely-agent/issues/4).
+This overrides the default surface table below **only for P1 completion**:
+
+- A owns remaining Canvas collector/resource/file reads, existing document upload
+  journal/publication assembly, extension packaging, P1 HTTP/private-result and
+  connections/coverage web wiring, their tests and integrated P1 acceptance.
+- Optional P1 Outlook remains paused; reassignment does not resume email consent work.
+- M pauses overlapping P1 implementation, preserves existing work and shares any
+  unpublished head/findings without secrets. A reuses his delivered modules rather
+  than replacing them. M can review P1 and retains P0 WhatsApp.
+- P2–P6 default owners, human merge protections, privacy and live-budget/access
+  limits remain unchanged. Reassignment is not provider activation or live proof.
+
+A's working branch is codex/p1-completion, based on #16431f3f8b. Batch connected
+implementation and acceptance into this feature; do not create a new agreement
+round or claim completion merely because ownership moved.
+
 ## Current P0 ownership — October 31, 2026
 
 Akbar's latest instruction reassigns P0-M1 Canvas (#51) and P0-M2 Outlook (#53)
