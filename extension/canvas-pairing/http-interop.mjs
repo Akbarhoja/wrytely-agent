@@ -16,6 +16,7 @@ const allowedPaths = new Set(
     "academic/batch",
     "academic/resource",
     "academic/extract",
+    ...["begin", "parts", "finish", "batch"].map((p) => `documents/${p}`),
     ...["begin", "resume", "batch", "resource", "finish"].map(
       (p) => `discovery/${p}`,
     ),
@@ -41,6 +42,18 @@ const scenarios = [
   "academic_cross_account",
   "assignment_collector_lifecycle",
   "assignment_collector_lost_after",
+  "document_complete",
+  "document_empty",
+  "document_syllabus",
+  "document_lost_begin",
+  "document_lost_parts",
+  "document_lost_finish",
+  "document_lost_batch",
+  "document_many_slots",
+  "document_four",
+  "document_pagination",
+  "document_bad_receipt",
+  "document_pending_tamper",
 ];
 let phase = "configuration";
 const rejection = (code) => (e) =>
@@ -72,6 +85,7 @@ try {
   const academicBodies = [];
   const extractionBodies = [];
   let collectionRound = 0;
+  const documentBodies = [];
 
   async function transport(url, init) {
     const requested = new URL(url);
@@ -109,7 +123,39 @@ try {
       injected = true;
       throw Error("synthetic transport loss before dispatch");
     }
+    const documentAction = requested.pathname.split("/documents/")[1];
+    if (documentAction)
+      documentBodies.push({
+        action: documentAction,
+        body: JSON.parse(init.body),
+      });
     const response = await fetch(`${target.origin}${requested.pathname}`, init);
+    if (
+      documentAction &&
+      !injected &&
+      scenario === `document_lost_${documentAction}` &&
+      response.ok
+    ) {
+      injected = true;
+      await response.arrayBuffer();
+      throw Error("synthetic lost document acknowledgment");
+    }
+    if (
+      documentAction === "finish" &&
+      !injected &&
+      scenario === "document_bad_receipt" &&
+      response.ok
+    ) {
+      injected = true;
+      const bad = await response.json();
+      bad.document_digest = "f".repeat(64);
+      const replacement = Response.json(bad, {
+        headers: { "cache-control": "no-store" },
+      });
+      Object.defineProperty(replacement, "url", { value: requested.href });
+      return replacement;
+    }
+
     assert.equal(response.headers.get("cache-control"), "no-store");
     if (
       isAcademic &&
@@ -305,11 +351,183 @@ try {
   if (
     !scenario.startsWith("collector_") &&
     !scenario.startsWith("academic_") &&
-    !scenario.startsWith("assignment_collector_")
+    !scenario.startsWith("assignment_collector_") &&
+    !scenario.startsWith("document_")
   )
     await alice.client.beginDiscovery();
 
-  if (scenario.startsWith("assignment_collector_")) {
+  if (scenario.startsWith("document_")) {
+    phase = "document_scope";
+    await alice.fresh().beginDiscovery();
+    await alice.fresh().commitDiscoveryPage(page());
+    await completeCourses(alice.fresh());
+    await alice.fresh().finishDiscovery();
+    const context = await alice.fresh().readCurrentContext();
+    const documentKind =
+      scenario === "document_syllabus" ? "syllabus" : "assignments";
+    assert.equal(
+      (
+        await request(`${root}/scope`, "alice", {
+          connection_id: context.connection_id,
+          generation: context.generation,
+          mode: "explicit_set",
+          course_ids: ["101"],
+          resource_kinds: [documentKind],
+        })
+      ).status,
+      200,
+    );
+    await alice.fresh().beginDiscovery();
+    await alice.fresh().commitDiscoveryPage(page());
+    await completeCourses(alice.fresh());
+    const input = {
+      resource_key: `101/${documentKind}`,
+      observed_at: new Date().toISOString(),
+      next_cursor: null,
+      coverage: { state: "complete", reason: null },
+      documents: Array.from(
+        {
+          length:
+            scenario === "document_empty"
+              ? 0
+              : ["document_four", "document_pagination"].includes(scenario)
+                ? 4
+                : 1,
+        },
+        (_, i) => ({
+          owner_object: {
+            kind: documentKind === "syllabus" ? "syllabus" : "assignment",
+            provider_id: String(17 + i),
+          },
+          object_fields:
+            documentKind === "syllabus"
+              ? { page_id: null, module_ids: null, source_format: "text" }
+              : {
+                  due_at: "2026-11-03T00:00:00Z",
+                  unlock_at: null,
+                  lock_at: null,
+                  points_possible: "20",
+                  submission_types: ["online_upload"],
+                  rubric: [],
+                  published: true,
+                },
+          metadata: {
+            title: `Synthetic original ${i}`,
+            format: "text",
+            extractor_version: "fixture.v1",
+            provider_updated_at: null,
+            coverage: "complete",
+            missing: [],
+          },
+          source: { text: "Cafe\u0301\r\n📚 " + i },
+          reference: `${canvasOrigin}/courses/101/assignments/${17 + i}`,
+        }),
+      ),
+    };
+    if (scenario === "document_pagination") {
+      input.next_cursor = "page-two";
+      input.coverage = { state: "partial", reason: "more_pages" };
+    }
+    if (scenario === "document_many_slots")
+      input.documents[0].source = {
+        text: "x".repeat(512),
+        sectionCharacters: 1,
+      };
+    phase = "document_begin";
+    const recover = async (work) => {
+      try {
+        return await work();
+      } catch (error) {
+        if (
+          ![
+            "document_lost_begin",
+            "document_lost_parts",
+            "document_lost_finish",
+            "document_lost_batch",
+            "document_bad_receipt",
+          ].includes(scenario) ||
+          !rejection("discovery_outcome_unknown")(error)
+        )
+          throw error;
+        const pending = structuredClone(alice.record().discovery.pending);
+        if (scenario === "document_lost_batch")
+          await alice.fresh().resumeDiscovery();
+        const recovered = await alice.fresh().retryDiscovery();
+        const repetitions = documentBodies.filter(
+          (x) => x.action === pending.operation.slice(9),
+        );
+        assert.equal(repetitions.length, 2);
+        const canonical = (x) => {
+          const y = structuredClone(x);
+          delete y.lease_token;
+          return JSON.stringify(y);
+        };
+        assert.equal(
+          canonical(repetitions[0].body),
+          canonical(repetitions[1].body),
+        );
+        return recovered;
+      }
+    };
+    await recover(() => alice.fresh().commitDocumentPage(input));
+    if (scenario === "document_pending_tamper") {
+      alice.record().discovery.document.documents[0].parts[0].text =
+        "corrupted";
+      const before = documentBodies.length;
+      await assert.rejects(
+        alice.fresh().continueDocumentPage(),
+        rejection("discovery_journal_invalid"),
+      );
+      assert.equal(documentBodies.length, before);
+    } else {
+      for (let i = 0; alice.record().discovery.document && i < 20; i++) {
+        phase = "document_" + alice.record().discovery.document.phase;
+        await recover(() => alice.fresh().continueDocumentPage());
+      }
+      assert.equal(alice.record().discovery.document, null);
+      assert.equal(
+        alice.record().discovery.academic.seen_count,
+        input.documents.length,
+      );
+      if (scenario === "document_pagination") {
+        const second = structuredClone(input);
+        second.next_cursor = null;
+        second.coverage = { state: "complete", reason: null };
+        second.documents = [structuredClone(input.documents[0])];
+        second.documents[0].owner_object.provider_id = "30";
+        second.documents[0].reference = `${canvasOrigin}/courses/101/assignments/30`;
+        await alice.fresh().commitDocumentPage(second);
+        while (alice.record().discovery.document)
+          await alice.fresh().continueDocumentPage();
+        assert.equal(alice.record().discovery.academic.seen_count, 5);
+        assert.equal(alice.record().discovery.academic.incomplete, false);
+      }
+      if (scenario === "document_many_slots") {
+        const puts = documentBodies.filter((x) => x.action === "parts");
+        assert.equal(puts.length, 11);
+        assert.ok(puts.every((x) => x.body.parts.length <= 50));
+      }
+      phase = "document_close";
+      await alice.fresh().finishDocumentResource({
+        resource_key: `101/${documentKind}`,
+        outcome: "complete",
+        reason: null,
+      });
+      assert.equal(
+        (await alice.fresh().finishDiscovery()).coverage,
+        "complete",
+      );
+      if (
+        scenario !== "document_complete" &&
+        scenario !== "document_four" &&
+        scenario !== "document_empty" &&
+        scenario !== "document_syllabus" &&
+        scenario !== "document_many_slots" &&
+        scenario !== "document_pagination"
+      )
+        assert.ok(injected);
+    }
+  } else if (scenario.startsWith("assignment_collector_")) {
     phase = "assignment_collector_scope";
     const context = await alice.fresh().readCurrentContext();
     assert.equal(

@@ -282,7 +282,9 @@ export function createPairingClient({
   }
   async function post(action, body, bearer) {
     const discovery =
-      action.startsWith("discovery/") || action.startsWith("academic/");
+      action.startsWith("discovery/") ||
+      action.startsWith("academic/") ||
+      action.startsWith("documents/");
     const uncertain =
       action === "redeem"
         ? "pairing_outcome_unknown"
@@ -325,7 +327,7 @@ export function createPairingClient({
           response.status === 401
         )
           fail("reconnect_required");
-        if (discovery && response.status === 422)
+        if (discovery && [400, 404, 413, 415, 422].includes(response.status))
           fail("discovery_request_rejected");
         if (discovery) fail(uncertain);
         if (response.status === 429) fail("pairing_rate_limited");
@@ -421,9 +423,13 @@ export function createPairingClient({
         canvas.assignmentPage(course, cursor),
       call: (operation, body, item) =>
         post(
-          operation.startsWith("academic_")
-            ? `academic/${operation.slice(9)}`
-            : `discovery/${operation}`,
+          operation.startsWith("document_")
+            ? operation === "document_resource"
+              ? "academic/resource"
+              : `documents/${operation.slice(9)}`
+            : operation.startsWith("academic_")
+              ? `academic/${operation.slice(9)}`
+              : `discovery/${operation}`,
           body,
           item.ingestion_bearer,
         ),

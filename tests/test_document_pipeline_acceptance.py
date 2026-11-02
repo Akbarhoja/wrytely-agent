@@ -1,7 +1,6 @@
-"""Combined synthetic JS→HTTP staging→Store publication→scoped runtime acceptance.
+"""Combined actual synthetic JS→private HTTP staging/publication→scoped runtime.
 
-Publication uses the Store explicitly: the current academic HTTP envelope is v1.
-No claim that a browser journal or document-publication route is implemented.
+No claim of installed Chrome, live sources or real model inference.
 """
 
 import unicodedata
@@ -54,7 +53,22 @@ def stage(device, *, scan=None, raw=None, key="pipeline", partial=False, due=Non
 
 def publish(device, data, *, partial=False):
     scan, body, upload, *_ = data
-    receipt = evidence.upload(device, scan, page(device, scan, body, upload))
+    envelope = page(device, scan, body, upload)
+    receipt = checked(
+        post(
+            client_for(device),
+            device,
+            "/batch",
+            {
+                "scan_id": scan["scan_id"],
+                "generation": body["generation"],
+                "lease_token": scan["lease_token"],
+                "batch_key": envelope["batch_key"],
+                "expected_checkpoint": scan["checkpoint"],
+                "envelope": envelope,
+            },
+        )
+    )
     evidence.close(device, scan, receipt, partial=partial)
     return receipt["observations"][0]
 

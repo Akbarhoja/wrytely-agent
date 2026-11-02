@@ -53,6 +53,14 @@ No new paid allowance, migration, runtime, queue or source activation is implied
 
 ## Implemented private v2 artifact Store reads
 
+November1 P1 reassignment implementation: the proposed `/v2` list/detail/evidence
+HTTP routes are now registered with verified sessions, no-store, strict queries and
+bounded encoded cursors. The website proxy explicitly forwards these GET routes;
+the student results UI remains unwired. Document publication is now available at
+`POST /v1/source-connections/canvas/documents/batch`, using the existing Store and
+durable discovery journal. [Exact assembly and evidence](docs/P1-CONNECTED-PUBLICATION.md).
+These updates supersede the HTTP-missing/M-owned statements in older evidence.
+
 [Private artifact reads v2](docs/contracts/PRIVATE-ARTIFACT-READ-v2.md) and
 [implementation evidence](docs/P1-PRIVATE-ARTIFACT-READS.md) define implemented
 list_private_artifacts_v2, read_private_artifact_v2 and

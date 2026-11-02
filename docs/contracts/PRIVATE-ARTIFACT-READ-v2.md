@@ -1,5 +1,14 @@
 # Private document-backed artifact reads — v2 proposal
 
+November1 implementation update: Akbar reassigned remaining P1 to A/Codex. The
+three proposed `/v2` GET routes below are now implemented on codex/p1-completion,
+with verified-session identity, no-store, strict queries and no retries/mutations.
+HTTP list `next` is a canonical unpadded base64url JSON string or null; decode that
+string for the unchanged Store cursor. The web proxy explicitly forwards these
+routes. The student-facing v2 results view remains unfinished.
+[Assembly and tests](../P1-CONNECTED-PUBLICATION.md). Older ownership/proposal
+language below is retained as historical context, superseded by this update.
+
 **Store implemented; HTTP/UI assembly remains M-owned.** Akbar removed the mandatory
 agreement gate November 1. A implemented this versioned boundary on
 codex/private-artifact-results. M can assemble the concrete methods after code review,

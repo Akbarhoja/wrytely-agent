@@ -42,6 +42,18 @@ SCENARIOS = (
     "academic_cross_account",
     "assignment_collector_lifecycle",
     "assignment_collector_lost_after",
+    "document_complete",
+    "document_empty",
+    "document_syllabus",
+    "document_lost_begin",
+    "document_lost_parts",
+    "document_lost_finish",
+    "document_lost_batch",
+    "document_many_slots",
+    "document_four",
+    "document_pagination",
+    "document_bad_receipt",
+    "document_pending_tamper",
 )
 ENV_NAMES = {"PATH", "SYSTEMROOT", "WINDIR", "COMSPEC", "PATHEXT", "TEMP", "TMP", "LANG", "LC_ALL"}
 
@@ -58,7 +70,12 @@ def interop_service(canvas_store, scenario, monkeypatch):
             if name.upper() not in ENV_NAMES:
                 isolated.delenv(name, raising=False)
         settings = Settings(_env_file=None, canvas_origins=[ORIGIN])
-        api = create_app(settings, store=canvas_store, verifier=SessionVerifier())
+        api = create_app(
+            settings,
+            store=canvas_store,
+            verifier=SessionVerifier(),
+            canvas_document_extractors=("fixture.v1",) if scenario.startswith("document_") else (),
+        )
     injected = False
     snapshots = []
 
@@ -185,7 +202,28 @@ def test_actual_client_http_contract(canvas_store, interop_service, scenario, mo
         versions = conn.execute(
             "SELECT count(*) AS n FROM wrytely_agent.source_versions"
         ).fetchone()["n"]
-        if scenario.startswith("assignment_collector_"):
+        if scenario.startswith("document_"):
+            assert versions == 0
+            observations = conn.execute(
+                "SELECT count(*) AS n FROM wrytely_agent.canvas_evidence_observations"
+            ).fetchone()["n"]
+            assert observations == (
+                0
+                if scenario in {"document_pending_tamper", "document_empty"}
+                else 4
+                if scenario == "document_four"
+                else 5
+                if scenario == "document_pagination"
+                else 1
+            )
+            assert batches == (
+                2
+                if scenario == "document_pending_tamper"
+                else 4
+                if scenario == "document_pagination"
+                else 3
+            )
+        elif scenario.startswith("assignment_collector_"):
             assert catalog == 2 and batches == 12 and versions == 3
             assert_collector_lifecycle(conn, snapshots)
         elif scenario.startswith("academic_"):

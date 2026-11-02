@@ -29,6 +29,33 @@ function request(path = "messages", method = "POST", origin = "https://agent.wry
   });
 }
 describe("authenticated API boundary", () => {
+  it.each([
+    "v2/responsibilities/00000000-0000-4000-8000-000000000001/artifacts?limit=1&before=opaque_cursor",
+    "v2/artifacts/00000000-0000-4000-8000-000000000001",
+    "v2/artifacts/00000000-0000-4000-8000-000000000001/evidence/policy/0?check_id=00000000-0000-4000-8000-000000000002",
+  ])("forwards exact versioned private result %s with verified identity", async (input) => {
+    const deps = dependencies();
+    const path = input.split("?")[0].split("/");
+    const response = await forward(request(input, "GET"), path, deps);
+    expect(response.status).toBe(202);
+    expect(deps.fetch.mock.calls[0][0]).toBe(`http://agent.internal:8000/${input}`);
+    const headers = new Headers(deps.fetch.mock.calls[0][1]?.headers);
+    expect(headers.get("Authorization")).toBe("Bearer verified-session-token");
+    expect(headers.has("Cookie")).toBe(false);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect((await forward(request(input), path, deps)).status).toBe(404);
+  });
+  it.each([
+    "v2/artifacts/00000000-0000-4000-8000-000000000001?user_id=other",
+    "v2/responsibilities/00000000-0000-4000-8000-000000000001/artifacts?limit=1&limit=2",
+    "v2/artifacts/00000000-0000-4000-8000-000000000001/evidence/citation/0?source_id=other",
+  ])("rejects unexpected private-result query %s before forwarding", async (input) => {
+    const deps = dependencies();
+    const response = await forward(request(input, "GET"), input.split("?")[0].split("/"), deps);
+    expect(response.status).toBe(400);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(deps.fetch).not.toHaveBeenCalled();
+  });
   it("permits only authenticated same-origin explicit delegation and private status reads", async () => {
     const deps = dependencies();
     expect((await forward(request("responsibilities"), ["responsibilities"], deps)).status).toBe(

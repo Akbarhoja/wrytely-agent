@@ -17,6 +17,7 @@ DOCUMENT_CONFLICTS = CONFLICT_CODES | {
     "document_conflict",
     "document_expired",
     "document_not_ready",
+    "resource_format_conflict",
 }
 QUOTAS = {"document_upload_limit", "document_bytes_limit"}
 
@@ -63,7 +64,7 @@ def register_canvas_documents(api, *, database_dependency, canvas_origins, extra
     def dispatch(request, credentials, body, operation, call):
         if not canvas_origins or not extractor_versions:
             raise HTTPException(503, "Canvas documents are not configured")
-        if request.query_params or body.get("operation") != operation:
+        if request.query_params or (operation is not None and body.get("operation") != operation):
             raise HTTPException(400, "Invalid Canvas request")
         try:
             if credentials is None:
@@ -128,5 +129,38 @@ def register_canvas_documents(api, *, database_dependency, canvas_origins, extra
                 token, body, extractor_versions=extractor_versions
             ),
         )
+
+    @router.post("/batch")
+    def publish(
+        request: Request, credentials: Credential, db: DB, body: Annotated[dict, Body(strict=True)]
+    ):
+        # Separate versioned document publication; schema1 academic routes stay unchanged.
+        def commit(token):
+            if body.keys() != {
+                "scan_id",
+                "generation",
+                "lease_token",
+                "batch_key",
+                "expected_checkpoint",
+                "envelope",
+            }:
+                raise ValueError("Invalid document publication request")
+            if type(body["envelope"]) is not dict or (
+                type(body["envelope"].get("schema_version")) is not int
+                or body["envelope"]["schema_version"] != 2
+                or body["envelope"].get("batch_type") != "canvas_documents"
+            ):
+                raise ValueError("Invalid document publication schema")
+            return db.commit_sync_batch(
+                token,
+                body["scan_id"],
+                body["generation"],
+                body["lease_token"],
+                body["batch_key"],
+                body["expected_checkpoint"],
+                body["envelope"],
+            )
+
+        return dispatch(request, credentials, body, None, commit)
 
     api.include_router(router)

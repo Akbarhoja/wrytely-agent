@@ -30,6 +30,29 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+P1 connected implementation checkpoint on codex/p1-completion: added actual private
+document batch publication HTTP and document phases inside the existing durable
+client journal. Staging parts are bounded to50/request;512 slots and five documents
+across two pages pass, along with exact replay after each lost response, lease
+rotation, malformed receipts and checked-empty/syllabus pages. Existing package now
+includes the producer/journal dependencies. The nine producer→checked draft tests
+use publication HTTP instead of the former internal Store bridge. Automatic host
+collection remains on the earlier assignment path; the new document methods take
+already-extracted input. No full-resource automatic collection is claimed.
+
+Verified-session v2 list/detail/exact-original HTTP routes and the authenticated web
+proxy now use the existing private Store reads. Strict bounded cursor/query handling,
+cross-account denial and revoked-source content blocking pass. The student results
+UI does not yet display v2 drafts. [Implementation and limits](docs/P1-CONNECTED-PUBLICATION.md).
+Validation: full fresh disposable backend1,584PASS/zero skips/2existingwarnings133.05s;
+all460NodePASS; all120webPASS and TypeScript; Ruff lint/format243files pass. These
+are synthetic/loopback checks, not live-source evidence. Next: automatic resource/file
+collection and document journal host wiring, connections/coverage/private-result UI,
+then integrated two-course and separately authorized installed/live acceptance.
+P0/P1 remain open. No live source/model/send/spend/grant/install/retainedmigration/
+continuousworker/deploy/mainmerge occurred. Earlier missing-HTTP and M-owned P1
+descriptions below are historical and superseded by this checkpoint/reassignment.
+
 Supervisor reassignment: A/Codex now owns all remaining P1 completion on
 codex/p1-completion from #16431f3f8b, including collector/journal/publication HTTP,
 resource/file coverage, package and private results/connections web wiring and tests.
@@ -263,10 +286,10 @@ provider call, production migration, deployment or continuous-worker activation.
 | Pause recovery #42       | A                 | 224bc96 (code a7db006), scoped review;385 backend/113 web CI reported                      | Included in #46; combined CI391/114 passed, review pending                                  |
 | Murtazo #28              | M                 | a344642 UI; latest a383782 Canvas proposal;114 local web reported                          | Reuse proposal findings; extension supersedes initial OAuth path                            |
 | P0-A2 Meta               | A                 | P0 real tool/saved-result/continuation proof passed in #50; academic M2 remains open       | Two-call probe passed (see #50); failed-call reservation retained                           |
-| P0-M1 Canvas             | A (reassigned)    | M #64 lifecycle API reviewed/21 cases pass; local diagnostic work reported                 | v5 known PDF read/matched; rubric, remaining session matrix and review pending        |
+| P0-M1 Canvas             | A (reassigned)    | M #64 lifecycle API reviewed/21 cases pass; local diagnostic work reported                 | v5 known PDF read/matched; rubric, remaining session matrix and review pending              |
 | P0-M2 Outlook            | A (reassigned)    | M #54 at4aadc91 offline Graph probe;32 cases independently pass                            | Optional/paused: CSU admin consent required; not a core stage blocker                       |
 | P0-M3 WhatsApp           | M                 | Linking/inbound worked; last delivery failed131031                                         | Business/account resolution and delivered-reply proof                                       |
-| P0-A3 interfaces         | A                 | C1/C2, C3 short-text and exact #118/#119 document/C4–C7 DESIGN agreed by M                  | Implementation and counterpart acceptance remain; no activation from design agreement       |
+| P0-A3 interfaces         | A                 | C1/C2, C3 short-text and exact #118/#119 document/C4–C7 DESIGN agreed by M                 | Implementation and counterpart acceptance remain; no activation from design agreement       |
 | P1 collection/memory     | A/M by work order | P1-A1 #58 adds staged academic text/check/event transactions; collectors not assembled     | 633 A backend pass; M transport/journal separately reviewed; live assembly/segments pending |
 | P2 always-on ownership   | A/M by work order | Existing task worker; continuous workers stopped                                           | Supervisor, schedule, hard budgets and bounded deployment                                   |
 | P3/P4 work/adaptation    | A/M by work order | Private drafting/checks scripted; live artifact not produced; A4 parked                    | Real accepted work/delivery, revisions and follow-through                                   |
@@ -648,14 +671,15 @@ and<=100 old orphan protocol roots, agent-before-row SKIP LOCKED with reference/
 expiry rechecks and atomic rollback. Scrubs headers/parts/ready pointers, retains
 content-free upload tombstones and exact original receipts. All bindings/history/
 matching observation payloads and retained upload pointers protect roots; root age
->=24h, legacy internal roots excluded. No source/event/freshness mutation.
-21focusedPASS; full combined disposable backend1184PASS/zero skips/2existingwarnings
-69.82s. Ruff/format191files/diff/link checks pass.019 applied only to disposable
-tests; no maintenance was run on retained data. [Evidence](docs/P1-DOCUMENT-CLEANUP.md).
-Previous #137 exactafc42c9 CI41288720692/41288717315 SUCCESS; new cleanup CI separate.
-Counterpart reviews/consumer assembly remain pending. M retains host/HTTP/extractor/
-extension work; no M file edit/live/model/send/spend/grant/install/retainedmigration/
-worker/deploy/mainmerge. P0/P1 remain open.
+
+> =24h, legacy internal roots excluded. No source/event/freshness mutation.
+> 21focusedPASS; full combined disposable backend1184PASS/zero skips/2existingwarnings
+> 69.82s. Ruff/format191files/diff/link checks pass.019 applied only to disposable
+> tests; no maintenance was run on retained data. [Evidence](docs/P1-DOCUMENT-CLEANUP.md).
+> Previous #137 exactafc42c9 CI41288720692/41288717315 SUCCESS; new cleanup CI separate.
+> Counterpart reviews/consumer assembly remain pending. M retains host/HTTP/extractor/
+> extension work; no M file edit/live/model/send/spend/grant/install/retainedmigration/
+> worker/deploy/mainmerge. P0/P1 remain open.
 
 ## Current non-WhatsApp P0 closure audit — November1
 

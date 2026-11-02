@@ -1,5 +1,6 @@
 // Private worker helper. Public callers receive neither credentials nor writer leases.
 import { collectCourseTick, collectAssignmentTick } from "./collector.mjs";
+import { documentPipeline, documentOperation } from "./document-journal.mjs";
 import { sourceDigest } from "../canvas/source-digest.mjs";
 import {
   assignmentKey,
@@ -8,6 +9,10 @@ import {
 } from "./assignment-page.mjs";
 export const discoveryConflicts = [
   "ambiguous_observation_time",
+  "document_conflict",
+  "document_expired",
+  "document_not_ready",
+  "resource_format_conflict",
   "duplicate_resource_item",
   "finish_previous_resource",
   "resource_rewind",
@@ -126,7 +131,7 @@ export function discoveryOperations({
         "next_cursor",
         "scope_revision",
       ]) ||
-      !(value.resource === "courses" || assignmentKey(value.resource)) ||
+      !resourceKey(value.resource) ||
       !integer(value.sequence, value.resource === "courses" ? 100 : 10000) ||
       value.scope_revision !== revision ||
       !(
@@ -159,7 +164,8 @@ export function discoveryOperations({
     return (
       states.includes(value.outcome) &&
       (value.outcome === "complete"
-        ? (key === "courses" || (academic && assignmentKey(key))) &&
+        ? (key === "courses" ||
+            (academic && resourceKey(key) && key !== "courses")) &&
           value.reason === null
         : reasons.includes(value.reason))
     );
@@ -224,6 +230,8 @@ export function discoveryOperations({
     }
   }
   function validateBody(operation, body, j) {
+    if (documentOperation(operation))
+      return documents.validateRequest(operation, body, j);
     const fields = {
       begin: [
         "connection_id",
@@ -383,6 +391,7 @@ export function discoveryOperations({
       if (
         bytes(value) > 8 * 1024 * 1024 ||
         !exact(value, [
+          ...(value.version === 3 ? ["document"] : []),
           "version",
           "binding",
           "scan",
@@ -398,7 +407,7 @@ export function discoveryOperations({
           "finished",
           "academic",
         ]) ||
-        value.version !== 2 ||
+        ![2, 3].includes(value.version) ||
         !exact(value.binding, [
           "connection_id",
           "generation",
@@ -444,7 +453,10 @@ export function discoveryOperations({
           "last_page_coverage",
           "incomplete",
         ]) ||
-          !assignmentKey(value.academic.resource_key) ||
+          !(value.version === 3
+            ? resourceKey(value.academic.resource_key) &&
+              value.academic.resource_key !== "courses"
+            : assignmentKey(value.academic.resource_key)) ||
           !required.has(value.academic.resource_key) ||
           !integer(value.academic.seen_count, 5000) ||
           !integer(value.academic.page_count, 100) ||
@@ -457,10 +469,21 @@ export function discoveryOperations({
         assignmentKey(value.scan?.checkpoint?.resource) &&
         value.academic?.resource_key !== value.scan.checkpoint.resource &&
         !(
-          value.pending?.operation === "academic_batch" &&
-          `${value.pending.body.envelope?.resource?.course_id}/assignments` ===
+          ["academic_batch", "document_batch"].includes(
+            value.pending?.operation,
+          ) &&
+          `${value.pending.body.envelope?.resource?.course_id}/${value.pending.body.envelope?.resource?.kind}` ===
             value.scan.checkpoint.resource
         )
+      )
+        throw Error();
+      if (value.version === 3 && value.document !== null)
+        documents.validate(value.document);
+      if (
+        value.version === 2 &&
+        value.scan &&
+        value.scan.checkpoint.resource !== "courses" &&
+        !assignmentKey(value.scan.checkpoint.resource)
       )
         throw Error();
       if (value.scan !== null) {
@@ -486,6 +509,11 @@ export function discoveryOperations({
             "finish",
             "academic_batch",
             "academic_resource",
+            "document_begin",
+            "document_parts",
+            "document_finish",
+            "document_batch",
+            "document_resource",
           ].includes(value.pending.operation)
         )
           throw Error();
@@ -605,10 +633,9 @@ export function discoveryOperations({
   function expectedBatchCheckpoint(operation, body) {
     return {
       ...body.expected_checkpoint,
-      resource:
-        operation === "academic_batch"
-          ? `${body.envelope.resource.course_id}/assignments`
-          : "courses",
+      resource: ["academic_batch", "document_batch"].includes(operation)
+        ? `${body.envelope.resource.course_id}/${body.envelope.resource.kind}`
+        : "courses",
       sequence: body.expected_checkpoint.sequence + 1,
       next_cursor: body.envelope.next_cursor,
     };
@@ -683,6 +710,10 @@ export function discoveryOperations({
   }
   async function acknowledge(j, response) {
     const { operation, body } = j.pending;
+    if (documentOperation(operation) && operation !== "document_resource") {
+      await documents.acknowledge(j, response);
+      return;
+    }
     if (operation === "begin") {
       const scan = lease(response, j.binding.scope_revision);
       if (
@@ -742,14 +773,18 @@ export function discoveryOperations({
         if (required.size > MAX_RESOURCES) throw Error();
         j.required = [...required];
       }
-    } else if (operation === "resource" || operation === "academic_resource") {
+    } else if (
+      operation === "resource" ||
+      operation === "academic_resource" ||
+      operation === "document_resource"
+    ) {
       if (
         !uuid.test(response.receipt_id) ||
         response.resource_key !== body.resource_key ||
         response.coverage !== body.outcome ||
         response.reason !== body.reason ||
         !integer(response.seen_count, 5000) ||
-        (operation === "academic_resource" &&
+        (["academic_resource", "document_resource"].includes(operation) &&
           (response.seen_count !==
             (j.academic?.resource_key === body.resource_key
               ? j.academic.seen_count
@@ -829,6 +864,7 @@ export function discoveryOperations({
   }
   async function enqueue(p, operation, body) {
     try {
+      if (p.j.document && !documentOperation(operation)) throw Error();
       validateBody(operation, body, p.j);
     } catch {
       fail("invalid_discovery_input");
@@ -838,6 +874,16 @@ export function discoveryOperations({
     await persist(p, j);
     return sendPending({ ...p, j });
   }
+  const documents = documentPipeline({
+    prepare,
+    available,
+    enqueue,
+    persist,
+    fail,
+    validExpiry,
+    resourceKey,
+    canvasOrigin,
+  });
   const operations = {
     beginDiscovery: async () => {
       const p = await prepare(true);
@@ -912,7 +958,7 @@ export function discoveryOperations({
       } catch {
         fail("discovery_outcome_unknown");
       }
-      const expected = ["batch", "academic_batch"].includes(
+      const expected = ["batch", "academic_batch", "document_batch"].includes(
         j.pending?.operation,
       )
         ? expectedBatchCheckpoint(j.pending.operation, j.pending.body)
@@ -1228,6 +1274,7 @@ export function discoveryOperations({
         }
       },
     });
+  Object.assign(operations, documents.operations);
   // All operations, including the whole capture/commit tick, share the original lock.
   return Object.fromEntries(
     Object.entries(operations).map(([name, operation]) => [
