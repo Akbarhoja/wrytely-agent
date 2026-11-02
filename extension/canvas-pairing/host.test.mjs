@@ -375,3 +375,75 @@ test("completed collection reports no running step while concurrent status remai
   assert.equal((await f.host.collect()).running, false);
   assert.equal((await f.host.status()).running, false);
 });
+
+test("a bounded burst reuses durable steps and stops at a finished scan", async () => {
+  const f = fixture();
+  let calls = 0;
+  f.options.client.collectDocumentPage = async () => ({
+    state: ++calls === 3 ? "finished" : "progress",
+    action: "document_step",
+    seen_count: 2,
+    coverage: "partial",
+  });
+  const host = createCanvasHost({ ...f.options, burstSteps: 100 });
+  await host.enable();
+  assert.equal((await host.collect()).state, "finished");
+  assert.equal(calls, 3);
+  assert.equal(f.scheduled.has(HOST_ALARMS.continuation), false);
+  assert.ok(f.scheduled.has(HOST_ALARMS.periodic));
+});
+test("burst checks the soft time budget between steps and retains continuation", async () => {
+  const f = fixture();
+  let calls = 0;
+  f.options.client.collectDocumentPage = async () => {
+    calls++;
+    f.advance(8000);
+    return { state: "progress", action: "document_step" };
+  };
+  const host = createCanvasHost({ ...f.options, burstSteps: 100 });
+  await host.enable();
+  await host.collect();
+  assert.equal(calls, 2);
+  assert.ok(f.scheduled.has(HOST_ALARMS.continuation));
+});
+test("burst count is a hard cap even with an unchanged test clock", async () => {
+  const f = fixture();
+  let calls = 0;
+  f.options.client.collectDocumentPage = async () => {
+    calls++;
+    return { state: "progress" };
+  };
+  const host = createCanvasHost({ ...f.options, burstSteps: 3 });
+  await host.enable();
+  await host.collect();
+  assert.equal(calls, 3);
+});
+test("pause fences an in-flight burst and prevents the next document step", async () => {
+  const f = fixture();
+  let release,
+    calls = 0;
+  const pending = new Promise((r) => (release = r));
+  f.options.client.collectDocumentPage = async () => {
+    calls++;
+    await pending;
+    return { state: "progress" };
+  };
+  const host = createCanvasHost({ ...f.options, burstSteps: 100 });
+  await host.enable();
+  const work = host.collect();
+  while (!calls) await new Promise((r) => setImmediate(r));
+  assert.equal((await host.collect()).state, "busy");
+  await host.disable();
+  release();
+  assert.equal((await work).enabled, false);
+  assert.equal(calls, 1);
+  assert.equal(f.scheduled.size, 0);
+});
+for (const burstSteps of [0, 101, 1.5, true])
+  test(`reject invalid burst bound ${burstSteps}`, () => {
+    const f = fixture();
+    assert.throws(
+      () => createCanvasHost({ ...f.options, burstSteps }),
+      /invalid_configuration/,
+    );
+  });

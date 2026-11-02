@@ -6,6 +6,7 @@ import { config } from "./config.mjs";
 registerCanvasHost({
   chrome,
   ...config,
+  burstSteps: 100,
   fileTransport: makeFileTransport(
     chrome.webRequest,
     chrome.runtime.getURL("").replace(/\/$/, ""),

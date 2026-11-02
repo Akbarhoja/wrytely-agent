@@ -23,13 +23,15 @@ export function registerCanvasHost({
   canvasOrigin,
   host,
   fileTransport,
+  burstSteps = 1,
 }) {
   const prior = registrations.get(chrome);
   if (prior) {
     if (
       prior.apiOrigin !== apiOrigin ||
       prior.canvasOrigin !== canvasOrigin ||
-      prior.injected !== host
+      prior.injected !== host ||
+      prior.burstSteps !== burstSteps
     )
       throw Error("host_already_registered");
     return prior.registration;
@@ -42,6 +44,7 @@ export function registerCanvasHost({
       storageArea: chrome.storage.local,
       alarms: chrome.alarms,
       fileTransport,
+      burstSteps,
     });
   const trustedPages = new Set(
     ["popup.html", "options.html"].map((path) => chrome.runtime.getURL(path)),
@@ -112,6 +115,7 @@ export function registerCanvasHost({
     apiOrigin,
     canvasOrigin,
     injected: host,
+    burstSteps,
     registration,
   });
   return registration;

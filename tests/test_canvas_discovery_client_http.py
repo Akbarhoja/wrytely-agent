@@ -199,7 +199,12 @@ def test_actual_client_http_contract(canvas_store, interop_service, scenario, mo
         input=json.dumps({"loopback": service_url, "scenario": scenario}),
         capture_output=True,
         text=True,
-        timeout=45,
+        # Automatic-document scenarios execute three complete scans, including
+        # conversion/upload/publication and original transaction fences. Linux
+        # CI's durable Postgres is materially slower than macOS pgserver. Keep
+        # a finite four-phase allowance (setup plus three scans), not retries or
+        # looser protocol/request deadlines; ordinary one-scan cases stay at45s.
+        timeout=180 if scenario.startswith("auto_documents_") else 45,
         cwd=ROOT,
         env=environment,
         creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,

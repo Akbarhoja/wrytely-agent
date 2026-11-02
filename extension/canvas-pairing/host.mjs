@@ -37,6 +37,7 @@ export function createCanvasHost({
   alarms,
   fileTransport,
   client,
+  burstSteps = 1,
   now = Date.now,
   randomUUID = () => crypto.randomUUID(),
 }) {
@@ -44,6 +45,9 @@ export function createCanvasHost({
     if (checkedOrigin(value) !== value) throw error("invalid_configuration");
   }
   if (
+    !Number.isInteger(burstSteps) ||
+    burstSteps < 1 ||
+    burstSteps > 100 ||
     !storageArea ||
     !alarms ||
     ["get", "set", "setAccessLevel"].some(
@@ -342,7 +346,20 @@ export function createCanvasHost({
     if (busy) return { state: "busy", running: true };
     busy = true;
     try {
-      return { ...(await collectStep()), running: false };
+      const deadline = now() + 15000;
+      let result;
+      for (let step = 0; step < burstSteps; step++) {
+        result = await collectStep();
+        // Check the soft event budget between durable steps. A step keeps its
+        // existing request deadlines and fences; finish/pause/failure stops now.
+        if (
+          result.state !== "progress" ||
+          result.enabled !== true ||
+          now() >= deadline
+        )
+          break;
+      }
+      return { ...result, running: false };
     } finally {
       busy = false;
     }
