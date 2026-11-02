@@ -51,14 +51,21 @@ exact clarification3b86710 in6554751518. Current executable text/reply/delivery
 contracts remain in force until the new implementation is separately reviewed.
 No new paid allowance, migration, runtime, queue or source activation is implied.
 
-## Proposed private v2 artifact consumer boundary
+## Implemented private v2 artifact Store reads
 
-[Private artifact reads v2](docs/contracts/PRIVATE-ARTIFACT-READ-v2.md) responds to
-M's #152 request6564664188 with explicit owned list/detail/exact-evidence reads,
-mixed reference shapes, saved-check versus current inspection status, authority/
-freshness/control fences and A-store/M-HTTP/UI ownership. **Proposal only; M agreement
-and implementation remain pending.** No Store method, route, public DTO or permission
-is introduced; existing v1 filters continue hiding internal v2 artifacts.
+[Private artifact reads v2](docs/contracts/PRIVATE-ARTIFACT-READ-v2.md) and
+[implementation evidence](docs/P1-PRIVATE-ARTIFACT-READS.md) define implemented
+list_private_artifacts_v2, read_private_artifact_v2 and
+read_private_artifact_evidence_v2 on the existing Store. They return metadata-only
+keyset lists, validated saved check projections and exact original mixed evidence,
+with current source authority and separate inspection status. No task lease, model
+call, work permission, new migration or public route is introduced. Controls expose
+agent_paused and actual responsibility_status, not a nonexistent duty pause flag.
+M owns HTTP/UI assembly; previous mandatory #157 agreement pauses are superseded.
+Existing v1 projection filters remain unchanged. PrivateArtifactReadLimit maps to
+redacted413; SourceRefreshRequired to409; LookupError to opaque404 and invalid
+bounds to redacted400. Identity must come from a verified session; all HTTP outcomes
+must be no-store. A saved passed check is never authorization to send or submit.
 
 ## Internal typed v2 document drafting
 

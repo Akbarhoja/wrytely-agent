@@ -1,9 +1,12 @@
 # Private document-backed artifact reads — v2 proposal
 
-**Design specified; implementation pending.** Akbar removed the mandatory agreement
-gate November 1. A may finalize and implement this Store/DTO boundary now; M reviews
-and owns HTTP/UI assembly, with concrete compatibility changes communicated asynchronously. Requested by M in
+**Store implemented; HTTP/UI assembly remains M-owned.** Akbar removed the mandatory
+agreement gate November 1. A implemented this versioned boundary on
+codex/private-artifact-results. M can assemble the concrete methods after code review,
+raising actual incompatibilities asynchronously. Original consumer request:
 [#152 comment6564664188](https://github.com/Akbarhoja/wrytely-agent/pull/152#issuecomment-6564664188).
+Implementation/evidence: [private result reads](../P1-PRIVATE-ARTIFACT-READS.md).
+
 Claim: [6565297576](https://github.com/Akbarhoja/wrytely-agent/issues/4#issuecomment-6565297576).
 Base: #156 `cba20736d8a22f085042f6e86d0d97222a763621`.
 
@@ -13,9 +16,9 @@ adds explicit versioned private reads; it never changes those filters or treats 
 root UUID as a legacy version. It grants no delegation, collection, send, rendering,
 submission, public sharing or worker activation.
 
-## 1. Proposed operations and assembly
+## 1. Implemented Store operations and proposed HTTP assembly
 
-A implements the following Store methods under the updated owner-decision process. verified_user is the
+The following Store methods are implemented under the updated owner-decision process. verified_user is the
 server-verified user ID, never a request body field or ingestion bearer identity.
 
 ```text
@@ -33,7 +36,7 @@ GET /v2/artifacts/{artifact_id}
 GET /v2/artifacts/{artifact_id}/evidence/{group}/{index}
 ```
 
-No routes exist from this design. Use the existing verified Clerk session dependency,
+Store implementation does not register these routes. Use the existing verified Clerk session dependency,
 no-store on every response/error, strict allowed query keys and no mutation/retry.
 Only the list accepts limit/before; only evidence accepts check_id/first_slot/limit.
 No endpoint accepts user IDs, source/root IDs, purpose/TTL, policy, provider URLs,
@@ -75,7 +78,7 @@ Successful content detail returns exactly:
 {schema_version:2,
  artifact:{id,responsibility_id,task_id,created_at,memory_revision,
            saved_state,memory_stale,draft},
- controls:{agent_paused,responsibility_paused},
+ controls:{agent_paused,responsibility_status},
  latest_check:null|{id,created_at,memory_revision,report},
  evidence_status:{evaluated_at,state,reasons},
  limits}
@@ -128,7 +131,8 @@ never silently replaced with latest. An unchanged sync can make old observations
 historical even when text/root is unchanged; retain exact pinned identity.
 
 Pausing the agent/responsibility prevents work, not the student's authorized read of
-saved content. Return both pause flags explicitly; no task lease is needed or
+saved content. Return agent_paused and the real active/blocked/done responsibility_status; there
+is no persisted per-responsibility pause flag to fabricate. No task lease is needed or
 manufactured for student inspection. Reads never resume work, refresh credentials,
 re-pin evidence, advance timestamps or revise artifact state. Recheck credential
 expiry and current control/connection authority before finishing the bounded read;
@@ -192,14 +196,15 @@ not executable source HTML. No signed downloads, remote fetches or public files.
 
 A errors: invalid strict input→ValueError; owned source authorization lost→
 SourceRefreshRequired; wrong/missing account/artifact/check reference→LookupError;
-response budget exceeded→a dedicated read-limit error. M maps to redacted400,
+response budget exceeded→PrivateArtifactReadLimit from
+shared/private_artifact_projection.py. M maps to redacted400,
 409{code:source_refresh_required}, indistinguishable404 and413{code:read_limit}.
 Authentication failure is401; database unavailable503, unexpected redacted500.
 No exception/source text in response/log. Every response, including401/404/413, is
 no-store. No refresh/send/model/other external IO is implicit in any read.
 
-Delivery sequence: A finalizes the versioned contract and implements typed Store
-projections/tests. M reviews concrete code and implements owned session routes/UI
+Delivery sequence: A has implemented versioned Store projections/tests. M reviews concrete code
+and implements owned session routes/UI
 against it; incompatibilities are raised asynchronously, without a mandatory design
 agreement pause. A reviews/integrates the combined consumer.
 Existing v1 filters stay until an explicit later migration decision. No new SQL is
@@ -217,4 +222,5 @@ live Meta quality, installed Canvas or WhatsApp/continuous-agent acceptance.
 
 Requested review: flag concrete method/DTO/paging/authority incompatibilities while
 A proceeds with owned implementation. There is no mandatory acknowledgment gate.
-The document itself changes no application behavior; M's independent work continues.
+The Store code and acceptance evidence are linked above. HTTP/UI activation and
+M's independent collection work remain separate.
