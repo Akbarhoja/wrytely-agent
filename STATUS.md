@@ -30,6 +30,18 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+Latest A runtime investigation on codex/p1-task-handoff-audit from #161e696be0:
+100 isolated synthetic typed plan→academic handoffs passed (18.86s); original
+intermittent claim failure was not reproduced and is not marked fixed. Added
+fenced, content-free planner_failure diagnostics at instrumented operations,
+retaining original exception/usage/retry/control semantics and no successful-path
+diagnostic writes. Thirteen new cases; focused planner/worker/typed58PASS, zero
+skips,9.28s. Full fresh disposable backend:1,485passed, zero skips, two existing
+warnings,109.49s; all460NodePASS and Ruff lint/format234 pass. [Evidence](docs/P1-TASK-HANDOFF-AUDIT.md). No scheduling, permission, schema,
+shared/public interface or M file change. #157 agreement/publication HTTP/journal
+remain pending/M-owned; P0/P1 remain open. No live source/model/send/spend/grant/
+install/retained migration/continuous worker/deploy/mainmerge.
+
 Latest A cross-layer acceptance on codex/p1-document-pipeline-acceptance from
 #1603ae1fc6: actual local JS producer output → real private ASGI staging API →
 explicit internal Store publication → original retrieval → scoped scripted checked

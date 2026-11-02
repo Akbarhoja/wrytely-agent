@@ -1,12 +1,14 @@
 """A model-selected next internal step, constrained by persisted responsibility state."""
 
 import json
+from functools import partial
 
 from contracts.document_artifacts import CoursePolicyV2, RubricItemV2
 from contracts.models import DraftPlannerDecision, PlannerDecision
 from runtime.draft_requirements import assess_draft_requirements
 from shared.canvas_reads import SourceRefreshRequired
-from shared.db import json_text
+from shared.db import LeaseLost, json_text
+from shared.model_client import ModelCallFailed
 from shared.typed_evidence import EvidenceContextLimit, resolve_evidence
 
 PLAN_TOOL = {
@@ -35,9 +37,43 @@ PLANNER_INSTRUCTIONS = (
 )
 
 
+def _at_stage(store, lease, stage, operation, *args, **kwargs):
+    """Best-effort fenced diagnostics; never replace an operation's exception."""
+    try:
+        return operation(*args, **kwargs)
+    except (LeaseLost, SourceRefreshRequired, EvidenceContextLimit):
+        # These are expected control/evidence stops, not a failed planner stage.
+        raise
+    except Exception as error:
+        category = (
+            "model_call_failed"
+            if isinstance(error, ModelCallFailed)
+            else "invalid_result"
+            if isinstance(error, ValueError)
+            else "missing_reference"
+            if isinstance(error, LookupError)
+            else "unexpected_failure"
+        )
+        try:
+            store.event(lease, "planner_failure", {"stage": stage, "category": category})
+        except Exception:
+            # Revocation/storage loss may prevent even this diagnostic. Preserve
+            # the original exception so worker usage/retry/lease handling survives.
+            pass
+        raise
+
+
+def _decode_plan(result, decision_type):
+    calls = [item for item in result.output if item.get("type") == "function_call"]
+    if len(calls) != 1 or calls[0].get("name") != "record_plan":
+        raise ValueError("Planner must choose one structured decision")
+    return decision_type.model_validate(json.loads(calls[0]["arguments"]))
+
+
 def run_planning_episode(store, model, settings, lease):
-    context = store.context(lease)
-    intent = store.draft_intent(lease)
+    call = partial(_at_stage, store, lease)
+    context = call("context_load", store.context, lease)
+    intent = call("intent_load", store.draft_intent, lease)
     decision_type = DraftPlannerDecision if intent else PlannerDecision
     instructions = PLANNER_INSTRUCTIONS
     tool = PLAN_TOOL
@@ -45,18 +81,24 @@ def run_planning_episode(store, model, settings, lease):
         typed = intent.get("canvas_objects_bound", False)
         try:
             if intent["assessment"] is None:
-                store.heartbeat(lease, settings.lease_seconds)
-                sources = store.draft_intent_sources(lease)
+                call("heartbeat", store.heartbeat, lease, settings.lease_seconds)
+                sources = call("source_load", store.draft_intent_sources, lease)
                 candidate = (
-                    assess_draft_requirements(model, sources, evidence_schema=2)
+                    call(
+                        "requirement_assessment",
+                        assess_draft_requirements,
+                        model,
+                        sources,
+                        evidence_schema=2,
+                    )
                     if typed
-                    else assess_draft_requirements(model, sources)
+                    else call("requirement_assessment", assess_draft_requirements, model, sources)
                 )
-                if not store.commit_draft_assessment(lease, candidate):
+                if not call("assessment_commit", store.commit_draft_assessment, lease, candidate):
                     return
-                intent = store.draft_intent(lease)
+                intent = call("intent_load", store.draft_intent, lease)
             elif typed:
-                sources = store.draft_intent_sources(lease)
+                sources = call("source_load", store.draft_intent_sources, lease)
                 saved = intent["assessment"]
                 policy = CoursePolicyV2.model_validate(saved["policy"])
                 rubric = [RubricItemV2.model_validate(r) for r in saved["rubric"]]
@@ -71,7 +113,9 @@ def run_planning_episode(store, model, settings, lease):
                 if isinstance(error, EvidenceContextLimit)
                 else "source_refresh_required"
             )
-            store.apply_plan(
+            call(
+                "source_block_commit",
+                store.apply_plan,
                 lease,
                 DraftPlannerDecision(
                     action="blocked", reason=reason, step_key="evidence-unavailable", instruction=""
@@ -97,10 +141,12 @@ def run_planning_episode(store, model, settings, lease):
         )
         tool = {**PLAN_TOOL, "parameters": DraftPlannerDecision.model_json_schema()}
         tool["parameters"]["required"] = ["action", "reason", "step_key", "instruction"]
-    saved = store.saved_plan(lease)
+    saved = call("plan_recovery", store.saved_plan, lease)
     if saved is None:
-        store.heartbeat(lease, settings.lease_seconds)
-        result = model.turn(
+        call("heartbeat", store.heartbeat, lease, settings.lease_seconds)
+        result = call(
+            "plan_model",
+            model.turn,
             [
                 {
                     "role": "system",
@@ -110,11 +156,10 @@ def run_planning_episode(store, model, settings, lease):
             ],
             [tool],
         )
-        calls = [item for item in result.output if item.get("type") == "function_call"]
-        if len(calls) != 1 or calls[0].get("name") != "record_plan":
-            raise ValueError("Planner must choose one structured decision")
-        decision = decision_type.model_validate(json.loads(calls[0]["arguments"]))
-        store.event(
+        decision = call("plan_decode", _decode_plan, result, decision_type)
+        call(
+            "plan_checkpoint",
+            store.event,
             lease,
             "planner_decision",
             {
@@ -124,11 +169,13 @@ def run_planning_episode(store, model, settings, lease):
             },
         )
     else:
-        decision = decision_type.model_validate(saved)
+        decision = call("plan_decode", decision_type.model_validate, saved)
     try:
-        store.apply_plan(lease, decision)
+        call("plan_apply", store.apply_plan, lease, decision)
     except (SourceRefreshRequired, EvidenceContextLimit):
-        store.apply_plan(
+        call(
+            "source_block_commit",
+            store.apply_plan,
             lease,
             decision_type(
                 action="blocked",
