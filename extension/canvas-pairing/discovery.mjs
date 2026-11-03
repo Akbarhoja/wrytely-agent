@@ -557,6 +557,7 @@ export function discoveryOperations({
       seen_count: j.seen_count,
       closed_count: j.closed.length,
       coverage: j.finished?.coverage ?? null,
+      content_requested: j.required.some((key) => key !== "courses"),
     };
   }
   function result(j) {
@@ -1156,6 +1157,14 @@ export function discoveryOperations({
           j.binding.generation !== item.connection.generation)
       )
         return { state: "blocked", reason: "discovery_context_changed" };
+      if (j?.finished) {
+        const context = await currentContext(item);
+        return {
+          ...status(j),
+          content_requested:
+            context.course_ids.length > 0 && context.resource_kinds.length > 0,
+        };
+      }
       return status(j);
     },
   };

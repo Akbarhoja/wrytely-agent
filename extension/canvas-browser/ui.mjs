@@ -185,6 +185,14 @@ export function createControls({
             ? "The last reported scan has complete coverage; other content may still be unavailable."
             : "Coverage not measured in this view.",
     };
+    if (
+      reply.state === "awaiting_resources" &&
+      reply.reason === "course_selection_required"
+    ) {
+      view.heading = "Choose courses to collect";
+      view.coverage =
+        "Only course discovery finished. In Wrytely → Connections, choose courses and content, save, then collect again.";
+    }
     if (reply.state === "blocked") {
       view.verified = false;
       view.feedback =

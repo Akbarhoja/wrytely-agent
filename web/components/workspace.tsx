@@ -87,7 +87,10 @@ function WorkspaceSession({
             ? "Ready for your message"
             : "Your academic agent";
   const ready = signedIn && Boolean(data.agent) && !data.loading && !data.expired;
-  const whatsapp = useWhatsAppConnection(ready ? userId : undefined);
+  // Connector reads authenticate their own requests. A failed dashboard load
+  // must not masquerade as signed-out or prevent repairing an existing connector.
+  const connectionsReady = signedIn && !data.loading && !data.expired;
+  const whatsapp = useWhatsAppConnection(connectionsReady ? userId : undefined);
 
   return (
     <div className="app-shell">
@@ -277,8 +280,8 @@ function WorkspaceSession({
           ) : view === "connections" ? (
             <div className="connections-layout">
               <CanvasConnection
-                userId={ready ? userId : undefined}
-                enabled={!data.expired}
+                userId={signedIn && !data.expired ? userId : undefined}
+                enabled={connectionsReady}
                 onSessionExpired={data.retry}
               />
               <WhatsAppConnection

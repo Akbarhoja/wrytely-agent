@@ -27,6 +27,22 @@ function fixture() {
     },
   };
 }
+test("catalog-only completion directs the student to select scope without claiming complete content", async () => {
+  const f = fixture();
+  f.reply = {
+    state: "awaiting_resources",
+    enabled: true,
+    reason: "course_selection_required",
+    coverage: null,
+  };
+  await f.controls.refresh();
+  assert.equal(f.controls.snapshot().heading, "Choose courses to collect");
+  assert.match(
+    f.controls.snapshot().coverage,
+    /Only course discovery finished/,
+  );
+  assert.ok(!f.controls.snapshot().coverage.includes("complete coverage"));
+});
 test("refresh preserves a restarted collector's stop reason without running collection", async () => {
   const f = fixture();
   f.reply = {

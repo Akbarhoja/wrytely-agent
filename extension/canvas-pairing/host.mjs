@@ -46,6 +46,7 @@ export function createCanvasHost({
   fileTransport,
   client,
   burstSteps = 1,
+  burstBudgetMs = 15000,
   now = Date.now,
   randomUUID = () => crypto.randomUUID(),
 }) {
@@ -56,6 +57,9 @@ export function createCanvasHost({
     !Number.isInteger(burstSteps) ||
     burstSteps < 1 ||
     burstSteps > 100 ||
+    !Number.isInteger(burstBudgetMs) ||
+    burstBudgetMs < 1000 ||
+    burstBudgetMs > 45000 ||
     !storageArea ||
     !alarms ||
     ["get", "set", "setAccessLevel"].some(
@@ -273,33 +277,51 @@ export function createCanvasHost({
       let result;
       try {
         const current = await client.readDiscoveryStatus();
-        const dispatch = await serial(async () => {
-          const latest = await load();
-          if (
-            localPause ||
-            !latest.enabled ||
-            latest.control_epoch !== start.control_epoch
-          )
-            return {
-              cancelled: true,
-              status: statusOf(latest, {
-                state: latest.enabled && !localPause ? "ready" : "paused",
-              }),
-            };
-          // Start synchronously under the control queue, but await outside it so pause remains responsive.
-          return {
-            completion:
-              current.state === "finished"
-                ? client.beginDiscovery()
-                : (
-                    client.collectDocumentPage ?? client.collectAssignmentPage
-                  ).call(client),
+        if (
+          current.state === "finished" &&
+          current.content_requested === false
+        ) {
+          result = {
+            state: "awaiting_resources",
+            reason: "course_selection_required",
           };
-        });
-        if (dispatch.cancelled) return dispatch.status;
-        result = await dispatch.completion;
-        if (current.state === "finished")
-          result = { state: "progress", action: "begin" };
+        } else {
+          const dispatch = await serial(async () => {
+            const latest = await load();
+            if (
+              localPause ||
+              !latest.enabled ||
+              latest.control_epoch !== start.control_epoch
+            )
+              return {
+                cancelled: true,
+                status: statusOf(latest, {
+                  state: latest.enabled && !localPause ? "ready" : "paused",
+                }),
+              };
+            // Start synchronously under the control queue, but await outside it so pause remains responsive.
+            return {
+              completion:
+                current.state === "finished"
+                  ? client.beginDiscovery()
+                  : (
+                      client.collectDocumentPage ?? client.collectAssignmentPage
+                    ).call(client),
+            };
+          });
+          if (dispatch.cancelled) return dispatch.status;
+          result = await dispatch.completion;
+          if (current.state === "finished")
+            result = { state: "progress", action: "begin" };
+          if (
+            result.state === "finished" &&
+            current.content_requested === false
+          )
+            result = {
+              state: "awaiting_resources",
+              reason: "course_selection_required",
+            };
+        }
       } catch (e) {
         result = {
           state: "blocked",
@@ -337,7 +359,10 @@ export function createCanvasHost({
         ) {
           view = {
             state: result.state,
-            reason: null,
+            reason:
+              result.reason === "course_selection_required"
+                ? result.reason
+                : null,
             course_count:
               Number.isSafeInteger(result.seen_count) && result.seen_count >= 0
                 ? result.seen_count
@@ -372,7 +397,7 @@ export function createCanvasHost({
     if (busy) return { state: "busy", running: true };
     busy = true;
     try {
-      const deadline = now() + 15000;
+      const deadline = now() + burstBudgetMs;
       let result;
       for (let step = 0; step < burstSteps; step++) {
         result = await collectStep();

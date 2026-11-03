@@ -36,6 +36,27 @@ function backend(loseFirst = false) {
   });
 }
 describe("student workspace", () => {
+  it("keeps authenticated Canvas controls available when dashboard bootstrap has a transient failure", async () => {
+    const base = backend();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn<typeof fetch>(async (url, options) => {
+        const path = String(url);
+        if (path.endsWith("bootstrap"))
+          return Response.json({ detail: "Temporary dashboard failure" }, { status: 503 });
+        if (path.endsWith("canvas/setup"))
+          return Response.json({ origins: ["https://canvas.example.edu"] });
+        if (path.endsWith("source-connections"))
+          return Response.json({ connections: [], next_cursor: null });
+        return base(url, options);
+      }),
+    );
+    render(<Workspace mode="signed-in" userId="user_alice" />);
+    await screen.findByText("Temporary dashboard failure");
+    fireEvent.click(screen.getByRole("button", { name: "Connections" }));
+    await screen.findByText("Create linking code");
+    expect(screen.queryByText("Sign in to connect your courses.")).toBeNull();
+  });
   it("clears hidden context and the whole workspace on a result-status session expiry", async () => {
     const base = backend();
     const source = {

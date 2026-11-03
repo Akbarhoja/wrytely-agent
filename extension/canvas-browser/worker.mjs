@@ -7,6 +7,7 @@ registerCanvasHost({
   chrome,
   ...config,
   burstSteps: 100,
+  burstBudgetMs: 45000,
   fileTransport: makeFileTransport(
     chrome.webRequest,
     chrome.runtime.getURL("").replace(/\/$/, ""),

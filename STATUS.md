@@ -30,6 +30,24 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+November3 combined P1 correction0.3.0: re-pairing deliberately resets scope; that
+security boundary stays. Empty-scope scans now prompt course/content selection in
+the host/UI instead of claiming completed content collection; a finished empty
+scope does not start another catalog scan. The website labels catalog-only results
+and warns that pairing again clears selections. Authenticated connector controls
+survive transient dashboard/bootstrap errors; real session expiry still fences reads.
+
+Packaged work bursts are45seconds rather than15, bounded to100original durable
+steps; original per-request limits, checkpoints, identity/scope fences and pause
+checks remain. Default factory stays15seconds. Simulated1.5-second steps plus30-second
+continuation wait give1.8x scheduled throughput; this is not a real Canvas speed claim.
+All587Node/134webPASS, TypeScript/Ruff/format pass. Disposable integration setup is
+blocked locally by process/shared-memory sandbox limits; remote CI and installed
+recovery/throughput/unchanged-repeat/isolation acceptance remain required. No backend
+deploy, migration, model call, WhatsApp send, scope expansion or P2 is included.
+Website empty-scope guidance was verified in Chrome; private live details remain local.
+One same-folder update is prepared; do not use the old0.0.1feasibility diagnostic.
+
 November3 diagnostic correction0.2.8 covers the legacy course checkpoint recovery
 and assignment fallbacks missed by0.2.7's document-only stage reporting. Their raw
 unexpected errors now become fixed recovery-stage codes; the host/UI retain only

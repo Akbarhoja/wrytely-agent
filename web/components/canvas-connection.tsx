@@ -238,6 +238,13 @@ function CanvasSession({
             Install the Wrytely Canvas extension supplied for this workspace, then create a private
             linking code and enter it in the extension. Your Canvas password stays with Canvas.
           </p>
+          {connections.some((item) => item.origin === origin && item.state === "connected") && (
+            <p className="privacy-note">
+              This Canvas account is already connected. Pair again only to replace the browser
+              connection. Pairing again clears your course selection; choose your courses again
+              afterward. A temporary website connection error does not require pairing again.
+            </p>
+          )}
           <button
             className="primary-button"
             disabled={busy || !enabled || !origin}
@@ -363,9 +370,24 @@ function CanvasSession({
         <div className="canvas-coverage" aria-live="polite">
           <h3>Your courses</h3>
           <p>
-            Scope: {label(coverage.scope.mode)} · Latest scan: {label(coverage.scan.state)} ·
-            Started: {when(coverage.scan.started_at)}
+            Scope: {label(coverage.scope.mode)} · Latest scan:{" "}
+            {coverage.scan.state === "finished" &&
+            ((coverage.scope.course_ids ?? coverage.courses.filter((c) => c.selected)).length ===
+              0 ||
+              coverage.scope.resource_kinds.length === 0)
+              ? "course discovery finished"
+              : label(coverage.scan.state)}{" "}
+            · Started: {when(coverage.scan.started_at)}
           </p>
+          {coverage.courses.length > 0 &&
+            ((coverage.scope.course_ids ?? coverage.courses.filter((c) => c.selected)).length ===
+              0 ||
+              coverage.scope.resource_kinds.length === 0) && (
+              <p role="status">
+                No course content is selected. This is course discovery only. Open “Choose specific
+                courses and content,” select your courses and content, then save before collecting.
+              </p>
+            )}
           <p>
             Discovery: {label(coverage.discovery.coverage)}. Last attempt:{" "}
             {when(coverage.discovery.last_attempt_at)}. Last complete course discovery:{" "}

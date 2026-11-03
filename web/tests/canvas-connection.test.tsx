@@ -13,14 +13,18 @@ const connection = {
   state: "connected",
   generation: 2,
 };
-function mock() {
+function mock(emptyScope = false) {
   const fetch = vi.fn(async (url: unknown, init?: RequestInit) => {
     const path = String(url);
     if (path.endsWith("/canvas/setup")) return Response.json({ origins: [connection.origin] });
     if (path.endsWith("/canvas/coverage"))
       return Response.json({
         connection,
-        scope: { mode: "all_active", resource_kinds: ["files"] },
+        scope: {
+          mode: emptyScope ? "explicit_set" : "all_active",
+          resource_kinds: emptyScope ? [] : ["files"],
+          ...(emptyScope ? { course_ids: [] } : {}),
+        },
         discovery: { coverage: "complete", last_attempt_at: null, last_complete_at: null },
         scan: { state: "finished", started_at: null },
         evaluated_at: "2026-11-02T01:00:00Z",
@@ -29,7 +33,7 @@ function mock() {
           {
             course_id: "101",
             title: "Synthetic course",
-            selected: true,
+            selected: !emptyScope,
             missing_pending_confirmation: false,
             resources: [
               {
@@ -63,6 +67,15 @@ it("shows incomplete content even for a finished complete resource scan", async 
   expect(screen.getByText(/2 with content gaps/)).toBeTruthy();
   expect(screen.getByText(/cannot see changes until the next sync/)).toBeTruthy();
   expect(screen.queryByText("Up to date")).toBeNull();
+});
+it("labels a finished empty-scope scan as discovery only and explains how to collect content", async () => {
+  mock(true);
+  render(<CanvasConnection userId="alice" />);
+  fireEvent.click(await screen.findByText("View courses and coverage"));
+  await screen.findByText(/Latest scan: course discovery finished/);
+  expect(screen.getByText(/No course content is selected/)).toBeTruthy();
+  expect(screen.getByText(/Pairing again clears your course selection/)).toBeTruthy();
+  expect(screen.queryByText(/Latest scan: finished/)).toBeNull();
 });
 it("scope choice sends only verified connection controls, never a posted account id", async () => {
   const fetch = mock();

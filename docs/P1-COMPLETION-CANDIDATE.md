@@ -8,6 +8,37 @@ remains required. Outlook is optional/paused; P0 WhatsApp remains Murtazo's.
 
 ## Current installed acceptance run
 
+### Combined scope, control and scheduling correction0.3.0
+
+Re-pairing intentionally resets the old generation's scope. Preserve that boundary:
+do not automatically reuse another identity's selections. The worker now distinguishes
+catalog-only completion from content work and requests selection instead of reporting
+complete content; an unchanged finished empty scope does not begin another scan.
+For a finished journal, current context is checked before deciding whether selected
+content now permits a new scan. The web view labels empty scope as course discovery
+only, provides selection guidance and warns that pairing again clears course choices.
+Transient dashboard bootstrap failures no longer hide authenticated connector controls;
+the connector still authorizes each request and real session expiry clears access.
+
+Package uses a45-second soft between-step budget rather than15seconds, still at
+most100original durable steps per callback. Factory default stays15seconds; budgets
+above45seconds reject.30-second continuation delay,30-minute periodic opportunity,
+per-request deadlines, original journal/receipt recovery, control epochs and pause
+checks are unchanged. No keep-alive loop, second scheduler or parallel upload system.
+[Chrome lifecycle reference](https://developer.chrome.com/docs/extensions/develop/concepts/service-workers/lifecycle)
+documents the event/idle limits; this remains bounded work and must survive worker
+termination. A virtual-clock regression with1.5-second durable steps measures10steps
+per45seconds versus30per75seconds including continuation waits, a1.8x simulated rate.
+It does not establish real Canvas throughput or a completion ETA.
+
+All587Node/134webPASS plus TypeScript/Ruff/format. Local disposable Postgres could
+not initialize due sandbox shared-memory/process restrictions; no local integration
+pass is claimed for this head. CI and installed proof remain separate. The corrected
+empty-scope website was inspected in Chrome; private selection/results stay ignored.
+Next: one same-folder0.3.0reload, positive pause/version check, independently read saved
+scope, bounded content collection, actual throughput/counters, unchanged repeat,
+recovery and isolation. Stop beforeP2. No new backend deploy or migration is required.
+
 Diagnostic0.2.7 follows another unresolved collector_failed stop. Unexpected errors
 now retain one fixed processing-stage code; known discovery_request_rejected and
 discovery_state_changed also survive the collector boundary. Original messages and

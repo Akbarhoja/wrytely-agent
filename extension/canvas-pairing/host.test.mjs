@@ -181,6 +181,63 @@ test("awaiting resources does not create continuation loop; finished waits for p
     assert.equal(f.scheduled.has(HOST_ALARMS.periodic), true);
   }
 });
+test("a catalog-only finish requests course selection instead of claiming content completion", async () => {
+  const f = fixture();
+  f.read = { state: "active", content_requested: false };
+  f.result = { state: "finished", coverage: "complete", seen_count: 7 };
+  await f.host.enable();
+  const result = await f.host.collect();
+  assert.equal(result.state, "awaiting_resources");
+  assert.equal(result.reason, "course_selection_required");
+  assert.equal(result.coverage, null);
+  assert.equal(f.scheduled.has(HOST_ALARMS.continuation), false);
+});
+test("finished empty scope does not start another catalog scan; selected scope can resume", async () => {
+  const f = fixture();
+  f.read = { state: "finished", content_requested: false };
+  await f.host.enable();
+  assert.equal((await f.host.collect()).reason, "course_selection_required");
+  assert.ok(!f.events.includes("begin"));
+  f.read = { state: "finished", content_requested: true };
+  assert.equal((await f.host.collect()).action, "begin");
+  assert.ok(f.events.includes("begin"));
+});
+test("longer bounded bursts reduce scheduled idle overhead without exceeding step or time caps", async () => {
+  const steps = [];
+  for (const budget of [15000, 45000]) {
+    const f = fixture();
+    let calls = 0;
+    f.options.client.collectDocumentPage = async () => {
+      calls++;
+      f.advance(1500);
+      return { state: "progress" };
+    };
+    const host = createCanvasHost({
+      ...f.options,
+      burstSteps: 100,
+      burstBudgetMs: budget,
+    });
+    await host.enable();
+    await host.collect();
+    steps.push(calls);
+    assert.equal(
+      f.scheduled.get(HOST_ALARMS.continuation).when,
+      1000000 + budget + 30000,
+    );
+  }
+  assert.deepEqual(steps, [10, 30]);
+  // Simulated 1.5s durable operations: 10/45s vs30/75s, a1.8x rate.
+  assert.equal(steps[1] / 75000 / (steps[0] / 45000), 1.8);
+});
+for (const budget of [0, 999, 45001, 1.5, true]) {
+  test(`reject invalid work budget ${budget}`, () => {
+    const f = fixture();
+    assert.throws(
+      () => createCanvasHost({ ...f.options, burstBudgetMs: budget }),
+      /invalid_configuration/,
+    );
+  });
+}
 test("transient backoff persists across restart and caps at six hours", async () => {
   const f = fixture();
   await f.host.enable();
