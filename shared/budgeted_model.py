@@ -37,7 +37,7 @@ class BudgetedModelClient:
             result = self.model.turn(history, tools)
         except Exception:
             self.store.settle_model_call(self.user, reservation)
-            raise
+            raise ModelBudgetExceeded("Model outcome unknown; reservation held") from None
         if not result.usage_known:
             self.store.settle_model_call(self.user, reservation)
             raise ModelBudgetExceeded("Model usage unknown; reservation held")

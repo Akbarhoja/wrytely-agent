@@ -161,3 +161,15 @@ class ModelBudgetStore:
                     (row["budget_id"],),
                 )
             return state
+
+    def hold_model_task(self, lease):
+        """No automatic task retry can turn unknown inference into another paid call."""
+        with self.connection() as conn:
+            self._fence(conn, lease)
+            conn.execute(
+                "UPDATE wrytely_agent.tasks SET status='blocked',"
+                "last_error='model_budget_or_unknown',lease_token=NULL,lease_until=NULL "
+                "WHERE id=%s",
+                (lease.task_id,),
+            )
+            self._block_failed_responsibilities(conn, lease.agent_id)

@@ -72,6 +72,7 @@ def test_overrun_disables_global_budget_and_no_default_grant_exists(store, alice
         )
         == "overrun"
     )
+    store.configure_model_budget("pilot", ceiling_usd="2", opening_liability_usd="1.32")
     with pytest.raises(ModelBudgetExceeded):
         store.reserve_model_call("user_alice", "pilot", "0.01")
 
@@ -128,4 +129,19 @@ def test_failed_or_missing_usage_holds_entire_reservation(store, alice, mode):
     with store.connection() as conn:
         row = conn.execute("SELECT * FROM wrytely_agent.model_call_reservations").fetchone()
     assert row["state"] == "unknown" and row["liability_usd"] == row["maximum_usd"]
+    assert provider.calls == 1
+
+
+def test_budget_unknown_blocks_worker_instead_of_an_automatic_retry(store, alice):
+    from runtime.worker import run_once
+    from shared.config import Settings
+
+    configured(store, alice)
+    store.enqueue("user_alice", "Explain fractions", "budgeted-question")
+    provider = Provider(fail=True)
+    assert run_once(store, wrapper(store, provider), Settings())
+    assert not run_once(store, wrapper(store, provider), Settings())
+    with store.connection() as conn:
+        row = conn.execute("SELECT status,last_error FROM wrytely_agent.tasks").fetchone()
+    assert row == {"status": "blocked", "last_error": "model_budget_or_unknown"}
     assert provider.calls == 1

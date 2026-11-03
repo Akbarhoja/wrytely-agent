@@ -11,6 +11,7 @@ from runtime.planner import run_planning_episode
 from shared.budgeted_model import BudgetedMetaRouter
 from shared.config import Settings
 from shared.db import LeaseLost, Store, json_text
+from shared.model_budgets import ModelBudgetExceeded
 from shared.model_client import ModelCallFailed
 
 log = logging.getLogger(__name__)
@@ -189,7 +190,10 @@ def run_once(store: Store, model: ModelClient, settings: Settings) -> bool:
         try:
             if isinstance(exc, ModelCallFailed):
                 store.event(lease, "model_failure", exc.evidence())
-            store.retry(lease, code, settings.max_attempts)
+            if isinstance(exc, ModelBudgetExceeded):
+                store.hold_model_task(lease)
+            else:
+                store.retry(lease, code, settings.max_attempts)
         except LeaseLost:
             pass
         log.warning("episode_failed task=%s code=%s", lease.task_id, code)
