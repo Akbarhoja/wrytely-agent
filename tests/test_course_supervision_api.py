@@ -145,3 +145,30 @@ def test_decline_and_strict_enable_inputs(device):
             conn.execute("SELECT count(*) AS n FROM wrytely_agent.responsibilities").fetchone()["n"]
             == 0
         )
+
+
+def test_proactive_opt_in_and_queue_are_session_owned_and_idempotent(device):
+    from test_course_offer_delivery import prepared
+
+    db, monitor, item = prepared(device, consent=False)
+    api = client(device)
+    root = f"{ROOT}/{monitor['id']}"
+    path = root + f"/offers/{item['id']}/delivery"
+    checked(api.post(path, headers=auth()), 400)
+    checked(api.post(root + "/notifications", json={"consent": "true"}, headers=auth()), 422)
+    db.provision("user_bob")
+    checked(api.post(root + "/notifications", json={"consent": True}, headers=auth("bob")), 404)
+    checked(api.post(root + "/notifications", json={"consent": True}, headers=auth()))
+    assert checked(api.get(root, headers=auth()))["notification_consent"] is True
+    first = checked(api.post(path, headers=auth()))
+    assert checked(api.post(path, headers=auth())) == first
+    checked(api.post(path, json={"recipient": "15555550999"}, headers=auth()), 400)
+    checked(api.post(path, headers=auth("bob")), 404)
+    checked(api.post(root + "/notifications", json={"consent": False}, headers=auth()))
+    with db.connection() as conn:
+        assert (
+            conn.execute("SELECT count(*) AS n FROM wrytely_agent.whatsapp_outbound").fetchone()[
+                "n"
+            ]
+            == 1
+        )

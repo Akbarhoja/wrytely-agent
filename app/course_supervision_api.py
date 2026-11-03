@@ -51,6 +51,10 @@ class DecisionIn(StrictBody):
     accept: bool
 
 
+class NotificationIn(StrictBody):
+    consent: bool
+
+
 def register_course_supervision(api, *, identity_dependency, database_dependency):
     User = Annotated[Identity, Depends(identity_dependency)]
     DB = Annotated[Store, Depends(database_dependency)]
@@ -89,5 +93,23 @@ def register_course_supervision(api, *, identity_dependency, database_dependency
         # Stable Store-provided request key recovers a crash between these calls.
         duty = db.create_canvas_draft_responsibility(user.user_id, **result["draft_request"])
         return {"state": result["state"], "responsibility_id": duty["id"]}
+
+    @router.post("/{supervision_id}/notifications")
+    def notifications(
+        supervision_id: str, body: NotificationIn, request: Request, user: User, db: DB
+    ):
+        _queries(request, set())
+        return db.set_course_notification_consent(
+            user.user_id, supervision_id, consent=body.consent
+        )
+
+    @router.post("/{supervision_id}/offers/{offer_id}/delivery")
+    async def enqueue(supervision_id: str, offer_id: str, request: Request, user: User, db: DB):
+        _queries(request, set())
+        if await request.body():
+            raise ValueError("Delivery has no caller payload")
+        return await run_in_threadpool(
+            db.enqueue_course_offer, user.user_id, supervision_id, offer_id
+        )
 
     api.include_router(router)

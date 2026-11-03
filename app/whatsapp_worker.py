@@ -58,6 +58,10 @@ def main(argv: list[str] | None = None):
                         worker_id=worker_id,
                         business_id=settings.whatsapp_business_account_id,
                         phone_number_id=settings.whatsapp_phone_number_id,
+                        approved_templates=settings.whatsapp_approved_templates,
+                        reply_template_key=settings.whatsapp_reply_template_key,
+                        approved_offer_templates=settings.whatsapp_approved_offer_templates,
+                        offer_template_key=settings.whatsapp_offer_template_key,
                     )
                 except Exception:
                     # Error text can contain credentials or message content. Do not
