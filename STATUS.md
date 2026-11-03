@@ -30,6 +30,14 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+Installed collection stopped again with generic collector_failed; cause remains
+unresolved. Diagnostic0.2.7 preserves fixed inspect/read/prepare/commit/continue/close
+failure stages and known request-rejection codes instead of collapsing them. No
+source text, stack, credentials or arbitrary error messages are surfaced. All574Node
+tests pass, including six stage-redaction cases and known-rejection propagation.
+Same-folder package prepared with unchanged permissions; one controlled resume is
+needed to identify the failed step. No full collection/large-course efficiency claim.
+
 Collector0.2.6 removes the display-only inspection after document operations. Those
 existing journal operations already persist and run finalCheck (current context and
 Canvas identity); reuse their returned projection instead of another context/profile

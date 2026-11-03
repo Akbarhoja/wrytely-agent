@@ -9,6 +9,14 @@ const supported = (key) =>
     key,
   );
 export const DOCUMENT_COLLECTION_ERRORS = Object.freeze([
+  "collector_inspect_failed",
+  "collector_read_failed",
+  "collector_prepare_failed",
+  "collector_commit_failed",
+  "collector_continue_failed",
+  "collector_close_failed",
+  "discovery_request_rejected",
+  "discovery_state_changed",
   "login_required",
   "permission_denied",
   "rate_limited",
@@ -344,6 +352,7 @@ export async function collectDocumentTick({
   origin,
   conflicts,
 }) {
+  let stage = "inspect";
   try {
     const current = await inspect();
     if (
@@ -354,6 +363,7 @@ export async function collectDocumentTick({
     )
       return operations.collectCoursePage();
     if (current.document_active) {
+      stage = "continue";
       // Existing journal operations already persist and run finalCheck (current
       // context + Canvas identity) before returning this projection. Reuse it
       // instead of making another context/profile round trip for display only.
@@ -382,6 +392,7 @@ export async function collectDocumentTick({
       const complete =
         !current.academic.incomplete &&
         current.academic.last_page_coverage === "complete";
+      stage = "close";
       const completed = await operations.finishDocumentResource({
         resource_key: resource,
         outcome: complete ? "complete" : "partial",
@@ -397,6 +408,7 @@ export async function collectDocumentTick({
     )
       throw Object.assign(Error(), { code: "size_limit" });
     let page;
+    stage = "read";
     try {
       page = await readPage(
         course,
@@ -410,6 +422,7 @@ export async function collectDocumentTick({
         throw error;
       // Only this selected resource is unavailable. Persist the gap so other
       // courses can continue; no missing page becomes deletion or complete data.
+      stage = "close";
       const completed = await operations.finishDiscoveryResource({
         resource_key: resource,
         outcome: error.code === "permission_denied" ? "restricted" : "partial",
@@ -420,6 +433,7 @@ export async function collectDocumentTick({
       });
       return summary(completed, "restricted_documents");
     }
+    stage = "prepare";
     const input = await prepareCollectedDocuments({
       resource_key: resource,
       page,
@@ -427,6 +441,7 @@ export async function collectDocumentTick({
       extract,
       extractFile,
     });
+    stage = "commit";
     return summary(await operations.commitDocumentPage(input), "document_page");
   } catch (e) {
     // A bounded provider read/extraction can outlive the lease inspected at the
@@ -441,7 +456,7 @@ export async function collectDocumentTick({
         controlled.has(e?.code) ||
         conflicts.some((x) => e?.code === `discovery_${x}`)
           ? e.code
-          : "collector_failed",
+          : `collector_${stage}_failed`,
     };
   }
 }

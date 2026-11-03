@@ -159,7 +159,7 @@ export async function prepareCanvasPackage({
   const manifest = {
     manifest_version: 3,
     name: "Wrytely Canvas collection (development)",
-    version: "0.2.6",
+    version: "0.2.7",
     minimum_chrome_version: "120",
     description:
       "Private student-controlled Canvas collection; inactive until explicitly enabled.",

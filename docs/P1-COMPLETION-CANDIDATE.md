@@ -8,6 +8,15 @@ remains required. Outlook is optional/paused; P0 WhatsApp remains Murtazo's.
 
 ## Current installed acceptance run
 
+Diagnostic0.2.7 follows another unresolved collector_failed stop. Unexpected errors
+now retain one fixed processing-stage code; known discovery_request_rejected and
+discovery_state_changed also survive the collector boundary. Original messages and
+stacks are not persisted or displayed. All574NodePASS including stage/redaction and
+request-rejection regressions. Read-only shape checks and a synthetic empty-body
+conversion did not reproduce a submission-state failure; do not claim that as the
+cause or a fix. Same-folder update permissions unchanged; controlled resume and
+actual diagnosis remain pending. P1 remains open.
+
 Performance follow-up0.2.6 reuses the projection returned by each persisted,
 final-checked document operation. The old caller immediately inspected again only
 to produce the same display summary, adding another context/profile round trip per

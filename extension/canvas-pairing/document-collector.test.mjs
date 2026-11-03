@@ -19,6 +19,68 @@ const inspection = () => ({
   seen_count: 2,
   coverage: null,
 });
+for (const stage of [
+  "inspect",
+  "read",
+  "prepare",
+  "commit",
+  "continue",
+  "close",
+]) {
+  test(`unexpected ${stage} error retains only a fixed stage code`, async () => {
+    const fail = async () => {
+      throw Error("PRIVATE submission token");
+    };
+    const current = {
+      ...inspection(),
+      ...(stage === "continue" ? { document_active: true } : {}),
+      ...(stage === "close"
+        ? {
+            academic: {
+              resource_key: "101/pages",
+              incomplete: true,
+              last_page_coverage: "partial",
+            },
+          }
+        : {}),
+    };
+    const reply = await collectDocumentTick({
+      inspect: stage === "inspect" ? fail : async () => current,
+      readPage:
+        stage === "read"
+          ? fail
+          : async () => ({
+              data: stage === "prepare" ? [null] : [],
+              next_cursor: null,
+            }),
+      operations: {
+        commitDocumentPage: fail,
+        continueDocumentPage: fail,
+        finishDocumentResource: fail,
+      },
+      origin,
+      conflicts: [],
+    });
+    assert.deepEqual(reply, {
+      state: "blocked",
+      reason: `collector_${stage}_failed`,
+    });
+    assert.ok(!JSON.stringify(reply).includes("PRIVATE"));
+  });
+}
+test("known upload rejection is not collapsed into an unexpected collector error", async () => {
+  const reply = await collectDocumentTick({
+    inspect: async () => ({ ...inspection(), document_active: true }),
+    operations: {
+      continueDocumentPage: async () => {
+        throw Object.assign(Error(), { code: "discovery_request_rejected" });
+      },
+    },
+    origin,
+    conflicts: [],
+  });
+  assert.equal(reply.reason, "discovery_request_rejected");
+});
 test("lease expiry between inspection and document commit uses existing recovery without rereading", async () => {
   const calls = [];
   const result = await collectDocumentTick({

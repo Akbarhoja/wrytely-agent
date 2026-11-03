@@ -35,6 +35,14 @@ const reasonCopy = {
 };
 // Display only internal, fixed codes. Never echo a source/provider error string.
 const diagnosticReasons = new Set([
+  "collector_inspect_failed",
+  "collector_read_failed",
+  "collector_prepare_failed",
+  "collector_commit_failed",
+  "collector_continue_failed",
+  "collector_close_failed",
+  "discovery_request_rejected",
+  "discovery_state_changed",
   "invalid_document_input",
   "invalid_collection",
   "unsafe_pagination",
