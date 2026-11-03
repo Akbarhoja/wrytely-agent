@@ -202,6 +202,28 @@ test("finished empty scope does not start another catalog scan; selected scope c
   assert.equal((await f.host.collect()).action, "begin");
   assert.ok(f.events.includes("begin"));
 });
+test("changed-scope recovery starts a validated new scan without re-pairing", async () => {
+  const f = fixture();
+  f.result = { state: "blocked", reason: "discovery_context_changed" };
+  await f.host.enable();
+  assert.equal((await f.host.collect()).action, "begin");
+  assert.ok(f.events.includes("begin"));
+  assert.ok(!f.events.includes("bind"));
+});
+test("pause during a scope mismatch prevents recovery from starting a scan", async () => {
+  const f = fixture();
+  let release;
+  f.pending = new Promise((r) => (release = r));
+  f.result = { state: "blocked", reason: "discovery_context_changed" };
+  await f.host.enable();
+  const work = f.host.collect();
+  while (!f.events.includes("collect"))
+    await new Promise((r) => setImmediate(r));
+  await f.host.disable();
+  release();
+  assert.equal((await work).enabled, false);
+  assert.ok(!f.events.includes("begin"));
+});
 test("longer bounded bursts reduce scheduled idle overhead without exceeding step or time caps", async () => {
   const steps = [];
   for (const budget of [15000, 45000]) {

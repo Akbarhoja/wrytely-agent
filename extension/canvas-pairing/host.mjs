@@ -311,6 +311,25 @@ export function createCanvasHost({
           });
           if (dispatch.cancelled) return dispatch.status;
           result = await dispatch.completion;
+          if (
+            result.state === "blocked" &&
+            result.reason === "discovery_context_changed"
+          ) {
+            // beginDiscovery permits replacement only for a verified forward
+            // scope/generation change, never a revoked credential or new subject.
+            const recovery = await serial(async () => {
+              const latest = await load();
+              if (
+                localPause ||
+                !latest.enabled ||
+                latest.control_epoch !== start.control_epoch
+              )
+                return { cancelled: true };
+              return { completion: client.beginDiscovery() };
+            });
+            if (!recovery.cancelled) await recovery.completion;
+            result = { state: "progress", action: "begin" };
+          }
           if (current.state === "finished")
             result = { state: "progress", action: "begin" };
           if (

@@ -30,6 +30,18 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+P1 scope-change recovery0.3.1 fixes a reproduced client dead end: saving selection
+aborts the previous scan and advances generation/scope, but the active local journal
+previously prevented beginning a replacement scan. Explicit begin may now replace
+that obsolete journal only after same credential/connection/Canvas subject validation
+and a forward change in BOTH generation and scope revision. Old operation replay
+remains fenced; generation-only/scope-only changes, credential loss, account switch
+and concurrent pause reject. Host uses that validated begin path after a context
+mismatch instead of requiring re-pairing. All594NodePASS, including these regressions.
+Same-folder0.3.1 prepared; no source/schema/deploy change, and no new live scan started
+by the agent. Actual installed recovery remains pending because extension-page
+controls cannot be operated through the browser tool's URL policy.
+
 November3 combined P1 correction0.3.0: re-pairing deliberately resets scope; that
 security boundary stays. Empty-scope scans now prompt course/content selection in
 the host/UI instead of claiming completed content collection; a finished empty

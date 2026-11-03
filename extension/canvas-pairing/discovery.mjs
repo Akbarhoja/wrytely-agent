@@ -594,9 +594,18 @@ export function discoveryOperations({
     const currentSubject = await profile(item, j?.binding.subject);
     if (Date.parse(context.credential_expires_at) <= Date.now())
       return cleanup("reconnect_required");
+    // configure_canvas_scope aborts the old scan and advances BOTH fences while
+    // retaining this credential. A new scan may replace that obsolete journal
+    // only after currentContext and the same Canvas subject were verified above.
+    // Old operation replay remains fenced; re-pair/account changes never qualify.
+    const scopeAdvanced =
+      !!j &&
+      j.binding.connection_id === context.connection_id &&
+      context.generation > j.binding.generation &&
+      context.scope_revision > j.binding.scope_revision;
     if (
       j &&
-      !(newScan && j.finished) &&
+      !(newScan && (j.finished || scopeAdvanced)) &&
       (j.binding.connection_id !== context.connection_id ||
         j.binding.generation !== context.generation ||
         j.binding.scope_revision !== context.scope_revision ||
@@ -605,7 +614,7 @@ export function discoveryOperations({
           JSON.stringify(context.resource_kinds))
     )
       fail("discovery_context_changed");
-    return { item, j, context, subject: currentSubject };
+    return { item, j, context, subject: currentSubject, scopeAdvanced };
   }
   async function finalCheck(p, j) {
     const item = await record();
@@ -890,7 +899,8 @@ export function discoveryOperations({
   const operations = {
     beginDiscovery: async () => {
       const p = await prepare(true);
-      if (p.j && !p.j.finished) fail("discovery_pending_operation");
+      if (p.j && !p.j.finished && !p.scopeAdvanced)
+        fail("discovery_pending_operation");
       p.j = {
         version: 2,
         academic: null,

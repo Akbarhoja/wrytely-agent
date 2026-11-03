@@ -8,6 +8,23 @@ remains required. Outlook is optional/paused; P0 WhatsApp remains Murtazo's.
 
 ## Current installed acceptance run
 
+### Scope-change recovery0.3.1
+
+configure_canvas_scope aborts active scans and advances both generation and scope
+revision while retaining the credential and Canvas subject. The old client correctly
+rejected replay under the obsolete context but also refused an explicit replacement
+begin, leaving a collection/re-pair loop. New begin can replace that journal only
+for the same verified credential/connection/subject with BOTH fences increasing.
+Account/credential changes, a single fence change and old pending replay still fail.
+The host routes context mismatch through this validated begin operation, rechecking
+its control epoch/pause before dispatch. This starts a new scan under the already
+selected current scope; it does not claim to resume an aborted scan or reuse its
+pending uploads. Existing server begin/receipt/finalCheck fences are unchanged.
+All594NodePASS including scope-forward replacement with an old pending upload,
+credential/account/single-fence rejection, host recovery and concurrent pause.
+Installed proof remains pending; same-folder package permissions unchanged. No new
+source read, model/send/spend, schema change, backend deployment or P2 activation.
+
 ### Combined scope, control and scheduling correction0.3.0
 
 Re-pairing intentionally resets the old generation's scope. Preserve that boundary:

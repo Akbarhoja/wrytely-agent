@@ -1375,6 +1375,57 @@ for (const change of ["generation", "scope", "account", "credential"]) {
       assert.equal(f.rpc().length, 2);
   });
 }
+test("an explicit new scan replaces a server-fenced old scope without re-pairing or replaying its pending upload", async () => {
+  const f = fixture(),
+    client = f.client();
+  await client.beginDiscovery();
+  f.loss = "before";
+  await assert.rejects(
+    client.commitDiscoveryPage(page()),
+    error("discovery_outcome_unknown"),
+  );
+  f.context.generation++;
+  f.context.scope_revision++;
+  f.checkpoint.scope_revision = f.context.scope_revision;
+  f.context.course_ids = ["101"];
+  f.context.resource_kinds = ["assignments"];
+  await assert.rejects(
+    client.retryDiscovery(),
+    error("discovery_context_changed"),
+  );
+  const before = f.rpc().length;
+  await client.beginDiscovery();
+  assert.equal(f.rpc().length, before + 1);
+  assert.equal(f.rpc().at(-1).action, "discovery/begin");
+  assert.equal(f.data[key].discovery.binding.generation, 2);
+  assert.equal(f.data[key].discovery.binding.scope_revision, 1);
+  assert.equal(f.data[key].discovery.pending, null);
+  assert.ok(f.data[key].discovery.required.includes("101/assignments"));
+});
+for (const change of [
+  "generation_only",
+  "scope_only",
+  "account",
+  "credential",
+]) {
+  test(`new-scan scope recovery rejects ${change} without replacing the old journal`, async () => {
+    const f = fixture(),
+      client = f.client();
+    await client.beginDiscovery();
+    if (change !== "scope_only") f.context.generation++;
+    if (change !== "generation_only") f.context.scope_revision++;
+    if (change === "account") f.profiles.push("8");
+    if (change === "credential") {
+      f.unauthorized = true;
+      f.context.state = "reconnect_required";
+    }
+    await assert.rejects(client.beginDiscovery());
+    assert.equal(
+      f.rpc().filter((x) => x.action === "discovery/begin").length,
+      1,
+    );
+  });
+}
 
 test("malformed receipt retains pending intent and never advances checkpoint", async () => {
   const f = fixture(),
