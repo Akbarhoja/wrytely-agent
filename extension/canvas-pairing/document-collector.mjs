@@ -345,7 +345,7 @@ export async function collectDocumentTick({
   conflicts,
 }) {
   try {
-    let current = await inspect();
+    const current = await inspect();
     if (
       current.state !== "active" ||
       current.pending ||
@@ -354,8 +354,10 @@ export async function collectDocumentTick({
     )
       return operations.collectCoursePage();
     if (current.document_active) {
-      await operations.continueDocumentPage();
-      return summary(await inspect(), "document_step");
+      // Existing journal operations already persist and run finalCheck (current
+      // context + Canvas identity) before returning this projection. Reuse it
+      // instead of making another context/profile round trip for display only.
+      return summary(await operations.continueDocumentPage(), "document_step");
     }
     if (
       current.academic &&
@@ -380,12 +382,12 @@ export async function collectDocumentTick({
       const complete =
         !current.academic.incomplete &&
         current.academic.last_page_coverage === "complete";
-      await operations.finishDocumentResource({
+      const completed = await operations.finishDocumentResource({
         resource_key: resource,
         outcome: complete ? "complete" : "partial",
         reason: complete ? null : "extraction_failed",
       });
-      return summary(await inspect(), "close_documents");
+      return summary(completed, "close_documents");
     }
     if (
       current.checkpoint.sequence >= 10000 ||
@@ -408,7 +410,7 @@ export async function collectDocumentTick({
         throw error;
       // Only this selected resource is unavailable. Persist the gap so other
       // courses can continue; no missing page becomes deletion or complete data.
-      await operations.finishDiscoveryResource({
+      const completed = await operations.finishDiscoveryResource({
         resource_key: resource,
         outcome: error.code === "permission_denied" ? "restricted" : "partial",
         reason:
@@ -416,7 +418,7 @@ export async function collectDocumentTick({
             ? "permission_denied"
             : "extraction_failed",
       });
-      return summary(await inspect(), "restricted_documents");
+      return summary(completed, "restricted_documents");
     }
     const input = await prepareCollectedDocuments({
       resource_key: resource,
@@ -425,9 +427,7 @@ export async function collectDocumentTick({
       extract,
       extractFile,
     });
-    await operations.commitDocumentPage(input);
-    current = await inspect();
-    return summary(current, "document_page");
+    return summary(await operations.commitDocumentPage(input), "document_page");
   } catch (e) {
     // A bounded provider read/extraction can outlive the lease inspected at the
     // start of this tick. Re-enter the existing pending-first recovery path;

@@ -30,6 +30,14 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+Collector0.2.6 removes the display-only inspection after document operations. Those
+existing journal operations already persist and run finalCheck (current context and
+Canvas identity); reuse their returned projection instead of another context/profile
+round trip. All567NodePASS, including one-inspection/current-projection and failed
+authorization tests. No boundary check, write fence, source page size or retry is
+removed. Request reduction is code-tested; real throughput improvement is unmeasured.
+Same-folder package prepared; collection remains owner-paused pending reload/live proof.
+
 Collector0.2.5 handles writer-lease expiry between document inspection and a later
 commit/continuation. It delegates to the existing pending-first course recovery
 operation, preserving receipt replay/checkpoints and server-authorized renewal.

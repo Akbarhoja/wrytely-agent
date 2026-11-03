@@ -8,6 +8,16 @@ remains required. Outlook is optional/paused; P0 WhatsApp remains Murtazo's.
 
 ## Current installed acceptance run
 
+Performance follow-up0.2.6 reuses the projection returned by each persisted,
+final-checked document operation. The old caller immediately inspected again only
+to produce the same display summary, adding another context/profile round trip per
+continuation, page commit and resource close. Initial inspection and all operation
+preflight/finalCheck identity/scope/receipt fences remain unchanged. All567NodePASS,
+including updated-result reuse with one inspection and rejection of final-check
+account changes. This is a verified redundant-request reduction, not a measured
+live speedup or large-course benchmark. Owner-paused collection requires same-folder
+reload/live proof; manifest permissions and existing pairing/checkpoints are unchanged.
+
 Lease-race fix0.2.5: document inspection can see a valid lease that expires during
 provider IO/conversion before a commit or continuation. Instead of making that
 ordinary expiry terminal, route only discovery_lease_expired through the existing

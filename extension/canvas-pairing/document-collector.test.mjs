@@ -88,7 +88,12 @@ test("worker restart continues a persisted document before reading another sourc
   const current = { ...inspection(), document_active: true };
   const result = await collectDocumentTick({
     inspect: async () => current,
-    operations: { continueDocumentPage: async () => calls.push("continue") },
+    operations: {
+      continueDocumentPage: async () => {
+        calls.push("continue");
+        return current;
+      },
+    },
     readPage: async () => assert.fail("must not recapture pending original"),
     conflicts: [],
     origin,
@@ -97,6 +102,46 @@ test("worker restart continues a persisted document before reading another sourc
   assert.equal(result.state, "progress");
   assert.equal(result.action, "document_step");
   assert.equal("checkpoint" in result, false);
+});
+test("document continuation reuses the final-checked projection without a second context/profile inspection", async () => {
+  let inspections = 0;
+  const result = await collectDocumentTick({
+    inspect: async () => {
+      inspections++;
+      return { ...inspection(), document_active: true };
+    },
+    operations: {
+      continueDocumentPage: async () => ({
+        state: "active",
+        seen_count: 9,
+        coverage: "partial",
+        checkpoint: "PRIVATE",
+      }),
+    },
+    readPage: async () => assert.fail("must not reread original"),
+    origin,
+    conflicts: [],
+  });
+  assert.equal(inspections, 1);
+  assert.equal(result.seen_count, 9);
+  assert.equal(result.coverage, "partial");
+  assert.ok(!JSON.stringify(result).includes("PRIVATE"));
+});
+test("final-check authorization failure stops instead of displaying an earlier successful projection", async () => {
+  const result = await collectDocumentTick({
+    inspect: async () => ({ ...inspection(), document_active: true }),
+    operations: {
+      continueDocumentPage: async () => {
+        throw Object.assign(Error(), { code: "canvas_account_changed" });
+      },
+    },
+    origin,
+    conflicts: [],
+  });
+  assert.deepEqual(result, {
+    state: "blocked",
+    reason: "canvas_account_changed",
+  });
 });
 test("receipt replay is processed before either document continuation or source reads", async () => {
   const current = {
@@ -131,6 +176,7 @@ test("a partial original cannot close its resource as complete", async () => {
     operations: {
       finishDocumentResource: async (input) => {
         outcome = input;
+        return current;
       },
     },
   });
@@ -209,6 +255,7 @@ test("a forbidden resource is recorded as restricted so other courses can contin
     operations: {
       finishDiscoveryResource: async (input) => {
         outcome = input;
+        return current;
       },
     },
   });
@@ -342,6 +389,7 @@ test("a missing resource records an incomplete read, not a deletion or permissio
     operations: {
       finishDiscoveryResource: async (value) => {
         outcome = value;
+        return inspection();
       },
     },
   });
