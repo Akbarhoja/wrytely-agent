@@ -30,6 +30,21 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+Installed P1 acceptance is in progress. Private academic test details remain in
+ignored local evidence and are not published here. P1 remains open pending actual
+collection, unchanged-repeat, recovery and isolation acceptance. No Meta calls,
+WhatsApp sends or P2 work are included.
+
+Murtazo completed his scoped counterpart review of exact #165 `7a3ef7a` and reported
+no blocking findings: [review handoff](https://github.com/Akbarhoja/wrytely-agent/issues/4#issuecomment-6594170818).
+His independent evidence is555Node/132web/127focused backend+WhatsApp/9JS-HTTP
+scenario passes plus TypeScript/Ruff; this is not a full backend or installed-live
+audit. His delivered components and requested review are complete for those scopes.
+P0/P1 remain open; required human approval/protected-main gates are unchanged.
+
+Historical preparation snapshot follows; pending installation/scope statements in
+that snapshot do not override the latest installed-test observations above.
+
 Installed P1 continuation: owner reports0.2.0 installed/paired/identity verified.
 Authenticated connection refresh confirms connected. The real extension has already
 completed metadata-only discovery: UI shows7courses, explicit-set scope,0selected

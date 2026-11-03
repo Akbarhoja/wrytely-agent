@@ -6,6 +6,20 @@ This is a connected implementation and validation candidate, **not completed P1*
 [Work-order acceptance](WORK-ORDERS.md#p1--automatic-collection-and-usable-memory)
 remains required. Outlook is optional/paused; P0 WhatsApp remains Murtazo's.
 
+## Current installed acceptance run
+
+Installed acceptance is in progress. Detailed academic observations remain in ignored
+local evidence, not this public report. Full collection, unchanged-repeat, installed
+recovery and isolation acceptance remain open.
+
+Murtazo's scoped review of exact7a3ef7a reports no blocking findings and independent
+555Node/132web/127focused backend+WhatsApp/9JS-HTTP scenario passes plus TypeScript/Ruff:
+[counterpart handoff](https://github.com/Akbarhoja/wrytely-agent/issues/4#issuecomment-6594170818).
+This completes the requested review scope, not a full backend/parser/live audit or
+the required human merge approval. No P2, Meta calls, WhatsApp sends or scope expansion.
+
+The preparation notes below are historical where superseded by this installed run.
+
 ## Installed metadata discovery and options-page repair
 
 Installed P1 continuation: owner reports0.2.0 installed/paired/identity verified.
