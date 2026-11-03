@@ -28,6 +28,23 @@ acceptance. Migration023 and supervisor are not deployed; no model calls/sends r
 Confirmed public repository visibility and MIT license via GitHub REST. Submission
 cutoff verified November4 at7PM Mountain; proposed feature freeze3PM, upload5PM.
 
+## Latest tested one-course checkpoint — November3
+
+Executable head64b35e2 adds checked private DOCX output using original v2 private
+reads before/after render, with disclosure, cited quotes, deterministic checksum,
+XML escaping and explicit unsupported complex-equation handling. Text paragraphs
+only; native Word/phone visual acceptance, download assembly and delivery remain.
+Run41721635667 passes the dedicated real-Postgres supervisor/protocol/rendering
+integration step and web/build/extension/diagnostic jobs; full backend regression
+is still running. Local19renderer/protocol tests pass. No live model inference.
+
+Owner-side WhatsApp Manager now explicitly confirms Account Restricted: verify
+business before messaging. Connected number/Summary Approved are not clearance.
+Security Center shows Eligible for verification/Start verification. Owner has been
+asked privately to complete correct legal details/documents. M received safe status
+and exact tested runtime/renderer boundaries in coordination issue4. No legal
+submission, business change, provider send, migration023 deployment or new budget.
+
 ## Product decision and actual stage
 
 Own Wrytely runtime + Meta primary intelligence. Required first version: Canvas
