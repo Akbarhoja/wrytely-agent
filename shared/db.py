@@ -1,6 +1,7 @@
 import hashlib
 import json
 from contextlib import contextmanager
+from contextvars import ContextVar
 from pathlib import Path
 from uuid import UUID, uuid4
 
@@ -34,6 +35,7 @@ from shared.private_artifact_reads import PrivateArtifactReadStore
 from shared.responsibilities import ResponsibilityStore
 from shared.source_connections import SourceConnectionStore, canvas_origin
 from shared.typed_evidence_store import TypedEvidenceStore
+from shared.whatsapp_commands import WhatsAppCommandStore
 from shared.whatsapp_store import WhatsAppStore
 
 
@@ -50,6 +52,7 @@ class QueueFull(Exception):
 
 
 class Store(
+    WhatsAppCommandStore,
     ArtifactDeliveryStore,
     CourseSupervisionStore,
     CourseOfferDeliveryStore,
@@ -80,11 +83,30 @@ class Store(
     def __init__(self, url: str, *, canvas_origins: tuple[str, ...] = ()):
         self._url = url
         self._canvas_origins = frozenset(canvas_origin(origin) for origin in canvas_origins)
+        self._transaction_connection = ContextVar("wrytely_store_connection", default=None)
 
     @contextmanager
     def connection(self):
+        existing = self._transaction_connection.get()
+        if existing is not None:
+            yield existing
+            return
         with psycopg.connect(self._url, row_factory=dict_row, connect_timeout=10) as conn:
             yield conn
+
+    @contextmanager
+    def _atomic_connection(self):
+        """Internal composition of existing Store calls, no provider IO in the scope.
+
+        Context is per Store and execution/thread; nested calls cannot commit early.
+        Only the owning outer connection commits or rolls back the entire command.
+        """
+        with self.connection() as conn:
+            token = self._transaction_connection.set(conn)
+            try:
+                yield conn
+            finally:
+                self._transaction_connection.reset(token)
 
     def migrate(self):
         """Explicit command only. Never run automatically on app startup."""

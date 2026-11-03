@@ -47,6 +47,7 @@ jobs:
           tests/test_delivery_store.py tests/test_template_policy.py tests/test_model_budgets.py
           tests/test_artifact_revisions.py tests/test_course_supervision_api.py
           tests/test_course_result_api.py tests/test_course_service.py tests/test_whatsapp_delivery.py
+          tests/test_whatsapp_commands.py tests/test_whatsapp.py tests/test_whatsapp_flow.py
           tests/test_one_course_journey.py tests/test_store.py
       - run: uv run pytest -m "not live" -q
   web:
