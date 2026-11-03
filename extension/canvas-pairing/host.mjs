@@ -28,6 +28,7 @@ const reasons = new Set([
   "storage_cleanup_required",
   "discovery_reconciliation_required",
 ]);
+const stopReasons = new Set([...reasons, "host_failed"]);
 const error = (code) => Object.assign(new Error(code), { code });
 
 export function createCanvasHost({
@@ -80,6 +81,7 @@ export function createCanvasHost({
     failures: 0,
     next_attempt_at: 0,
     device_public_id: null,
+    stop_reason: null,
   });
   async function load() {
     let value;
@@ -93,7 +95,17 @@ export function createCanvasHost({
     if (
       !value ||
       typeof value !== "object" ||
-      Object.keys(value).sort().join() !== Object.keys(fresh()).sort().join() ||
+      Object.keys(value)
+        .filter((k) => k !== "stop_reason")
+        .sort()
+        .join() !==
+        Object.keys(fresh())
+          .filter((k) => k !== "stop_reason")
+          .sort()
+          .join() ||
+      (value.stop_reason !== undefined &&
+        value.stop_reason !== null &&
+        (!stopReasons.has(value.stop_reason) || value.enabled !== false)) ||
       value.version !== 1 ||
       typeof value.enabled !== "boolean" ||
       !(value.control_epoch === null || uuid.test(value.control_epoch)) ||
@@ -106,7 +118,7 @@ export function createCanvasHost({
       !(value.device_public_id === null || uuid.test(value.device_public_id))
     )
       throw error("host_state_invalid");
-    return value;
+    return { ...value, stop_reason: value.stop_reason ?? null };
   }
   async function save(value) {
     try {
@@ -124,6 +136,9 @@ export function createCanvasHost({
   function statusOf(p, override = {}) {
     return {
       ...view,
+      ...(!p.enabled && p.stop_reason
+        ? { state: "blocked", reason: p.stop_reason }
+        : {}),
       enabled: p.enabled && !localPause,
       running: busy,
       retry_after_ms: Math.max(0, p.next_attempt_at - now()),
@@ -174,7 +189,7 @@ export function createCanvasHost({
       const p = await load();
       return statusOf(
         p,
-        !p.enabled || localPause
+        (!p.enabled || localPause) && !p.stop_reason
           ? { state: "paused" }
           : p.next_attempt_at > now()
             ? { state: "cooldown" }
@@ -193,6 +208,7 @@ export function createCanvasHost({
         control_epoch: nextEpoch(),
         failures: 0,
         next_attempt_at: 0,
+        stop_reason: null,
       };
       await save(next);
       localPause = false;
@@ -214,6 +230,7 @@ export function createCanvasHost({
           control_epoch: nextEpoch(),
           failures: 0,
           next_attempt_at: 0,
+          stop_reason: null,
         };
         await save(next);
       } catch (e) {
@@ -243,7 +260,7 @@ export function createCanvasHost({
     try {
       start = await serial(() => load());
       if (!start.enabled || localPause)
-        return statusOf(start, { state: "paused" });
+        return statusOf(start, start.stop_reason ? {} : { state: "paused" });
       if (start.next_attempt_at > now())
         return statusOf(start, { state: "cooldown" });
       let result;
@@ -304,6 +321,7 @@ export function createCanvasHost({
             view = { ...view, state: "cooldown", reason };
           } else {
             next.enabled = false;
+            next.stop_reason = reason;
             next.control_epoch = nextEpoch();
             view = { ...view, state: "blocked", reason };
           }
@@ -324,6 +342,7 @@ export function createCanvasHost({
           if (result.action === "begin") view.action = "begin";
         } else {
           next.enabled = false;
+          next.stop_reason = "host_failed";
           next.control_epoch = nextEpoch();
           view = { ...view, state: "blocked", reason: "host_failed" };
         }

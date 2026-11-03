@@ -27,6 +27,19 @@ function fixture() {
     },
   };
 }
+test("refresh preserves a restarted collector's stop reason without running collection", async () => {
+  const f = fixture();
+  f.reply = {
+    state: "blocked",
+    enabled: false,
+    reason: "discovery_context_changed",
+  };
+  await f.controls.refresh();
+  assert.equal(f.controls.snapshot().heading, "Collection needs attention");
+  assert.match(f.controls.snapshot().feedback, /current course selection/);
+  assert.equal(f.calls.length, 1);
+  assert.equal(f.calls[0].action, "status");
+});
 test("opening/refresh asks status only, never pairing, bind or source collection", async () => {
   const f = fixture();
   assert.deepEqual(f.calls, []);

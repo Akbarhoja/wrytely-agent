@@ -30,6 +30,14 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+P1 collector diagnostic0.2.2 preserves allowlisted terminal stop codes across worker
+recreation instead of losing the reason behind a paused display. Explicit pause or
+enable clears the code; no automatic retry/access expansion. Legacy preferences and
+unknown-text rejection tested; all557NodePASS. Same-folder package permissions are
+unchanged. Owner reload/live recheck remains required; this fixes observability,
+not a proven cause of the earlier interruption. See the
+[candidate record](docs/P1-COMPLETION-CANDIDATE.md#current-installed-acceptance-run).
+
 Installed P1 acceptance is in progress. Private academic test details remain in
 ignored local evidence and are not published here. P1 remains open pending actual
 collection, unchanged-repeat, recovery and isolation acceptance. No Meta calls,

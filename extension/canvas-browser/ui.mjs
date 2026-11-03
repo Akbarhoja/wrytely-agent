@@ -17,6 +17,14 @@ const reasonCopy = {
   canvas_session_unavailable:
     "Canvas could not verify this session. Check your sign-in.",
   reconnect_required: "Reconnect this browser using a new pairing code.",
+  discovery_context_changed:
+    "The saved scan no longer matches the current course selection or connection. Collection stopped; ask Wrytely support to check recovery before pairing again.",
+  discovery_journal_invalid:
+    "The saved collection checkpoint could not be validated. Collection stopped; ask Wrytely support to check recovery.",
+  discovery_reconciliation_required:
+    "The saved checkpoint needs reconciliation with Wrytely. Collection stopped; ask Wrytely support to check recovery.",
+  host_failed:
+    "The browser collector stopped unexpectedly. No automatic retry is running. Ask Wrytely support to check recovery.",
   pause_required: "Pause collection before changing the connection.",
   identity_in_progress: "Wait for identity verification to finish.",
   storage_unavailable:

@@ -8,6 +8,17 @@ remains required. Outlook is optional/paused; P0 WhatsApp remains Murtazo's.
 
 ## Current installed acceptance run
 
+Collector diagnostic follow-up0.2.2 fixes lost stop reasons: a terminal collection
+error used to disable the host durably but keep its reason only in worker memory.
+Status after worker recreation could therefore show only paused. The host now stores
+an allowlisted stop code with its preferences and returns blocked after recreation;
+explicit pause/enable clears the diagnostic. Legacy preferences remain readable,
+unknown/source-supplied text fails closed, and no automatic retry or access expansion
+is introduced. All557Node tests pass, including restart/status/no-retry and legacy
+preference checks. This cannot recover an earlier lost reason or prove the underlying
+live interruption resolved. Same-folder0.2.2 package is prepared with identical
+permissions; owner reload and bounded live recheck remain pending.
+
 Installed acceptance is in progress. Detailed academic observations remain in ignored
 local evidence, not this public report. Full collection, unchanged-repeat, installed
 recovery and isolation acceptance remain open.

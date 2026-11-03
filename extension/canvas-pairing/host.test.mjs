@@ -212,9 +212,28 @@ test("blocked auth, corrupt journal, unknown errors pause durably without retry"
     assert.equal(result.enabled, false);
     assert.equal(result.state, "blocked");
     assert.ok(!JSON.stringify(result).includes("PRIVATE"));
-    assert.equal((await createCanvasHost(f.options).collect()).state, "paused");
+    const restarted = createCanvasHost(f.options);
+    assert.equal((await restarted.reconcile()).state, "blocked");
+    assert.equal((await restarted.status()).reason, result.reason);
+    assert.equal((await restarted.collect()).state, "blocked");
     assert.equal(f.scheduled.size, 0);
+    await restarted.disable();
+    assert.equal((await createCanvasHost(f.options).status()).state, "paused");
+    assert.equal((await createCanvasHost(f.options).status()).reason, null);
   }
+});
+test("legacy preferences load without granting access; untrusted stop text fails closed", async () => {
+  const f = fixture();
+  await f.host.enable();
+  await f.host.disable();
+  const key = Object.keys(f.data)[0];
+  delete f.data[key].stop_reason;
+  assert.equal((await createCanvasHost(f.options).status()).state, "paused");
+  assert.equal(f.scheduled.size, 0);
+  f.data[key].stop_reason = "PRIVATE course content";
+  const status = await createCanvasHost(f.options).status();
+  assert.equal(status.reason, "host_state_invalid");
+  assert.ok(!JSON.stringify(status).includes("PRIVATE"));
 });
 test("pause during collector prevents stale completion and duplicate calls", async () => {
   const f = fixture();
