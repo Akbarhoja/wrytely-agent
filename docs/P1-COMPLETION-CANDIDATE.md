@@ -6,6 +6,35 @@ This is a connected implementation and validation candidate, **not completed P1*
 [Work-order acceptance](WORK-ORDERS.md#p1--automatic-collection-and-usable-memory)
 remains required. Outlook is optional/paused; P0 WhatsApp remains Murtazo's.
 
+## Approved live-preparation update
+
+November2 approved live preparation supersedes the earlier candidate-only snapshot.
+Akbar approved the scoped development deploy/migrations/configuration, Canvas notice
+amendment and bounded read-only two-course/restart/session test. Approved privacy
+notice is published at2f30819. Exact development deployment6c8bfbc9-0ba2-481c-9d83-ce68100dccd4
+of2f30819 is SUCCESS; bounded logs show migration-command completion and API-only
+startup, health200 and authenticated Canvas setup/listing work in Akbar's correct
+Chrome account. The migration runner's existing atomic checksum/advisory-lock fences
+ran during predeploy; no separate SSH ledger enumeration was available without a
+new SSH key, and none was added. This is startup proof, not collection acceptance.
+
+CSU login recovered and its dashboard shows7published courses. New inactive package
+0.2.0 is at .local/canvas-packages/p1-live-20261102-v020. Akbar is asked to load it,
+pair and verify identity while leaving collection paused. Content scope must remain
+empty until the owner chooses2courses; do not use all-active for this bounded test.
+No course collection run is accepted yet. P0 WhatsApp and optional Outlook remain
+untouched; model/delivery workers stopped, no Meta calls/sends/spend and no P2.
+
+Browser-only follow-up abdd6ff adds at most100original durable steps per callback,
+with a soft15-second between-step budget. It stops on finish/pause/backoff/failure;
+single flight, epoch fences, existing checkpoints and30-minute refresh remain.
+Factory default stays1step. All553NodePASS including8new lifecycle/bound cases.
+The existing Linux CI at a8915a8 failed two3-scan discussion subprocesses at45seconds
+(1608others passed). Three-scan automatic-document drivers now have180seconds;
+ordinary cases stay45seconds. Production deadlines/assertions/retries/skips unchanged.
+Three focused combined/reply cases pass28.94s. All four Linux CI jobs pass atabdd6ff in both push/PR runs41546216664 and41546223520. This test and
+browser change needs no backend redeploy; the deployed API remains2f30819.
+
 ## What this candidate adds
 
 The original host, paired client, durable discovery/upload journal, document producer,

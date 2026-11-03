@@ -1,4 +1,8 @@
-# Canvas pilot privacy amendment — draft for Akbar's review
+# Canvas pilot privacy amendment — approved November 2, 2026
+
+Akbar explicitly approved publication in the current session. The amendment was
+applied to [the effective notice](PRIVACY.md) at2f30819. The proposal below is retained
+as its review record, not a competing policy.
 
 This is a proposed factual amendment to [the effective privacy notice](PRIVACY.md),
 not an effective notice or legal-compliance certification. The existing approved
