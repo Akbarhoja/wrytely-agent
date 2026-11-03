@@ -12,6 +12,22 @@ supervisor work on codex/p1-completion and fixes M’s empty-all_active finding.
 M owns WhatsApp/app/web/service assembly in parallel. This supersedes stop-before-P2;
 P0/P1 remain open. No new live activation is inferred.
 
+## One-course implementation candidate
+
+A has added persisted supervisor checks/leases/call reservations, Meta-selected
+inspect/offer/wait decisions, pinned original evidence reads, deduplicated private
+offers, explicit acceptance into the existing draft API and restartable next checks.
+Inspected course context is pinned to the accepted offer (up to8objects). M's
+empty-all_active discovery finding is fixed, including website scope guidance.
+Local596Node/134web/7supervisor-protocol tests and TypeScript/Ruff pass. Real Store
+integration runs in isolated GitHub PostgreSQL CI; local process/shared-memory
+restrictions prevent starting disposable Postgres here. No database pass inferred.
+Pending: full CI/counterpart review, M app/service/WhatsApp assembly, delivery scope,
+render/revision integration, dollar-budgeted live activation and actual one-course
+acceptance. Migration023 and supervisor are not deployed; no model calls/sends run.
+Confirmed public repository visibility and MIT license via GitHub REST. Submission
+cutoff verified November4 at7PM Mountain; proposed feature freeze3PM, upload5PM.
+
 ## Product decision and actual stage
 
 Own Wrytely runtime + Meta primary intelligence. Required first version: Canvas

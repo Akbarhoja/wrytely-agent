@@ -40,6 +40,8 @@ jobs:
       - run: uv sync --locked
       - run: uv run ruff check .
       - run: uv run ruff format --check .
+      - name: One-course supervisor integration (fail fast)
+        run: uv run pytest -q tests/test_course_supervision.py tests/test_supervisor_protocol.py
       - run: uv run pytest -m "not live" -q
   web:
     runs-on: ubuntu-latest

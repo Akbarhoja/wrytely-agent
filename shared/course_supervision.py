@@ -205,10 +205,22 @@ class CourseSupervisionStore:
                 else:
                     if source["kind"] != "assignment" or decision.object_id not in inspections:
                         raise ValueError("Offer requires inspected assignment")
+                    evidence = [
+                        {
+                            "object_id": s["object_id"],
+                            "version_id": s["document_version_id"] or s["latest_version_id"],
+                        }
+                        for s in sources
+                        if s["object_id"] in inspections
+                        and s["freshness"]["usable"]
+                        and not s["historical"]
+                    ]
+                    if len(evidence) > 8:
+                        raise ValueError("Offer evidence scope limit")
                     conn.execute(
                         "INSERT INTO wrytely_agent.course_offers "
-                        "(id,agent_id,supervision_id,object_id,version_id,message,reason) "
-                        "VALUES (%s,%s,%s,%s,%s,%s,%s) ON CONFLICT "
+                        "(id,agent_id,supervision_id,object_id,version_id,evidence,message,reason) "
+                        "VALUES (%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT "
                         "(supervision_id,object_id,version_id) DO NOTHING",
                         (
                             uuid4(),
@@ -216,6 +228,7 @@ class CourseSupervisionStore:
                             row["id"],
                             _uuid(decision.object_id),
                             _uuid(source["document_version_id"] or source["latest_version_id"]),
+                            Jsonb(evidence),
                             decision.message,
                             decision.reason,
                         ),
@@ -290,6 +303,15 @@ class CourseSupervisionStore:
                 != str(offer["version_id"])
             ):
                 raise SourceRefreshRequired()
+            for pin in offer["evidence"]:
+                current = next((s for s in sources if s["object_id"] == pin["object_id"]), None)
+                if (
+                    not current
+                    or not current["freshness"]["usable"]
+                    or str(current["document_version_id"] or current["latest_version_id"])
+                    != pin["version_id"]
+                ):
+                    raise SourceRefreshRequired()
             target = "accepted" if accept else "declined"
             if offer["state"] not in ("pending", target):
                 raise ValueError("Offer decision already recorded or stale")
@@ -302,7 +324,7 @@ class CourseSupervisionStore:
                 "draft_request": {
                     "objective": offer["message"],
                     "request_key": "course-offer:" + str(offer["id"]),
-                    "object_ids": [str(offer["object_id"])],
+                    "object_ids": [pin["object_id"] for pin in offer["evidence"]],
                 }
                 if accept
                 else None,

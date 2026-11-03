@@ -16,7 +16,9 @@ source store or message queue is introduced. Original planner/draft pipeline rem
   an explicit current-source decision. On acceptance returns draft_request arguments
   for existing create_canvas_draft_responsibility(verified_user, **draft_request).
   Use those exact arguments: stable key deduplicates a repeated HTTP request/crash.
-  Both steps recheck ownership/source scope. Do not accept model-generated user IDs.
+  The offer pins up to eight inspected current objects (assignment plus investigated
+  course policy/context); acceptance rechecks every pinned version. Both steps
+  recheck ownership/source scope. Do not accept model-generated user IDs.
 
 These methods require authenticated assembly. Internal claim/finish/hold methods must
 never be exposed as student RPCs. An offer/acceptance grants no WhatsApp delivery scope.
