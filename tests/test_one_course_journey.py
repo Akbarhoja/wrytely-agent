@@ -8,6 +8,7 @@ from copy import deepcopy
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
+import httpx
 import pytest
 from test_artifacts import assessment
 from test_canvas_sync import device as device
@@ -29,8 +30,8 @@ from test_typed_document_drafting import (
 )
 from test_worker import ScriptedModel
 
-from contracts.models import DeliveryResult
-from integrations.whatsapp import WhatsAppText
+from integrations.whatsapp import WhatsAppAdapter, WhatsAppText
+from integrations.whatsapp_delivery import run_once as dispatch_once
 from runtime.artifact_rendering import ArtifactNotReady, render_private_artifact_docx
 from runtime.supervisor import run_course_supervision_once
 from runtime.worker import run_once
@@ -69,7 +70,9 @@ def test_one_course_offer_accept_checked_file_revision_and_new_deadline(device):
     db.set_communication_preferences(
         "user_alice", consent=True, timezone="UTC", quiet_start=0, quiet_end=0
     )
-    db.set_course_notification_consent("user_alice", monitor["id"], consent=True)
+    checked(
+        api.post(f"{ROOT}/{monitor['id']}/notifications", headers=auth(), json={"consent": True})
+    )
     db.configure_model_budget("journey", ceiling_usd="1", opening_liability_usd="0")
     db.grant_model_budget("journey", "user_alice", ceiling_usd="1")
     run_course_supervision_once(
@@ -94,13 +97,28 @@ def test_one_course_offer_accept_checked_file_revision_and_new_deadline(device):
         monitor["id"],
     )
     offer = checked(api.get(f"{ROOT}/{monitor['id']}", headers=auth()))["offers"][0]
-    action = db.enqueue_course_offer("user_alice", monitor["id"], offer["id"])
-    claim = db.claim_whatsapp_delivery("simulated-transport")
-    assert db.authorize_whatsapp_send(claim, **ACCOUNT).state == "permitted"
-    db.record_whatsapp_result(
-        claim,
-        DeliveryResult(internal_id=claim.action_id, state="accepted", provider_ref="wamid.one"),
+    recovery = db.pending_course_offer_deliveries(limit=1)[0]
+    action = db.enqueue_course_offer(
+        recovery["user_id"], recovery["supervision_id"], recovery["offer_id"]
     )
+    assert db.pending_course_offer_deliveries() == []
+    # Exercise the real typed transport assembler with simulated HTTP only.
+    requests = []
+
+    def simulated_send(request):
+        requests.append(request)
+        return httpx.Response(200, json={"messages": [{"id": "wamid.one"}]})
+
+    with httpx.Client(transport=httpx.MockTransport(simulated_send)) as transport:
+        adapter = WhatsAppAdapter(
+            client=transport,
+            token="synthetic-token",
+            phone_number_id=ACCOUNT["phone_number_id"],
+            api_version="v23.0",
+        )
+        assert dispatch_once(db, adapter, worker_id="simulated-transport", **ACCOUNT) == "accepted"
+        assert dispatch_once(db, adapter, worker_id="restart", **ACCOUNT) == "idle"
+    assert len(requests) == 1
     assert db.record_whatsapp_status(status(), **ACCOUNT)["matched"]
     path = f"{ROOT}/{monitor['id']}/offers/{offer['id']}/decision"
     accepted = checked(api.post(path, headers=auth(), json={"accept": True}))
@@ -131,9 +149,14 @@ def test_one_course_offer_accept_checked_file_revision_and_new_deadline(device):
         0
     ]
     first_file = render_private_artifact_docx(db, "user_alice", saved["id"])
-    revision = db.request_private_artifact_revision(
-        "user_alice", saved["id"], "Use a clearer title", "student-r1"
-    )
+    download = api.get(f"/v2/artifacts/{saved['id']}/file", headers=auth())
+    assert download.status_code == 200 and download.headers["cache-control"] == "no-store"
+    assert download.content == first_file.content
+    assert download.headers["x-artifact-sha256"] == first_file.sha256
+    revision_path = f"/v2/artifacts/{saved['id']}/revisions"
+    revision_request = {"instructions": "Use a clearer title", "request_key": "student-r1"}
+    revision = checked(api.post(revision_path, headers=auth(), json=revision_request))
+    assert checked(api.post(revision_path, headers=auth(), json=revision_request)) == revision
     revised = deepcopy(draft)
     revised["title"] = "Clearer private comparison"
     model = bound(
@@ -143,6 +166,10 @@ def test_one_course_offer_accept_checked_file_revision_and_new_deadline(device):
     latest = db.list_private_artifacts_v2("user_alice", accepted["responsibility_id"])["artifacts"]
     assert len(latest) == 2 and latest[0]["task_id"] == str(revision["task_id"])
     second_file = render_private_artifact_docx(db, "user_alice", latest[0]["id"])
+    assert (
+        api.get(f"/v2/artifacts/{latest[0]['id']}/file", headers=auth()).content
+        == second_file.content
+    )
     assert first_file.sha256 != second_file.sha256
     assert first_file.content == render_private_artifact_docx(db, "user_alice", saved["id"]).content
     assert db.due_course_supervisions() == []
@@ -153,6 +180,8 @@ def test_one_course_offer_accept_checked_file_revision_and_new_deadline(device):
     assert db.due_course_supervisions() == [{"id": UUID(monitor["id"]), "user_id": "user_alice"}]
     with pytest.raises((SourceRefreshRequired, ArtifactNotReady)):
         render_private_artifact_docx(db, "user_alice", saved["id"])
+    stale_download = api.get(f"/v2/artifacts/{saved['id']}/file", headers=auth())
+    assert stale_download.status_code == 409 and not stale_download.content.startswith(b"PK")
     run_course_supervision_once(db, bound(db, Model(decision("wait"))), "user_alice", monitor["id"])
     assert db.due_course_supervisions() == []
     with db.connection() as conn:
