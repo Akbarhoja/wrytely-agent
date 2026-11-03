@@ -163,3 +163,36 @@ def test_foreign_inspection_cannot_read_other_course(device):
             db, Model(decision("inspect", uuid4())), "user_alice", monitor["id"]
         )
     assert db.course_supervision_status("user_alice", monitor["id"])["state"] == "blocked"
+
+
+def test_changed_source_fences_a_model_decision_and_clears_investigation(device):
+    import test_canvas_evidence as evidence
+
+    db, monitor, obj = setup(device)
+    run_course_supervision_once(db, Model(decision("inspect", obj)), "user_alice", monitor["id"])
+    claim = db.claim_course_supervision("user_alice", monitor["id"])
+    scan = evidence.next_scan(device, "updated-source")
+    item = evidence.assignment()
+    item["content"] = "New instructions and deadline."
+    receipt = evidence.upload(device, scan, evidence.body(device, scan, [item]))
+    evidence.close(device, scan, receipt)
+    with pytest.raises(SourceRefreshRequired):
+        db.finish_course_supervision("user_alice", claim, decision("offer", obj, "Stale offer"))
+    assert db.course_supervision_status("user_alice", monitor["id"])["offers"] == []
+
+
+def test_restart_restores_due_time_without_a_new_prompt(device):
+    from shared.db import Store
+
+    db, monitor, _ = setup(device)
+    run_course_supervision_once(db, Model(decision("wait")), "user_alice", monitor["id"])
+    restarted = Store(db._url, canvas_origins=tuple(db._canvas_origins))
+    assert restarted.due_course_supervisions() == []
+    due(db, monitor)
+    assert restarted.due_course_supervisions() == [{"id": monitor["id"], "user_id": "user_alice"}]
+    assert (
+        run_course_supervision_once(
+            restarted, Model(decision("wait")), "user_alice", monitor["id"]
+        )["calls_reserved"]
+        == 2
+    )

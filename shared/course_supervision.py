@@ -93,10 +93,19 @@ class CourseSupervisionStore:
             return row
 
     def _supervision_snapshot(self, conn, agent, connection, course):
-        rows = self._evidence_rows(conn, agent, connection, None, course=course, limit=201)
+        rows = self._evidence_rows(
+            conn, agent, connection, None, course=course, limit=201, body=True
+        )
         if len(rows) > 200:
             raise ValueError("course_supervision_catalog_limit")
-        sources = [self._evidence_projection(conn, connection, r)[0] for r in rows]
+        sources = []
+        for row in rows:
+            source = self._evidence_projection(conn, connection, row)[0]
+            fields = row["private_payload"]["fields"]
+            source["fields"] = fields.get("object_fields", fields)
+            sources.append(source)
+        if len(json.dumps(student_json(sources)).encode()) > 200000:
+            raise ValueError("course_supervision_context_limit")
         # Ignore refreshed observation timestamps; immutable content versions drive change.
         digest = hashlib.sha256(
             json.dumps(
@@ -298,3 +307,17 @@ class CourseSupervisionStore:
                 if accept
                 else None,
             }
+
+    def due_course_supervisions(self, *, limit=20):
+        """Internal service discovery only; never expose the returned user IDs as an RPC."""
+        if type(limit) is not int or not 1 <= limit <= 100:
+            raise ValueError("Invalid due limit")
+        with self.connection() as conn:
+            return conn.execute(
+                "SELECT s.id,a.user_id FROM wrytely_agent.course_supervisions s "
+                "JOIN wrytely_agent.agents a ON a.id=s.agent_id WHERE NOT a.paused AND "
+                "((s.state='ready' AND s.next_check_at<=now()) OR "
+                "(s.state='running' AND s.lease_until<=now())) "
+                "ORDER BY s.next_check_at,s.id LIMIT %s",
+                (limit,),
+            ).fetchall()
