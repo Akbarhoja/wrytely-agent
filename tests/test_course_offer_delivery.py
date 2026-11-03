@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 
 import pytest
 from test_canvas_sync import device as device
-from test_course_supervision import Model, decision, setup
+from test_course_supervision import Model, decision, due, setup
 from test_delivery_store import ACCOUNT, PHONE, state, status
 
 from contracts.models import DeliveryResult
