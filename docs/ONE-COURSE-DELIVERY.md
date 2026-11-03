@@ -74,12 +74,24 @@ must identify built, scripted-tested, live-proven and blocked capabilities separ
 
 ## November 3 implementation checkpoint
 
-A pushed d5d6c72/46a88b0: persisted per-course supervisor, typed Meta decisions,
-original evidence inspection, private deduplicated offers, explicit acceptance spec
-into existing private draft workflow, durable due checks, call reservation/hold and
-pause/source fences. M’s empty-all_active refresh defect is fixed. Locally596Node,
-134web, TypeScript, Ruff and formatting pass. Disposable local PostgreSQL cannot
-start under macOS sandbox process/shared-memory restrictions. GitHub’s isolated
-Postgres CI runs the actual new migration/Store tests; do not label them passed yet.
-No 023 retained migration, new model call, worker activation or WhatsApp send occurred.
-Public source filenames and APIs are in contracts/COURSE-SUPERVISION-v1.md.
+A supplies persisted scoped supervision/Meta decisions/evidence inspection, offers,
+source-event wakeup, original-outbox proactive authorization and independent enqueue
+recovery, cumulative dollar caps/unknown holds, checked DOCX/private revisions and
+typed checked-attachment authority. Read-only connection/course lookup recovers an
+existing monitor without enrolling/resuming it. Exact APIs and tests are published
+in docs/contracts/COURSE-SUPERVISION-v1.md, COURSE-OFFER-DELIVERY-v1.md,
+MODEL-BUDGET-v1.md, ARTIFACT-REVISION-v1.md and ARTIFACT-DELIVERY-v1.md.
+
+M017946f HTTP/typed dispatch/budgeted service/download/revision assembly is reviewed
+and combined in A's branch; M retains student web, signed linked command routing,
+attachment media transport and selector consumption. Full backend at earlier044b8df
+passed1707tests on GitHub PostgreSQL. Newer combined79bd138 run41734459420
+passes its dedicated realPostgres integration and web/extension/diagnostic jobs;
+full backend regression remains running.
+Local pure/service/limit checks and Ruff/format pass; local disposable PostgreSQL
+remains sandbox-blocked. Scripted models/receipts are separate from live acceptance.
+
+Owner submitted Meta business verification; under review, not approved. Actual
+one-course collection coverage, real Meta decision/draft quality, typed phone file
+receipt/native layout, restart/laptop-closed duration, demo and submission remain.
+No new retained023–027 migration, grant, deployment, model call or send is implied.
