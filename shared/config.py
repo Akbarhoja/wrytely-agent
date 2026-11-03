@@ -1,4 +1,5 @@
 import json
+from decimal import Decimal
 from typing import Annotated
 
 from pydantic import Field, SecretStr, field_validator
@@ -18,6 +19,9 @@ class Settings(BaseSettings):
     canvas_document_extractors: Annotated[tuple[str, ...], NoDecode] = ()
     meta_api_key: SecretStr | None = None
     meta_model: str = "muse-spark-1.3"
+    meta_budget_key: str | None = Field(default=None, min_length=1, max_length=100)
+    meta_input_usd_per_million: Decimal | None = Field(default=None, gt=0, le=10000)
+    meta_output_usd_per_million: Decimal | None = Field(default=None, gt=0, le=10000)
     whatsapp_approved_templates: list[ApprovedTemplate] = Field(default_factory=list, max_length=20)
     whatsapp_reply_template_key: str | None = None
     whatsapp_approved_offer_templates: list[ApprovedOfferTemplate] = Field(

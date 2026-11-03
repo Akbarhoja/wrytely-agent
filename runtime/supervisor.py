@@ -43,7 +43,8 @@ def run_course_supervision_once(store, model, verified_user, supervision_id):
         return None
     try:
         context = {k: v for k, v in claim.items() if k not in {"token", "id"}}
-        result = model.turn(
+        bound_model = model.for_user(verified_user) if hasattr(model, "for_user") else model
+        result = bound_model.turn(
             [
                 {"role": "system", "content": INSTRUCTIONS},
                 {"role": "user", "content": json_text(context)},

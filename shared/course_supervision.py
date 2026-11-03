@@ -260,7 +260,8 @@ class CourseSupervisionStore:
         with self.connection() as conn:
             agent, _ = self._read_identity(conn, verified_user, None)
             row = conn.execute(
-                "SELECT id,state,next_check_at,calls_reserved,call_limit,last_decision,reason "
+                "SELECT id,state,next_check_at,calls_reserved,call_limit,last_decision,reason, "
+                "notification_consent "
                 "FROM wrytely_agent.course_supervisions WHERE agent_id=%s AND id=%s",
                 (agent, _uuid(supervision_id)),
             ).fetchone()

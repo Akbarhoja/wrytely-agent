@@ -27,6 +27,7 @@ from shared.course_supervision import CourseSupervisionStore
 from shared.delivery_store import DeliveryStore
 from shared.draft_intents import DraftIntentStore
 from shared.drafting_tasks import DraftingTaskStore
+from shared.model_budgets import ModelBudgetStore
 from shared.private_artifact_reads import PrivateArtifactReadStore
 from shared.responsibilities import ResponsibilityStore
 from shared.source_connections import SourceConnectionStore, canvas_origin
@@ -49,6 +50,7 @@ class QueueFull(Exception):
 class Store(
     CourseSupervisionStore,
     CourseOfferDeliveryStore,
+    ModelBudgetStore,
     WhatsAppStore,
     ResponsibilityStore,
     AcademicMemoryStore,
