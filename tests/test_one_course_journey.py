@@ -6,6 +6,7 @@ than treating separate component tests as an end-to-end student experience.
 
 from copy import deepcopy
 from datetime import UTC, datetime, timedelta
+from uuid import UUID
 
 import pytest
 from test_artifacts import assessment
@@ -149,7 +150,7 @@ def test_one_course_offer_accept_checked_file_revision_and_new_deadline(device):
 
     scan = evidence.next_scan(device, "deadline-extension")
     publish(device, text=TEXT, scan=scan, due=(deadline + timedelta(days=1)).isoformat())
-    assert db.due_course_supervisions() == [{"id": monitor["id"], "user_id": "user_alice"}]
+    assert db.due_course_supervisions() == [{"id": UUID(monitor["id"]), "user_id": "user_alice"}]
     with pytest.raises((SourceRefreshRequired, ArtifactNotReady)):
         render_private_artifact_docx(db, "user_alice", saved["id"])
     run_course_supervision_once(db, bound(db, Model(decision("wait"))), "user_alice", monitor["id"])
