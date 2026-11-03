@@ -58,3 +58,21 @@ unbounded files are not claimed. No external tools, course writes, quiz attempts
 automatic drafting from a source. Updated source details must come from a new sync.
 No DOCX/PDF rendering, revisions, proactive channel delivery or paid deployment is
 claimed complete by this first supervisor candidate; those remain delivery work.
+
+## Checked private Word output
+
+A supplies runtime.artifact_rendering.render_private_artifact_docx(store,
+verified_user, artifact_id) -> immutable RenderedArtifact(artifact_id, check_id,
+filename, media_type, sha256, content). M's authenticated download/file-delivery
+assembly consumes the bytes. Use no-store and attachment headers; never accept an
+arbitrary body/draft from the browser, put it in a public bucket or equate rendering
+with recipient delivery authorization. All filenames are fixed UUID-based names.
+
+The helper reads the existing v2 private artifact projection, requires ready/current
+passed checks and unpaused controls, renders inert text-only DOCX, then repeats the
+same ownership/evidence/control read and compares artifact/check/content identity.
+Content SHA256 is stable. Disclosure and quoted original evidence are included;
+XML is escaped, no external relationships/macros/assets are emitted. Paragraph text
+is literal; no Markdown/table/image/equation layout claim. Complex LaTex math is
+explicitly unsupported. ZIP/XML/Unicode/control-fence tests are separate from actual
+Word/phone visual acceptance, which remains required before calling export complete.
