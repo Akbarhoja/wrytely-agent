@@ -1,7 +1,9 @@
 # One-course autonomous submission — November 3, 2026
 
-Supervisor approved this delivery scope in chat. Target: submission tomorrow
-(November 4, America/Denver; verify event cutoff/timezone before uploading).
+Supervisor approved this delivery scope in chat. Target: November 4, 2026 at 7:00 PM America/Denver (9:00 PM ET), verified
+on the [event page](https://cerebralvalley.ai/e/meta-ai-developer-hackathon) November 3.
+Feature freeze target: November 4 at 3:00 PM Mountain; recording/upload by 5:00 PM.
+Organizers require open-source GitHub and emphasize the three-minute demo video.
 This supersedes the stop-before-P2 instruction. Keep the existing Python runtime,
 Meta primary reasoning, Store, Canvas collector/journal and private result pipeline.
 No Hermes/OpenClaw/Muse Personal Agent migration. Full semester vision remains the
@@ -69,3 +71,15 @@ Outlook, Teams/group chat, calendar, handwriting, all-format parsing, multi-cour
 priority proof, grade recovery, broad pilot and 72-hour soak are later delivery scope.
 Do not label original P0–P6 complete from this one-course demonstration. Release claims
 must identify built, scripted-tested, live-proven and blocked capabilities separately.
+
+## November 3 implementation checkpoint
+
+A pushed d5d6c72/46a88b0: persisted per-course supervisor, typed Meta decisions,
+original evidence inspection, private deduplicated offers, explicit acceptance spec
+into existing private draft workflow, durable due checks, call reservation/hold and
+pause/source fences. M’s empty-all_active refresh defect is fixed. Locally596Node,
+134web, TypeScript, Ruff and formatting pass. Disposable local PostgreSQL cannot
+start under macOS sandbox process/shared-memory restrictions. GitHub’s isolated
+Postgres CI runs the actual new migration/Store tests; do not label them passed yet.
+No 023 retained migration, new model call, worker activation or WhatsApp send occurred.
+Public source filenames and APIs are in contracts/COURSE-SUPERVISION-v1.md.

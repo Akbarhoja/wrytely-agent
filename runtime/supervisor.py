@@ -54,12 +54,13 @@ def run_course_supervision_once(store, model, verified_user, supervision_id):
             raise ValueError("One course decision required")
         decision = CourseDecision.model_validate(json.loads(calls[0]["arguments"]))
         inspection = None
-        if decision.action == "inspect":
+        if decision.action != "wait":
             source = next(
                 (s for s in claim["sources"] if str(s["object_id"]) == decision.object_id), None
             )
             if not source:
                 raise ValueError("Target outside course scope")
+        if decision.action == "inspect":
             if source["document_version_id"]:
                 inspection = store.read_canvas_document_sections(
                     verified_user,
