@@ -65,6 +65,26 @@ that scope and is combining the exact patch for integrated CI. M retains app/web
 transport/service ownership and continues from his branch. No protected-main merge,
 new paid call, business submission, provider send or retained migration occurred.
 
+## Connected scripted journey passes — November3
+
+At executable58ed3e0, run41728249183 passes the combined dedicated PostgreSQL gate:
+supervisor, MHTTP, offer/reply/template/receipt, cumulative budget/stop, checked
+DOCX, explicit immutable revision, source-event wakeup and current migration
+inventory. tests/test_one_course_journey.py passes the connected synthetic course
+journey through real Store/HTTP/runtime/renderer with budget reservations; models
+are scripted and phone receipts simulated, NOT actual Meta quality/WhatsApp proof.
+Web/build/extension/diagnostic jobs pass. Full backend suite still runs; earlier
+82983c6 full result was1680PASS/1FAIL solely the expected migration inventory,
+now explicitly updated through026. The connected journey's UUID/string expectation
+was also corrected; no authorization/checks/migration guard was relaxed.
+38local pure tests plus Ruff/format pass. Native Word-open/phone layout remains
+unverified because native file-picker input did not take effect; synthetic file
+stays ignored/local. No source-private content was published. No new provider
+inference, actual allowance grant, deployment or retained023–026 migration occurred.
+Remaining: MUI/continuous/signed-inbound/file-delivery assembly, counterpart/full CI,
+owner business verification, concrete bounded live activation, real course/phone
+acceptance and demo/submission. Public repo/MIT and event cutoff are verified.
+
 ## Product decision and actual stage
 
 Own Wrytely runtime + Meta primary intelligence. Required first version: Canvas
