@@ -20,6 +20,17 @@ message. A call ceiling is not paid activation approval.
 | POST   | `/v1/course-supervisions/{id}/pause`                      | Empty body; fences supervision, including after source disconnect                                       |
 | POST   | `/v1/course-supervisions/{id}/offers/{offer_id}/decision` | Required boolean `accept`; returns state and nullable `responsibility_id`                               |
 
+Additional session routes:
+
+- POST `/v1/course-supervisions/{id}/notifications`: strict boolean `consent` for
+  separate proactive opt-in.
+- POST `/v1/course-supervisions/{id}/offers/{offer_id}/delivery`: empty body;
+  idempotent Store-owned enqueue, never a caller payload or direct send.
+- GET `/v2/artifacts/{id}/file`: immutable checked Word bytes with attachment,
+  digest and check headers; no public file link.
+- POST `/v2/artifacts/{id}/revisions`: student `instructions` and stable
+  `request_key` handed to the existing private revision task method.
+
 Enable returns the student status projection rather than the raw Store row, so
 leases and inspection snapshots stay internal. Enable replay does not refill the
 Store allowance. Acceptance passes only the Store's returned `draft_request` to
@@ -27,24 +38,33 @@ the existing Canvas draft method. Its stable request key recovers repeated reque
 and a crash after recording acceptance. Decline creates no draft. Private artifact
 reads remain on existing authenticated result routes.
 
-## Remaining assembly
+## Transport and service assembly
+
+The existing WhatsApp worker opts into typed payload support. It passes trusted
+reply and offer configuration separately to Store authorization and dispatches only
+the returned text/template payload once. Accepted/unknown outcomes and the existing
+signed receipt path are preserved. Empty template configuration still holds sends
+outside the conversation window. Code does not verify real provider approval.
+
+The explicit course service uses `BudgetedMetaRouter` and trusted persisted due
+identities. See [service preparation](../deploy/ONE-COURSE-SERVICES.md) for entrypoints,
+health, stop and restart limits. No startup migration, budget grant or direct send.
+
+## Remaining assembly and acceptance
 
 - Build the supervision web controls against these endpoints and the existing
   private result UI. A retains collector and remaining P1 implementation.
-- Prepare explicit service scheduling using stored due-user identities and the
-  published runtime, with health/stop/restart controls. Paid activation remains off
-  until a concrete bounded candidate is approved.
-- Proactive offers need A's distinct persisted delivery authorization, explicit
-  proactive consent, source/control fences and actual approved offer template.
-  Reply-only authorization cannot dispatch them.
-- Reply-template opt-in is separately authorized for implementation under the new
-  supervisor assignment. Provider approval and live sends remain separate gates.
-- File/revision assembly consumes published Store/rendering boundaries as A makes
-  them executable. No parallel interpreter, Store or delivery queue is introduced.
+- Recover a saved offer awaiting enqueue independently of the next paid model check,
+  using A's requested internal selector. No parallel queue is introduced.
+- Complete signed linked-inbound acceptance/revision commands and separately
+  authorized phone file delivery once the channel boundary is ready.
+- Verify actual template approval, owner business verification and bounded live
+  activation before WhatsApp/model operations.
 
 ## Acceptance limits
 
 This HTTP slice does not prove installed Canvas collection, continuous operation,
-model quality, artifact revision/rendering or WhatsApp delivery. Last shared account
-restriction state remains unknown; no live send or retry is included. Test evidence
+model quality or WhatsApp delivery. Owner confirmed account restriction pending
+business verification; no live send or retry is included. Word/phone visual
+acceptance is unverified. Test evidence
 must name the exact candidate and distinguish synthetic integration from live proof.
