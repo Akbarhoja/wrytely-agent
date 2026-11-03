@@ -6,6 +6,29 @@ This is a connected implementation and validation candidate, **not completed P1*
 [Work-order acceptance](WORK-ORDERS.md#p1--automatic-collection-and-usable-memory)
 remains required. Outlook is optional/paused; P0 WhatsApp remains Murtazo's.
 
+## Installed metadata discovery and options-page repair
+
+Installed P1 continuation: owner reports0.2.0 installed/paired/identity verified.
+Authenticated connection refresh confirms connected. The real extension has already
+completed metadata-only discovery: UI shows7courses, explicit-set scope,0selected
+courses and0content-resource rows. This is live catalog proof, not full collection.
+The popup indicated an enabled finished scan, so a pause must be positively verified
+before content scope is selected; the owner's paused report alone is not acceptance.
+
+The full options page showed unknown status while the popup worked. Chrome documents
+that an extension options tab can carry sender.tab/frameId metadata. The old blanket
+"tab" rejection is replaced only for the exact own top-level options.html sender:
+same extension ID, exact page, frame0, safe tab ID, matching origin and optional tab URL.
+Content scripts/web pages/other extensions/child frames/popup tabs still reject.
+Two new positive/negative cases and all555NodePASS. Live recheck is pending.
+Version0.2.1 updates only host-events/manifest in the same installed v020 folder;
+manifest permissions/configuration/storage identity are unchanged. Native management
+control was interrupted by active Chrome use; owner is asked to reload and confirm
+Pause in full Settings. Two-course choice is also pending. No course content may be
+collected until those steps are confirmed. No new credential, backend deploy, Meta
+call, WhatsApp send, scope expansion or P2. Primary sender documentation:
+https://developer.chrome.com/docs/extensions/reference/api/runtime#type-MessageSender
+
 ## Approved live-preparation update
 
 November2 approved live preparation supersedes the earlier candidate-only snapshot.
