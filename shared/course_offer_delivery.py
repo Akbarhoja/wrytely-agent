@@ -7,6 +7,35 @@ from shared.canvas_reads import SourceRefreshRequired, _uuid
 
 
 class CourseOfferDeliveryStore:
+    def pending_course_offer_deliveries(self, *, limit=20):
+        """Internal recovery hints, independent of model due time; not send permits.
+
+        Every candidate must still pass enqueue_course_offer and the original
+        dispatch authorization. Any existing outbox outcome excludes recovery.
+        """
+        if type(limit) is not int or not 1 <= limit <= 100:
+            raise ValueError("Invalid offer recovery limit")
+        with self.connection() as conn:
+            return conn.execute(
+                "SELECT a.user_id,s.id AS supervision_id,o.id AS offer_id "
+                "FROM wrytely_agent.course_offers o "
+                "JOIN wrytely_agent.course_supervisions s "
+                "ON s.id=o.supervision_id AND s.agent_id=o.agent_id "
+                "JOIN wrytely_agent.agents a ON a.id=o.agent_id "
+                "JOIN wrytely_agent.source_connections c "
+                "ON c.id=s.connection_id AND c.agent_id=s.agent_id "
+                "JOIN wrytely_agent.channel_links l ON l.agent_id=a.id "
+                "WHERE NOT a.paused AND s.state<>'paused' AND s.notification_consent "
+                "AND o.state='pending' AND o.created_at>clock_timestamp()-interval '24 hours' "
+                "AND c.provider='canvas_extension' AND c.state='connected' "
+                "AND c.credential_expires_at>clock_timestamp() AND c.origin=ANY(%s) "
+                "AND c.generation=s.generation AND c.scope_revision=s.scope_revision "
+                "AND NOT EXISTS (SELECT 1 FROM wrytely_agent.whatsapp_outbound w "
+                "WHERE w.course_offer_id=o.id) "
+                "ORDER BY o.created_at,o.id LIMIT %s",
+                (list(self._canvas_origins), limit),
+            ).fetchall()
+
     def set_course_notification_consent(self, verified_user, supervision_id, *, consent):
         if type(consent) is not bool:
             raise ValueError("Explicit notification consent required")

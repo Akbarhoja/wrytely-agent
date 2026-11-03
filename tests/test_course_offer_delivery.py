@@ -11,7 +11,7 @@ from contracts.models import DeliveryResult
 from contracts.templates import ApprovedOfferTemplate, ApprovedTemplate
 from integrations.whatsapp import WhatsAppText
 from runtime.supervisor import run_course_supervision_once
-from shared.db import LeaseLost
+from shared.db import LeaseLost, Store
 
 
 def prepared(device, *, consent=True, limit=6):
@@ -49,6 +49,81 @@ def template(offer=True):
     )
 
 
+def test_recovery_after_saved_offer_does_not_need_due_model_or_refill_allowance(device):
+    db, monitor, offer = prepared(device)
+    with db.connection() as conn:
+        conn.execute(
+            "UPDATE wrytely_agent.course_supervisions SET next_check_at=now()+interval '1 day',"
+            "state='blocked',reason='inference_outcome_unknown',calls_reserved=call_limit "
+            "WHERE id=%s",
+            (monitor["id"],),
+        )
+    restarted = Store(db._url, canvas_origins=db._canvas_origins)
+    expected = [dict(user_id="user_alice", supervision_id=monitor["id"], offer_id=offer["id"])]
+    assert restarted.pending_course_offer_deliveries(limit=1) == expected
+    assert restarted.pending_course_offer_deliveries(limit=1) == expected
+    assert restarted.due_course_supervisions(limit=1) == []
+    result = restarted.enqueue_course_offer(
+        **{
+            "verified_user": expected[0]["user_id"],
+            "supervision_id": expected[0]["supervision_id"],
+            "offer_id": expected[0]["offer_id"],
+        }
+    )
+    assert result["state"] == "queued"
+    assert restarted.pending_course_offer_deliveries() == []
+    status = restarted.course_supervision_status("user_alice", monitor["id"])
+    assert status["calls_reserved"] == status["call_limit"]
+    assert status["state"] == "blocked" and status["reason"] == "inference_outcome_unknown"
+
+
+@pytest.mark.parametrize(
+    "control", ["consent", "pause", "agent_pause", "declined", "unlink", "expired", "scope"]
+)
+def test_recovery_discovery_excludes_ineligible_offers(device, control):
+    db, monitor, offer = prepared(device)
+    assert len(db.pending_course_offer_deliveries()) == 1
+    if control == "consent":
+        db.set_course_notification_consent("user_alice", monitor["id"], consent=False)
+    elif control == "pause":
+        db.pause_course_supervision("user_alice", monitor["id"])
+    elif control == "agent_pause":
+        db.set_paused("user_alice", True)
+    elif control == "declined":
+        db.decide_course_offer("user_alice", monitor["id"], offer["id"], accept=False)
+    elif control == "unlink":
+        db.unlink_whatsapp("user_alice")
+    elif control == "expired":
+        with db.connection() as conn:
+            conn.execute("UPDATE wrytely_agent.course_offers SET created_at=now()-interval '25h'")
+    else:
+        db.rotate_or_revoke("user_alice", device[1]["connection_id"])
+    assert db.pending_course_offer_deliveries() == []
+
+
+def test_recovery_hint_does_not_bypass_consent_change_before_enqueue(device):
+    db, monitor, _ = prepared(device)
+    candidate = db.pending_course_offer_deliveries()[0]
+    db.set_course_notification_consent("user_alice", monitor["id"], consent=False)
+    with pytest.raises(ValueError, match="proactive_consent_missing"):
+        db.enqueue_course_offer(
+            candidate["user_id"], candidate["supervision_id"], candidate["offer_id"]
+        )
+    with db.connection() as conn:
+        assert (
+            conn.execute("SELECT count(*) AS n FROM wrytely_agent.whatsapp_outbound").fetchone()[
+                "n"
+            ]
+            == 0
+        )
+
+
+@pytest.mark.parametrize("limit", [True, 0, -1, 101, "1", None])
+def test_recovery_discovery_limit_rejected_before_database_access(limit):
+    with pytest.raises(ValueError, match="Invalid offer recovery limit"):
+        Store("not-a-database").pending_course_offer_deliveries(limit=limit)
+
+
 def test_private_offer_uses_existing_queue_and_one_use_dispatch_with_signed_receipt(device):
     db, monitor, offer = prepared(device)
     action = queue(db, monitor, offer)
@@ -64,6 +139,7 @@ def test_private_offer_uses_existing_queue_and_one_use_dispatch_with_signed_rece
         claim,
         DeliveryResult(internal_id=claim.action_id, state="accepted", provider_ref="wamid.one"),
     )
+    assert db.pending_course_offer_deliveries() == []
     assert db.record_whatsapp_status(status(), **ACCOUNT)["matched"]
     assert state(db)["state"] == "delivered"
     assert db.claim_whatsapp_delivery("another") is None
@@ -141,6 +217,7 @@ def test_unknown_dispatch_never_requeues_on_restart(device):
     assert db.claim_whatsapp_delivery("restart") is None
     assert state(db)["state"] == "unknown"
     assert queue(db, monitor, offer)["state"] == "unknown"
+    assert db.pending_course_offer_deliveries() == []
 
 
 def test_changed_course_source_cancels_queued_offer(device):
