@@ -14,6 +14,37 @@ P0/P1 remain open. No new live activation is inferred.
 
 ## One-course implementation candidate
 
+Current executable candidate79bd138 combines M017946f exactly (importdd90a2e),
+adds independent saved-offer recovery c17dd88, typed checked attachment authority
+53e3e9e and read-only course supervision lookup79bd138. A read M's diff and tests;
+M reports88focusedPostgresPASS. Existing full backend CI41728675310 at044b8df
+is now SUCCESS:1707PASS, with127PASS in its separate fast gate; that evidence does
+not cover the newer assembly/document code. Current79bd138 run41734459420 passes the dedicated realPostgres combined gate,
+including checked attachment Store/receipts/isolation/current-source/unknown tests,
+read-only lookup and connected HTTP/runtime/typed-transport journey. Web/build,
+extension and diagnostic jobs pass. Full regression still runs.
+Local38pure/5service/6recovery-limit tests and Ruff/format pass.
+
+New027 stores immutable checked DOCX bytes and check/hash identity privately in
+the same agent schema; original outbox now has a typed artifact intent. Explicit
+student delivery request, current sources/checks/link/consent/pause,1hour act
+freshness,24hour channel window and one-use attempt remain mandatory. Old workers
+hold document sends until their completed adapter opts into supports_documents.
+No actual attachment upload/send or027 retained migration occurred. Pure DOCX
+serialization moved to shared/artifact_document.py and is reused unchanged by
+downloads and the delivery boundary. Native Word/phone layout remains unverified.
+
+A published exact contracts to M in issue4 comments6616857578/6617504483/6617519041.
+M now builds student web controls/results; service offer-recovery consumption,
+signed linked acceptance/revision and typed attachment transport remain M-owned.
+The combined journey now exercises actual HTTP download/revision and typed
+transport with simulated HTTP/receipts; this realDB gate passes, not live phone proof.
+Earlier65bfb2d fast result166PASS/1FAIL was a nonnumeric synthetic phone-ID
+fixture; corrected to numeric123 and matching receipt, preserving transport checks.
+Owner reports Meta business verification SUBMITTED/UNDER REVIEW. It is not approved
+and WhatsApp restriction is not cleared. No new paid call, allowance initialization,
+deployment, retained023–027 migration, continuous activation or actual send occurred.
+
 A has added persisted supervisor checks/leases/call reservations, Meta-selected
 inspect/offer/wait decisions, pinned original evidence reads, deduplicated private
 offers, explicit acceptance into the existing draft API and restartable next checks.
@@ -64,6 +95,26 @@ realStore/HTTP passes; A read the complete diff/tests with no blocking finding i
 that scope and is combining the exact patch for integrated CI. M retains app/web/
 transport/service ownership and continues from his branch. No protected-main merge,
 new paid call, business submission, provider send or retained migration occurred.
+
+## Connected scripted journey passes — November3
+
+At executable58ed3e0, run41728249183 passes the combined dedicated PostgreSQL gate:
+supervisor, MHTTP, offer/reply/template/receipt, cumulative budget/stop, checked
+DOCX, explicit immutable revision, source-event wakeup and current migration
+inventory. tests/test_one_course_journey.py passes the connected synthetic course
+journey through real Store/HTTP/runtime/renderer with budget reservations; models
+are scripted and phone receipts simulated, NOT actual Meta quality/WhatsApp proof.
+Web/build/extension/diagnostic jobs pass. Full backend suite still runs; earlier
+82983c6 full result was1680PASS/1FAIL solely the expected migration inventory,
+now explicitly updated through026. The connected journey's UUID/string expectation
+was also corrected; no authorization/checks/migration guard was relaxed.
+38local pure tests plus Ruff/format pass. Native Word-open/phone layout remains
+unverified because native file-picker input did not take effect; synthetic file
+stays ignored/local. No source-private content was published. No new provider
+inference, actual allowance grant, deployment or retained023–026 migration occurred.
+Remaining: MUI/continuous/signed-inbound/file-delivery assembly, counterpart/full CI,
+owner business verification, concrete bounded live activation, real course/phone
+acceptance and demo/submission. Public repo/MIT and event cutoff are verified.
 
 ## Product decision and actual stage
 

@@ -7,7 +7,7 @@ from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
-from contracts.templates import TemplatePayload, TextPayload
+from contracts.templates import ArtifactPayload, TemplatePayload, TextPayload
 
 
 @dataclass(frozen=True)
@@ -22,6 +22,7 @@ class DeliveryClaim:
     attempt_token: UUID
     deadline: datetime
     offer_id: UUID | None = None
+    artifact_file_id: UUID | None = None
 
 
 @dataclass(frozen=True)
@@ -31,7 +32,13 @@ class SendAuthorization:
     retry_at: datetime | None = None
     recipient: str | None = None
     text: str | None = None
-    payload: TextPayload | TemplatePayload | None = None
+    payload: TextPayload | TemplatePayload | ArtifactPayload | None = None
+
+
+@dataclass(frozen=True)
+class ArtifactDeliveryFile:
+    descriptor: ArtifactPayload
+    content: bytes
 
 
 class WhatsAppStatusEvent(BaseModel):

@@ -6,6 +6,19 @@ Migration024 not deployed. Old reply authorization remains unchanged.
 
 ## Exact new calls
 
+- pending_course_offer_deliveries(limit=20) -> list of
+  {user_id,supervision_id,offer_id}: INTERNAL trusted service discovery, never a
+  student HTTP route or model tool. Strict integer limit1..100; oldest first.
+  Finds saved pending, unexpired, opted-in, linked offers without ANY original
+  outbox row, independently of next_check_at, model call limits or inference holds.
+  Paused agents/monitors, disconnected/expired connections and changed generation/
+  scope are excluded. Returned identities come from the database, not a caller.
+  These are bounded recovery hints, not authorization: always call the existing
+  enqueue_course_offer with those identities, which rechecks source pins, current
+  selection and controls; then use original dispatch authorization. A stale hint
+  must not stop other candidates. No claim, model call, new queue or migration.
+  Once an outbox row exists (queued, held, cancelled, accepted, unknown or delivered),
+  recovery never creates another send; original dispatch handles its lifecycle.
 - set_course_notification_consent(verified_user, supervision_id, consent=bool):
   session-owned proactive opt-in, defaultfalse. Existing reply consent alone is
   insufficient. Revoke remains possible after disconnect.

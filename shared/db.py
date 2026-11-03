@@ -11,6 +11,7 @@ from psycopg.types.json import Jsonb
 from contracts.models import TaskLease
 from shared.academic_memory import AcademicMemoryStore
 from shared.academic_reads import AcademicReadStore
+from shared.artifact_delivery import ArtifactDeliveryStore
 from shared.artifact_revisions import ArtifactRevisionStore
 from shared.artifacts import ArtifactStore
 from shared.bound_responsibilities import BoundResponsibilityStore
@@ -49,6 +50,7 @@ class QueueFull(Exception):
 
 
 class Store(
+    ArtifactDeliveryStore,
     CourseSupervisionStore,
     CourseOfferDeliveryStore,
     ModelBudgetStore,

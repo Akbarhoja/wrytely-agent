@@ -6,6 +6,13 @@
 Migration023 adds private persisted checks/offers. No paid worker or channel
 authorization is enabled by this implementation.
 
+Current dependent candidates: [proactive offer/recovery boundary](docs/contracts/COURSE-OFFER-DELIVERY-v1.md)
+(024), [cumulative model budgets](docs/contracts/MODEL-BUDGET-v1.md) (025),
+source-event wakeup026, [immutable revisions](docs/contracts/ARTIFACT-REVISION-v1.md)
+and [typed checked attachment delivery](docs/contracts/ARTIFACT-DELIVERY-v1.md) (027).
+All use the original Store/runtime/outbox. Candidate code is not live activation;
+see STATUS for exact CI/deployment/provider evidence.
+
 
 > November 1 supervisor execution update: mandatory preimplementation consumer
 > agreement is removed. The interface owner may version/document and implement

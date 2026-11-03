@@ -5,6 +5,19 @@ existing Wrytely handwriting product for the Meta Global AI Developer Hackathon.
 
 ## Current implementation
 
+The November3 delivery target is a **one-course autonomous prototype**: Canvas
+collection, a persisted Meta-powered supervisor that investigates stored evidence
+and offers help, explicit student acceptance, checked private DOCX drafts and
+revisions, source-change reassessment and WhatsApp communication. See the
+[one-course plan and exact owners](docs/ONE-COURSE-DELIVERY.md).
+
+Supervisor, budget, offer recovery and checked-file authorization code is on the
+candidate branch. M's HTTP/download/revision/budgeted service assembly is combined;
+student controls, signed WhatsApp decisions and media transport are being assembled.
+Scripted integration evidence is separate from actual Meta quality, installed
+collection coverage, continuous cloud operation and phone delivery. Meta business
+verification is submitted and under review; the messaging restriction is not cleared.
+
 The P1 completion candidate on `codex/p1-completion` connects the existing Canvas
 extension to document storage and a student connection/coverage interface. It
 collects discovered courses, assignment instructions/rubrics, syllabus text,
@@ -20,14 +33,15 @@ private drafts. Document-based saved drafts now have an explicit v2 inspection v
 with pinned original evidence and current access checks. Saved checks do not grant
 permission to send or submit work.
 
-**P1 is not complete yet.** Local synthetic integration checks are separate from
-installed Chrome and live two-course acceptance. The new candidate has not been
-deployed; the existing isolated development service still runs the older M2 build.
+**P1 is not complete yet.** Synthetic integration checks are separate from
+installed Chrome and live course acceptance. The isolated development API has an
+earlier P1 deployment; the new supervisor/delivery candidate and migrations023–027
+are not deployed.
 Independent review/CI and protected-main merge status remain separate. See
 [the P1 candidate and live checklist](docs/P1-COMPLETION-CANDIDATE.md),
 [STATUS.md](STATUS.md) and [work orders](docs/WORK-ORDERS.md).
 
-Continuous semester supervision and follow-through are later P2–P6 work. Development
+The broader multi-course semester vision remains P2–P6 roadmap work. Development
 model and WhatsApp workers stay stopped outside separately authorized tests; no
 completed 24/7 academic agent is claimed. WhatsApp live-delivery acceptance remains
 open. Outlook email is optional and paused; Teams, handwriting and Hermes are outside
@@ -63,6 +77,10 @@ an existing product's environment files.
   the backend does not need a Clerk admin secret. Update the key after rotation.
 - `AGENT_AUTHORIZED_PARTIES`: exact allowed frontend origins as a JSON array.
 - `AGENT_META_API_KEY`, `AGENT_META_MODEL`: Meta development key and available model.
+- `AGENT_META_BUDGET_KEY`, `AGENT_META_INPUT_USD_PER_MILLION`,
+  `AGENT_META_OUTPUT_USD_PER_MILLION`: trusted operator budget key and verified
+  nonzero prices. Worker execution requires an operator-configured global budget
+  and student grant; no credit balance creates an allowance automatically.
 
 After reviewing the target database, explicitly apply the additive migration:
 
@@ -71,15 +89,17 @@ uv run --env-file .env python -m app.migrate
 uv run --env-file .env uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-In another terminal, run the persistent worker:
+For a separately authorized bounded academic execution pass:
 
 ```sh
-uv run --env-file .env python -m runtime.worker
+uv run --env-file .env python -m runtime.worker --once
 ```
 
 Routes and semantics are in CONTRACTS.md. The frontend must obtain a real Clerk
 session bearer token. There is no debug-user fallback or public test login.
 `GET /healthz` is liveness; `/readyz` only reports configuration flags.
+The [service preparation](deploy/ONE-COURSE-SERVICES.md) describes separately
+activated supervision and delivery processes; starting the API does not start them.
 
 ## Engineering review
 
@@ -108,7 +128,7 @@ does not mean those services were created during the hackathon.
 - https://clerk.com/docs/guides/sessions/manual-jwt-verification
 - https://neon.com/docs/connect/connection-pooling
 
-Public pilot launch still requires cumulative usage reservation/limits, live
+Public pilot launch still requires configured cumulative usage limits, live
 acceptance evidence, connector permissions and operational validation. Existing
 authentication, private artifact reads and delivery controls have code/test evidence;
 that does not establish production readiness or successful live delivery.
