@@ -8,6 +8,16 @@ remains required. Outlook is optional/paused; P0 WhatsApp remains Murtazo's.
 
 ## Current installed acceptance run
 
+Lease-race fix0.2.5: document inspection can see a valid lease that expires during
+provider IO/conversion before a commit or continuation. Instead of making that
+ordinary expiry terminal, route only discovery_lease_expired through the existing
+pending-first recovery operation. Accepted primary receipts replay before renewal;
+original checkpoints, server ownership and lease-replaced fencing are preserved.
+No new scheduler, lease duration, credential or parallel upload path. All565NodePASS
+including commit-time expiry, continuation expiry and replaced-writer rejection.
+Local full integration setup remains sandbox-blocked as recorded below. Prepared
+same-folder package permissions unchanged; live recovery and performance are pending.
+
 Root-cause fix0.2.4: discussion requests used only_announcements=false. A controlled
 read reproduced announcement rows for that selector and a discussion response when
 omitted. The response-type guard correctly rejected announcements as discussions;

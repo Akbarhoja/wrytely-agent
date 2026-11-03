@@ -30,6 +30,13 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+Collector0.2.5 handles writer-lease expiry between document inspection and a later
+commit/continuation. It delegates to the existing pending-first course recovery
+operation, preserving receipt replay/checkpoints and server-authorized renewal.
+Lease-replaced still stops; no second upload or unchecked retry is introduced.
+All565NodePASS including commit/continuation expiry and replaced-writer regressions.
+Same-folder package prepared; installed recovery and throughput remain unverified.
+
 Collector0.2.4 fixes a reproduced discussion-listing incompatibility: sending
 only_announcements=false can select announcements on a presence-sensitive Canvas
 deployment. Use the documented default by omitting that parameter for discussions;

@@ -19,6 +19,69 @@ const inspection = () => ({
   seen_count: 2,
   coverage: null,
 });
+test("lease expiry between inspection and document commit uses existing recovery without rereading", async () => {
+  const calls = [];
+  const result = await collectDocumentTick({
+    inspect: async () => inspection(),
+    readPage: async () => {
+      calls.push("read");
+      return { data: [], next_cursor: null };
+    },
+    operations: {
+      commitDocumentPage: async () => {
+        calls.push("commit");
+        throw Object.assign(Error(), { code: "discovery_lease_expired" });
+      },
+      collectCoursePage: async () => {
+        calls.push("recover");
+        return { state: "progress", action: "resume" };
+      },
+    },
+    origin,
+    conflicts: ["lease_expired"],
+  });
+  assert.deepEqual(calls, ["read", "commit", "recover"]);
+  assert.deepEqual(result, { state: "progress", action: "resume" });
+});
+test("lease expiry during document continuation recovers without starting a second upload", async () => {
+  const calls = [];
+  const result = await collectDocumentTick({
+    inspect: async () => ({ ...inspection(), document_active: true }),
+    operations: {
+      continueDocumentPage: async () => {
+        calls.push("continue");
+        throw Object.assign(Error(), { code: "discovery_lease_expired" });
+      },
+      collectCoursePage: async () => {
+        calls.push("recover");
+        return { state: "progress", action: "recover" };
+      },
+    },
+    readPage: async () => assert.fail("must not recapture pending document"),
+    origin,
+    conflicts: ["lease_expired"],
+  });
+  assert.deepEqual(calls, ["continue", "recover"]);
+  assert.equal(result.state, "progress");
+});
+test("a replaced writer lease still stops instead of automatic recovery", async () => {
+  const result = await collectDocumentTick({
+    inspect: async () => ({ ...inspection(), document_active: true }),
+    operations: {
+      continueDocumentPage: async () => {
+        throw Object.assign(Error(), { code: "discovery_lease_replaced" });
+      },
+      collectCoursePage: async () =>
+        assert.fail("must not take over another writer"),
+    },
+    origin,
+    conflicts: ["lease_replaced"],
+  });
+  assert.deepEqual(result, {
+    state: "blocked",
+    reason: "discovery_lease_replaced",
+  });
+});
 
 test("worker restart continues a persisted document before reading another source", async () => {
   const calls = [];

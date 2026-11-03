@@ -429,6 +429,12 @@ export async function collectDocumentTick({
     current = await inspect();
     return summary(current, "document_page");
   } catch (e) {
+    // A bounded provider read/extraction can outlive the lease inspected at the
+    // start of this tick. Re-enter the existing pending-first recovery path;
+    // it replays accepted receipts before renewing the writer lease. Never
+    // treat a replaced lease (another writer) as permission to continue here.
+    if (e?.code === "discovery_lease_expired")
+      return operations.collectCoursePage();
     return {
       state: "blocked",
       reason:
