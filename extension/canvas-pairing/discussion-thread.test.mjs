@@ -15,6 +15,26 @@ const topic = () => ({
   require_initial_post: false,
 });
 const cursor = () => discussionContinuation("101", [topic()], null, origin);
+test("topic continuation accepts default discussion pagination and rejects announcement selectors", () => {
+  const next = `${origin}/api/v1/courses/101/discussion_topics?per_page=4&page=opaque-next`;
+  assert.ok(
+    discussionContinuation("101", [topic()], next, origin).includes(
+      "opaque-next",
+    ),
+  );
+  for (const value of ["true", "false"]) {
+    assert.throws(
+      () =>
+        discussionContinuation(
+          "101",
+          [topic()],
+          next + `&only_announcements=${value}`,
+          origin,
+        ),
+      /unsafe_pagination/,
+    );
+  }
+});
 function fixture({
   visible = true,
   malformed = false,

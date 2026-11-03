@@ -30,6 +30,15 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+Collector0.2.4 fixes a reproduced discussion-listing incompatibility: sending
+only_announcements=false can select announcements on a presence-sensitive Canvas
+deployment. Use the documented default by omitting that parameter for discussions;
+announcement requests retain true. Exact-origin/course pagination and returned-topic
+type checks remain strict. All562NodePASS, including presence-sensitive, pagination
+and announcement-selector rejection regressions. Local actual-JS/HTTP integration
+checks could not start because sandbox permissions block the test DB launcher;
+they are not reported passed on this change. Live checkpoint recovery remains pending.
+
 Collector0.2.3 additionally retains fixed document-validation/scan-conflict codes
 through the host boundary; unknown errors still redact. All559NodePASS. Same-folder
 package prepared with unchanged permissions. Live failure cause and recovery are

@@ -8,6 +8,18 @@ remains required. Outlook is optional/paused; P0 WhatsApp remains Murtazo's.
 
 ## Current installed acceptance run
 
+Root-cause fix0.2.4: discussion requests used only_announcements=false. A controlled
+read reproduced announcement rows for that selector and a discussion response when
+omitted. The response-type guard correctly rejected announcements as discussions;
+keep that guard, change the request to the documented default, and reject announcement
+selectors in discussion pagination/continuations. Announcement reads still request
+true. No extra origin/scope/credential or weakened source-type check. All562NodePASS.
+Focused actual-JS/HTTP tests hit sandbox setup errors in pgserver's cache/process
+inspection before running; no integration pass is claimed for this head. Same-folder
+0.2.4 package is ready with identical manifest permissions; installed recovery remains
+pending. Primary API reference:
+https://developerdocs.instructure.com/services/canvas/resources/discussion_topics
+
 Diagnostic follow-up0.2.3 preserves the document collector's fixed validation and
 scan-conflict codes through the host boundary instead of collapsing them to
 host_failed. UI displays only a fixed allowlist of diagnostic codes, never arbitrary

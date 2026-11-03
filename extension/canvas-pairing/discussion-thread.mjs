@@ -16,7 +16,7 @@ const exact = (x, keys) =>
   !Array.isArray(x) &&
   Object.keys(x).length === keys.length &&
   keys.every((k) => Object.hasOwn(x, k));
-function pageURL(value, origin, path, size, topicList = false) {
+function pageURL(value, origin, path, size) {
   try {
     if (
       typeof value !== "string" ||
@@ -25,7 +25,7 @@ function pageURL(value, origin, path, size, topicList = false) {
     )
       throw Error();
     const url = new URL(value),
-      keys = ["per_page", "page", ...(topicList ? ["only_announcements"] : [])];
+      keys = ["per_page", "page"];
     if (
       url.origin !== origin ||
       url.pathname !== path ||
@@ -35,7 +35,6 @@ function pageURL(value, origin, path, size, topicList = false) {
       [...url.searchParams.keys()].some((k) => !keys.includes(k)) ||
       keys.some((k) => url.searchParams.getAll(k).length > 1) ||
       url.searchParams.get("per_page") !== String(size) ||
-      (topicList && url.searchParams.get("only_announcements") !== "false") ||
       (url.searchParams.has("page") && !url.searchParams.get("page"))
     )
       throw Error();
@@ -74,7 +73,7 @@ function validate(s, course, origin) {
   )
     throw new ProbeError("unsafe_pagination");
   const base = `/api/v1/courses/${course}/discussion_topics`;
-  if (s.topic_next !== null) pageURL(s.topic_next, origin, base, 4, true);
+  if (s.topic_next !== null) pageURL(s.topic_next, origin, base, 4);
   if (s.entries_next !== null)
     pageURL(s.entries_next, origin, `${base}/${s.topics[0]}/entries`, 4);
   if (s.replies_next !== null)

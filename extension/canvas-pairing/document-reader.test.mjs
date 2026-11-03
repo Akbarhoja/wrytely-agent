@@ -190,7 +190,7 @@ for (const kind of ["announcements", "discussions"]) {
     assert.ok(
       calls.includes(
         origin +
-          `/api/v1/courses/101/discussion_topics?per_page=4&only_announcements=${announcement}`,
+          `/api/v1/courses/101/discussion_topics?per_page=4${announcement ? "&only_announcements=true" : ""}`,
       ),
     );
   });
@@ -210,5 +210,51 @@ test("an announcement cannot be mislabeled as a discussion prompt", async () => 
   await assert.rejects(
     reader("101", "discussions", null, "7"),
     /invalid_collection/,
+  );
+});
+test("discussion listing omits false announcement selector on presence-sensitive Canvas", async () => {
+  const calls = [];
+  const reader = makeDocumentReader(origin, async (url) => {
+    calls.push(url);
+    if (url.endsWith("/profile")) return response(url, { id: 7 });
+    // Reproduce the real boundary without retaining private course data.
+    const parsed = new URL(url);
+    return response(
+      url,
+      parsed.searchParams.has("only_announcements")
+        ? [{ id: 50, is_announcement: true }]
+        : [],
+    );
+  });
+  assert.deepEqual(await reader("101", "discussions", null, "7"), {
+    data: [],
+    next_cursor: null,
+  });
+  assert.ok(calls.every((url) => !url.includes("only_announcements")));
+  await assert.rejects(
+    reader(
+      "101",
+      "discussions",
+      origin +
+        "/api/v1/courses/101/discussion_topics?per_page=4&only_announcements=false",
+      "7",
+    ),
+    /unsafe_pagination/,
+  );
+});
+test("discussion pagination preserves the default listing without switching to announcements", async () => {
+  const next =
+    origin +
+    "/api/v1/courses/101/discussion_topics?per_page=4&page=opaque-next";
+  const reader = makeDocumentReader(origin, async (url) =>
+    response(
+      url,
+      url.endsWith("/profile") ? { id: 7 } : [],
+      url.endsWith("/profile") ? {} : { link: `<${next}>; rel="next"` },
+    ),
+  );
+  assert.equal(
+    (await reader("101", "discussions", null, "7")).next_cursor,
+    next,
   );
 });

@@ -81,7 +81,9 @@ export function makeDocumentReader(
     const submission = ["submissions", "grades"].includes(kind);
     const topic = ["announcements", "discussions"].includes(kind);
     const path = `${base}/${submission ? "students/submissions" : topic ? "discussion_topics" : kind}`;
-    const initial = `${origin}${path}?per_page=4${kind === "assignments" ? "&override_assignment_dates=true" : topic ? `&only_announcements=${kind === "announcements" ? "true" : "false"}` : submission ? "&include[]=assignment" : ""}`;
+    // Use Canvas's default discussion listing. Some deployments treat the
+    // presence of only_announcements (even "false") as an announcement request.
+    const initial = `${origin}${path}?per_page=4${kind === "assignments" ? "&override_assignment_dates=true" : kind === "announcements" ? "&only_announcements=true" : submission ? "&include[]=assignment" : ""}`;
     function checked(value) {
       try {
         if (
@@ -95,7 +97,7 @@ export function makeDocumentReader(
           "per_page",
           "page",
           ...(kind === "assignments" ? ["override_assignment_dates"] : []),
-          ...(topic ? ["only_announcements"] : []),
+          ...(kind === "announcements" ? ["only_announcements"] : []),
           ...(submission ? ["include[]"] : []),
         ];
         if (
@@ -109,9 +111,8 @@ export function makeDocumentReader(
           url.searchParams.get("per_page") !== "4" ||
           (kind === "assignments" &&
             url.searchParams.get("override_assignment_dates") !== "true") ||
-          (topic &&
-            url.searchParams.get("only_announcements") !==
-              (kind === "announcements" ? "true" : "false")) ||
+          (kind === "announcements" &&
+            url.searchParams.get("only_announcements") !== "true") ||
           (submission && url.searchParams.get("include[]") !== "assignment") ||
           (url.searchParams.has("page") && !url.searchParams.get("page"))
         )
