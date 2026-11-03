@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { api, ApiError } from "../lib/client";
+import { CourseSupervision } from "./course-supervision";
 
 type Connection = { connection_id: string; origin: string; state: string; generation: number };
 type Course = {
@@ -45,10 +46,12 @@ export function CanvasConnection({
   userId,
   enabled = true,
   onSessionExpired,
+  onViewResults,
 }: {
   userId?: string;
   enabled?: boolean;
   onSessionExpired?: () => void;
+  onViewResults?: () => void;
 }) {
   if (!userId)
     return (
@@ -57,14 +60,26 @@ export function CanvasConnection({
         <p>Sign in to connect your courses.</p>
       </section>
     );
-  return <CanvasSession key={userId} enabled={enabled} onSessionExpired={onSessionExpired} />;
+  return (
+    <CanvasSession
+      key={userId}
+      userId={userId}
+      enabled={enabled}
+      onSessionExpired={onSessionExpired}
+      onViewResults={onViewResults}
+    />
+  );
 }
 function CanvasSession({
+  userId,
   enabled,
   onSessionExpired,
+  onViewResults,
 }: {
   enabled: boolean;
+  userId: string;
   onSessionExpired?: () => void;
+  onViewResults?: () => void;
 }) {
   const [origins, setOrigins] = useState<string[]>([]),
     [origin, setOrigin] = useState("");
@@ -492,6 +507,20 @@ function CanvasSession({
                   </li>
                 ))}
               </ul>
+              <CourseSupervision
+                userId={userId}
+                connectionId={coverage.connection.connection_id}
+                courseId={course.course_id}
+                title={course.title || `Course ${course.course_id}`}
+                enabled={enabled}
+                selected={
+                  course.selected &&
+                  coverage.scope.resource_kinds.length > 0 &&
+                  !course.missing_pending_confirmation
+                }
+                onSessionExpired={onSessionExpired}
+                onViewResults={onViewResults}
+              />
             </details>
           ))}
           {coverage.next && (

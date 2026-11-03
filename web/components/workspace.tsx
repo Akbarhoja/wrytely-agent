@@ -283,6 +283,7 @@ function WorkspaceSession({
                 userId={signedIn && !data.expired ? userId : undefined}
                 enabled={connectionsReady}
                 onSessionExpired={data.retry}
+                onViewResults={() => setView("results")}
               />
               <WhatsAppConnection
                 key={userId || "guest"}

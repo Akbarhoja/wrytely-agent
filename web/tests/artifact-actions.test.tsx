@@ -1,0 +1,65 @@
+import { afterEach, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { ArtifactActions } from "../components/artifact-actions";
+
+const id = "00000000-0000-4000-8000-000000000001";
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
+
+it("retains the same revision key after an uncertain response and does not send on render", async () => {
+  let first = true;
+  const fetch = vi.fn(async () => {
+    if (first) {
+      first = false;
+      throw Error("Response lost");
+    }
+    return Response.json({ task_id: id });
+  });
+  vi.stubGlobal("fetch", fetch);
+  render(<ArtifactActions artifactId={id} enabled onSessionExpired={() => {}} />);
+  expect(fetch).not.toHaveBeenCalled();
+  fireEvent.change(screen.getByRole("textbox"), { target: { value: "Clarify the argument" } });
+  fireEvent.click(screen.getByText("Request a revision"));
+  await screen.findByRole("alert");
+  fireEvent.click(screen.getByText("Request a revision"));
+  await screen.findByText(/Revision requested/);
+  expect(fetch).toHaveBeenCalledTimes(2);
+  const calls = fetch.mock.calls as unknown as [string, RequestInit][];
+  expect(calls[0][1].body).toBe(calls[1][1].body);
+});
+
+it("fences private actions and removes instructions after session expiry", async () => {
+  const expired = vi.fn();
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => Response.json({}, { status: 401 })),
+  );
+  render(<ArtifactActions artifactId={id} enabled onSessionExpired={expired} />);
+  fireEvent.change(screen.getByRole("textbox"), { target: { value: "Private revision" } });
+  fireEvent.click(screen.getByText("Download Word file"));
+  await waitFor(() => expect(expired).toHaveBeenCalledOnce());
+  expect(screen.getByRole<HTMLTextAreaElement>("textbox").value).toBe("");
+  expect(
+    screen.getByRole<HTMLButtonElement>("button", { name: "Download Word file" }).disabled,
+  ).toBe(true);
+});
+
+it("clears prior-artifact instructions and disabled controls never dispatch", () => {
+  const fetch = vi.fn();
+  vi.stubGlobal("fetch", fetch);
+  const view = render(<ArtifactActions artifactId={id} enabled onSessionExpired={() => {}} />);
+  fireEvent.change(screen.getByRole("textbox"), { target: { value: "Old private text" } });
+  view.rerender(
+    <ArtifactActions
+      artifactId={id.replace(/1$/, "2")}
+      enabled={false}
+      onSessionExpired={() => {}}
+    />,
+  );
+  expect(screen.getByRole<HTMLTextAreaElement>("textbox").value).toBe("");
+  fireEvent.click(screen.getByText("Download Word file"));
+  expect(fetch).not.toHaveBeenCalled();
+});
