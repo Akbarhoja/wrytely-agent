@@ -12,6 +12,13 @@ const documentEvidence = new RegExp(
 );
 const canvasCoverage = new RegExp(`^source-connections/${resourceUuid}/canvas/coverage$`, "i");
 const canvasRevoke = new RegExp(`^source-connections/${resourceUuid}/revoke$`, "i");
+const supervisionRead = new RegExp(`^course-supervisions/${resourceUuid}$`, "i");
+const supervisionAction = new RegExp(
+  `^course-supervisions(?:/${resourceUuid}/(?:pause|notifications|offers/${resourceUuid}/(?:decision|delivery)))?$`,
+  "i",
+);
+const artifactFile = new RegExp(`^v2/artifacts/${resourceUuid}/file$`, "i");
+const artifactRevision = new RegExp(`^v2/artifacts/${resourceUuid}/revisions$`, "i");
 type Dependencies = {
   configured: boolean;
   backend: string | undefined;
@@ -25,6 +32,8 @@ function json(status: number, detail: string) {
 
 export async function forward(request: Request, path: string[], deps: Dependencies) {
   const route = path.join("/");
+  const fileRead = artifactFile.test(route);
+  const courseRoute = supervisionRead.test(route) || supervisionAction.test(route);
   const documentRead =
     documentList.test(route) || documentDetail.test(route) || documentEvidence.test(route);
   const connectionRead =
@@ -36,6 +45,8 @@ export async function forward(request: Request, path: string[], deps: Dependenci
       ? ["me", "messages", "tasks", "whatsapp", "sources", "responsibilities"].includes(route) ||
         resultRead.test(route) ||
         documentRead ||
+        fileRead ||
+        supervisionRead.test(route) ||
         connectionRead ||
         /^tasks\/[0-9a-f-]{36}$/i.test(route) ||
         /^sources\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(route)
@@ -54,10 +65,12 @@ export async function forward(request: Request, path: string[], deps: Dependenci
           (["source-connections/canvas/pairing", "source-connections/canvas/scope"].includes(
             route,
           ) ||
-            canvasRevoke.test(route)));
+            canvasRevoke.test(route) ||
+            supervisionAction.test(route) ||
+            artifactRevision.test(route)));
   if (!permitted) return json(404, "Route not found");
   let query = "";
-  if (documentRead || connectionRead) {
+  if (documentRead || connectionRead || fileRead || courseRoute || artifactRevision.test(route)) {
     const url = new URL(request.url);
     const allowed =
       route === "source-connections"
@@ -99,7 +112,8 @@ export async function forward(request: Request, path: string[], deps: Dependenci
       const key = request.headers.get("idempotency-key");
       if (key) headers.set("Idempotency-Key", key);
     }
-    const backendPath = documentRead ? route : `v1/${route}`;
+    const backendPath =
+      documentRead || fileRead || artifactRevision.test(route) ? route : `v1/${route}`;
     const upstream = await deps.fetch(`${deps.backend.replace(/\/$/, "")}/${backendPath}${query}`, {
       method: request.method,
       headers,
@@ -110,6 +124,42 @@ export async function forward(request: Request, path: string[], deps: Dependenci
     });
     if (upstream.status >= 500)
       return json(503, "Wrytely is having trouble connecting. Please try again.");
+    if (fileRead && upstream.ok) {
+      const media = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+      if (
+        upstream.status !== 200 ||
+        upstream.headers.get("content-type") !== media ||
+        !upstream.body
+      )
+        return json(503, "Private file is unavailable.");
+      const reader = upstream.body.getReader();
+      const chunks: Uint8Array[] = [];
+      let size = 0;
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        size += value.length;
+        if (size > 10 * 1024 * 1024) {
+          await reader.cancel();
+          return json(413, "Private file exceeds the download limit.");
+        }
+        chunks.push(value);
+      }
+      const content = new Uint8Array(size);
+      let offset = 0;
+      for (const chunk of chunks) {
+        content.set(chunk, offset);
+        offset += chunk.length;
+      }
+      return new Response(content, {
+        headers: {
+          "Content-Type": media,
+          "Content-Disposition": `attachment; filename="wrytely-${path[2]}.docx"`,
+          "Cache-Control": "no-store",
+          "X-Content-Type-Options": "nosniff",
+        },
+      });
+    }
     const data = await upstream.json();
     return Response.json(data, {
       status: upstream.status,

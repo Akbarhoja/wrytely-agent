@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { api, ApiError } from "../lib/client";
+import { ArtifactActions } from "./artifact-actions";
 type Saved = { id: string; created_at: string; saved_state: string; memory_stale: boolean };
 type Reference = { kind: "legacy" | "canvas_document"; quote: string };
 type Detail = {
@@ -252,6 +253,18 @@ function DocumentSession({
             </ul>
           )}
           <pre>{detail.artifact.draft.body}</pre>
+          <ArtifactActions
+            artifactId={detail.artifact.id}
+            enabled={
+              enabled &&
+              !busy &&
+              !!detail.latest_check?.report.passed &&
+              !detail.artifact.memory_stale &&
+              !detail.controls.agent_paused &&
+              detail.evidence_status.state === "current"
+            }
+            onSessionExpired={onSessionExpired}
+          />
           {detail.artifact.draft.disclosure && (
             <>
               <h4>Disclosure</h4>

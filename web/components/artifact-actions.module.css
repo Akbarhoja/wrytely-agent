@@ -1,0 +1,27 @@
+.actions {
+  margin: 16px 0;
+}
+.actions form {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+.actions label {
+  display: grid;
+  gap: 8px;
+  font-weight: 500;
+}
+.actions textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  resize: vertical;
+  background: var(--surface);
+  color: var(--text);
+}
+.actions button {
+  min-height: 44px;
+  justify-self: start;
+}
