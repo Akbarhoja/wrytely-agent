@@ -1172,7 +1172,8 @@ export function discoveryOperations({
         return {
           ...status(j),
           content_requested:
-            context.course_ids.length > 0 && context.resource_kinds.length > 0,
+            (context.mode === "all_active" || context.course_ids.length > 0) &&
+            context.resource_kinds.length > 0,
         };
       }
       return status(j);

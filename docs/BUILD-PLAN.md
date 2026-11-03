@@ -1,6 +1,12 @@
 # Wrytely academic agent — build plan
 
-Revision 7 · October 30, 2026 · Optional-email amendment October 31 · Product owner: Akbar
+Revision 8 · November 3, 2026 · Product owner: Akbar
+
+**Active delivery scope:** [One-course autonomous submission](ONE-COURSE-DELIVERY.md).
+Akbar approved one complete course journey and parallel P1/P2/P3 implementation.
+This amendment supersedes multi-course submission acceptance and stop-before-P2
+instructions below. The broader requirements remain the post-submission roadmap;
+see [preserved revision 7](archive/BUILD-PLAN-r7-2026-10-30.md).
 
 This is the authoritative product scope and delivery order. It incorporates the
 founder's Canvas-extension/Outlook decision and review of Claude's October 30 plan.

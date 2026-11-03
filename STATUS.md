@@ -4,6 +4,14 @@ Updated November 2, 2026. [Plan revision7](docs/BUILD-PLAN.md) ·
 [Work orders](docs/WORK-ORDERS.md) · [Code audit](docs/IMPLEMENTATION-AUDIT.md) ·
 [Team coordination](https://github.com/Akbarhoja/wrytely-agent/issues/4)
 
+## November 3 current delivery decision
+
+Supervisor approved revision8 one-course autonomous submission; see
+[execution order and owners](docs/ONE-COURSE-DELIVERY.md). A starts connected
+supervisor work on codex/p1-completion and fixes M’s empty-all_active finding.
+M owns WhatsApp/app/web/service assembly in parallel. This supersedes stop-before-P2;
+P0/P1 remain open. No new live activation is inferred.
+
 ## Product decision and actual stage
 
 Own Wrytely runtime + Meta primary intelligence. Required first version: Canvas

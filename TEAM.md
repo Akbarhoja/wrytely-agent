@@ -1,5 +1,14 @@
 # Wrytely team agreement
 
+
+## November 3 supervisor delivery amendment
+
+Follow [one-course delivery and exact parallel assignments](docs/ONE-COURSE-DELIVERY.md).
+This supersedes stop-before-P2 and the sequential stage-completion freeze.
+A retains remaining P1 and runtime/shared/contracts; M starts app/WhatsApp/web/deploy
+assembly for the one-course autonomous journey. No duplicate collector/runtime.
+Original full-product P0–P6 gates remain unpassed until their evidence exists.
+
 Updated October 30, 2026. Active scope/order: [revision 7](docs/BUILD-PLAN.md).
 Read [work orders](docs/WORK-ORDERS.md), [status](STATUS.md), [contracts](CONTRACTS.md)
 and [coordination issue #4](https://github.com/Akbarhoja/wrytely-agent/issues/4) before work.

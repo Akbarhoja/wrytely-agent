@@ -22,6 +22,7 @@ from shared.canvas_object_scope import CanvasObjectScopeStore
 from shared.canvas_reads import CanvasReadStore
 from shared.canvas_sync import CanvasSyncStore
 from shared.connection_status import ConnectionStatusStore
+from shared.course_supervision import CourseSupervisionStore
 from shared.delivery_store import DeliveryStore
 from shared.draft_intents import DraftIntentStore
 from shared.drafting_tasks import DraftingTaskStore
@@ -45,6 +46,7 @@ class QueueFull(Exception):
 
 
 class Store(
+    CourseSupervisionStore,
     WhatsAppStore,
     ResponsibilityStore,
     AcademicMemoryStore,

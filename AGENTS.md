@@ -1,5 +1,14 @@
 # Wrytely engineering agreement
 
+
+## November 3 supervisor delivery amendment
+
+Follow [one-course delivery and exact parallel assignments](docs/ONE-COURSE-DELIVERY.md).
+This supersedes stop-before-P2 and the sequential stage-completion freeze.
+A retains remaining P1 and runtime/shared/contracts; M starts app/WhatsApp/web/deploy
+assembly for the one-course autonomous journey. No duplicate collector/runtime.
+Original full-product P0–P6 gates remain unpassed until their evidence exists.
+
 ## Authority and scope
 
 Akbar is supervisor/product owner. Codex is lead engineer. Murtazo is engineer for

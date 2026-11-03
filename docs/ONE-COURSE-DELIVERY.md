@@ -1,0 +1,71 @@
+# One-course autonomous submission — November 3, 2026
+
+Supervisor approved this delivery scope in chat. Target: submission tomorrow
+(November 4, America/Denver; verify event cutoff/timezone before uploading).
+This supersedes the stop-before-P2 instruction. Keep the existing Python runtime,
+Meta primary reasoning, Store, Canvas collector/journal and private result pipeline.
+No Hermes/OpenClaw/Muse Personal Agent migration. Full semester vision remains the
+roadmap; this submission is explicitly a one-course prototype.
+
+## Required student journey and execution order
+
+1. Connect Canvas; discover courses automatically; choose exactly one course for the
+   submission scenario. Read available syllabus, assignments, announcements and
+   relevant documents, with honest coverage gaps. Existing approved two-course test
+   may finish; this plan does not change its live scope automatically.
+2. Enable course supervision explicitly. Cloud supervisor inspects stored evidence,
+   chooses what to investigate, offers help or waits, and persists its next check.
+   No student prompt is needed for each decision. Model chooses actions within typed
+   tools; source content cannot grant permissions. Browser-off means stored evidence,
+   not unseen Canvas updates. New source versions trigger reassessment.
+3. Student receives an evidenced offer on WhatsApp; acceptance binds current source
+   versions to the existing private draft workflow. No automatic permission to draft
+   from reading an assignment. Offer and acceptance are idempotent.
+4. Meta prepares and checks an appropriate draft/preparation result. Deliver a private
+   usable file, accept a revision, retain both versions and repeat checks. Labs request
+   real student results. Never open/solve timed quiz attempts or submit coursework.
+5. On changed deadline/instructions after a successful sync, reconsider the plan,
+   invalidate stale offers and explain the changed priority. Demonstrate this with a
+   labeled synthetic change if no real authorized course change exists.
+6. Prove restart/pause, one-account scope, cross-account denial, bounded calls/costs,
+   no duplicate offers/work, unknown-call/send handling and one laptop-closed decision.
+   Record the real duration; 72-hour soak and broader pilot remain pending roadmap work.
+7. Record demo and prepare repository/setup/Meta-use evidence while engineering runs.
+   Freeze the candidate several hours before the verified cutoff; upload early.
+
+## Exactly one implementation owner per area
+
+A (Akbar/Codex), branch codex/p1-completion: remaining P1 fixes/live acceptance;
+runtime/supervisor.py, shared/course_supervision.py, contracts/course_supervision.py,
+additive 023 migration, related tests and contracts. Reuse task planner/drafting;
+add persisted course decisions/offers/checks, scoped evidence investigation, acceptance
+handoff and later rendering/revision. Own shared documentation and integration review.
+
+M (Murtazo), separate branch from current shared candidate: app/ HTTP/inbound assembly,
+integrations/whatsapp*, app/whatsapp_worker.py, deploy/ and student web controls/results.
+Begin P2/P3 transport/service assembly now; earlier P1-overlap pause does not prohibit
+this assignment. Do not edit A's supervisor/store/contracts/collector. First inspect
+WhatsApp restriction status without changing business/legal details; report exact safe
+blocker. Wire approved reply-template opt-in separately from proactive-offer authorization;
+never repurpose reply-only consent for proactive sends. Implement offer/accept/revision
+routing using A's published Store boundary, prepare continuous-process entrypoint and
+health/stop controls, and prepare reproducible demo/setup materials. Send interface
+incompatibilities/findings immediately; no ceremonial agreement wait.
+
+A publishes concrete executable boundaries as implemented. M can prepare assembly
+against their signatures, but must not claim placeholders are live. Do not create a
+parallel runtime/store/journal. M's empty-all_active refresh finding is A-owned.
+
+## Activation and acceptance
+
+Code implementation is authorized now. Existing live scope and $2 total ceiling
+remain; $150 credits are not a replacement budget. New retained migrations, deployment,
+paid cloud supervision and outward sends need applicable scoped activation approval
+once the tested candidate and concrete budget are ready. No broad production launch.
+Meta-business/legal decisions remain Akbar's. WhatsApp failure remains a submission
+blocker unless Akbar explicitly selects a disclosed website fallback and rules allow it.
+
+Outlook, Teams/group chat, calendar, handwriting, all-format parsing, multi-course
+priority proof, grade recovery, broad pilot and 72-hour soak are later delivery scope.
+Do not label original P0–P6 complete from this one-course demonstration. Release claims
+must identify built, scripted-tested, live-proven and blocked capabilities separately.

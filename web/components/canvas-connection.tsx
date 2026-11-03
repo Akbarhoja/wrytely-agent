@@ -372,16 +372,18 @@ function CanvasSession({
           <p>
             Scope: {label(coverage.scope.mode)} · Latest scan:{" "}
             {coverage.scan.state === "finished" &&
-            ((coverage.scope.course_ids ?? coverage.courses.filter((c) => c.selected)).length ===
-              0 ||
+            ((coverage.scope.mode !== "all_active" &&
+              (coverage.scope.course_ids ?? coverage.courses.filter((c) => c.selected)).length ===
+                0) ||
               coverage.scope.resource_kinds.length === 0)
               ? "course discovery finished"
               : label(coverage.scan.state)}{" "}
             · Started: {when(coverage.scan.started_at)}
           </p>
           {coverage.courses.length > 0 &&
-            ((coverage.scope.course_ids ?? coverage.courses.filter((c) => c.selected)).length ===
-              0 ||
+            ((coverage.scope.mode !== "all_active" &&
+              (coverage.scope.course_ids ?? coverage.courses.filter((c) => c.selected)).length ===
+                0) ||
               coverage.scope.resource_kinds.length === 0) && (
               <p role="status">
                 No course content is selected. This is course discovery only. Open “Choose specific

@@ -1,5 +1,14 @@
 # Ordered engineering work orders
 
+
+## November 3 supervisor delivery amendment
+
+Follow [one-course delivery and exact parallel assignments](ONE-COURSE-DELIVERY.md).
+This supersedes stop-before-P2 and the sequential stage-completion freeze.
+A retains remaining P1 and runtime/shared/contracts; M starts app/WhatsApp/web/deploy
+assembly for the one-course autonomous journey. No duplicate collector/runtime.
+Original full-product P0–P6 gates remain unpassed until their evidence exists.
+
 Revision 7 · October 30, 2026. Scope: [BUILD-PLAN.md](BUILD-PLAN.md).
 Status: planned unless [STATUS.md](../STATUS.md) links acceptance evidence.
 A = Akbar with Codex; M = Murtazo. Each item has exactly one accountable engineer;

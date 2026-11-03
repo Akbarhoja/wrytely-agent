@@ -1,5 +1,12 @@
 # Contracts — implemented boundaries and historical increments
 
+## November 3 one-course supervisor candidate
+
+[Executable Store/runtime boundary](docs/contracts/COURSE-SUPERVISION-v1.md).
+Migration023 adds private persisted checks/offers. No paid worker or channel
+authorization is enabled by this implementation.
+
+
 > November 1 supervisor execution update: mandatory preimplementation consumer
 > agreement is removed. The interface owner may version/document and implement
 > owned boundaries, notifying consumers asynchronously. Historical “await agreement”

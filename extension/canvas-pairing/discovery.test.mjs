@@ -1924,3 +1924,26 @@ for (const corruption of ["missing_row", "false_complete"]) {
     assert.equal((await client.retryDiscovery()).coverage, "partial");
   });
 }
+
+for (const mode of ["all_active", "explicit_set"]) {
+  test(`empty ${mode} completion preserves only configured discovery intent`, async () => {
+    const f = fixture(),
+      client = f.client();
+    f.context.mode = mode;
+    f.context.resource_kinds = ["assignments"];
+    await client.beginDiscovery();
+    await client.commitDiscoveryPage({ ...page(), items: [] });
+    await client.finishDiscoveryResource({
+      resource_key: "courses",
+      outcome: "complete",
+      reason: null,
+    });
+    await client.finishDiscovery();
+    assert.equal(
+      (await client.readDiscoveryStatus()).content_requested,
+      mode === "all_active",
+    );
+    f.context.resource_kinds = [];
+    assert.equal((await client.readDiscoveryStatus()).content_requested, false);
+  });
+}
