@@ -31,6 +31,18 @@ it("retains the same revision key after an uncertain response and does not send 
   expect(calls[0][1].body).toBe(calls[1][1].body);
 });
 
+it("queues a file only after the explicit button and does not claim phone delivery", async () => {
+  const fetch = vi.fn(async () => Response.json({ id, state: "ready" }));
+  vi.stubGlobal("fetch", fetch);
+  render(<ArtifactActions artifactId={id} enabled onSessionExpired={() => {}} />);
+  expect(fetch).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByText("Send this file to my WhatsApp"));
+  await screen.findByText("File delivery requested. Phone delivery has not been confirmed.");
+  const calls = fetch.mock.calls as unknown as [string, RequestInit][];
+  expect(calls[0][0]).toBe(`/api/agent/v2/artifacts/${id}/delivery`);
+  expect(calls[0][1].body).toBeUndefined();
+});
+
 it("fences private actions and removes instructions after session expiry", async () => {
   const expired = vi.fn();
   vi.stubGlobal(

@@ -32,10 +32,15 @@ can treat a stale timestamp as unhealthy; a present file alone is not liveness.
 when the operator creates that file; remove it explicitly before an approved restart.
 An in-flight external call cannot be recalled. Do not retry its unknown outcome.
 
-Current limitation: queueing of freshly observed offers occurs after course ticks.
-Crash recovery between saved offer and enqueue must consume A's independent pending
-offer selector once published; do not spend another model call merely to recover
-that handoff. This is not complete proactive service acceptance yet. WhatsApp is
-restricted pending owner business verification; no successful phone delivery is
-claimed. Native Word/phone file acceptance and bounded laptop-closed live operation
-remain separate gates.
+When explicitly enabled, offer enqueue recovery uses A's independent bounded
+pending-offer selector after the scheduling pass. A saved offer can recover even
+when no model check is due. Any existing outbox row, including an unknown outcome,
+excludes requeue; enqueue still rechecks current source/control/consent fences.
+Recovery needs no additional model call and introduces no separate message queue.
+
+WhatsApp business verification is submitted and under review; no successful phone
+delivery is claimed. Native Word/phone file acceptance and bounded laptop-closed
+live operation remain separate gates. Document transport uploads checked immutable
+bytes only after one-use authorization, repeats the current file/control read after
+upload and before send, and retains unknown outcomes without retry. Explicit student
+file requests are required; the service never auto-sends a completed artifact.

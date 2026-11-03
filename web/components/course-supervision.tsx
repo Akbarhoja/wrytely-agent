@@ -15,21 +15,6 @@ type Monitor = {
   offers: { id: string; message: string; reason: string; state: string }[];
 };
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-function cached(key: string) {
-  try {
-    return sessionStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-function remember(key: string, id: string | null) {
-  try {
-    if (id) sessionStorage.setItem(key, id);
-    else sessionStorage.removeItem(key);
-  } catch {
-    /* Server state remains authoritative when browser storage is unavailable. */
-  }
-}
 
 export function CourseSupervision(props: {
   userId: string;
@@ -102,7 +87,6 @@ function Session({
         if (e instanceof ApiError && e.status === 401) {
           setMonitor(null);
           setExpired(true);
-          remember(key, null);
           onSessionExpired?.();
         }
       }
@@ -115,8 +99,17 @@ function Session({
   }
   useEffect(() => {
     if (enabled) {
-      const id = cached(key);
-      if (id && uuid.test(id)) void run((signal) => read(id, signal));
+      void run(async (signal) => {
+        const query = new URLSearchParams({ connection_id: connectionId, course_id: courseId });
+        const value = await api<{ supervision: Monitor | null }>(`course-supervisions?${query}`, {
+          signal,
+        });
+        if (signal.aborted) return;
+        if (value.supervision) {
+          if (!uuid.test(value.supervision.id)) throw Error();
+          await read(value.supervision.id, signal);
+        } else if (!signal.aborted) setMonitor(null);
+      });
     } else {
       control.current?.abort();
       active.current = false;
@@ -138,7 +131,6 @@ function Session({
     });
     if (!uuid.test(value.id)) throw Error();
     if (!signal.aborted) {
-      remember(key, value.id);
       await read(value.id, signal);
     }
   }

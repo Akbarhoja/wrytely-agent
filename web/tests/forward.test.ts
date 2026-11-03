@@ -49,6 +49,24 @@ describe("authenticated API boundary", () => {
     expect(result.status).toBe(status);
     expect(result.headers.get("cache-control")).toBe("no-store");
   });
+  it("forwards read-only course lookup without an enable side effect", async () => {
+    const id = "00000000-0000-4000-8000-000000000001";
+    const path = `course-supervisions?connection_id=${id}&course_id=101`;
+    const deps = dependencies();
+    expect((await forward(request(path, "GET"), ["course-supervisions"], deps)).status).toBe(202);
+    expect(deps.fetch.mock.calls[0][0]).toBe(`http://agent.internal:8000/v1/${path}`);
+    const bad = dependencies();
+    expect(
+      (
+        await forward(
+          request("course-supervisions?user_id=other", "GET"),
+          ["course-supervisions"],
+          bad,
+        )
+      ).status,
+    ).toBe(400);
+    expect(bad.fetch).not.toHaveBeenCalled();
+  });
   it("allows only student supervision and explicit revision actions", async () => {
     const id = "00000000-0000-4000-8000-000000000001";
     for (const path of [
@@ -58,6 +76,7 @@ describe("authenticated API boundary", () => {
       `course-supervisions/${id}/offers/${id}/decision`,
       `course-supervisions/${id}/offers/${id}/delivery`,
       `v2/artifacts/${id}/revisions`,
+      `v2/artifacts/${id}/delivery`,
     ]) {
       const deps = dependencies();
       expect((await forward(request(path), path.split("/"), deps)).status).toBe(202);

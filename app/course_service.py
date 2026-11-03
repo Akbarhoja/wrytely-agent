@@ -26,20 +26,23 @@ def tick(store, model, *, limit=20, queue_offers=False, stopped=lambda: False):
             result = run_course_supervision_once(store, model, row["user_id"], row["id"])
             if result is not None:
                 counts["checked"] += 1
-            if queue_offers and not stopped():
-                status = store.course_supervision_status(row["user_id"], row["id"])
-                if status["notification_consent"]:
-                    for offer in status["offers"]:
-                        if stopped():
-                            break
-                        if offer["state"] == "pending":
-                            store.enqueue_course_offer(row["user_id"], row["id"], offer["id"])
-                            counts["queued"] += 1
         except Exception:
             # Runtime holds failed/unknown inference. Never repeat the model call
             # here or log exception contents (which can contain private sources).
             counts["errors"] += 1
             log.warning("course_service_item_failed")
+    if queue_offers and not stopped():
+        # Recover a committed offer independently of paid model due times. These
+        # are hints, not permits; enqueue rechecks current source/consent fences.
+        for row in store.pending_course_offer_deliveries(limit=limit):
+            if stopped():
+                break
+            try:
+                store.enqueue_course_offer(row["user_id"], row["supervision_id"], row["offer_id"])
+                counts["queued"] += 1
+            except Exception:
+                counts["errors"] += 1
+                log.warning("course_service_enqueue_failed")
     return counts
 
 

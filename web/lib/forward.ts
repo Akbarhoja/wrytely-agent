@@ -18,7 +18,7 @@ const supervisionAction = new RegExp(
   "i",
 );
 const artifactFile = new RegExp(`^v2/artifacts/${resourceUuid}/file$`, "i");
-const artifactRevision = new RegExp(`^v2/artifacts/${resourceUuid}/revisions$`, "i");
+const artifactRevision = new RegExp(`^v2/artifacts/${resourceUuid}/(?:revisions|delivery)$`, "i");
 type Dependencies = {
   configured: boolean;
   backend: string | undefined;
@@ -47,6 +47,7 @@ export async function forward(request: Request, path: string[], deps: Dependenci
         documentRead ||
         fileRead ||
         supervisionRead.test(route) ||
+        route === "course-supervisions" ||
         connectionRead ||
         /^tasks\/[0-9a-f-]{36}$/i.test(route) ||
         /^sources\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(route)
@@ -73,15 +74,17 @@ export async function forward(request: Request, path: string[], deps: Dependenci
   if (documentRead || connectionRead || fileRead || courseRoute || artifactRevision.test(route)) {
     const url = new URL(request.url);
     const allowed =
-      route === "source-connections"
-        ? ["limit", "cursor"]
-        : canvasCoverage.test(route)
-          ? ["limit", "after"]
-          : documentList.test(route)
-            ? ["limit", "before"]
-            : documentEvidence.test(route)
-              ? ["check_id", "first_slot", "limit"]
-              : [];
+      route === "course-supervisions" && request.method === "GET"
+        ? ["connection_id", "course_id"]
+        : route === "source-connections"
+          ? ["limit", "cursor"]
+          : canvasCoverage.test(route)
+            ? ["limit", "after"]
+            : documentList.test(route)
+              ? ["limit", "before"]
+              : documentEvidence.test(route)
+                ? ["check_id", "first_slot", "limit"]
+                : [];
     const keys = [...url.searchParams.keys()];
     if (
       url.search.length > 2048 ||
@@ -89,6 +92,8 @@ export async function forward(request: Request, path: string[], deps: Dependenci
       keys.some((key) => !allowed.includes(key))
     )
       return json(400, "Invalid result request.");
+    if (route === "course-supervisions" && request.method === "GET" && keys.length !== 2)
+      return json(400, "Connection and course required.");
     query = url.search;
   }
   if (request.method === "POST" && request.headers.get("origin") !== new URL(request.url).origin) {

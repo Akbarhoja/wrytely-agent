@@ -60,6 +60,17 @@ def register_course_supervision(api, *, identity_dependency, database_dependency
     DB = Annotated[Store, Depends(database_dependency)]
     router = APIRouter(prefix="/v1/course-supervisions", route_class=SupervisionRoute)
 
+    @router.get("")
+    def find(request: Request, user: User, db: DB):
+        query = _queries(request, {"connection_id", "course_id"})
+        if set(query) != {"connection_id", "course_id"}:
+            raise ValueError("Connection and course required")
+        return {
+            "supervision": db.find_course_supervision(
+                user.user_id, query["connection_id"], query["course_id"]
+            )
+        }
+
     @router.post("")
     def enable(body: EnableIn, request: Request, user: User, db: DB):
         _queries(request, set())

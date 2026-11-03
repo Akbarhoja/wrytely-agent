@@ -70,6 +70,29 @@ def test_revision_is_explicit_private_and_replays_existing_task(device):
     assert api.post(path, json=body).status_code == 401
 
 
+def test_file_delivery_requires_explicit_owner_request_without_caller_payload(device):
+    from test_artifact_delivery import prepared_file
+
+    db, saved = prepared_file(device)
+    api = client(device)
+    path = f"/v2/artifacts/{saved['id']}/delivery"
+    first = api.post(path, headers=auth())
+    assert first.status_code == 200, first.text
+    assert first.headers["cache-control"] == "no-store"
+    assert api.post(path, headers=auth()).json() == first.json()
+    db.provision("user_bob")
+    assert api.post(path, headers=auth("bob")).status_code == 404
+    assert api.post(path, json={"recipient": "15555550999"}, headers=auth()).status_code == 400
+    assert api.post(path).status_code == 401
+    with db.connection() as conn:
+        assert (
+            conn.execute("SELECT count(*) AS n FROM wrytely_agent.whatsapp_outbound").fetchone()[
+                "n"
+            ]
+            == 1
+        )
+
+
 @pytest.mark.parametrize("suffix", ["file", "revisions"])
 def test_result_database_errors_are_private(device, monkeypatch, suffix):
     def fail(*args, **kwargs):

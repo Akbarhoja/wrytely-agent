@@ -48,6 +48,23 @@ def test_enable_status_replay_and_private_projection(device):
     assert checked(api.get(f"{ROOT}/{monitor['id']}", headers=auth())) == again
 
 
+def test_lookup_does_not_enable_refill_or_choose_an_owner(device):
+    db = device[0]
+    api = client(device)
+    query = {"connection_id": str(device[1]["connection_id"]), "course_id": "101"}
+    assert checked(api.get(ROOT, params=query, headers=auth())) == {"supervision": None}
+    _, monitor, _ = setup(device)
+    found = checked(api.get(ROOT, params=query, headers=auth()))["supervision"]
+    assert found["id"] == str(monitor["id"]) and found["calls_reserved"] == 0
+    db.provision("user_bob")
+    checked(api.get(ROOT, params=query, headers=auth("bob")), 404)
+    checked(api.get(ROOT, params={**query, "verified_user": "user_bob"}, headers=auth()), 400)
+    db.rotate_or_revoke("user_alice", device[1]["connection_id"])
+    assert checked(api.get(ROOT, params=query, headers=auth()))["supervision"]["id"] == str(
+        monitor["id"]
+    )
+
+
 def test_accept_replays_exact_existing_draft_after_handoff_failure(device, monkeypatch):
     monitor, item = offer(device)
     api = client(device)
