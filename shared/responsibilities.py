@@ -107,6 +107,13 @@ class ResponsibilityStore:
         ).fetchone()
         if task["kind"] != "academic":
             return
+        revision = conn.execute(
+            "SELECT specification->'revision' AS revision FROM wrytely_agent.drafting_requests "
+            "WHERE task_id=%s AND agent_id=%s",
+            (lease.task_id, lease.agent_id),
+        ).fetchone()
+        if revision and revision["revision"]:
+            return
         row = conn.execute(
             "SELECT * FROM wrytely_agent.responsibilities WHERE id=%s AND agent_id=%s FOR UPDATE",
             (task["responsibility_id"], lease.agent_id),
@@ -129,7 +136,8 @@ class ResponsibilityStore:
             "UPDATE wrytely_agent.responsibilities r SET status='blocked', "
             "status_reason='task_execution_failed' WHERE r.agent_id=%s AND r.status='active' "
             "AND EXISTS (SELECT 1 FROM wrytely_agent.tasks t "
-            "WHERE t.responsibility_id=r.id AND t.status='blocked')",
+            "WHERE t.responsibility_id=r.id AND t.status='blocked' "
+            "AND t.last_error IS DISTINCT FROM 'superseded_by_revision')",
             (agent_id,),
         )
 

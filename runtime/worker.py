@@ -67,6 +67,7 @@ def run_episode(store: Store, model: ModelClient, settings: Settings, lease: Tas
                 for item in request["rubric"]
             ],
             max_revisions=request["max_revisions"],
+            student_revision=request.get("revision"),
         )
         if outcome["state"] == "ready":
             store.complete(

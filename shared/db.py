@@ -11,6 +11,7 @@ from psycopg.types.json import Jsonb
 from contracts.models import TaskLease
 from shared.academic_memory import AcademicMemoryStore
 from shared.academic_reads import AcademicReadStore
+from shared.artifact_revisions import ArtifactRevisionStore
 from shared.artifacts import ArtifactStore
 from shared.bound_responsibilities import BoundResponsibilityStore
 from shared.canvas_document_cleanup import CanvasDocumentCleanupStore
@@ -56,6 +57,7 @@ class Store(
     AcademicMemoryStore,
     DeliveryStore,
     ArtifactStore,
+    ArtifactRevisionStore,
     DraftingTaskStore,
     ConnectionStatusStore,
     AcademicReadStore,
