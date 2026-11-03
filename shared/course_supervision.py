@@ -286,6 +286,20 @@ class CourseSupervisionStore:
             ).fetchall()
             return row
 
+    def find_course_supervision(self, verified_user, connection_id, course_id):
+        """Session-owned lookup only; never enroll, resume or refill on page reload."""
+        course = validate_course(course_id)
+        with self.connection() as conn:
+            agent, _ = self._read_identity(conn, verified_user, None)
+            connection = self._read_connection(conn, agent, _uuid(connection_id))
+            row = conn.execute(
+                "SELECT id FROM wrytely_agent.course_supervisions "
+                "WHERE agent_id=%s AND connection_id=%s AND course_id=%s",
+                (agent, connection["id"], course),
+            ).fetchone()
+        # Release the first transaction's agent lock before the original private read.
+        return self.course_supervision_status(verified_user, row["id"]) if row else None
+
     def decide_course_offer(self, verified_user, supervision_id, offer_id, *, accept):
         """Persist explicit student decision; return existing draft API arguments.
 

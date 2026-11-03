@@ -12,6 +12,12 @@ source store or message queue is introduced. Original planner/draft pipeline rem
   remains available after source disconnect. Enable replay is not an unknown-call reset.
 - course_supervision_status(verified_user, supervision_id) returns persisted state,
   next_check_at, calls_reserved, call_limit, last_decision, reason and private offers.
+- find_course_supervision(verified_user, connection_id, course_id) returns that same
+  private status or None for a never-enabled course. Owned connection required;
+  another student's connection returns Not found. This read-only lookup never
+  enables/resumes a monitor, replenishes calls or clears holds; paused/disconnected
+  historical status remains available for the owner's controls. M can expose it
+  through strict session HTTP for website reload/cross-device recovery.
 - decide_course_offer(verified_user, supervision_id, offer_id, accept=bool) persists
   an explicit current-source decision. On acceptance returns draft_request arguments
   for existing create_canvas_draft_responsibility(verified_user, **draft_request).

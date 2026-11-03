@@ -121,6 +121,24 @@ def test_cross_account_and_course_rejected(device):
         db.course_supervision_status("user_bob", monitor["id"])
 
 
+def test_owned_course_lookup_is_read_only_and_survives_pause_and_disconnect(device):
+    db, linked = device
+    assert db.find_course_supervision("user_alice", linked["connection_id"], "101") is None
+    db, monitor, _ = setup(device)
+    run_course_supervision_once(db, Model(decision("wait")), "user_alice", monitor["id"])
+    expected = db.course_supervision_status("user_alice", monitor["id"])
+    assert db.find_course_supervision("user_alice", linked["connection_id"], "101") == expected
+    assert db.find_course_supervision("user_alice", linked["connection_id"], "999") is None
+    db.provision("user_bob")
+    with pytest.raises(LookupError):
+        db.find_course_supervision("user_bob", linked["connection_id"], "101")
+    db.pause_course_supervision("user_alice", monitor["id"])
+    db.rotate_or_revoke("user_alice", linked["connection_id"])
+    recovered = db.find_course_supervision("user_alice", linked["connection_id"], "101")
+    assert recovered["state"] == "paused" and recovered["calls_reserved"] == 1
+    assert not {"agent_id", "lease_token", "inspections", "snapshot_digest"} & recovered.keys()
+
+
 def test_pause_fences_inflight_and_remains_possible_after_disconnect(device):
     db, monitor, _ = setup(device)
     claim = db.claim_course_supervision("user_alice", monitor["id"])
