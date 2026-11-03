@@ -14,13 +14,14 @@ from contracts.templates import TemplatePayload, TextPayload
 class DeliveryClaim:
     action_id: UUID
     agent_id: UUID
-    task_id: UUID
+    task_id: UUID | None
     recipient: str
     content: str
     link_generation: UUID | None
     worker_id: str
     attempt_token: UUID
     deadline: datetime
+    offer_id: UUID | None = None
 
 
 @dataclass(frozen=True)
