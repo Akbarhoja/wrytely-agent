@@ -8,6 +8,13 @@ remains required. Outlook is optional/paused; P0 WhatsApp remains Murtazo's.
 
 ## Current installed acceptance run
 
+Diagnostic follow-up0.2.3 preserves the document collector's fixed validation and
+scan-conflict codes through the host boundary instead of collapsing them to
+host_failed. UI displays only a fixed allowlist of diagnostic codes, never arbitrary
+provider/source error text. All559NodePASS, including host/restart propagation and
+UI redaction. Same-folder package permissions are unchanged. The underlying live
+failure remains unresolved; previous generic error cannot be decoded retroactively.
+
 Collector diagnostic follow-up0.2.2 fixes lost stop reasons: a terminal collection
 error used to disable the host durably but keep its reason only in worker memory.
 Status after worker recreation could therefore show only paused. The host now stores

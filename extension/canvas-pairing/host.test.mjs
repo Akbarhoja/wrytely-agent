@@ -235,6 +235,26 @@ test("legacy preferences load without granting access; untrusted stop text fails
   assert.equal(status.reason, "host_state_invalid");
   assert.ok(!JSON.stringify(status).includes("PRIVATE"));
 });
+test("document and scan conflict codes survive the host boundary and restart", async () => {
+  for (const code of [
+    "invalid_collection",
+    "unsafe_pagination",
+    "invalid_document_input",
+    "discovery_lease_expired",
+    "discovery_checkpoint_changed",
+    "collector_failed",
+  ]) {
+    const f = fixture();
+    await f.host.enable();
+    f.result = { state: "blocked", reason: code, message: "PRIVATE source" };
+    assert.equal((await f.host.collect()).reason, code);
+    const next = await createCanvasHost(f.options).status();
+    assert.equal(next.reason, code);
+    assert.equal(next.enabled, false);
+    assert.equal(f.scheduled.size, 0);
+    assert.ok(!JSON.stringify(next).includes("PRIVATE"));
+  }
+});
 test("pause during collector prevents stale completion and duplicate calls", async () => {
   const f = fixture();
   await f.host.enable();

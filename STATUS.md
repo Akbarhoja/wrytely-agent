@@ -30,6 +30,11 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+Collector0.2.3 additionally retains fixed document-validation/scan-conflict codes
+through the host boundary; unknown errors still redact. All559NodePASS. Same-folder
+package prepared with unchanged permissions. Live failure cause and recovery are
+still unverified; diagnostic improvements do not close installed acceptance.
+
 P1 collector diagnostic0.2.2 preserves allowlisted terminal stop codes across worker
 recreation instead of losing the reason behind a paused display. Explicit pause or
 enable clears the code; no automatic retry/access expansion. Legacy preferences and

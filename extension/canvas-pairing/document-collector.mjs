@@ -8,7 +8,7 @@ const supported = (key) =>
   /^[1-9][0-9]{0,19}\/(assignments|syllabus|pages|announcements|discussions|submissions|grades|modules|files)$/.test(
     key,
   );
-const controlled = new Set([
+export const DOCUMENT_COLLECTION_ERRORS = Object.freeze([
   "login_required",
   "permission_denied",
   "rate_limited",
@@ -35,6 +35,7 @@ const controlled = new Set([
   "unsafe_file_url",
   "unsafe_file_redirect",
 ]);
+const controlled = new Set(DOCUMENT_COLLECTION_ERRORS);
 const summary = (s, action) => ({
   state: "progress",
   action,

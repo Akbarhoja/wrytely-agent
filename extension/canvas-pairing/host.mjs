@@ -1,6 +1,8 @@
 // Connector availability only. No installation, model scheduler or second source journal.
 import { createPairingClient } from "./client.mjs";
 import { checkedOrigin } from "../canvas-feasibility/probe.mjs";
+import { DOCUMENT_COLLECTION_ERRORS } from "./document-collector.mjs";
+import { discoveryConflicts } from "./discovery.mjs";
 
 export const HOST_ALARMS = Object.freeze({
   periodic: "wrytely.canvas.host.periodic.v1",
@@ -17,6 +19,9 @@ const transient = new Set([
   "file_access_failed",
 ]);
 const reasons = new Set([
+  ...DOCUMENT_COLLECTION_ERRORS,
+  ...discoveryConflicts.map((code) => `discovery_${code}`),
+  "collector_failed",
   ...transient,
   "login_required",
   "permission_denied",

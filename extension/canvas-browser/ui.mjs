@@ -33,6 +33,51 @@ const reasonCopy = {
   permission_denied:
     "Canvas did not allow this read. Check the connection and course access.",
 };
+// Display only internal, fixed codes. Never echo a source/provider error string.
+const diagnosticReasons = new Set([
+  "invalid_document_input",
+  "invalid_collection",
+  "unsafe_pagination",
+  "pagination_cycle",
+  "invalid_pagination",
+  "invalid_provider_id",
+  "size_limit",
+  "login_or_non_json",
+  "invalid_response",
+  "unsafe_file_url",
+  "unsafe_file_redirect",
+  "collector_failed",
+  ...[
+    "ambiguous_observation_time",
+    "document_conflict",
+    "document_expired",
+    "document_not_ready",
+    "resource_format_conflict",
+    "duplicate_resource_item",
+    "finish_previous_resource",
+    "resource_rewind",
+    "checkpoint_changed",
+    "course_not_discovered",
+    "course_scope_limit",
+    "cursor_cycle",
+    "duplicate_course_page",
+    "generation_changed",
+    "identity_required",
+    "incomplete_resource",
+    "lease_expired",
+    "lease_replaced",
+    "pagination_complete_or_limit",
+    "reconnect_required",
+    "replay_conflict",
+    "resource_not_selected",
+    "resource_terminal",
+    "resources_open",
+    "resume_existing_scan",
+    "scan_terminal",
+    "scope_changed",
+    "subject_changed",
+  ].map((code) => `discovery_${code}`),
+]);
 const headings = {
   paused: "Collection is paused",
   ready: "Collection is enabled",
@@ -123,7 +168,9 @@ export function createControls({
       view.verified = false;
       view.feedback =
         reasonCopy[reply.reason] ??
-        "Collection needs attention. Refresh status and verify the connection.";
+        (diagnosticReasons.has(reply.reason)
+          ? `Collection stopped. Diagnostic code: ${reply.reason}. Keep it paused and share this code with Wrytely support.`
+          : "Collection needs attention. Refresh status and verify the connection.");
       view.tone = "warning";
     }
     return reply.state !== "blocked";
