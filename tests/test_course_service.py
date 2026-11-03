@@ -25,6 +25,13 @@ class Store:
     def enqueue_course_offer(self, user, monitor, offer):
         self.queued.append((user, monitor, offer))
 
+    def pending_course_offer_deliveries(self, *, limit):
+        return (
+            []
+            if self.queued
+            else [{"user_id": "stored_owner", "supervision_id": "one", "offer_id": "offer"}]
+        )
+
 
 def test_ticks_use_stored_identities_and_do_not_send_by_default(monkeypatch):
     calls = []
@@ -99,3 +106,32 @@ def test_real_store_restart_keeps_due_time_or_unknown_hold(device, unknown):
     assert model.calls == 1
     status = db.course_supervision_status("user_alice", monitor["id"])
     assert status["state"] == ("blocked" if unknown else "ready")
+
+
+def test_saved_offer_recovery_needs_no_model_call_and_never_requeues_unknown(device):
+    from test_course_offer_delivery import ACCOUNT, prepared
+
+    from contracts.models import DeliveryResult
+
+    db, monitor, _ = prepared(device)
+    with db.connection() as conn:
+        conn.execute(
+            "UPDATE wrytely_agent.course_supervisions "
+            "SET next_check_at=now()+interval '1 day' WHERE id=%s",
+            (monitor["id"],),
+        )
+    model = Model(decision("wait"))
+    assert tick(db, model, limit=1, queue_offers=True) == {"checked": 0, "queued": 1, "errors": 0}
+    assert model.calls == 0
+    restarted = RealStore(db._url, canvas_origins=db._canvas_origins)
+    claim = restarted.claim_whatsapp_delivery("one")
+    assert restarted.authorize_whatsapp_send(claim, **ACCOUNT).state == "permitted"
+    restarted.record_whatsapp_result(
+        claim, DeliveryResult(internal_id=claim.action_id, state="unknown")
+    )
+    assert tick(restarted, model, limit=1, queue_offers=True) == {
+        "checked": 0,
+        "queued": 0,
+        "errors": 0,
+    }
+    assert model.calls == 0

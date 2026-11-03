@@ -4,6 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import Field
+from starlette.concurrency import run_in_threadpool
 
 from app.course_supervision_api import SupervisionRoute
 from app.private_artifact_api import _queries
@@ -47,6 +48,15 @@ def register_course_results(api, *, identity_dependency, database_dependency):
         _queries(request, set())
         return db.request_private_artifact_revision(
             user.user_id, artifact_id, body.instructions, body.request_key
+        )
+
+    @router.post("/{artifact_id}/delivery")
+    async def deliver(artifact_id: str, request: Request, user: User, db: DB):
+        _queries(request, set())
+        if await request.body():
+            raise ValueError("File delivery has no caller payload")
+        return await run_in_threadpool(
+            db.enqueue_checked_artifact_delivery, user.user_id, artifact_id
         )
 
     api.include_router(router)

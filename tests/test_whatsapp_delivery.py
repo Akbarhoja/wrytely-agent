@@ -12,6 +12,55 @@ from shared.db import Store
 ACCOUNT = {"business_id": "456", "phone_number_id": "123"}
 
 
+@pytest.mark.parametrize(
+    "mode", ["success", "upload_timeout", "send_timeout", "pause_after_upload"]
+)
+def test_checked_file_upload_rechecks_control_and_never_retries(device, mode):
+    import json
+
+    from test_artifact_delivery import ACCOUNT as file_account
+    from test_artifact_delivery import prepared_file
+
+    from integrations.whatsapp_delivery import run_once
+    from runtime.artifact_rendering import render_private_artifact_docx
+
+    db, saved = prepared_file(device)
+    file_account = {**file_account, "phone_number_id": "123"}
+    expected = render_private_artifact_docx(db, "user_alice", saved["id"]).content
+    db.enqueue_checked_artifact_delivery("user_alice", saved["id"])
+    calls = []
+
+    def handle(request):
+        calls.append(request)
+        if request.url.path.endswith("/media"):
+            assert expected in request.content
+            assert request.headers["content-type"].startswith("multipart/form-data;")
+            if mode == "upload_timeout":
+                raise httpx.ReadTimeout("Lost upload", request=request)
+            if mode == "pause_after_upload":
+                db.set_paused("user_alice", True)
+            return httpx.Response(200, json={"id": "media_one"})
+        payload = json.loads(request.content)
+        assert payload["type"] == "document"
+        assert payload["document"] == {"id": "media_one", "filename": f"wrytely-{saved['id']}.docx"}
+        assert "link" not in payload["document"]
+        if mode == "send_timeout":
+            raise httpx.ReadTimeout("Lost send", request=request)
+        return httpx.Response(200, json={"messages": [{"id": "wamid.file"}]})
+
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        adapter = WhatsAppAdapter(
+            client=client,
+            token="test",
+            phone_number_id=file_account["phone_number_id"],
+            api_version="v23.0",
+        )
+        args = dict(worker_id="file-one", **file_account)
+        assert run_once(db, adapter, **args) == ("accepted" if mode == "success" else "unknown")
+        assert run_once(db, adapter, **args) == "idle"
+    assert len(calls) == (1 if mode in {"upload_timeout", "pause_after_upload"} else 2)
+
+
 @pytest.mark.parametrize("lost", [False, True])
 def test_reply_template_uses_typed_payload_and_never_resends(store, ready_reply, lost):
     import json

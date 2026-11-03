@@ -10,6 +10,89 @@ import pytest
 from integrations.whatsapp import WhatsAppAdapter, extract_texts, verify_signature
 
 
+def file_descriptor():
+    from contracts.templates import ArtifactPayload
+
+    artifact = str(uuid4())
+    content = b"synthetic immutable checked Word bytes"
+    return ArtifactPayload(
+        file_id=str(uuid4()),
+        artifact_id=artifact,
+        check_id=str(uuid4()),
+        filename=f"wrytely-{artifact}.docx",
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        sha256=hashlib.sha256(content).hexdigest(),
+        byte_length=len(content),
+    ), content
+
+
+@pytest.mark.parametrize("change", ["bytes", "filename", "hash"])
+def test_document_upload_rejects_bytes_outside_authorization_before_network(change):
+    descriptor, content = file_descriptor()
+    if change == "bytes":
+        content += b"changed"
+    elif change == "filename":
+        descriptor = descriptor.model_copy(update={"filename": "../private.docx"})
+    else:
+        descriptor = descriptor.model_copy(update={"sha256": "0" * 64})
+    calls = []
+    with httpx.Client(
+        transport=httpx.MockTransport(lambda request: calls.append(request))
+    ) as client:
+        adapter = WhatsAppAdapter(
+            client=client, token="test", phone_number_id="123", api_version="v23.0"
+        )
+        with pytest.raises(ValueError):
+            adapter.upload_document(descriptor=descriptor, content=content, action_id=uuid4())
+    assert calls == []
+
+
+@pytest.mark.parametrize("change", ["account", "action", "descriptor"])
+def test_document_media_cannot_be_reused_for_another_account_action_or_hash(change):
+    from integrations.whatsapp import UploadedDocument
+
+    descriptor, _ = file_descriptor()
+    action = uuid4()
+    media = UploadedDocument(
+        "media_one",
+        "456" if change == "account" else "123",
+        uuid4() if change == "action" else action,
+        descriptor,
+    )
+    if change == "descriptor":
+        descriptor = descriptor.model_copy(update={"sha256": "0" * 64})
+    calls = []
+    with httpx.Client(
+        transport=httpx.MockTransport(lambda request: calls.append(request))
+    ) as client:
+        adapter = WhatsAppAdapter(
+            client=client, token="test", phone_number_id="123", api_version="v23.0"
+        )
+        with pytest.raises(ValueError):
+            adapter.send_document(
+                recipient="15555550123", media=media, descriptor=descriptor, action_id=action
+            )
+    assert calls == []
+
+
+@pytest.mark.parametrize("response", [{}, {"id": "https://public.invalid/file"}, {"id": 123}])
+def test_document_upload_bad_receipt_does_not_send_or_retry(response):
+    descriptor, content = file_descriptor()
+    calls = []
+
+    def handle(request):
+        calls.append(request)
+        return httpx.Response(200, json=response)
+
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        adapter = WhatsAppAdapter(
+            client=client, token="test", phone_number_id="123", api_version="v23.0"
+        )
+        with pytest.raises(ValueError):
+            adapter.upload_document(descriptor=descriptor, content=content, action_id=uuid4())
+    assert len(calls) == 1 and calls[0].url.path.endswith("/media")
+
+
 def status_payload(statuses):
     return {
         "object": "whatsapp_business_account",

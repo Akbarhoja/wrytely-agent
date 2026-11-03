@@ -22,6 +22,10 @@ message. A call ceiling is not paid activation approval.
 
 Additional session routes:
 
+- GET `/v1/course-supervisions?connection_id=...&course_id=...`: read-only owned
+  status lookup, returning nullable `supervision`. Never enrolls or refills. The
+  web controls use this rather than browser persistence or automatic enable calls.
+
 - POST `/v1/course-supervisions/{id}/notifications`: strict boolean `consent` for
   separate proactive opt-in.
 - POST `/v1/course-supervisions/{id}/offers/{offer_id}/delivery`: empty body;
@@ -30,6 +34,8 @@ Additional session routes:
   digest and check headers; no public file link.
 - POST `/v2/artifacts/{id}/revisions`: student `instructions` and stable
   `request_key` handed to the existing private revision task method.
+- POST `/v2/artifacts/{id}/delivery`: empty body; explicit request for the checked
+  artifact through the existing one-use outbox. No caller recipient/URL/file body.
 
 Enable returns the student status projection rather than the raw Store row, so
 leases and inspection snapshots stay internal. Enable replay does not refill the
@@ -50,14 +56,29 @@ The explicit course service uses `BudgetedMetaRouter` and trusted persisted due
 identities. See [service preparation](../deploy/ONE-COURSE-SERVICES.md) for entrypoints,
 health, stop and restart limits. No startup migration, budget grant or direct send.
 
+Checked document dispatch uploads the authorized bytes to the configured account,
+binds the returned media ID to the action/account/hash, re-reads current checked
+bytes and authority, then sends a document referencing that media ID. Upload and
+send each have a bounded timeout and no retry. Both private reads must match the
+original descriptor. Missing or ambiguous results remain unknown. Current-window
+authorization and signed receipt reconciliation remain in the original Store.
+The adapter rejects mismatched bytes/filename/hash and media from another action
+or account before sending. No public file URL is introduced.
+
+Protocol references: Meta's [upload endpoint example](https://www.postman.com/meta/whatsapp-business-platform/request/q3rsuse/upload-image)
+and its [document message schema](https://whatsapp.github.io/WhatsApp-Nodejs-SDK/api-reference/messages/document/).
+The SDK reference is archived; native provider acceptance remains an explicit live
+gate. The current Cloud API reference fetch returned HTTP429 during this audit.
+
 ## Remaining assembly and acceptance
 
-- Build the supervision web controls against these endpoints and the existing
-  private result UI. A retains collector and remaining P1 implementation.
-- Recover a saved offer awaiting enqueue independently of the next paid model check,
-  using A's requested internal selector. No parallel queue is introduced.
-- Complete signed linked-inbound acceptance/revision commands and separately
-  authorized phone file delivery once the channel boundary is ready.
+- Student web controls now wire explicit supervision/notification/offer decisions,
+  private Word download/revision and explicit file enqueue through a narrow session
+  proxy. A retains collector and remaining P1 implementation.
+- Saved offer enqueue recovery uses the published internal selector independently
+  of paid model due time, including restart/unknown-outcome exclusions.
+- Complete signed linked-inbound acceptance/revision/file commands after A publishes
+  the trusted durable intake/owner/context boundary requested in coordination.
 - Verify actual template approval, owner business verification and bounded live
   activation before WhatsApp/model operations.
 
@@ -65,6 +86,6 @@ health, stop and restart limits. No startup migration, budget grant or direct se
 
 This HTTP slice does not prove installed Canvas collection, continuous operation,
 model quality or WhatsApp delivery. Owner confirmed account restriction pending
-business verification; no live send or retry is included. Word/phone visual
+business verification (submitted and under review); no live send or retry is included. Word/phone visual
 acceptance is unverified. Test evidence
 must name the exact candidate and distinguish synthetic integration from live proof.

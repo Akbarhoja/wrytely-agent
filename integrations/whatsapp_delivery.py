@@ -1,7 +1,7 @@
 """One delivery attempt using the existing durable Store; no independent retry queue."""
 
 from contracts.models import DeliveryResult
-from contracts.templates import TemplatePayload, TextPayload
+from contracts.templates import ArtifactPayload, TemplatePayload, TextPayload
 from integrations.whatsapp import WhatsAppAdapter
 from shared.db import LeaseLost, Store
 
@@ -27,6 +27,7 @@ def run_once(
             business_id=business_id,
             phone_number_id=phone_number_id,
             supports_templates=True,
+            supports_documents=True,
             approved_templates=approved_templates,
             reply_template_key=reply_template_key,
             approved_offer_templates=approved_offer_templates,
@@ -52,6 +53,22 @@ def run_once(
                 name=payload.name,
                 language=payload.language,
                 body_parameters=payload.body_parameters,
+                action_id=claim.action_id,
+            )
+        elif isinstance(payload, ArtifactPayload):
+            original = store.read_artifact_delivery_file(claim)
+            if original.descriptor != payload:
+                raise ValueError("File authorization changed")
+            media = adapter.upload_document(
+                descriptor=payload, content=original.content, action_id=claim.action_id
+            )
+            current = store.read_artifact_delivery_file(claim)
+            if current.descriptor != payload or current.content != original.content:
+                raise ValueError("File authorization changed during upload")
+            result = adapter.send_document(
+                recipient=authorization.recipient,
+                media=media,
+                descriptor=payload,
                 action_id=claim.action_id,
             )
         else:

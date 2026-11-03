@@ -104,6 +104,11 @@ function Actions({ artifactId, enabled, onSessionExpired }: Props) {
         "Revision requested. Refresh document drafts after processing to see the new version. Your previous draft is preserved.",
       );
   }
+  async function deliver(signal: AbortSignal) {
+    await api(`v2/artifacts/${artifactId}/delivery`, { method: "POST", signal });
+    if (!signal.aborted)
+      setMessage("File delivery requested. Phone delivery has not been confirmed.");
+  }
   return (
     <section className={styles.actions} aria-label="Private draft actions">
       <button
@@ -112,6 +117,13 @@ function Actions({ artifactId, enabled, onSessionExpired }: Props) {
         onClick={() => void run(download)}
       >
         Download Word file
+      </button>
+      <button
+        className="quiet-button"
+        disabled={!available || busy}
+        onClick={() => void run(deliver)}
+      >
+        Send this file to my WhatsApp
       </button>
       <form
         onSubmit={(e) => {
