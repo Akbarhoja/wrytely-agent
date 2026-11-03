@@ -38,10 +38,17 @@ def execute(db, message):
 
 def counts(db):
     with db.connection() as conn:
-        return {
+        result = {
             table: conn.execute(f"SELECT count(*) AS n FROM wrytely_agent.{table}").fetchone()["n"]
             for table in ("messages", "tasks", "responsibilities", "whatsapp_inbound")
         }
+        result["user_messages"] = conn.execute(
+            "SELECT count(*) AS n FROM wrytely_agent.messages WHERE role='user'"
+        ).fetchone()["n"]
+        result["reply_tasks"] = conn.execute(
+            "SELECT count(*) AS n FROM wrytely_agent.tasks WHERE kind='reply'"
+        ).fetchone()["n"]
+        return result
 
 
 def test_acceptance_is_atomic_replayed_and_never_creates_a_generic_chat_task(device):
@@ -54,7 +61,9 @@ def test_acceptance_is_atomic_replayed_and_never_creates_a_generic_chat_task(dev
     restarted = Store(db._url, canvas_origins=tuple(db._canvas_origins))
     assert execute(restarted, message) == {**first, "replayed": True}
     after = counts(db)
-    assert after["messages"] == before["messages"]
+    assert after["messages"] == before["messages"] + 1  # Existing internal planner note.
+    assert after["user_messages"] == before["user_messages"]
+    assert after["reply_tasks"] == before["reply_tasks"]
     assert after["tasks"] == before["tasks"] + 1
     assert after["responsibilities"] == before["responsibilities"] + 1
     assert after["whatsapp_inbound"] == before["whatsapp_inbound"] + 1
@@ -276,7 +285,10 @@ def test_explicit_file_and_revision_commands_reuse_existing_checked_pipelines(de
     first = execute(db, message)
     assert first["state"] == "applied"
     assert execute(db, message) == {**first, "replayed": True}
-    assert counts(db)["messages"] == before["messages"]
+    after = counts(db)
+    assert after["user_messages"] == before["user_messages"]
+    assert after["reply_tasks"] == before["reply_tasks"]
+    assert after["messages"] == before["messages"] + int(kind == "revise_artifact")
     if kind == "send_artifact":
         with db.connection() as conn:
             rows = conn.execute("SELECT * FROM wrytely_agent.whatsapp_outbound").fetchall()
