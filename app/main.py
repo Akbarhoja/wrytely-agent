@@ -16,6 +16,7 @@ from starlette.concurrency import run_in_threadpool
 
 from app.canvas_document_api import register_canvas_documents
 from app.canvas_sync_api import register_canvas_sync
+from app.course_supervision_api import register_course_supervision
 from app.private_artifact_api import register_private_artifacts
 from app.source_connections import register_source_connections
 from contracts.delivery import WhatsAppStatusEvent
@@ -132,6 +133,7 @@ def create_app(
     DB = Annotated[Store, Depends(database)]
 
     register_private_artifacts(api, identity_dependency=identity, database_dependency=database)
+    register_course_supervision(api, identity_dependency=identity, database_dependency=database)
 
     register_source_connections(
         api,
