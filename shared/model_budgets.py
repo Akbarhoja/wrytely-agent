@@ -173,3 +173,15 @@ class ModelBudgetStore:
                 (lease.task_id,),
             )
             self._block_failed_responsibilities(conn, lease.agent_id)
+
+    def disable_model_budget(self, key):
+        """Operator hard stop for new reservations; never releases existing liabilities."""
+        with self.connection() as conn:
+            row = conn.execute(
+                "UPDATE wrytely_agent.model_budgets SET enabled=false WHERE id=%s "
+                "RETURNING id,enabled",
+                (key,),
+            ).fetchone()
+            if not row:
+                raise LookupError("Budget not configured")
+            return row

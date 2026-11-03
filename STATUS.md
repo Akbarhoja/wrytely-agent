@@ -1,6 +1,6 @@
 # Engineering status
 
-Updated November 2, 2026. [Plan revision7](docs/BUILD-PLAN.md) ·
+Updated November 3, 2026. [Plan revision8](docs/BUILD-PLAN.md) ·
 [Work orders](docs/WORK-ORDERS.md) · [Code audit](docs/IMPLEMENTATION-AUDIT.md) ·
 [Team coordination](https://github.com/Akbarhoja/wrytely-agent/issues/4)
 
@@ -44,6 +44,26 @@ Security Center shows Eligible for verification/Start verification. Owner has be
 asked privately to complete correct legal details/documents. M received safe status
 and exact tested runtime/renderer boundaries in coordination issue4. No legal
 submission, business change, provider send, migration023 deployment or new budget.
+
+## November3 proactive, budget and revision candidate
+
+A added distinct proactive consent and offer bindings in the existing WhatsApp
+outbox (024), current course/source/link/quiet/expiry checks, one-use authorization,
+account-scoped offer templates,3/day cap and original unknown/receipt handling.
+Cumulative global/student model budgets (025) reserve before inference; unknown
+costs remain held, overruns disable budget, and worker cannot automatically retry
+unknown budgeted inference. No allowance is initialized from credit balance.
+Student revisions now reuse original scoped tasks/drafting/checks, keep v1 immutable
+and produce checked v2. No revision-specific migration. Run41726583914 real-Postgres
+fast integration step passes at3db5182 (proactive/reply/template/budget/revision);
+web/build/extension/diagnostic pass, full backend remains pending. Latest operator
+budget hard-stop regression is being added separately.38local pure tests pass;
+local Postgres remains sandbox-blocked. New candidates are not deployed/live-accepted.
+M04b8d0c provides session-owned enable/status/pause/acceptance HTTP with12reported
+realStore/HTTP passes; A read the complete diff/tests with no blocking finding in
+that scope and is combining the exact patch for integrated CI. M retains app/web/
+transport/service ownership and continues from his branch. No protected-main merge,
+new paid call, business submission, provider send or retained migration occurred.
 
 ## Product decision and actual stage
 

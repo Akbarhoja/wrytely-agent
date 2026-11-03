@@ -145,3 +145,18 @@ def test_budget_unknown_blocks_worker_instead_of_an_automatic_retry(store, alice
         row = conn.execute("SELECT status,last_error FROM wrytely_agent.tasks").fetchone()
     assert row == {"status": "blocked", "last_error": "model_budget_or_unknown"}
     assert provider.calls == 1
+
+
+def test_operator_stop_survives_setup_replay_and_keeps_unknown_liabilities(store, alice):
+    configured(store, alice)
+    reservation = store.reserve_model_call("user_alice", "pilot", "0.10")
+    store.settle_model_call("user_alice", reservation)
+    assert store.disable_model_budget("pilot")["enabled"] is False
+    configured(store, alice)
+    with pytest.raises(ModelBudgetExceeded):
+        store.reserve_model_call("user_alice", "pilot", "0.01")
+    with store.connection() as conn:
+        row = conn.execute(
+            "SELECT state,liability_usd FROM wrytely_agent.model_call_reservations"
+        ).fetchone()
+    assert row == {"state": "unknown", "liability_usd": Decimal("0.10")}

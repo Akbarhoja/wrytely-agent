@@ -5,6 +5,9 @@ No model calls, real grant, deployment or increased allowance occurs from this c
 
 Operator-only Store methods (NEVER expose as student HTTP or model tools):
 
+- disable_model_budget(key): stops all new reservations immediately; preserves
+  known/unknown liabilities and remains disabled on configuration replay.
+
 - configure_model_budget(key, ceiling_usd=decimal_string,
   opening_liability_usd=decimal_string): explicit global allowance; opening historical
   spent/unknown liabilities cannot reset on replay. Existing records must be
