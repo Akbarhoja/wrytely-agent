@@ -50,6 +50,29 @@ class WhatsAppCommandStore:
                 if envelope.command.kind in ("accept_offer", "decline_offer")
                 else row["artifact_id"]
             )
+            if (
+                resolved is None
+                and row["course_offer_id"] is not None
+                and envelope.command.kind in ("send_artifact", "revise_artifact")
+            ):
+                # A student can request the first file by replying to the exact
+                # accepted offer, without visiting the website to find an artifact ID.
+                # Never guess the latest artifact across the student's other work.
+                artifact = conn.execute(
+                    "SELECT f.id FROM wrytely_agent.course_offers o "
+                    "JOIN wrytely_agent.responsibilities r ON r.agent_id=o.agent_id "
+                    "AND r.request_key='course-offer:'||o.id::text "
+                    "JOIN wrytely_agent.artifacts f ON f.agent_id=r.agent_id "
+                    "AND f.responsibility_id=r.id AND f.evidence_schema=2 "
+                    "WHERE o.agent_id=%s AND o.id=%s AND o.state='accepted' "
+                    "AND (%s::uuid IS NULL OR f.id=%s) "
+                    "AND NOT EXISTS (SELECT 1 FROM wrytely_agent.tasks t "
+                    "WHERE t.agent_id=r.agent_id AND t.responsibility_id=r.id "
+                    "AND t.kind='academic' AND t.status IN ('ready','running')) "
+                    "ORDER BY f.created_at DESC,f.id DESC LIMIT 1",
+                    (agent["id"], row["course_offer_id"], target, target),
+                ).fetchone()
+                resolved = artifact["id"] if artifact else None
             if resolved is None or (target is not None and target != resolved):
                 raise WhatsAppCommandRejected("command_context_unavailable")
             target = resolved

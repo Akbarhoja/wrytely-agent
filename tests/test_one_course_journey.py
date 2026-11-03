@@ -178,7 +178,11 @@ def test_one_course_offer_accept_checked_file_revision_and_new_deadline(device, 
     assert download.headers["x-artifact-sha256"] == first_file.sha256
     if command_channel:
         incoming = command_envelope(
-            saved["id"], kind="send_artifact", provider_id="journey-send", **transport_account
+            None,
+            kind="send_artifact",
+            provider_id="journey-send",
+            reply_to_provider_ref="wamid.one",
+            **transport_account,
         )
         file_receipt = db.execute_whatsapp_command(incoming, **transport_account)
         assert file_receipt["state"] == "applied"

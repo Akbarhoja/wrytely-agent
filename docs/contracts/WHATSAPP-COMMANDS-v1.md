@@ -51,8 +51,13 @@ Unknown/unlinked senders return `{state:ignored}` without retaining instructions
 A reply target must match an original typed outbox offer/document, account/number,
 recipient/current link generation, dispatch time and accepted/delivered/unknown
 state. Generic chat references, unrelated/stale link references and explicit target
-conflicts reject. Explicit target UUIDs still require ownership and existing current
-source/pause/policy/check gates; no auto-selection of the latest offer/artifact.
+conflicts reject. For send/revise replies to an ACCEPTED original offer, resolve
+only its stable course-offer responsibility and latest v2 artifact, with no academic
+work still pending/running. An explicit artifact ID must belong to that same duty.
+This lets the student ask for their first file from WhatsApp without looking up an
+artifact UUID on the website. Unaccepted offers, unfinished/no-result work and
+unrelated artifacts reject; no global latest-offer/artifact guess. Existing current
+source/pause/policy/check gates still apply when executing the file/revision action.
 
 The ORIGINAL whatsapp_inbound row stores normalized command, digest, current link
 generation and receipt; task_id staysNULL. Existing Store decision/delegation,
