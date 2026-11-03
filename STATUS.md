@@ -1,6 +1,6 @@
 # Engineering status
 
-Updated November 2, 2026. [Plan revision7](docs/BUILD-PLAN.md) ·
+Updated November 3, 2026. [Plan revision8](docs/BUILD-PLAN.md) ·
 [Work orders](docs/WORK-ORDERS.md) · [Code audit](docs/IMPLEMENTATION-AUDIT.md) ·
 [Team coordination](https://github.com/Akbarhoja/wrytely-agent/issues/4)
 
@@ -11,6 +11,59 @@ Supervisor approved revision8 one-course autonomous submission; see
 supervisor work on codex/p1-completion and fixes M’s empty-all_active finding.
 M owns WhatsApp/app/web/service assembly in parallel. This supersedes stop-before-P2;
 P0/P1 remain open. No new live activation is inferred.
+
+## One-course implementation candidate
+
+A has added persisted supervisor checks/leases/call reservations, Meta-selected
+inspect/offer/wait decisions, pinned original evidence reads, deduplicated private
+offers, explicit acceptance into the existing draft API and restartable next checks.
+Inspected course context is pinned to the accepted offer (up to8objects). M's
+empty-all_active discovery finding is fixed, including website scope guidance.
+Local596Node/134web/7supervisor-protocol tests and TypeScript/Ruff pass. Real Store
+integration runs in isolated GitHub PostgreSQL CI; local process/shared-memory
+restrictions prevent starting disposable Postgres here. No database pass inferred.
+Pending: full CI/counterpart review, M app/service/WhatsApp assembly, delivery scope,
+render/revision integration, dollar-budgeted live activation and actual one-course
+acceptance. Migration023 and supervisor are not deployed; no model calls/sends run.
+Confirmed public repository visibility and MIT license via GitHub REST. Submission
+cutoff verified November4 at7PM Mountain; proposed feature freeze3PM, upload5PM.
+
+## Latest tested one-course checkpoint — November3
+
+Executable head64b35e2 adds checked private DOCX output using original v2 private
+reads before/after render, with disclosure, cited quotes, deterministic checksum,
+XML escaping and explicit unsupported complex-equation handling. Text paragraphs
+only; native Word/phone visual acceptance, download assembly and delivery remain.
+Run41721635667 passes the dedicated real-Postgres supervisor/protocol/rendering
+integration step and web/build/extension/diagnostic jobs; full backend regression
+is still running. Local19renderer/protocol tests pass. No live model inference.
+
+Owner-side WhatsApp Manager now explicitly confirms Account Restricted: verify
+business before messaging. Connected number/Summary Approved are not clearance.
+Security Center shows Eligible for verification/Start verification. Owner has been
+asked privately to complete correct legal details/documents. M received safe status
+and exact tested runtime/renderer boundaries in coordination issue4. No legal
+submission, business change, provider send, migration023 deployment or new budget.
+
+## November3 proactive, budget and revision candidate
+
+A added distinct proactive consent and offer bindings in the existing WhatsApp
+outbox (024), current course/source/link/quiet/expiry checks, one-use authorization,
+account-scoped offer templates,3/day cap and original unknown/receipt handling.
+Cumulative global/student model budgets (025) reserve before inference; unknown
+costs remain held, overruns disable budget, and worker cannot automatically retry
+unknown budgeted inference. No allowance is initialized from credit balance.
+Student revisions now reuse original scoped tasks/drafting/checks, keep v1 immutable
+and produce checked v2. No revision-specific migration. Run41726583914 real-Postgres
+fast integration step passes at3db5182 (proactive/reply/template/budget/revision);
+web/build/extension/diagnostic pass, full backend remains pending. Latest operator
+budget hard-stop regression is being added separately.38local pure tests pass;
+local Postgres remains sandbox-blocked. New candidates are not deployed/live-accepted.
+M04b8d0c provides session-owned enable/status/pause/acceptance HTTP with12reported
+realStore/HTTP passes; A read the complete diff/tests with no blocking finding in
+that scope and is combining the exact patch for integrated CI. M retains app/web/
+transport/service ownership and continues from his branch. No protected-main merge,
+new paid call, business submission, provider send or retained migration occurred.
 
 ## Product decision and actual stage
 

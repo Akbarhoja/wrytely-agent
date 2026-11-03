@@ -28,6 +28,9 @@ def store(database_url):
     store.migrate()
     with store.connection() as conn:
         conn.execute("TRUNCATE wrytely_agent.students CASCADE")
+        # Global operator budgets intentionally outlive individual students in the
+        # product. The disposable test fixture must reset them separately.
+        conn.execute("TRUNCATE wrytely_agent.model_budgets CASCADE")
     yield store
 
 

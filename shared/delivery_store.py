@@ -10,7 +10,7 @@ from psycopg.types.json import Jsonb
 from contracts.delivery import DeliveryClaim, SendAuthorization, WhatsAppStatusEvent
 from contracts.models import DeliveryResult
 from contracts.templates import TextPayload
-from shared.template_policy import select_reply_template
+from shared.template_policy import select_offer_template, select_reply_template
 
 
 class DeliveryStore:
@@ -94,6 +94,7 @@ class DeliveryStore:
                 worker_id,
                 token,
                 deadline,
+                row["course_offer_id"],
             )
 
     def _delivery_fence(self, conn, claim):
@@ -105,9 +106,17 @@ class DeliveryStore:
         )
         row = conn.execute(
             "SELECT * FROM wrytely_agent.whatsapp_outbound WHERE id=%s AND agent_id=%s "
-            "AND task_id=%s AND worker_id=%s AND attempt_token=%s AND lease_until>now() "
+            "AND task_id IS NOT DISTINCT FROM %s AND course_offer_id IS NOT DISTINCT FROM %s "
+            "AND worker_id=%s AND attempt_token=%s AND lease_until>now() "
             "AND state='sending' FOR UPDATE",
-            (claim.action_id, claim.agent_id, claim.task_id, claim.worker_id, claim.attempt_token),
+            (
+                claim.action_id,
+                claim.agent_id,
+                claim.task_id,
+                claim.offer_id,
+                claim.worker_id,
+                claim.attempt_token,
+            ),
         ).fetchone()
         if not row:
             raise LeaseLost("Delivery attempt no longer owned")
@@ -122,6 +131,8 @@ class DeliveryStore:
         supports_templates=False,
         approved_templates=(),
         reply_template_key=None,
+        approved_offer_templates=(),
+        offer_template_key=None,
     ):
         if not business_id or not phone_number_id:
             raise ValueError("Configured WhatsApp account required")
@@ -155,7 +166,10 @@ class DeliveryStore:
                 "AND r.agent_id=t.agent_id WHERE t.id=%s AND t.agent_id=%s",
                 (row["task_id"], row["agent_id"]),
             ).fetchone()
-            if not valid or valid["status"] != "done" or valid["kind"] != "reply":
+            if row["course_offer_id"] is not None:
+                if reason is None:
+                    reason, cancel = self._authorize_course_offer(conn, row)
+            elif not valid or valid["status"] != "done" or valid["kind"] != "reply":
                 reason, cancel = "result_not_deliverable", True
             prefs = conn.execute(
                 "SELECT * FROM wrytely_agent.communication_preferences WHERE agent_id=%s",
@@ -179,13 +193,22 @@ class DeliveryStore:
                         if supports_templates is not True:
                             reason = "approved_template_required"
                         else:
-                            payload, reason = select_reply_template(
-                                approved_templates,
-                                reply_template_key,
-                                business_id=business_id,
-                                phone_number_id=phone_number_id,
-                                reply_text=row["content"],
-                            )
+                            if row["course_offer_id"] is not None:
+                                payload, reason = select_offer_template(
+                                    approved_offer_templates,
+                                    offer_template_key,
+                                    business_id=business_id,
+                                    phone_number_id=phone_number_id,
+                                    offer_text=row["content"],
+                                )
+                            else:
+                                payload, reason = select_reply_template(
+                                    approved_templates,
+                                    reply_template_key,
+                                    business_id=business_id,
+                                    phone_number_id=phone_number_id,
+                                    reply_text=row["content"],
+                                )
                     elif not 0 < len(row["content"].strip()) <= 4096:
                         reason = "text_payload_limit"
             if reason:
@@ -197,26 +220,27 @@ class DeliveryStore:
                     ("cancelled" if cancel else "deferred", reason, retry, row["id"]),
                 )
                 return SendAuthorization("cancelled" if cancel else "held", reason, retry)
-            conn.execute(
-                "UPDATE wrytely_agent.whatsapp_outbound SET dispatch_at=now(),business_id=%s, "
-                "phone_number_id=%s,hold_reason=NULL,retry_at=NULL WHERE id=%s",
-                (business_id, phone_number_id, row["id"]),
-            )
             payload = payload or TextPayload(text=row["content"])
             conn.execute(
-                "INSERT INTO wrytely_agent.episode_events(task_id,attempt,kind,data) "
-                "VALUES (%s,0,'delivery_authorized',%s)",
-                (
-                    row["task_id"],
-                    Jsonb(
-                        {
-                            "action_id": str(row["id"]),
-                            "attempt_token": str(row["attempt_token"]),
-                            "payload": payload.model_dump(mode="json"),
-                        }
-                    ),
-                ),
+                "UPDATE wrytely_agent.whatsapp_outbound SET dispatch_at=now(),business_id=%s, "
+                "phone_number_id=%s,dispatch_payload=%s,hold_reason=NULL,retry_at=NULL WHERE id=%s",
+                (business_id, phone_number_id, Jsonb(payload.model_dump(mode="json")), row["id"]),
             )
+            if row["task_id"] is not None:
+                conn.execute(
+                    "INSERT INTO wrytely_agent.episode_events(task_id,attempt,kind,data) "
+                    "VALUES (%s,0,'delivery_authorized',%s)",
+                    (
+                        row["task_id"],
+                        Jsonb(
+                            {
+                                "action_id": str(row["id"]),
+                                "attempt_token": str(row["attempt_token"]),
+                                "payload": payload.model_dump(mode="json"),
+                            }
+                        ),
+                    ),
+                )
             return SendAuthorization(
                 "permitted",
                 recipient=row["recipient"],

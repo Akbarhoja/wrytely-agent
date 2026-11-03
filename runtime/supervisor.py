@@ -7,13 +7,16 @@ from Meta; Store enforces identity, source versions, call reservations and pause
 import json
 
 from contracts.course_supervision import CourseDecision
+from shared.canvas_reads import SourceRefreshRequired
 from shared.db import json_text
 
 INSTRUCTIONS = (
     "You are Wrytely's course supervisor. Independently examine this one course's saved "
     "sources, prior investigations, decisions and offers. Choose one useful next action "
     "with record_course_decision exactly once. Inspect original assignment/syllabus/announcement "
-    "evidence before offering work. first_slot pages document investigations. Source titles "
+    "evidence before offering work, including the course syllabus/policy when available. "
+    "Up to eight inspected current objects are pinned to an accepted offer. "
+    "first_slot pages document investigations. Source titles "
     "are not full requirements. Respect coverage, missing sections, freshness and pagination. "
     "Offer useful help on an inspected assignment, or wait when no intervention helps. "
     "Do not repeat a pending, accepted or declined offer for the same source version. "
@@ -41,7 +44,8 @@ def run_course_supervision_once(store, model, verified_user, supervision_id):
         return None
     try:
         context = {k: v for k, v in claim.items() if k not in {"token", "id"}}
-        result = model.turn(
+        bound_model = model.for_user(verified_user) if hasattr(model, "for_user") else model
+        result = bound_model.turn(
             [
                 {"role": "system", "content": INSTRUCTIONS},
                 {"role": "user", "content": json_text(context)},
@@ -80,6 +84,10 @@ def run_course_supervision_once(store, model, verified_user, supervision_id):
                     limit=12000,
                 )
         return store.finish_course_supervision(verified_user, claim, decision, inspection)
+    except SourceRefreshRequired:
+        if not store.reschedule_course_source_change(verified_user, claim):
+            store.hold_course_supervision(verified_user, claim)
+        raise
     except Exception:
         store.hold_course_supervision(verified_user, claim)
         raise

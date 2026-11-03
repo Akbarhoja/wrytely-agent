@@ -1,10 +1,11 @@
 import json
+from decimal import Decimal
 from typing import Annotated
 
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
-from contracts.templates import ApprovedTemplate
+from contracts.templates import ApprovedOfferTemplate, ApprovedTemplate
 from shared.source_connections import canvas_origin
 
 
@@ -18,8 +19,15 @@ class Settings(BaseSettings):
     canvas_document_extractors: Annotated[tuple[str, ...], NoDecode] = ()
     meta_api_key: SecretStr | None = None
     meta_model: str = "muse-spark-1.3"
+    meta_budget_key: str | None = Field(default=None, min_length=1, max_length=100)
+    meta_input_usd_per_million: Decimal | None = Field(default=None, gt=0, le=10000)
+    meta_output_usd_per_million: Decimal | None = Field(default=None, gt=0, le=10000)
     whatsapp_approved_templates: list[ApprovedTemplate] = Field(default_factory=list, max_length=20)
     whatsapp_reply_template_key: str | None = None
+    whatsapp_approved_offer_templates: list[ApprovedOfferTemplate] = Field(
+        default_factory=list, max_length=20
+    )
+    whatsapp_offer_template_key: str | None = None
     whatsapp_business_number: str | None = Field(default=None, pattern=r"^[1-9][0-9]{6,14}$")
     whatsapp_access_token: SecretStr | None = None
     whatsapp_api_version: str | None = Field(default=None, pattern=r"^v[0-9]+\.0$")

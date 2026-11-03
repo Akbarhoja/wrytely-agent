@@ -26,6 +26,7 @@ CREATE TABLE wrytely_agent.course_offers (
  supervision_id uuid NOT NULL,
  object_id uuid NOT NULL,
  version_id uuid NOT NULL,
+ evidence jsonb NOT NULL,
  message text NOT NULL,
  reason text NOT NULL,
  state text NOT NULL DEFAULT 'pending' CHECK(state IN ('pending','accepted','declined','stale')),

@@ -49,6 +49,7 @@ def generate_checked_draft(
     policy: CoursePolicy,
     rubric: list[RubricItem],
     max_revisions=2,
+    student_revision=None,
 ):
     if (
         not 1 <= len(workflow_key) <= 100
@@ -97,6 +98,11 @@ def generate_checked_draft(
         "max_revisions": max_revisions,
         **({"evidence_schema": 2} if typed else {}),
     }
+    if student_revision is not None:
+        if not typed:
+            raise ValueError("Student revisions require typed private artifacts")
+        DraftArtifactV2.model_validate(student_revision["draft"])
+        spec["student_revision"] = student_revision
     saved = store.drafting_checkpoint(lease, "drafting_spec", workflow_key)
     if saved and saved != spec:
         raise RequestConflict("Workflow key reused with different instructions")
@@ -137,8 +143,8 @@ def generate_checked_draft(
         store.event(lease, "drafting_preflight", permission)
     if not permission["allowed"]:
         return {"state": "blocked", "reason": permission["reason"], "artifact_id": None}
-    feedback = None
-    previous = None
+    feedback = {"student_request": student_revision["instructions"]} if student_revision else None
+    previous = student_revision["draft"] if student_revision else None
     for revision in range(max_revisions + 1):
         key = f"{workflow_key}:{revision}"
         artifact, report = store.draft_progress(lease, key)
@@ -162,6 +168,9 @@ def generate_checked_draft(
                             "from the word-counted body:', use its exact following disclosure "
                             "line and keep it out of the body; otherwise include disclosure "
                             "in both body and field. Follow all quoted word limits. "
+                            "When previous_draft and student feedback exist, "
+                            "apply the requested revision "
+                            "while preserving source/policy/rubric/disclosure requirements. "
                             "Use feedback to "
                             "correct deficiencies "
                             "without concealing missing evidence. Never claim "

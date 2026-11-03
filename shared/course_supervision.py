@@ -128,7 +128,18 @@ class CourseSupervisionStore:
                     (row["id"],),
                 )
                 return None
-            if row["state"] != "ready" or row["next_check_at"] > now:
+            latest_event = conn.execute(
+                "SELECT max(e.created_at) AS at FROM wrytely_agent.canvas_evidence_events e "
+                "JOIN wrytely_agent.canvas_evidence_objects o ON o.id=e.object_id "
+                "AND o.agent_id=e.agent_id JOIN wrytely_agent.canvas_evidence_observations n "
+                "ON n.id=e.observation_id AND n.agent_id=e.agent_id WHERE e.agent_id=%s "
+                "AND o.connection_id=%s AND o.course_id=%s AND n.generation=%s",
+                (agent["id"], connection["id"], row["course_id"], connection["generation"]),
+            ).fetchone()["at"]
+            changed = latest_event is not None and (
+                row["last_source_event_at"] is None or latest_event > row["last_source_event_at"]
+            )
+            if row["state"] != "ready" or (row["next_check_at"] > now and not changed):
                 return None
             if row["calls_reserved"] >= row["call_limit"]:
                 conn.execute(
@@ -156,8 +167,8 @@ class CourseSupervisionStore:
                 "UPDATE wrytely_agent.course_supervisions SET state='running',lease_token=%s,"
                 "lease_until=clock_timestamp()+interval '5 minutes',"
                 "calls_reserved=calls_reserved+1,"
-                "snapshot_digest=%s,inspections=%s WHERE id=%s",
-                (token, digest, Jsonb(inspections), row["id"]),
+                "snapshot_digest=%s,inspections=%s,last_source_event_at=%s WHERE id=%s",
+                (token, digest, Jsonb(inspections), latest_event, row["id"]),
             )
             offers = conn.execute(
                 "SELECT object_id,version_id,state FROM wrytely_agent.course_offers "
@@ -205,10 +216,22 @@ class CourseSupervisionStore:
                 else:
                     if source["kind"] != "assignment" or decision.object_id not in inspections:
                         raise ValueError("Offer requires inspected assignment")
+                    evidence = [
+                        {
+                            "object_id": s["object_id"],
+                            "version_id": s["document_version_id"] or s["latest_version_id"],
+                        }
+                        for s in sources
+                        if s["object_id"] in inspections
+                        and s["freshness"]["usable"]
+                        and not s["historical"]
+                    ]
+                    if len(evidence) > 8:
+                        raise ValueError("Offer evidence scope limit")
                     conn.execute(
                         "INSERT INTO wrytely_agent.course_offers "
-                        "(id,agent_id,supervision_id,object_id,version_id,message,reason) "
-                        "VALUES (%s,%s,%s,%s,%s,%s,%s) ON CONFLICT "
+                        "(id,agent_id,supervision_id,object_id,version_id,evidence,message,reason) "
+                        "VALUES (%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT "
                         "(supervision_id,object_id,version_id) DO NOTHING",
                         (
                             uuid4(),
@@ -216,6 +239,7 @@ class CourseSupervisionStore:
                             row["id"],
                             _uuid(decision.object_id),
                             _uuid(source["document_version_id"] or source["latest_version_id"]),
+                            Jsonb(evidence),
                             decision.message,
                             decision.reason,
                         ),
@@ -247,7 +271,8 @@ class CourseSupervisionStore:
         with self.connection() as conn:
             agent, _ = self._read_identity(conn, verified_user, None)
             row = conn.execute(
-                "SELECT id,state,next_check_at,calls_reserved,call_limit,last_decision,reason "
+                "SELECT id,state,next_check_at,calls_reserved,call_limit,last_decision,reason, "
+                "notification_consent "
                 "FROM wrytely_agent.course_supervisions WHERE agent_id=%s AND id=%s",
                 (agent, _uuid(supervision_id)),
             ).fetchone()
@@ -290,6 +315,15 @@ class CourseSupervisionStore:
                 != str(offer["version_id"])
             ):
                 raise SourceRefreshRequired()
+            for pin in offer["evidence"]:
+                current = next((s for s in sources if s["object_id"] == pin["object_id"]), None)
+                if (
+                    not current
+                    or not current["freshness"]["usable"]
+                    or str(current["document_version_id"] or current["latest_version_id"])
+                    != pin["version_id"]
+                ):
+                    raise SourceRefreshRequired()
             target = "accepted" if accept else "declined"
             if offer["state"] not in ("pending", target):
                 raise ValueError("Offer decision already recorded or stale")
@@ -302,7 +336,7 @@ class CourseSupervisionStore:
                 "draft_request": {
                     "objective": offer["message"],
                     "request_key": "course-offer:" + str(offer["id"]),
-                    "object_ids": [str(offer["object_id"])],
+                    "object_ids": [pin["object_id"] for pin in offer["evidence"]],
                 }
                 if accept
                 else None,
@@ -316,8 +350,38 @@ class CourseSupervisionStore:
             return conn.execute(
                 "SELECT s.id,a.user_id FROM wrytely_agent.course_supervisions s "
                 "JOIN wrytely_agent.agents a ON a.id=s.agent_id WHERE NOT a.paused AND "
-                "((s.state='ready' AND s.next_check_at<=now()) OR "
+                "((s.state='ready' AND (s.next_check_at<=now() OR EXISTS ("
+                "SELECT 1 FROM wrytely_agent.canvas_evidence_events e JOIN "
+                "wrytely_agent.canvas_evidence_objects o ON o.id=e.object_id "
+                "AND o.agent_id=e.agent_id "
+                "JOIN wrytely_agent.canvas_evidence_observations n ON n.id=e.observation_id "
+                "AND n.agent_id=e.agent_id WHERE e.agent_id=s.agent_id "
+                "AND o.connection_id=s.connection_id AND o.course_id=s.course_id "
+                "AND n.generation=s.generation AND (s.last_source_event_at IS NULL "
+                "OR e.created_at>s.last_source_event_at)))) OR "
                 "(s.state='running' AND s.lease_until<=now())) "
                 "ORDER BY s.next_check_at,s.id LIMIT %s",
                 (limit,),
             ).fetchall()
+
+    def reschedule_course_source_change(self, verified_user, claim):
+        """Only known source races retry; changed authority, pause and unknown inference do not."""
+        try:
+            with self.connection() as conn:
+                _, _, row = self._supervision_scope(conn, verified_user, claim["id"])
+                now = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
+                if (
+                    row["state"] != "running"
+                    or row["lease_token"] != claim["token"]
+                    or row["lease_until"] <= now
+                ):
+                    return False
+                conn.execute(
+                    "UPDATE wrytely_agent.course_supervisions SET state='ready',"
+                    "next_check_at=clock_timestamp(),lease_token=NULL,lease_until=NULL,"
+                    "inspections='{}',reason='source_changed_during_decision' WHERE id=%s",
+                    (row["id"],),
+                )
+                return True
+        except SourceRefreshRequired:
+            return False

@@ -62,3 +62,47 @@ class TemplatePayload(BaseModel):
     name: str
     language: str
     body_parameters: tuple[str, ...]
+
+
+class OfferTemplateParameter(BaseModel):
+    """Proactive content is deliberately distinct from reply-only templates."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+    source: Literal["literal", "offer_text"]
+    literal: str | None = Field(default=None, max_length=1024)
+    max_length: int = Field(default=1024, ge=1, le=4096)
+
+    @model_validator(mode="after")
+    def valid_source(self):
+        if self.source == "literal":
+            if not self.literal or not self.literal.strip() or len(self.literal) > self.max_length:
+                raise ValueError("Literal parameter must fit configured limit")
+        elif self.literal is not None:
+            raise ValueError("Offer text cannot supply a literal")
+        return self
+
+
+class ApprovedOfferTemplate(BaseModel):
+    """Operator supplies actual approval evidence; a model cannot choose this config."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    key: str = Field(pattern=r"^[a-z0-9_]{1,100}$")
+    name: str = Field(pattern=r"^[a-z0-9_]{1,512}$")
+    language: str = Field(pattern=r"^[a-z]{2,3}(?:_[A-Z]{2})?$")
+    business_id: str = Field(min_length=1, max_length=100)
+    phone_number_id: str = Field(min_length=1, max_length=100)
+    provider_approved: Literal[True]
+    body_parameters: tuple[OfferTemplateParameter, ...] = Field(min_length=1, max_length=10)
+
+    @field_validator("provider_approved", mode="before")
+    @classmethod
+    def explicit_approval(cls, value):
+        if value is not True:
+            raise ValueError("Provider approval must be explicitly true")
+        return value
+
+    @model_validator(mode="after")
+    def carries_offer(self):
+        if sum(p.source == "offer_text" for p in self.body_parameters) != 1:
+            raise ValueError("Offer template must carry full offer exactly once")
+        return self

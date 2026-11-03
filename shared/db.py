@@ -11,6 +11,7 @@ from psycopg.types.json import Jsonb
 from contracts.models import TaskLease
 from shared.academic_memory import AcademicMemoryStore
 from shared.academic_reads import AcademicReadStore
+from shared.artifact_revisions import ArtifactRevisionStore
 from shared.artifacts import ArtifactStore
 from shared.bound_responsibilities import BoundResponsibilityStore
 from shared.canvas_document_cleanup import CanvasDocumentCleanupStore
@@ -22,10 +23,12 @@ from shared.canvas_object_scope import CanvasObjectScopeStore
 from shared.canvas_reads import CanvasReadStore
 from shared.canvas_sync import CanvasSyncStore
 from shared.connection_status import ConnectionStatusStore
+from shared.course_offer_delivery import CourseOfferDeliveryStore
 from shared.course_supervision import CourseSupervisionStore
 from shared.delivery_store import DeliveryStore
 from shared.draft_intents import DraftIntentStore
 from shared.drafting_tasks import DraftingTaskStore
+from shared.model_budgets import ModelBudgetStore
 from shared.private_artifact_reads import PrivateArtifactReadStore
 from shared.responsibilities import ResponsibilityStore
 from shared.source_connections import SourceConnectionStore, canvas_origin
@@ -47,11 +50,14 @@ class QueueFull(Exception):
 
 class Store(
     CourseSupervisionStore,
+    CourseOfferDeliveryStore,
+    ModelBudgetStore,
     WhatsAppStore,
     ResponsibilityStore,
     AcademicMemoryStore,
     DeliveryStore,
     ArtifactStore,
+    ArtifactRevisionStore,
     DraftingTaskStore,
     ConnectionStatusStore,
     AcademicReadStore,

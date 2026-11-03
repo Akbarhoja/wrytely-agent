@@ -16,7 +16,9 @@ source store or message queue is introduced. Original planner/draft pipeline rem
   an explicit current-source decision. On acceptance returns draft_request arguments
   for existing create_canvas_draft_responsibility(verified_user, **draft_request).
   Use those exact arguments: stable key deduplicates a repeated HTTP request/crash.
-  Both steps recheck ownership/source scope. Do not accept model-generated user IDs.
+  The offer pins up to eight inspected current objects (assignment plus investigated
+  course policy/context); acceptance rechecks every pinned version. Both steps
+  recheck ownership/source scope. Do not accept model-generated user IDs.
 
 These methods require authenticated assembly. Internal claim/finish/hold methods must
 never be exposed as student RPCs. An offer/acceptance grants no WhatsApp delivery scope.
@@ -56,3 +58,33 @@ unbounded files are not claimed. No external tools, course writes, quiz attempts
 automatic drafting from a source. Updated source details must come from a new sync.
 No DOCX/PDF rendering, revisions, proactive channel delivery or paid deployment is
 claimed complete by this first supervisor candidate; those remain delivery work.
+
+## Checked private Word output
+
+A supplies runtime.artifact_rendering.render_private_artifact_docx(store,
+verified_user, artifact_id) -> immutable RenderedArtifact(artifact_id, check_id,
+filename, media_type, sha256, content). M's authenticated download/file-delivery
+assembly consumes the bytes. Use no-store and attachment headers; never accept an
+arbitrary body/draft from the browser, put it in a public bucket or equate rendering
+with recipient delivery authorization. All filenames are fixed UUID-based names.
+
+The helper reads the existing v2 private artifact projection, requires ready/current
+passed checks and unpaused controls, renders inert text-only DOCX, then repeats the
+same ownership/evidence/control read and compares artifact/check/content identity.
+Content SHA256 is stable. Disclosure and quoted original evidence are included;
+XML is escaped, no external relationships/macros/assets are emitted. Paragraph text
+is literal; no Markdown/table/image/equation layout claim. Complex LaTex math is
+explicitly unsupported. ZIP/XML/Unicode/control-fence tests are separate from actual
+Word/phone visual acceptance, which remains required before calling export complete.
+
+## Source-event wakeups
+
+Additive026 stores the last observed source-event timestamp per monitor. New
+course-scoped source/coverage events make a ready monitor due even before its
+model-selected next check; unchanged sync cannot create a paid polling loop.
+Claim records that event watermark with its existing call reservation and context.
+A known source race after a model result can requeue a fresh decision, preserving
+call/dollar limits and clearing obsolete investigations. Expired lease, pause,
+changed account/scope/generation or unknown inference cannot use this path. No
+source ingestion callback starts models directly; M's due service remains the only
+reasoning process. New events while the laptop is off still require an actual sync.
