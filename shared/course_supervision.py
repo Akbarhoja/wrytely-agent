@@ -128,7 +128,18 @@ class CourseSupervisionStore:
                     (row["id"],),
                 )
                 return None
-            if row["state"] != "ready" or row["next_check_at"] > now:
+            latest_event = conn.execute(
+                "SELECT max(e.created_at) AS at FROM wrytely_agent.canvas_evidence_events e "
+                "JOIN wrytely_agent.canvas_evidence_objects o ON o.id=e.object_id "
+                "AND o.agent_id=e.agent_id JOIN wrytely_agent.canvas_evidence_observations n "
+                "ON n.id=e.observation_id AND n.agent_id=e.agent_id WHERE e.agent_id=%s "
+                "AND o.connection_id=%s AND o.course_id=%s AND n.generation=%s",
+                (agent["id"], connection["id"], row["course_id"], connection["generation"]),
+            ).fetchone()["at"]
+            changed = latest_event is not None and (
+                row["last_source_event_at"] is None or latest_event > row["last_source_event_at"]
+            )
+            if row["state"] != "ready" or (row["next_check_at"] > now and not changed):
                 return None
             if row["calls_reserved"] >= row["call_limit"]:
                 conn.execute(
@@ -156,8 +167,8 @@ class CourseSupervisionStore:
                 "UPDATE wrytely_agent.course_supervisions SET state='running',lease_token=%s,"
                 "lease_until=clock_timestamp()+interval '5 minutes',"
                 "calls_reserved=calls_reserved+1,"
-                "snapshot_digest=%s,inspections=%s WHERE id=%s",
-                (token, digest, Jsonb(inspections), row["id"]),
+                "snapshot_digest=%s,inspections=%s,last_source_event_at=%s WHERE id=%s",
+                (token, digest, Jsonb(inspections), latest_event, row["id"]),
             )
             offers = conn.execute(
                 "SELECT object_id,version_id,state FROM wrytely_agent.course_offers "
@@ -339,8 +350,38 @@ class CourseSupervisionStore:
             return conn.execute(
                 "SELECT s.id,a.user_id FROM wrytely_agent.course_supervisions s "
                 "JOIN wrytely_agent.agents a ON a.id=s.agent_id WHERE NOT a.paused AND "
-                "((s.state='ready' AND s.next_check_at<=now()) OR "
+                "((s.state='ready' AND (s.next_check_at<=now() OR EXISTS ("
+                "SELECT 1 FROM wrytely_agent.canvas_evidence_events e JOIN "
+                "wrytely_agent.canvas_evidence_objects o ON o.id=e.object_id "
+                "AND o.agent_id=e.agent_id "
+                "JOIN wrytely_agent.canvas_evidence_observations n ON n.id=e.observation_id "
+                "AND n.agent_id=e.agent_id WHERE e.agent_id=s.agent_id "
+                "AND o.connection_id=s.connection_id AND o.course_id=s.course_id "
+                "AND n.generation=s.generation AND (s.last_source_event_at IS NULL "
+                "OR e.created_at>s.last_source_event_at)))) OR "
                 "(s.state='running' AND s.lease_until<=now())) "
                 "ORDER BY s.next_check_at,s.id LIMIT %s",
                 (limit,),
             ).fetchall()
+
+    def reschedule_course_source_change(self, verified_user, claim):
+        """Only known source races retry; changed authority, pause and unknown inference do not."""
+        try:
+            with self.connection() as conn:
+                _, _, row = self._supervision_scope(conn, verified_user, claim["id"])
+                now = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
+                if (
+                    row["state"] != "running"
+                    or row["lease_token"] != claim["token"]
+                    or row["lease_until"] <= now
+                ):
+                    return False
+                conn.execute(
+                    "UPDATE wrytely_agent.course_supervisions SET state='ready',"
+                    "next_check_at=clock_timestamp(),lease_token=NULL,lease_until=NULL,"
+                    "inspections='{}',reason='source_changed_during_decision' WHERE id=%s",
+                    (row["id"],),
+                )
+                return True
+        except SourceRefreshRequired:
+            return False

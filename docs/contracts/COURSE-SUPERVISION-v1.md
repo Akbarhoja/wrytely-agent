@@ -76,3 +76,15 @@ XML is escaped, no external relationships/macros/assets are emitted. Paragraph t
 is literal; no Markdown/table/image/equation layout claim. Complex LaTex math is
 explicitly unsupported. ZIP/XML/Unicode/control-fence tests are separate from actual
 Word/phone visual acceptance, which remains required before calling export complete.
+
+## Source-event wakeups
+
+Additive026 stores the last observed source-event timestamp per monitor. New
+course-scoped source/coverage events make a ready monitor due even before its
+model-selected next check; unchanged sync cannot create a paid polling loop.
+Claim records that event watermark with its existing call reservation and context.
+A known source race after a model result can requeue a fresh decision, preserving
+call/dollar limits and clearing obsolete investigations. Expired lease, pause,
+changed account/scope/generation or unknown inference cannot use this path. No
+source ingestion callback starts models directly; M's due service remains the only
+reasoning process. New events while the laptop is off still require an actual sync.

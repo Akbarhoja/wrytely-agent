@@ -7,6 +7,7 @@ from Meta; Store enforces identity, source versions, call reservations and pause
 import json
 
 from contracts.course_supervision import CourseDecision
+from shared.canvas_reads import SourceRefreshRequired
 from shared.db import json_text
 
 INSTRUCTIONS = (
@@ -83,6 +84,10 @@ def run_course_supervision_once(store, model, verified_user, supervision_id):
                     limit=12000,
                 )
         return store.finish_course_supervision(verified_user, claim, decision, inspection)
+    except SourceRefreshRequired:
+        if not store.reschedule_course_source_change(verified_user, claim):
+            store.hold_course_supervision(verified_user, claim)
+        raise
     except Exception:
         store.hold_course_supervision(verified_user, claim)
         raise

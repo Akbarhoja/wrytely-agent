@@ -196,3 +196,24 @@ def test_restart_restores_due_time_without_a_new_prompt(device):
         )["calls_reserved"]
         == 2
     )
+
+
+def test_new_source_wakes_a_future_check_and_known_race_replans_within_same_allowance(device):
+    import test_canvas_evidence as evidence
+
+    db, monitor, _ = setup(device)
+    run_course_supervision_once(db, Model(decision("wait")), "user_alice", monitor["id"])
+    assert db.due_course_supervisions() == []
+    scan = evidence.next_scan(device, "deadline-updated")
+    item = evidence.assignment()
+    item["content"] = "New source evidence"
+    receipt = evidence.upload(device, scan, evidence.body(device, scan, [item]))
+    evidence.close(device, scan, receipt)
+    assert db.due_course_supervisions() == [{"id": monitor["id"], "user_id": "user_alice"}]
+    claim = db.claim_course_supervision("user_alice", monitor["id"])
+    assert claim is not None  # next_check_at is still in the future
+    assert db.reschedule_course_source_change("user_alice", claim)
+    resumed = db.claim_course_supervision("user_alice", monitor["id"])
+    assert resumed["token"] != claim["token"]
+    db.pause_course_supervision("user_alice", monitor["id"])
+    assert not db.reschedule_course_source_change("user_alice", resumed)
