@@ -55,6 +55,20 @@ class TextPayload(BaseModel):
     text: str = Field(min_length=1, max_length=4096)
 
 
+class ArtifactPayload(BaseModel):
+    """Internal immutable file descriptor; never a public URL or model input."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    kind: Literal["artifact"] = "artifact"
+    file_id: str
+    artifact_id: str
+    check_id: str
+    filename: str
+    media_type: Literal["application/vnd.openxmlformats-officedocument.wordprocessingml.document"]
+    sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    byte_length: int = Field(ge=1, le=10485760)
+
+
 class TemplatePayload(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
     kind: Literal["template"] = "template"

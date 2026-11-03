@@ -104,6 +104,7 @@ def test_one_course_offer_accept_checked_file_revision_and_new_deadline(device):
     assert db.pending_course_offer_deliveries() == []
     # Exercise the real typed transport assembler with simulated HTTP only.
     requests = []
+    transport_account = {**ACCOUNT, "phone_number_id": "123"}
 
     def simulated_send(request):
         requests.append(request)
@@ -113,13 +114,18 @@ def test_one_course_offer_accept_checked_file_revision_and_new_deadline(device):
         adapter = WhatsAppAdapter(
             client=transport,
             token="synthetic-token",
-            phone_number_id=ACCOUNT["phone_number_id"],
+            phone_number_id=transport_account["phone_number_id"],
             api_version="v23.0",
         )
-        assert dispatch_once(db, adapter, worker_id="simulated-transport", **ACCOUNT) == "accepted"
-        assert dispatch_once(db, adapter, worker_id="restart", **ACCOUNT) == "idle"
+        assert (
+            dispatch_once(db, adapter, worker_id="simulated-transport", **transport_account)
+            == "accepted"
+        )
+        assert dispatch_once(db, adapter, worker_id="restart", **transport_account) == "idle"
     assert len(requests) == 1
-    assert db.record_whatsapp_status(status(), **ACCOUNT)["matched"]
+    assert db.record_whatsapp_status(
+        status().model_copy(update=transport_account), **transport_account
+    )["matched"]
     path = f"{ROOT}/{monitor['id']}/offers/{offer['id']}/decision"
     accepted = checked(api.post(path, headers=auth(), json={"accept": True}))
     assert checked(api.post(path, headers=auth(), json={"accept": True})) == accepted

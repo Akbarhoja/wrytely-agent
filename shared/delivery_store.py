@@ -95,6 +95,7 @@ class DeliveryStore:
                 token,
                 deadline,
                 row["course_offer_id"],
+                row["artifact_file_id"],
             )
 
     def _delivery_fence(self, conn, claim):
@@ -107,6 +108,7 @@ class DeliveryStore:
         row = conn.execute(
             "SELECT * FROM wrytely_agent.whatsapp_outbound WHERE id=%s AND agent_id=%s "
             "AND task_id IS NOT DISTINCT FROM %s AND course_offer_id IS NOT DISTINCT FROM %s "
+            "AND artifact_file_id IS NOT DISTINCT FROM %s "
             "AND worker_id=%s AND attempt_token=%s AND lease_until>now() "
             "AND state='sending' FOR UPDATE",
             (
@@ -114,6 +116,7 @@ class DeliveryStore:
                 claim.agent_id,
                 claim.task_id,
                 claim.offer_id,
+                claim.artifact_file_id,
                 claim.worker_id,
                 claim.attempt_token,
             ),
@@ -133,6 +136,7 @@ class DeliveryStore:
         reply_template_key=None,
         approved_offer_templates=(),
         offer_template_key=None,
+        supports_documents=False,
     ):
         if not business_id or not phone_number_id:
             raise ValueError("Configured WhatsApp account required")
@@ -169,6 +173,12 @@ class DeliveryStore:
             if row["course_offer_id"] is not None:
                 if reason is None:
                     reason, cancel = self._authorize_course_offer(conn, row)
+            elif row["artifact_file_id"] is not None:
+                if reason is None:
+                    if supports_documents is not True:
+                        reason = "document_transport_required"
+                    else:
+                        payload, reason, cancel = self._authorize_artifact_delivery(conn, row)
             elif not valid or valid["status"] != "done" or valid["kind"] != "reply":
                 reason, cancel = "result_not_deliverable", True
             prefs = conn.execute(
@@ -190,7 +200,9 @@ class DeliveryStore:
                     elif link["last_event_at"] is None:
                         reason = "inbound_time_unknown"
                     elif now - link["last_event_at"] >= timedelta(hours=24):
-                        if supports_templates is not True:
+                        if row["artifact_file_id"] is not None:
+                            reason = "document_conversation_required"
+                        elif supports_templates is not True:
                             reason = "approved_template_required"
                         else:
                             if row["course_offer_id"] is not None:
@@ -209,7 +221,10 @@ class DeliveryStore:
                                     phone_number_id=phone_number_id,
                                     reply_text=row["content"],
                                 )
-                    elif not 0 < len(row["content"].strip()) <= 4096:
+                    elif (
+                        row["artifact_file_id"] is None
+                        and not 0 < len(row["content"].strip()) <= 4096
+                    ):
                         reason = "text_payload_limit"
             if reason:
                 retry = None if cancel else now + timedelta(minutes=5)

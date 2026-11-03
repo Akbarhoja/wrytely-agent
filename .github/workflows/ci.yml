@@ -43,7 +43,7 @@ jobs:
       - name: One-course supervisor integration (fail fast)
         run: >-
           uv run pytest -q tests/test_course_supervision.py tests/test_supervisor_protocol.py
-          tests/test_artifact_rendering.py tests/test_course_offer_delivery.py
+          tests/test_artifact_rendering.py tests/test_artifact_delivery.py tests/test_course_offer_delivery.py
           tests/test_delivery_store.py tests/test_template_policy.py tests/test_model_budgets.py
           tests/test_artifact_revisions.py tests/test_course_supervision_api.py
           tests/test_course_result_api.py tests/test_course_service.py tests/test_whatsapp_delivery.py
