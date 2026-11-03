@@ -30,6 +30,15 @@ it no longer gates the core product. No new/duplicate CSU approval request will 
 
 ## Current work and evidence
 
+November3 diagnostic correction0.2.8 covers the legacy course checkpoint recovery
+and assignment fallbacks missed by0.2.7's document-only stage reporting. Their raw
+unexpected errors now become fixed recovery-stage codes; the host/UI retain only
+that allowlist. Settings displays the installed manifest version. All578NodePASS,
+including pending document replay/resume/inspection failure redaction and original
+successful action projections. Existing unknown saved reasons cannot be recovered
+retroactively. Same-folder package permissions unchanged; underlying live failure
+is unresolved. Browser control is disabled; API health200 is not signed-in UI proof.
+
 Installed collection stopped again with generic collector_failed; cause remains
 unresolved. Diagnostic0.2.7 preserves fixed inspect/read/prepare/commit/continue/close
 failure stages and known request-rejection codes instead of collapsing them. No

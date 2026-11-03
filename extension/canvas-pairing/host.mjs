@@ -3,6 +3,7 @@ import { createPairingClient } from "./client.mjs";
 import { checkedOrigin } from "../canvas-feasibility/probe.mjs";
 import { DOCUMENT_COLLECTION_ERRORS } from "./document-collector.mjs";
 import { discoveryConflicts } from "./discovery.mjs";
+import { RECOVERY_DIAGNOSTIC_CODES } from "./collector.mjs";
 
 export const HOST_ALARMS = Object.freeze({
   periodic: "wrytely.canvas.host.periodic.v1",
@@ -19,6 +20,7 @@ const transient = new Set([
   "file_access_failed",
 ]);
 const reasons = new Set([
+  ...RECOVERY_DIAGNOSTIC_CODES,
   ...DOCUMENT_COLLECTION_ERRORS,
   ...discoveryConflicts.map((code) => `discovery_${code}`),
   "collector_failed",

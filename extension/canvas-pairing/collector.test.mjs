@@ -1,9 +1,49 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mapCoursePage } from "./collector.mjs";
+import {
+  mapCoursePage,
+  collectCourseTick,
+  collectAssignmentTick,
+} from "./collector.mjs";
 
 const origin = "https://canvas.example.edu";
 const observed = "2026-10-31T00:00:00Z";
+for (const stage of ["recover", "resume", "inspect"]) {
+  test(`recovery failure reports ${stage} stage without leaking raw error text`, async () => {
+    const fail = async () => {
+      throw Error("PRIVATE token and content");
+    };
+    const result = await collectCourseTick({
+      inspect:
+        stage === "inspect"
+          ? fail
+          : async () => ({
+              state: "pending",
+              pending: stage === "resume" ? "resume" : "document_begin",
+            }),
+      operations: { retryDiscovery: fail, resumeDiscovery: fail },
+      conflicts: [],
+      origin,
+    });
+    assert.deepEqual(result, {
+      state: "blocked",
+      reason: `course_${stage}_failed`,
+    });
+    assert.ok(!JSON.stringify(result).includes("PRIVATE"));
+  });
+}
+test("legacy assignment inspection failures carry a bounded stage code", async () => {
+  const result = await collectAssignmentTick({
+    inspect: async () => {
+      throw Error("PRIVATE");
+    },
+    conflicts: [],
+  });
+  assert.deepEqual(result, {
+    state: "blocked",
+    reason: "assignment_inspect_failed",
+  });
+});
 const row = (extra = {}) => ({
   id: 101,
   name: "Synthetic course",

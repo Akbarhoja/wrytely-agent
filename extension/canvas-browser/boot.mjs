@@ -8,5 +8,5 @@ const controls = mountControls({
   openOptions: () => chrome.runtime.openOptionsPage(),
 });
 document.getElementById("scope").textContent =
-  `Canvas: ${new URL(config.canvasOrigin).hostname}. Wrytely service: ${new URL(config.apiOrigin).hostname}.`;
+  `Connector ${chrome.runtime.getManifest().version}. Canvas: ${new URL(config.canvasOrigin).hostname}. Wrytely service: ${new URL(config.apiOrigin).hostname}.`;
 window.addEventListener("pagehide", () => controls.dispose(), { once: true });

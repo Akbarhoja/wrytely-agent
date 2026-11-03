@@ -35,6 +35,19 @@ const reasonCopy = {
 };
 // Display only internal, fixed codes. Never echo a source/provider error string.
 const diagnosticReasons = new Set([
+  ...[
+    "inspect",
+    "begin",
+    "recover",
+    "resume",
+    "finish",
+    "close_courses",
+    "page",
+    "verify",
+  ].map((stage) => `course_${stage}_failed`),
+  ...["inspect", "close_assignments", "assignment_page", "verify"].map(
+    (stage) => `assignment_${stage}_failed`,
+  ),
   "collector_inspect_failed",
   "collector_read_failed",
   "collector_prepare_failed",
