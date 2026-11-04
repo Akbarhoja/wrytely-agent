@@ -245,7 +245,7 @@ def test_supervisor_can_inspect_current_partial_originals_without_authorizing_wo
         item = evidence.assignment()
         item.update(coverage="partial", missing=["html_text_only"])
         receipt = evidence.upload(device, scan, evidence.body(device, scan, [item]))
-        obj = receipt["observations"][0]["object_id"]
+        obj = evidence.rows(device, "canvas_evidence_objects")[0]["id"]
     evidence.close(device, scan, receipt, partial=True)
     db = device[0]
     monitor = db.enable_course_supervision("user_alice", device[1]["connection_id"], "101")
