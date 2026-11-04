@@ -23,9 +23,11 @@ from app.source_connections import register_source_connections
 from contracts.delivery import WhatsAppStatusEvent
 from contracts.models import AgentControl, Identity, MessageIn, SessionVerifier, SourceObservation
 from integrations.whatsapp import extract_statuses, extract_texts, verify_signature
+from integrations.whatsapp_commands import InvalidWhatsAppCommand, parse_command
 from shared.auth import AuthenticationError, ClerkSessionVerifier
 from shared.config import Settings
 from shared.db import QueueFull, RequestConflict, Store
+from shared.whatsapp_commands import WhatsAppCommandRejected
 
 log = logging.getLogger(__name__)
 
@@ -459,6 +461,30 @@ def create_app(
             raise HTTPException(400, "Invalid webhook payload") from None
         try:
             for message in messages:
+                try:
+                    command = parse_command(
+                        message,
+                        business_id=settings.whatsapp_business_account_id,
+                        phone_number_id=settings.whatsapp_phone_number_id,
+                    )
+                except InvalidWhatsAppCommand:
+                    continue
+                if command is not None:
+                    try:
+                        await run_in_threadpool(
+                            db.execute_whatsapp_command,
+                            command,
+                            business_id=settings.whatsapp_business_account_id,
+                            phone_number_id=settings.whatsapp_phone_number_id,
+                        )
+                    except WhatsAppCommandRejected:
+                        # Permanent envelope/replay rejection is not a chat task.
+                        pass
+                    except Exception:
+                        # No acknowledgment of an unpersisted command or echoed
+                        # provider/source diagnostics. Replay is Store-idempotent.
+                        raise HTTPException(503, "Command could not be stored") from None
+                    continue
                 await run_in_threadpool(
                     db.ingest_whatsapp, message, limit=settings.pending_task_limit
                 )

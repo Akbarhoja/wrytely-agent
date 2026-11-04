@@ -70,15 +70,36 @@ and its [document message schema](https://whatsapp.github.io/WhatsApp-Nodejs-SDK
 The SDK reference is archived; native provider acceptance remains an explicit live
 gate. The current Cloud API reference fetch returned HTTP429 during this audit.
 
-## Remaining assembly and acceptance
+## Signed WhatsApp commands
+
+The exact raw-body signature and configured account/phone filters run before the
+bounded deterministic parser. Replies to an authenticated original offer/file can
+use `/accept`, `/decline`, `/file` or `/revise` followed by feedback. An optional
+explicit owned UUID target is supported for controlled tests and recovery; the
+student's normal flow replies to the message. Bare natural-language agreement is
+not converted into acceptance. Only revision accepts feedback (at most 4000
+characters). Slash-prefixed input is reserved for explicit commands; malformed or
+unknown commands never fall through to generic reasoning.
+
+The app constructs A's typed envelope from signed sender/provider time/reply context
+and calls the original atomic intake. It never chooses an owner or issues SQL to
+resolve a phone. Commands skip generic ingestion and its chat task. LINK and ordinary
+messages keep their existing behavior. Missing/invalid timestamps or reply context
+cannot grant acceptance. Current-link/account/owned-target checks, replay receipts
+and action idempotency remain in the existing Store/028 boundary. Permanent rejection
+is safely acknowledged with no outward send; unexpected persistence failure returns
+503 without private diagnostics, allowing the provider's idempotent event replay.
+Valid signed delivery-status siblings still persist after malformed commands.
+
+## Remaining acceptance
 
 - Student web controls now wire explicit supervision/notification/offer decisions,
   private Word download/revision and explicit file enqueue through a narrow session
   proxy. A retains collector and remaining P1 implementation.
 - Saved offer enqueue recovery uses the published internal selector independently
   of paid model due time, including restart/unknown-outcome exclusions.
-- Complete signed linked-inbound acceptance/revision/file commands after A publishes
-  the trusted durable intake/owner/context boundary requested in coordination.
+- Validate the final signed command slice with focused, full and Linux CI evidence;
+  retain permanent rejection versus unpersisted failure distinctions.
 - Verify actual template approval, owner business verification and bounded live
   activation before WhatsApp/model operations.
 

@@ -27,6 +27,7 @@ class WhatsAppText:
     sender: str
     text: str
     event_at: datetime | None = None
+    reply_to_provider_ref: str | None = None
 
 
 def _event_time(timestamp: object, now: datetime) -> datetime | None:
@@ -175,6 +176,15 @@ def extract_texts(
                             sender,
                             text.strip(),
                             _event_time(message.get("timestamp"), now or datetime.now(UTC)),
+                            (
+                                message["context"]["id"]
+                                if isinstance(message.get("context"), dict)
+                                and isinstance(message["context"].get("id"), str)
+                                and 0 < len(message["context"]["id"]) <= 512
+                                else ""
+                                if "context" in message
+                                else None
+                            ),
                         )
                     )
     return result
