@@ -185,7 +185,30 @@ export function makeDocumentReader(
         throw new ProbeError("invalid_collection");
       if (topic && detail.is_announcement !== (kind === "announcements"))
         throw new ProbeError("invalid_collection");
-      details.push(topic ? { ...detail, _wrytely_entry: null } : detail);
+      // Canvas includes rubric fields only when an associated rubric exists.
+      // Interpret omission only on this verified full-detail GET, never a list
+      // row, a restricted response, explicit null or contradictory indicators.
+      const noAttachedRubric =
+        kind === "assignments" &&
+        detail.locked_for_user === false &&
+        typeof detail.name === "string" &&
+        typeof detail.description === "string" &&
+        typeof detail.published === "boolean" &&
+        Array.isArray(detail.submission_types) &&
+        [
+          "rubric",
+          "rubric_settings",
+          "use_rubric_for_grading",
+          "has_rubric",
+          "free_form_criterion_comments",
+        ].every((key) => !Object.hasOwn(detail, key));
+      details.push(
+        topic
+          ? { ...detail, _wrytely_entry: null }
+          : noAttachedRubric
+            ? { ...detail, rubric: [] }
+            : detail,
+      );
     }
     const following = nextLink(link);
     const next_cursor = following === null ? null : checked(following).href;

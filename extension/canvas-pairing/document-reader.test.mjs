@@ -258,3 +258,101 @@ test("discussion pagination preserves the default listing without switching to a
     next,
   );
 });
+
+// Only the authoritative detail request can interpret Canvas's documented
+// omission semantics. The generic mapper still treats arbitrary omission as unknown.
+async function assignmentDetail(overrides = {}) {
+  const detail = {
+    id: 17,
+    course_id: 101,
+    name: "Fictional practice",
+    description: "Read the supplied instructions.",
+    published: true,
+    locked_for_user: false,
+    submission_types: ["online_upload"],
+    due_at: null,
+    unlock_at: null,
+    lock_at: null,
+    points_possible: 10,
+    ...overrides,
+  };
+  const before = structuredClone(detail);
+  const reader = makeDocumentReader(origin, async (url) => {
+    if (url.endsWith("/profile")) return response(url, { id: 7 });
+    if (url.includes("/assignments/17?")) return response(url, detail);
+    return response(url, [{ id: 17, course_id: 101, rubric: [] }]);
+  });
+  const page = await reader("101", "assignments", null, "7");
+  assert.deepEqual(detail, before);
+  return page.data[0];
+}
+
+test("verified unlocked full detail records no attached rubric without mutating response", async () => {
+  const detail = await assignmentDetail();
+  assert.deepEqual(detail.rubric, []);
+  const { mapAssignmentObservation } =
+    await import("../canvas/assignment-observation.mjs");
+  const options = {
+    courseId: "101",
+    dateContext: "requesting_student",
+    extracted: {
+      courseId: "101",
+      assignmentId: "17",
+      text: "Read the supplied instructions.",
+      coverage: "complete",
+      missing: [],
+    },
+  };
+  const mapped = mapAssignmentObservation(detail, options).digestPayload;
+  assert.equal(mapped.coverage, "complete");
+  assert.deepEqual(mapped.missing, []);
+  const generic = { ...detail };
+  delete generic.rubric;
+  assert.ok(
+    mapAssignmentObservation(generic, options).digestPayload.missing.includes(
+      "rubric_not_observed",
+    ),
+  );
+  const partial = structuredClone(options);
+  partial.extracted.coverage = "partial";
+  partial.extracted.missing = ["linked_file_unread"];
+  assert.equal(
+    mapAssignmentObservation(detail, partial).digestPayload.coverage,
+    "partial",
+  );
+  const constrained = mapAssignmentObservation(
+    await assignmentDetail({ allowed_attempts: 2 }),
+    options,
+  ).digestPayload;
+  assert.equal(constrained.coverage, "partial");
+  assert.ok(constrained.missing.includes("assignment_constraints_unmapped"));
+});
+
+for (const [name, overrides] of [
+  ["locked", { locked_for_user: true }],
+  ["unknown lock", { locked_for_user: undefined }],
+  ["missing body", { description: null }],
+  ["missing title", { name: undefined }],
+  ["missing publication", { published: undefined }],
+  ["missing submission types", { submission_types: undefined }],
+  ["null rubric", { rubric: null }],
+  ["rubric settings", { rubric_settings: {} }],
+  ["null rubric settings", { rubric_settings: null }],
+  ["grading indicator", { use_rubric_for_grading: false }],
+  ["presence indicator", { has_rubric: true }],
+  ["comment indicator", { free_form_criterion_comments: true }],
+]) {
+  test(`does not infer absent rubric from ${name}`, async () => {
+    const detail = await assignmentDetail(overrides);
+    assert.equal(detail.rubric, overrides.rubric);
+  });
+}
+
+test("preserves associated rubric and other assignment constraints", async () => {
+  const rubric = [
+    { id: "criterion", description: "Requirement", points: 10, ratings: [] },
+  ];
+  const detail = await assignmentDetail({ rubric, allowed_attempts: 2 });
+  assert.deepEqual(detail.rubric, rubric);
+  assert.equal(detail.allowed_attempts, 2);
+});

@@ -91,6 +91,17 @@ cleanup deployment69bc53b0 SUCCESS, health200, protected401. HTMLv2 remains inac
 no scan/scope/pairing/new migration/draft/WhatsApp/continuous worker occurred.
 [Exact scope and evidence](docs/ONE-COURSE-NEXT-META-CHECK.md). No repeat authorized.
 
+## Independent Canvas readiness correction — not activated
+
+A audited collector/mapper/provider semantics on codex/p1-canvas-readiness, separate
+from approvedbb626d3. Verified unlocked full assignment-detail GETs may now record
+Canvas's documented absence of an attached rubric; generic omission/null remains
+unknown. No schema/default/readiness relaxation; incomplete extraction/constraints
+stay partial. Regression fails on old reader;621 extension tests pass. Current saved
+ECE253 missing-reason distribution is not remeasured; full content readiness remains
+unproved. [Findings and next collection order](docs/CANVAS-READINESS-AUDIT.md).
+No installed-package/API-v2/scan/model/deploy change; CI/review pending.
+
 ## Current source-readiness candidate (not activated)
 
 A added separate operator-opt-in canvas.html.v2 for supplied literal HTML text.
