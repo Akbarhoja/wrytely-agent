@@ -35,7 +35,7 @@ def main(argv: list[str] | None = None):
             "and AGENT_WHATSAPP_PHONE_NUMBER_ID"
         )
     logging.basicConfig(level=logging.INFO)
-    store = Store(settings.database_url.get_secret_value())
+    store = Store(settings.database_url.get_secret_value(), canvas_origins=settings.canvas_origins)
     worker_id = f"whatsapp-{uuid4()}"
     try:
         with httpx.Client(
