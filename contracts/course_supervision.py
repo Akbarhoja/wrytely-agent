@@ -9,9 +9,28 @@ class CourseDecision(BaseModel):
     model_config = ConfigDict(extra="forbid")
     action: Literal["inspect", "offer", "wait"]
     reason: str = Field(min_length=1, max_length=2000)
-    object_id: str = Field(max_length=36)
-    first_slot: int = Field(ge=0, le=512)
-    message: str = Field(max_length=2000)
+    object_id: str = Field(
+        max_length=36,
+        description=(
+            "For inspect/offer copy the exact object_id UUID from sources, never a Canvas ID. "
+            "Empty string for wait."
+        ),
+    )
+    first_slot: int = Field(
+        ge=0,
+        le=512,
+        description=(
+            "Zero for wait, offer and inline inspection. "
+            "Only document inspection may use a section offset."
+        ),
+    )
+    message: str = Field(
+        max_length=2000,
+        description=(
+            "Student-facing offer text only for action=offer. Empty string for inspect/wait. "
+            "Put internal explanations in reason."
+        ),
+    )
     next_check_seconds: int = Field(ge=60, le=86400)
 
     @model_validator(mode="after")
