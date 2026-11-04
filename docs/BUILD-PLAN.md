@@ -1,6 +1,12 @@
 # Wrytely academic agent — build plan
 
-Revision 7 · October 30, 2026 · Optional-email amendment October 31 · Product owner: Akbar
+Revision 8 · November 3, 2026 · Product owner: Akbar
+
+**Active delivery scope:** [One-course autonomous submission](ONE-COURSE-DELIVERY.md).
+Akbar approved one complete course journey and parallel P1/P2/P3 implementation.
+This amendment supersedes multi-course submission acceptance and stop-before-P2
+instructions below. The broader requirements remain the post-submission roadmap;
+see [preserved revision 7](archive/BUILD-PLAN-r7-2026-10-30.md).
 
 This is the authoritative product scope and delivery order. It incorporates the
 founder's Canvas-extension/Outlook decision and review of Claude's October 30 plan.
@@ -14,6 +20,17 @@ activate services, authorize account access/spending, or change executable contr
 - [Ownership and coordination](../TEAM.md)
 - [Implemented interfaces](../CONTRACTS.md)
 - [Historical revision 6](archive/BUILD-PLAN-r6-2026-10-29.md)
+
+### Quiz boundary — clarified November 2
+
+Quiz support is passive preparation and tracking. Collect titles, deadlines, time
+limits and instructions only where Canvas exposes them before an attempt. Never
+start, resume or submit an attempt, launch a timed quiz, or fetch attempt/question
+endpoints to discover hidden content. Autonomous solving/submission of graded quizzes
+is outside this plan. Topic explanation and practice questions are distinct from
+taking the graded quiz. Hidden questions stay explicitly unread; the student is
+not asked to open a quiz merely to refresh the agent's data. Quiz-specific metadata
+collection is not complete merely because its assignment title/date was discovered.
 
 ## 1. Required outcome
 

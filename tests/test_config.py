@@ -81,3 +81,35 @@ def test_operator_origin_list_is_bounded():
 def test_empty_env_list_explicitly_disables_origins(monkeypatch):
     monkeypatch.setenv("AGENT_CANVAS_ORIGINS", "[]")
     assert Settings(_env_file=None).canvas_origins == ()
+
+
+def test_canvas_extractors_are_default_off_and_operator_allowlisted(monkeypatch):
+    monkeypatch.delenv("AGENT_CANVAS_DOCUMENT_EXTRACTORS", raising=False)
+    assert Settings(_env_file=None).canvas_document_extractors == ()
+    monkeypatch.setenv("AGENT_CANVAS_DOCUMENT_EXTRACTORS", '["canvas.html.v1","canvas.pdf.v1"]')
+    assert Settings(_env_file=None).canvas_document_extractors == (
+        "canvas.html.v1",
+        "canvas.pdf.v1",
+    )
+    for value in [
+        ["arbitrary.parser"],
+        ["canvas.pdf.v1", "canvas.pdf.v1"],
+        "not json",
+        {"canvas.pdf.v1": True},
+    ]:
+        with pytest.raises(ValueError):
+            Settings(_env_file=None, canvas_document_extractors=value)
+
+
+def test_html_v2_requires_explicit_operator_allowlist_and_can_coexist_with_legacy():
+    versions = [
+        "canvas.html.v1",
+        "canvas.html.v2",
+        "canvas.pdf.v1",
+        "canvas.text.v1",
+        "canvas.json.v1",
+    ]
+    assert Settings(
+        _env_file=None, canvas_document_extractors=versions
+    ).canvas_document_extractors == tuple(versions)
+    assert "canvas.html.v2" not in Settings(_env_file=None).canvas_document_extractors

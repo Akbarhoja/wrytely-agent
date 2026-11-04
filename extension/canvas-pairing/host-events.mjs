@@ -17,13 +17,23 @@ const failed = () => ({
   enabled: false,
 });
 
-export function registerCanvasHost({ chrome, apiOrigin, canvasOrigin, host }) {
+export function registerCanvasHost({
+  chrome,
+  apiOrigin,
+  canvasOrigin,
+  host,
+  fileTransport,
+  burstSteps = 1,
+  burstBudgetMs = 15000,
+}) {
   const prior = registrations.get(chrome);
   if (prior) {
     if (
       prior.apiOrigin !== apiOrigin ||
       prior.canvasOrigin !== canvasOrigin ||
-      prior.injected !== host
+      prior.injected !== host ||
+      prior.burstSteps !== burstSteps ||
+      prior.burstBudgetMs !== burstBudgetMs
     )
       throw Error("host_already_registered");
     return prior.registration;
@@ -35,6 +45,9 @@ export function registerCanvasHost({ chrome, apiOrigin, canvasOrigin, host }) {
       canvasOrigin,
       storageArea: chrome.storage.local,
       alarms: chrome.alarms,
+      fileTransport,
+      burstSteps,
+      burstBudgetMs,
     });
   const trustedPages = new Set(
     ["popup.html", "options.html"].map((path) => chrome.runtime.getURL(path)),
@@ -43,8 +56,25 @@ export function registerCanvasHost({ chrome, apiOrigin, canvasOrigin, host }) {
     if (
       !sender ||
       sender.id !== chrome.runtime.id ||
-      "tab" in sender ||
-      !trustedPages.has(sender.url)
+      !trustedPages.has(sender.url) ||
+      (sender.origin !== undefined &&
+        sender.origin !== `chrome-extension://${chrome.runtime.id}`) ||
+      (sender.frameId !== undefined && sender.frameId !== 0)
+    )
+      return false;
+    // Chrome attaches tab/frame metadata to the full options page. It does not
+    // mean "content script": authenticate the exact own top-level page instead.
+    // https://developer.chrome.com/docs/extensions/reference/api/runtime#type-MessageSender
+    if (
+      "tab" in sender &&
+      (sender.url !== chrome.runtime.getURL("options.html") ||
+        !sender.tab ||
+        typeof sender.tab !== "object" ||
+        Array.isArray(sender.tab) ||
+        !Number.isSafeInteger(sender.tab.id) ||
+        sender.tab.id < 0 ||
+        sender.frameId !== 0 ||
+        (sender.tab.url !== undefined && sender.tab.url !== sender.url))
     )
       return false;
     if (
@@ -105,6 +135,8 @@ export function registerCanvasHost({ chrome, apiOrigin, canvasOrigin, host }) {
     apiOrigin,
     canvasOrigin,
     injected: host,
+    burstSteps,
+    burstBudgetMs,
     registration,
   });
   return registration;

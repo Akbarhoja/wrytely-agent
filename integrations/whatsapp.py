@@ -10,6 +10,15 @@ from uuid import UUID
 import httpx
 
 from contracts.models import DeliveryResult
+from contracts.templates import ArtifactPayload
+
+
+@dataclass(frozen=True)
+class UploadedDocument:
+    media_id: str
+    phone_number_id: str
+    action_id: UUID
+    descriptor: ArtifactPayload
 
 
 @dataclass(frozen=True)
@@ -18,6 +27,7 @@ class WhatsAppText:
     sender: str
     text: str
     event_at: datetime | None = None
+    reply_to_provider_ref: str | None = None
 
 
 def _event_time(timestamp: object, now: datetime) -> datetime | None:
@@ -166,6 +176,15 @@ def extract_texts(
                             sender,
                             text.strip(),
                             _event_time(message.get("timestamp"), now or datetime.now(UTC)),
+                            (
+                                message["context"]["id"]
+                                if isinstance(message.get("context"), dict)
+                                and isinstance(message["context"].get("id"), str)
+                                and 0 < len(message["context"]["id"]) <= 512
+                                else ""
+                                if "context" in message
+                                else None
+                            ),
                         )
                     )
     return result
@@ -188,6 +207,7 @@ class WhatsAppAdapter:
             raise ValueError("Configure a supported Graph API version explicitly")
         self.client = client
         self.token = token
+        self.phone_number_id = phone_number_id
         self.url = f"https://graph.facebook.com/{api_version}/{phone_number_id}/messages"
 
     def send(self, *, recipient: str, text: str, action_id: UUID) -> DeliveryResult:
@@ -246,6 +266,58 @@ class WhatsAppAdapter:
                 "to": recipient,
                 "type": "template",
                 "template": template,
+            },
+            action_id,
+        )
+
+    def upload_document(self, *, descriptor: ArtifactPayload, content: bytes, action_id: UUID):
+        """One exact-byte multipart upload; caller already consumed a file permit."""
+        if (
+            not isinstance(content, bytes)
+            or len(content) != descriptor.byte_length
+            or hashlib.sha256(content).hexdigest() != descriptor.sha256
+            or descriptor.filename != f"wrytely-{UUID(descriptor.artifact_id)}.docx"
+        ):
+            raise ValueError("Document bytes do not match authorization")
+        response = self.client.post(
+            self.url.removesuffix("/messages") + "/media",
+            headers={"Authorization": f"Bearer {self.token}"},
+            data={"messaging_product": "whatsapp", "type": descriptor.media_type},
+            files={"file": (descriptor.filename, content, descriptor.media_type)},
+            timeout=15,
+            follow_redirects=False,
+        )
+        if response.status_code != 200 or len(response.content) > 16384:
+            raise ValueError("Document upload outcome unavailable")
+        try:
+            media_id = response.json()["id"]
+            if not isinstance(media_id, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,512}", media_id):
+                raise ValueError()
+        except (ValueError, KeyError, TypeError):
+            raise ValueError("Document upload outcome unavailable") from None
+        return UploadedDocument(media_id, self.phone_number_id, action_id, descriptor)
+
+    def send_document(
+        self,
+        *,
+        recipient: str,
+        media: UploadedDocument,
+        descriptor: ArtifactPayload,
+        action_id: UUID,
+    ) -> DeliveryResult:
+        if (
+            not re.fullmatch(r"[0-9]{7,15}", recipient)
+            or media.phone_number_id != self.phone_number_id
+            or media.action_id != action_id
+            or media.descriptor != descriptor
+        ):
+            raise ValueError("Uploaded media does not match authorization")
+        return self._send_payload(
+            {
+                "messaging_product": "whatsapp",
+                "to": recipient,
+                "type": "document",
+                "document": {"id": media.media_id, "filename": descriptor.filename},
             },
             action_id,
         )

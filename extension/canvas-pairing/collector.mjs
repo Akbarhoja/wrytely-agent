@@ -44,6 +44,21 @@ const providerErrors = new Set([
   "invalid_assignment_input",
   "assignment_extraction_invalid",
 ]);
+export const RECOVERY_DIAGNOSTIC_CODES = Object.freeze([
+  ...[
+    "inspect",
+    "begin",
+    "recover",
+    "resume",
+    "finish",
+    "close_courses",
+    "page",
+    "verify",
+  ].map((stage) => `course_${stage}_failed`),
+  ...["inspect", "close_assignments", "assignment_page", "verify"].map(
+    (stage) => `assignment_${stage}_failed`,
+  ),
+]);
 const text = (value) => {
   if (typeof value !== "string" || /[\u0000\uD800-\uDFFF]/u.test(value))
     return null;
@@ -150,10 +165,11 @@ export async function collectCourseTick({
   origin,
   conflicts,
 }) {
-  let current;
+  let current,
+    action = "inspect",
+    verifying = false;
   try {
     current = await inspect();
-    let action;
     if (current.state === "idle") {
       action = "begin";
       await operations.beginDiscovery();
@@ -201,6 +217,7 @@ export async function collectCourseTick({
         mapCoursePage(page, origin, new Date().toISOString()),
       );
     }
+    verifying = true;
     current = await inspect();
     return summary(
       current,
@@ -215,7 +232,7 @@ export async function collectCourseTick({
         providerErrors.has(code) ||
         conflicts.some((c) => code === `discovery_${c}`)
           ? code
-          : "collector_failed",
+          : `course_${verifying ? "verify" : action}_failed`,
     };
   }
 }
@@ -228,6 +245,7 @@ export async function collectAssignmentTick({
   extractPage,
   conflicts,
 }) {
+  let stage = "inspect";
   try {
     let current = await inspect();
     if (
@@ -256,7 +274,7 @@ export async function collectAssignmentTick({
       active?.resource_key === resource &&
       current.checkpoint.next_cursor === null
     ) {
-      action = "close_assignments";
+      action = stage = "close_assignments";
       const complete =
         active.last_page_coverage === "complete" && !active.incomplete;
       await operations.finishAssignmentResource({
@@ -265,7 +283,7 @@ export async function collectAssignmentTick({
         reason: complete ? null : "extraction_failed",
       });
     } else {
-      action = "assignment_page";
+      action = stage = "assignment_page";
       if (
         current.checkpoint.sequence >= 10000 ||
         (active?.resource_key === resource &&
@@ -294,6 +312,7 @@ export async function collectAssignmentTick({
         items,
       });
     }
+    stage = "verify";
     current = await inspect();
     return summary(current, "progress", action);
   } catch (error) {
@@ -304,7 +323,7 @@ export async function collectAssignmentTick({
         providerErrors.has(code) ||
         conflicts.some((c) => code === `discovery_${c}`)
           ? code
-          : "collector_failed",
+          : `assignment_${stage}_failed`,
     };
   }
 }

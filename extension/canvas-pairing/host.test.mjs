@@ -2,6 +2,19 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createCanvasHost, HOST_ALARMS } from "./host.mjs";
 
+test("background host uses the connected document collector when available", async () => {
+  const f = fixture();
+  let documents = 0;
+  f.options.client.collectDocumentPage = async () => {
+    documents++;
+    return { state: "progress", action: "document_step", seen_count: 2 };
+  };
+  await f.host.enable();
+  await f.host.collect();
+  assert.equal(documents, 1);
+  assert.ok(!f.events.includes("collect"));
+});
+
 function fixture() {
   const data = {},
     events = [],
@@ -168,6 +181,85 @@ test("awaiting resources does not create continuation loop; finished waits for p
     assert.equal(f.scheduled.has(HOST_ALARMS.periodic), true);
   }
 });
+test("a catalog-only finish requests course selection instead of claiming content completion", async () => {
+  const f = fixture();
+  f.read = { state: "active", content_requested: false };
+  f.result = { state: "finished", coverage: "complete", seen_count: 7 };
+  await f.host.enable();
+  const result = await f.host.collect();
+  assert.equal(result.state, "awaiting_resources");
+  assert.equal(result.reason, "course_selection_required");
+  assert.equal(result.coverage, null);
+  assert.equal(f.scheduled.has(HOST_ALARMS.continuation), false);
+});
+test("finished empty scope does not start another catalog scan; selected scope can resume", async () => {
+  const f = fixture();
+  f.read = { state: "finished", content_requested: false };
+  await f.host.enable();
+  assert.equal((await f.host.collect()).reason, "course_selection_required");
+  assert.ok(!f.events.includes("begin"));
+  f.read = { state: "finished", content_requested: true };
+  assert.equal((await f.host.collect()).action, "begin");
+  assert.ok(f.events.includes("begin"));
+});
+test("changed-scope recovery starts a validated new scan without re-pairing", async () => {
+  const f = fixture();
+  f.result = { state: "blocked", reason: "discovery_context_changed" };
+  await f.host.enable();
+  assert.equal((await f.host.collect()).action, "begin");
+  assert.ok(f.events.includes("begin"));
+  assert.ok(!f.events.includes("bind"));
+});
+test("pause during a scope mismatch prevents recovery from starting a scan", async () => {
+  const f = fixture();
+  let release;
+  f.pending = new Promise((r) => (release = r));
+  f.result = { state: "blocked", reason: "discovery_context_changed" };
+  await f.host.enable();
+  const work = f.host.collect();
+  while (!f.events.includes("collect"))
+    await new Promise((r) => setImmediate(r));
+  await f.host.disable();
+  release();
+  assert.equal((await work).enabled, false);
+  assert.ok(!f.events.includes("begin"));
+});
+test("longer bounded bursts reduce scheduled idle overhead without exceeding step or time caps", async () => {
+  const steps = [];
+  for (const budget of [15000, 45000]) {
+    const f = fixture();
+    let calls = 0;
+    f.options.client.collectDocumentPage = async () => {
+      calls++;
+      f.advance(1500);
+      return { state: "progress" };
+    };
+    const host = createCanvasHost({
+      ...f.options,
+      burstSteps: 100,
+      burstBudgetMs: budget,
+    });
+    await host.enable();
+    await host.collect();
+    steps.push(calls);
+    assert.equal(
+      f.scheduled.get(HOST_ALARMS.continuation).when,
+      1000000 + budget + 30000,
+    );
+  }
+  assert.deepEqual(steps, [10, 30]);
+  // Simulated 1.5s durable operations: 10/45s vs30/75s, a1.8x rate.
+  assert.equal(steps[1] / 75000 / (steps[0] / 45000), 1.8);
+});
+for (const budget of [0, 999, 45001, 1.5, true]) {
+  test(`reject invalid work budget ${budget}`, () => {
+    const f = fixture();
+    assert.throws(
+      () => createCanvasHost({ ...f.options, burstBudgetMs: budget }),
+      /invalid_configuration/,
+    );
+  });
+}
 test("transient backoff persists across restart and caps at six hours", async () => {
   const f = fixture();
   await f.host.enable();
@@ -199,8 +291,47 @@ test("blocked auth, corrupt journal, unknown errors pause durably without retry"
     assert.equal(result.enabled, false);
     assert.equal(result.state, "blocked");
     assert.ok(!JSON.stringify(result).includes("PRIVATE"));
-    assert.equal((await createCanvasHost(f.options).collect()).state, "paused");
+    const restarted = createCanvasHost(f.options);
+    assert.equal((await restarted.reconcile()).state, "blocked");
+    assert.equal((await restarted.status()).reason, result.reason);
+    assert.equal((await restarted.collect()).state, "blocked");
     assert.equal(f.scheduled.size, 0);
+    await restarted.disable();
+    assert.equal((await createCanvasHost(f.options).status()).state, "paused");
+    assert.equal((await createCanvasHost(f.options).status()).reason, null);
+  }
+});
+test("legacy preferences load without granting access; untrusted stop text fails closed", async () => {
+  const f = fixture();
+  await f.host.enable();
+  await f.host.disable();
+  const key = Object.keys(f.data)[0];
+  delete f.data[key].stop_reason;
+  assert.equal((await createCanvasHost(f.options).status()).state, "paused");
+  assert.equal(f.scheduled.size, 0);
+  f.data[key].stop_reason = "PRIVATE course content";
+  const status = await createCanvasHost(f.options).status();
+  assert.equal(status.reason, "host_state_invalid");
+  assert.ok(!JSON.stringify(status).includes("PRIVATE"));
+});
+test("document and scan conflict codes survive the host boundary and restart", async () => {
+  for (const code of [
+    "invalid_collection",
+    "unsafe_pagination",
+    "invalid_document_input",
+    "discovery_lease_expired",
+    "discovery_checkpoint_changed",
+    "collector_failed",
+  ]) {
+    const f = fixture();
+    await f.host.enable();
+    f.result = { state: "blocked", reason: code, message: "PRIVATE source" };
+    assert.equal((await f.host.collect()).reason, code);
+    const next = await createCanvasHost(f.options).status();
+    assert.equal(next.reason, code);
+    assert.equal(next.enabled, false);
+    assert.equal(f.scheduled.size, 0);
+    assert.ok(!JSON.stringify(next).includes("PRIVATE"));
   }
 });
 test("pause during collector prevents stale completion and duplicate calls", async () => {
@@ -362,3 +493,75 @@ test("completed collection reports no running step while concurrent status remai
   assert.equal((await f.host.collect()).running, false);
   assert.equal((await f.host.status()).running, false);
 });
+
+test("a bounded burst reuses durable steps and stops at a finished scan", async () => {
+  const f = fixture();
+  let calls = 0;
+  f.options.client.collectDocumentPage = async () => ({
+    state: ++calls === 3 ? "finished" : "progress",
+    action: "document_step",
+    seen_count: 2,
+    coverage: "partial",
+  });
+  const host = createCanvasHost({ ...f.options, burstSteps: 100 });
+  await host.enable();
+  assert.equal((await host.collect()).state, "finished");
+  assert.equal(calls, 3);
+  assert.equal(f.scheduled.has(HOST_ALARMS.continuation), false);
+  assert.ok(f.scheduled.has(HOST_ALARMS.periodic));
+});
+test("burst checks the soft time budget between steps and retains continuation", async () => {
+  const f = fixture();
+  let calls = 0;
+  f.options.client.collectDocumentPage = async () => {
+    calls++;
+    f.advance(8000);
+    return { state: "progress", action: "document_step" };
+  };
+  const host = createCanvasHost({ ...f.options, burstSteps: 100 });
+  await host.enable();
+  await host.collect();
+  assert.equal(calls, 2);
+  assert.ok(f.scheduled.has(HOST_ALARMS.continuation));
+});
+test("burst count is a hard cap even with an unchanged test clock", async () => {
+  const f = fixture();
+  let calls = 0;
+  f.options.client.collectDocumentPage = async () => {
+    calls++;
+    return { state: "progress" };
+  };
+  const host = createCanvasHost({ ...f.options, burstSteps: 3 });
+  await host.enable();
+  await host.collect();
+  assert.equal(calls, 3);
+});
+test("pause fences an in-flight burst and prevents the next document step", async () => {
+  const f = fixture();
+  let release,
+    calls = 0;
+  const pending = new Promise((r) => (release = r));
+  f.options.client.collectDocumentPage = async () => {
+    calls++;
+    await pending;
+    return { state: "progress" };
+  };
+  const host = createCanvasHost({ ...f.options, burstSteps: 100 });
+  await host.enable();
+  const work = host.collect();
+  while (!calls) await new Promise((r) => setImmediate(r));
+  assert.equal((await host.collect()).state, "busy");
+  await host.disable();
+  release();
+  assert.equal((await work).enabled, false);
+  assert.equal(calls, 1);
+  assert.equal(f.scheduled.size, 0);
+});
+for (const burstSteps of [0, 101, 1.5, true])
+  test(`reject invalid burst bound ${burstSteps}`, () => {
+    const f = fixture();
+    assert.throws(
+      () => createCanvasHost({ ...f.options, burstSteps }),
+      /invalid_configuration/,
+    );
+  });

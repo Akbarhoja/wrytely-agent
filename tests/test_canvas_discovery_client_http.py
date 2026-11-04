@@ -42,6 +42,29 @@ SCENARIOS = (
     "academic_cross_account",
     "assignment_collector_lifecycle",
     "assignment_collector_lost_after",
+    "auto_documents_pdf",
+    "auto_documents_all",
+    "auto_documents_files",
+    "auto_documents_modules",
+    "auto_documents_replies",
+    "auto_documents_replies_lost",
+    "auto_documents_status",
+    "auto_documents_restricted",
+    "auto_documents_topics",
+    "auto_documents_lifecycle",
+    "auto_documents_lost_batch",
+    "document_complete",
+    "document_empty",
+    "document_syllabus",
+    "document_lost_begin",
+    "document_lost_parts",
+    "document_lost_finish",
+    "document_lost_batch",
+    "document_many_slots",
+    "document_four",
+    "document_pagination",
+    "document_bad_receipt",
+    "document_pending_tamper",
 )
 ENV_NAMES = {"PATH", "SYSTEMROOT", "WINDIR", "COMSPEC", "PATHEXT", "TEMP", "TMP", "LANG", "LC_ALL"}
 
@@ -58,7 +81,21 @@ def interop_service(canvas_store, scenario, monkeypatch):
             if name.upper() not in ENV_NAMES:
                 isolated.delenv(name, raising=False)
         settings = Settings(_env_file=None, canvas_origins=[ORIGIN])
-        api = create_app(settings, store=canvas_store, verifier=SessionVerifier())
+        api = create_app(
+            settings,
+            store=canvas_store,
+            verifier=SessionVerifier(),
+            canvas_document_extractors=(
+                "canvas.html.v1",
+                "canvas.json.v1",
+                "canvas.text.v1",
+                "canvas.pdf.v1",
+            )
+            if scenario.startswith("auto_documents_")
+            else ("fixture.v1",)
+            if scenario.startswith("document_")
+            else (),
+        )
     injected = False
     snapshots = []
 
@@ -162,7 +199,12 @@ def test_actual_client_http_contract(canvas_store, interop_service, scenario, mo
         input=json.dumps({"loopback": service_url, "scenario": scenario}),
         capture_output=True,
         text=True,
-        timeout=45,
+        # Automatic-document scenarios execute three complete scans, including
+        # conversion/upload/publication and original transaction fences. Linux
+        # CI's durable Postgres is materially slower than macOS pgserver. Keep
+        # a finite four-phase allowance (setup plus three scans), not retries or
+        # looser protocol/request deadlines; ordinary one-scan cases stay at45s.
+        timeout=180 if scenario.startswith("auto_documents_") else 45,
         cwd=ROOT,
         env=environment,
         creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
@@ -185,7 +227,167 @@ def test_actual_client_http_contract(canvas_store, interop_service, scenario, mo
         versions = conn.execute(
             "SELECT count(*) AS n FROM wrytely_agent.source_versions"
         ).fetchone()["n"]
-        if scenario.startswith("assignment_collector_"):
+        if scenario.startswith("auto_documents_"):
+            assert (
+                versions == 0
+                and catalog == 2
+                and batches
+                == (
+                    99
+                    if scenario == "auto_documents_all"
+                    else 33
+                    if scenario in {"auto_documents_files", "auto_documents_pdf"}
+                    else 63
+                    if scenario.startswith("auto_documents_replies")
+                    else 39
+                    if scenario
+                    in {"auto_documents_topics", "auto_documents_status", "auto_documents_modules"}
+                    else 24
+                    if scenario == "auto_documents_restricted"
+                    else 27
+                )
+            )
+            assert conn.execute(
+                "SELECT count(*) AS n FROM wrytely_agent.canvas_evidence_observations"
+            ).fetchone()["n"] == (
+                156
+                if scenario == "auto_documents_all"
+                else 36
+                if scenario in {"auto_documents_files", "auto_documents_pdf"}
+                else 120
+                if scenario.startswith("auto_documents_replies")
+                else 42
+                if scenario
+                in {"auto_documents_topics", "auto_documents_status", "auto_documents_modules"}
+                else 27
+                if scenario == "auto_documents_restricted"
+                else 30
+            )
+            assert conn.execute(
+                "SELECT count(*) AS n FROM wrytely_agent.canvas_evidence_events"
+            ).fetchone()["n"] == (
+                57
+                if scenario == "auto_documents_all"
+                else 13
+                if scenario == "auto_documents_pdf"
+                else 15
+                if scenario == "auto_documents_files"
+                else 42
+                if scenario.startswith("auto_documents_replies")
+                else 16
+                if scenario == "auto_documents_status"
+                else 15
+                if scenario in {"auto_documents_topics", "auto_documents_modules"}
+                else 10
+                if scenario == "auto_documents_restricted"
+                else 11
+            )
+            assert conn.execute(
+                "SELECT count(*) AS n FROM wrytely_agent.canvas_document_versions"
+            ).fetchone()["n"] == (
+                57
+                if scenario == "auto_documents_all"
+                else 13
+                if scenario == "auto_documents_pdf"
+                else 15
+                if scenario == "auto_documents_files"
+                else 42
+                if scenario.startswith("auto_documents_replies")
+                else 16
+                if scenario == "auto_documents_status"
+                else 15
+                if scenario in {"auto_documents_topics", "auto_documents_modules"}
+                else 10
+                if scenario == "auto_documents_restricted"
+                else 11
+            )
+            text = conn.execute(
+                "SELECT text FROM wrytely_agent.canvas_document_sections "
+                "ORDER BY length(text) DESC LIMIT 1"
+            ).fetchone()["text"]
+            assert "PRIVATE_SCRIPT" not in text
+            long_root = conn.execute(
+                "SELECT total_characters FROM wrytely_agent.canvas_document_versions "
+                "ORDER BY total_characters DESC LIMIT 1"
+            ).fetchone()["total_characters"]
+            assert long_root > 24000
+            rubric = conn.execute(
+                "SELECT payload->'fields'->'object_fields'->'rubric' AS rubric "
+                "FROM wrytely_agent.canvas_evidence_observations "
+                "WHERE resource_key LIKE '%%/assignments' LIMIT 1"
+            ).fetchone()["rubric"]
+            assert rubric[0]["description"] == "Explain evidence"
+            if scenario.startswith("auto_documents_replies"):
+                entry_rows = conn.execute(
+                    "SELECT payload FROM wrytely_agent.canvas_evidence_observations "
+                    "WHERE payload->'fields'->>'owner_kind'='entry'"
+                ).fetchall()
+                assert len(entry_rows) == 84
+                parents = [
+                    row["payload"]["fields"]["object_fields"]["parent_entry_id"]
+                    for row in entry_rows
+                ]
+                assert parents.count(None) == 12
+                assert parents.count("1010") == 36 and parents.count("1020") == 36
+                texts = conn.execute(
+                    "SELECT text FROM wrytely_agent.canvas_document_sections"
+                ).fetchall()
+                assert "PRIVATE_RECENT_SAMPLE_ONLY" not in json.dumps(texts)
+                assert any("Reply 10112" in row["text"] for row in texts)
+                assert any("Reply 10101 changed" in row["text"] for row in texts)
+            if scenario == "auto_documents_pdf":
+                originals = conn.execute(
+                    "SELECT text FROM wrytely_agent.canvas_document_sections"
+                ).fetchall()
+                assert "Synthetic syllabus." in json.dumps(originals)
+                roots = conn.execute(
+                    "SELECT count(*) AS n FROM wrytely_agent.canvas_document_versions "
+                    "WHERE format='pdf_text'"
+                ).fetchone()
+                assert roots["n"] == 2
+            if scenario in {"auto_documents_status", "auto_documents_all"}:
+                rows = conn.execute(
+                    "SELECT payload FROM wrytely_agent.canvas_evidence_observations "
+                    "WHERE resource_key IN ('101/grades','102/grades',"
+                    "'101/submissions','102/submissions')"
+                ).fetchall()
+                serialized = json.dumps(rows)
+                assert (
+                    "PRIVATE_SUBMISSION_BODY" not in serialized
+                    and "PRIVATE_FEEDBACK" not in serialized
+                )
+                assert "user_id" not in serialized
+                contents = json.dumps(
+                    conn.execute(
+                        "SELECT text FROM wrytely_agent.canvas_document_sections"
+                    ).fetchall()
+                )
+                assert "OWN_SUBMISSION_BODY" in contents and "OWN_FEEDBACK" in contents
+                assert "PRIVATE_SCRIPT" not in contents
+                scores = [row["payload"]["fields"]["object_fields"].get("score") for row in rows]
+                assert "12" in scores and "18" in scores
+        elif scenario.startswith("document_"):
+            assert versions == 0
+            observations = conn.execute(
+                "SELECT count(*) AS n FROM wrytely_agent.canvas_evidence_observations"
+            ).fetchone()["n"]
+            assert observations == (
+                0
+                if scenario in {"document_pending_tamper", "document_empty"}
+                else 4
+                if scenario == "document_four"
+                else 5
+                if scenario == "document_pagination"
+                else 1
+            )
+            assert batches == (
+                2
+                if scenario == "document_pending_tamper"
+                else 4
+                if scenario == "document_pagination"
+                else 3
+            )
+        elif scenario.startswith("assignment_collector_"):
             assert catalog == 2 and batches == 12 and versions == 3
             assert_collector_lifecycle(conn, snapshots)
         elif scenario.startswith("academic_"):

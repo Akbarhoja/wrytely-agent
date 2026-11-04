@@ -38,6 +38,111 @@ def _budget(value):
 
 
 class CanvasReadStore:
+    def canvas_coverage(self, verified_user, connection_id, *, limit=20, after=None):
+        """Session-owned metadata only; a finished scan is not a freshness claim."""
+        from contracts.canvas_sync import course_id
+        from shared.source_connections import _safe
+
+        _bound(limit, 1, 50)
+        anchor = course_id(after) if after is not None else None
+        with self.connection() as conn:
+            agent, _ = self._read_identity(conn, verified_user, None)
+            connection = self._read_connection(conn, agent, _uuid(connection_id))
+            if connection["provider"] != "canvas_extension":
+                raise LookupError("Not found")
+            context = self._context(conn, connection)
+            rows = conn.execute(
+                "SELECT course_id,payload,observed_at,missing_pending_confirmation "
+                "FROM wrytely_agent.canvas_catalog WHERE connection_id=%s AND generation=%s "
+                "AND (%s::text IS NULL OR course_id>%s) ORDER BY course_id LIMIT %s",
+                (connection["id"], connection["generation"], anchor, anchor, limit + 1),
+            ).fetchall()
+            scan = conn.execute(
+                "SELECT id,state,started_at,expires_at,reason FROM wrytely_agent.canvas_scans "
+                "WHERE connection_id=%s AND generation=%s ORDER BY sequence DESC LIMIT 1",
+                (connection["id"], connection["generation"]),
+            ).fetchone()
+            now = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
+            scan_state = scan["state"] if scan else "not_started"
+            if scan and scan_state == "active" and scan["expires_at"] <= now:
+                scan_state = "expired"
+            resources = {
+                row["resource_key"]: row
+                for row in conn.execute(
+                    "SELECT resource_key,coverage,reason,seen_count,page_count "
+                    "FROM wrytely_agent.canvas_resources WHERE scan_id=%s",
+                    (scan["id"] if scan else None,),
+                ).fetchall()
+            }
+            retained_by_resource = {
+                row["resource_key"]: row
+                for row in conn.execute(
+                    "SELECT n.resource_key,count(*) AS count, count(*) FILTER "
+                    "(WHERE n.coverage<>'complete') AS incomplete "
+                    "FROM wrytely_agent.canvas_evidence_objects o "
+                    "JOIN wrytely_agent.canvas_evidence_observations n "
+                    "ON n.id=o.latest_observation_id AND n.agent_id=o.agent_id "
+                    "WHERE o.agent_id=%s AND o.connection_id=%s AND n.generation=%s "
+                    "AND o.course_id=ANY(%s) GROUP BY n.resource_key",
+                    (
+                        agent,
+                        connection["id"],
+                        connection["generation"],
+                        [row["course_id"] for row in rows[:limit]],
+                    ),
+                ).fetchall()
+            }
+            courses = []
+            selected = set(context["course_ids"])
+            for row in rows[:limit]:
+                course = row["course_id"]
+                states = []
+                for kind in connection["resource_kinds"]:
+                    key = f"{course}/{kind}"
+                    resource = resources.get(key)
+                    retained = retained_by_resource.get(key, {"count": 0, "incomplete": 0})
+                    states.append(
+                        {
+                            "kind": kind,
+                            "coverage": resource["coverage"] if resource else "unknown",
+                            "reason": resource["reason"] if resource else None,
+                            "items_seen": resource["seen_count"] if resource else 0,
+                            "retained_items": retained["count"],
+                            "incomplete_items": retained["incomplete"],
+                        }
+                    )
+                courses.append(
+                    {
+                        "course_id": course,
+                        "title": row["payload"].get("title"),
+                        "selected": course in selected,
+                        "missing_pending_confirmation": row["missing_pending_confirmation"],
+                        "discovered_at": row["observed_at"],
+                        "resources": states,
+                    }
+                )
+            return self._finish_canvas_read(
+                conn,
+                None,
+                {
+                    "schema_version": 1,
+                    "connection": _safe(connection),
+                    "scope": {
+                        "mode": context["mode"],
+                        "resource_kinds": context["resource_kinds"],
+                        "course_ids": context["course_ids"],
+                    },
+                    "discovery": context["discovery"],
+                    "scan": {
+                        "state": scan_state,
+                        "started_at": scan["started_at"] if scan else None,
+                    },
+                    "courses": courses,
+                    "next": rows[limit - 1]["course_id"] if len(rows) > limit else None,
+                    "evaluated_at": now,
+                },
+            )
+
     def _finish_canvas_read(self, conn, lease, result, connection=None):
         result = _budget(result)
         now = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]

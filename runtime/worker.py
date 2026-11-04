@@ -8,9 +8,11 @@ from contracts.document_artifacts import CoursePolicyV2, RubricItemV2
 from contracts.models import ModelClient, TaskLease
 from runtime.drafting import generate_checked_draft
 from runtime.planner import run_planning_episode
+from shared.budgeted_model import BudgetedMetaRouter
 from shared.config import Settings
 from shared.db import LeaseLost, Store, json_text
-from shared.model_client import MetaModelClient, ModelCallFailed
+from shared.model_budgets import ModelBudgetExceeded
+from shared.model_client import ModelCallFailed
 
 log = logging.getLogger(__name__)
 TOOLS = [
@@ -65,6 +67,7 @@ def run_episode(store: Store, model: ModelClient, settings: Settings, lease: Tas
                 for item in request["rubric"]
             ],
             max_revisions=request["max_revisions"],
+            student_revision=request.get("revision"),
         )
         if outcome["state"] == "ready":
             store.complete(
@@ -178,7 +181,8 @@ def run_once(store: Store, model: ModelClient, settings: Settings) -> bool:
     if lease is None:
         return False
     try:
-        run_episode(store, model, settings, lease)
+        bound_model = model.for_user(lease.user_id) if hasattr(model, "for_user") else model
+        run_episode(store, bound_model, settings, lease)
     except LeaseLost:
         log.info("episode_stopped task=%s reason=lease_or_pause", lease.task_id)
     except Exception as exc:
@@ -187,7 +191,10 @@ def run_once(store: Store, model: ModelClient, settings: Settings) -> bool:
         try:
             if isinstance(exc, ModelCallFailed):
                 store.event(lease, "model_failure", exc.evidence())
-            store.retry(lease, code, settings.max_attempts)
+            if isinstance(exc, ModelBudgetExceeded):
+                store.hold_model_task(lease)
+            else:
+                store.retry(lease, code, settings.max_attempts)
         except LeaseLost:
             pass
         log.warning("episode_failed task=%s code=%s", lease.task_id, code)
@@ -199,11 +206,11 @@ def main():
     parser.add_argument("--once", action="store_true")
     args = parser.parse_args()
     settings = Settings()
-    if not settings.database_url or not settings.meta_api_key:
-        parser.error("Configure AGENT_DATABASE_URL and AGENT_META_API_KEY")
+    if not settings.database_url or not settings.readiness()["meta_model"]:
+        parser.error("Configure AGENT_DATABASE_URL and the selected provider's model key")
     logging.basicConfig(level=logging.INFO)
-    store = Store(settings.database_url.get_secret_value())
-    model = MetaModelClient(settings)
+    store = Store(settings.database_url.get_secret_value(), canvas_origins=settings.canvas_origins)
+    model = BudgetedMetaRouter(store, settings)
     while True:
         worked = run_once(store, model, settings)
         if args.once:

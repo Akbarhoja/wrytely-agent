@@ -137,3 +137,77 @@ def test_ambiguous_markup_never_returns_hidden_text_or_parser_details(body):
     result = extract_html(body)
     assert result.text == "" and result.status == "blocked"
     assert result.reasons == ("malformed_markup",)
+
+
+@pytest.mark.parametrize(
+    "source,expected",
+    [
+        (b"Plain instructions.", "Plain instructions."),
+        (
+            b"<h2>Task</h2><p>Explain <strong>three</strong> steps.<br>Use examples.</p>",
+            "Task\nExplain three steps.\nUse examples.",
+        ),
+        ("<p>Cafe\u0301 &amp; tea</p>".encode(), "Café & tea"),
+    ],
+)
+def test_v2_only_certifies_supplied_literal_text_and_leaves_v1_partial(source, expected):
+    from integrations.canvas.html_extract import extract_html_v2
+
+    result = extract_html_v2(source)
+    assert result.text == expected
+    assert result.status == "complete" and result.reasons == ()
+    legacy = extract_html(source)
+    assert legacy.status == "partial" and "html_text_only" in legacy.reasons
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        b'<p>Read <a href="/files/1">attachment</a></p>',
+        b'<p>Read</p><img src="/private" alt="Required chart">',
+        b"<p hidden>Secret</p><p>Read</p>",
+        b'<p class="hidden-by-external-css">Read</p>',
+        b'<p style="color:red">Read</p>',
+        b"<p>Read</p><script>PRIVATE</script>",
+        b'<p>Read</p><iframe src="private"></iframe>',
+        b"<pre>  preserve indentation\n    required</pre>",
+        b"<code>a  b</code>",
+        b"<table><tr><td>value</td></tr></table>",
+        b'<ol start="4"><li>Required item</li></ol>',
+        b"<p><del>old requirement</del>new requirement</p>",
+        b"<p>e<sup>x</sup></p>",
+        b"<custom>Read</custom>",
+        b"<p>Read",
+        b"<!doctype html><p>Read</p>",
+        b"<!-- conditional content --><p>Read</p>",
+        b"<p>Read &#0;</p>",
+        b"<p>Read &#x41;</p>",
+        b"<p>Read</p><img src=",
+        b"<p>Read</p><script",
+        b"<p>Read</p><",
+        b"<p>Read &unknown;</p>",
+    ],
+)
+def test_v2_unread_structure_or_normalization_never_becomes_complete(source):
+    from integrations.canvas.html_extract import extract_html_v2
+
+    result = extract_html_v2(source)
+    assert result.status != "complete" and result.reasons
+    assert "PRIVATE" not in result.text
+
+
+@pytest.mark.parametrize(
+    "source", [b"<div hidden><p>PRIVATE</div></p>", b"\xff", b"", b"<p/>PRIVATE"]
+)
+def test_v2_malformed_and_empty_content_is_blocked(source):
+    from integrations.canvas.html_extract import extract_html_v2
+
+    result = extract_html_v2(source)
+    assert result.status == "blocked" and result.text == "" and result.reasons
+
+
+def test_v2_preserves_original_hard_bounds():
+    from integrations.canvas.html_extract import extract_html_v2
+
+    assert extract_html_v2(b"<p>long</p>", max_chars=2).reasons == ("resource_limit",)
+    assert extract_html_v2(b"text", max_bytes=1048577).reasons == ("invalid_limits",)

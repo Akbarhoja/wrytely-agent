@@ -29,6 +29,123 @@ function request(path = "messages", method = "POST", origin = "https://agent.wry
   });
 }
 describe("authenticated API boundary", () => {
+  it.each([
+    [10 * 1024 * 1024, 200],
+    [10 * 1024 * 1024 + 1, 413],
+  ])("preserves the checked-file contract limit %s", async (size, status) => {
+    const id = "00000000-0000-4000-8000-000000000001";
+    const path = `v2/artifacts/${id}/file`;
+    const deps = dependencies();
+    deps.fetch.mockImplementation(
+      async () =>
+        new Response(new Uint8Array(size), {
+          headers: {
+            "Content-Type":
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          },
+        }),
+    );
+    const result = await forward(request(path, "GET"), path.split("/"), deps);
+    expect(result.status).toBe(status);
+    expect(result.headers.get("cache-control")).toBe("no-store");
+  });
+  it("forwards read-only course lookup without an enable side effect", async () => {
+    const id = "00000000-0000-4000-8000-000000000001";
+    const path = `course-supervisions?connection_id=${id}&course_id=101`;
+    const deps = dependencies();
+    expect((await forward(request(path, "GET"), ["course-supervisions"], deps)).status).toBe(202);
+    expect(deps.fetch.mock.calls[0][0]).toBe(`http://agent.internal:8000/v1/${path}`);
+    const bad = dependencies();
+    expect(
+      (
+        await forward(
+          request("course-supervisions?user_id=other", "GET"),
+          ["course-supervisions"],
+          bad,
+        )
+      ).status,
+    ).toBe(400);
+    expect(bad.fetch).not.toHaveBeenCalled();
+  });
+  it("allows only student supervision and explicit revision actions", async () => {
+    const id = "00000000-0000-4000-8000-000000000001";
+    for (const path of [
+      "course-supervisions",
+      `course-supervisions/${id}/pause`,
+      `course-supervisions/${id}/notifications`,
+      `course-supervisions/${id}/offers/${id}/decision`,
+      `course-supervisions/${id}/offers/${id}/delivery`,
+      `v2/artifacts/${id}/revisions`,
+      `v2/artifacts/${id}/delivery`,
+    ]) {
+      const deps = dependencies();
+      expect((await forward(request(path), path.split("/"), deps)).status).toBe(202);
+      expect(deps.fetch.mock.calls[0][0]).toBe(
+        `http://agent.internal:8000/${path.startsWith("v2/") ? "" : "v1/"}${path}`,
+      );
+    }
+    for (const path of [
+      `course-supervisions/${id}/claim`,
+      `course-supervisions/${id}/finish`,
+      "model-budgets",
+      `course-supervisions/${id}/pause?user_id=other`,
+    ]) {
+      const deps = dependencies();
+      const result = await forward(request(path), path.split("?")[0].split("/"), deps);
+      expect([400, 404]).toContain(result.status);
+      expect(deps.fetch).not.toHaveBeenCalled();
+    }
+  });
+
+  it("forwards private Word bytes with verified auth and attachment/no-store headers", async () => {
+    const id = "00000000-0000-4000-8000-000000000001";
+    const path = `v2/artifacts/${id}/file`;
+    const deps = dependencies();
+    deps.fetch.mockImplementation(
+      async () =>
+        new Response(new Uint8Array([80, 75, 1, 2]), {
+          headers: {
+            "Content-Type":
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          },
+        }),
+    );
+    const result = await forward(request(path, "GET"), path.split("/"), deps);
+    expect(result.status).toBe(200);
+    expect([...new Uint8Array(await result.arrayBuffer())]).toEqual([80, 75, 1, 2]);
+    expect(result.headers.get("cache-control")).toBe("no-store");
+    expect(result.headers.get("content-disposition")).toContain(`${id}.docx`);
+    expect(new Headers(deps.fetch.mock.calls[0][1]?.headers).get("authorization")).toBe(
+      "Bearer verified-session-token",
+    );
+  });
+  it.each([
+    "v2/responsibilities/00000000-0000-4000-8000-000000000001/artifacts?limit=1&before=opaque_cursor",
+    "v2/artifacts/00000000-0000-4000-8000-000000000001",
+    "v2/artifacts/00000000-0000-4000-8000-000000000001/evidence/policy/0?check_id=00000000-0000-4000-8000-000000000002",
+  ])("forwards exact versioned private result %s with verified identity", async (input) => {
+    const deps = dependencies();
+    const path = input.split("?")[0].split("/");
+    const response = await forward(request(input, "GET"), path, deps);
+    expect(response.status).toBe(202);
+    expect(deps.fetch.mock.calls[0][0]).toBe(`http://agent.internal:8000/${input}`);
+    const headers = new Headers(deps.fetch.mock.calls[0][1]?.headers);
+    expect(headers.get("Authorization")).toBe("Bearer verified-session-token");
+    expect(headers.has("Cookie")).toBe(false);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect((await forward(request(input), path, deps)).status).toBe(404);
+  });
+  it.each([
+    "v2/artifacts/00000000-0000-4000-8000-000000000001?user_id=other",
+    "v2/responsibilities/00000000-0000-4000-8000-000000000001/artifacts?limit=1&limit=2",
+    "v2/artifacts/00000000-0000-4000-8000-000000000001/evidence/citation/0?source_id=other",
+  ])("rejects unexpected private-result query %s before forwarding", async (input) => {
+    const deps = dependencies();
+    const response = await forward(request(input, "GET"), input.split("?")[0].split("/"), deps);
+    expect(response.status).toBe(400);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(deps.fetch).not.toHaveBeenCalled();
+  });
   it("permits only authenticated same-origin explicit delegation and private status reads", async () => {
     const deps = dependencies();
     expect((await forward(request("responsibilities"), ["responsibilities"], deps)).status).toBe(
@@ -244,5 +361,40 @@ describe("authenticated API boundary", () => {
     const response = await forward(request(), ["messages"], deps);
     expect(response.status).toBe(503);
     expect(await response.text()).not.toContain("sensitive");
+  });
+});
+
+describe("session Canvas connection proxy", () => {
+  it("forwards bounded coverage queries using the verified session", async () => {
+    const deps = dependencies();
+    const path = "source-connections/00000000-0000-4000-8000-000000000001/canvas/coverage";
+    const response = await forward(
+      request(path + "?limit=20&after=101", "GET"),
+      path.split("/"),
+      deps,
+    );
+    expect(response.status).toBe(202);
+    expect(String(deps.fetch.mock.calls[0][0])).toContain("/v1/" + path + "?limit=20&after=101");
+    expect(new Headers(deps.fetch.mock.calls[0][1]?.headers).get("authorization")).toBe(
+      "Bearer verified-session-token",
+    );
+  });
+  it.each([
+    "source-connections/canvas/redeem",
+    "source-connections/canvas/bind",
+    "source-connections/canvas/context",
+    "source-connections/canvas/documents/file-extract",
+  ])("never forwards ingestion operation %s", async (path) => {
+    const deps = dependencies();
+    expect((await forward(request(path), path.split("/"), deps)).status).toBe(404);
+    expect(deps.fetch).not.toHaveBeenCalled();
+  });
+  it("rejects owner overrides and duplicate queries before fetching", async () => {
+    for (const suffix of ["?user_id=bob", "?limit=1&limit=2"]) {
+      const deps = dependencies();
+      const path = "source-connections";
+      expect((await forward(request(path + suffix, "GET"), [path], deps)).status).toBe(400);
+      expect(deps.fetch).not.toHaveBeenCalled();
+    }
   });
 });

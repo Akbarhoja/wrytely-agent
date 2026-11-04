@@ -1,8 +1,8 @@
 # Wrytely Academic Agent — Privacy Notice
 
-Effective date: October 29, 2026
+Effective date: November 2, 2026
 
-This notice covers the Wrytely Academic Agent development pilot, including its student workspace and official WhatsApp integration. Wrytely operates this pilot. The pilot is currently intended for consenting U.S. participants aged 18 or older. For privacy questions and requests, contact **support@wrytely.io**.
+This notice covers the Wrytely Academic Agent development pilot, including its student workspace, Canvas collection extension and official WhatsApp integration. Wrytely operates this pilot. The pilot is currently intended for consenting U.S. participants aged 18 or older. For privacy questions and requests, contact **support@wrytely.io**.
 
 This agent is being developed separately from Wrytely’s handwriting service. This notice describes the agent pilot; the handwriting service’s privacy policy remains at https://www.wrytely.io/privacy.
 
@@ -11,13 +11,18 @@ This agent is being developed separately from Wrytely’s handwriting service. T
 - **Account information:** Clerk processes sign-in information such as your name, email address, profile information and session. The agent uses your Clerk account and session identifiers to associate your private agent and saved work with your account.
 - **WhatsApp connection information:** your WhatsApp number, verification challenge records, provider message identifiers, connection state, reply consent, timezone and quiet-hour preferences.
 - **Messages and results:** messages you send to the agent, task records, generated answers, model/tool execution records and saved results needed to carry out and review the requested work.
+- **Canvas course information you authorize us to collect:** discovered course names/identifiers, selected syllabus and course-page text, assignment instructions, rubrics and dates, announcements, visible discussions/replies, modules/items, your submission status/content/feedback, your assignment grades, readable course files and extracted document text. Connection identity, selected scope, observations, version history and coverage records associate this information with your account.
 - **Delivery and operational information:** message timestamps, provider acceptance/delivery status, execution attempts, errors and usage information needed for reliability, security and cost control. Infrastructure providers may also process network and request information.
 
-The pilot does not currently connect to Canvas, Teams or calendars. It does not obtain access to your other WhatsApp conversations or address book merely because you message its business number. Do not send passwords, payment-card details, confidential third-party records or unnecessary sensitive information. Use synthetic academic examples during testing.
+The Chrome extension reads from your signed-in Canvas session only after you pair it, verify the account, choose scope and enable collection. It uploads selected course information to Wrytely's isolated Railway pilot backend and database. It does not export your Canvas password or cookies. Collection pauses when Chrome/session access is unavailable; stored information may remain out of date until another sync. Teams, other WhatsApp conversations/address books and calendars are not connected by this pilot.
+
+Choose courses you are authorized to share and avoid unnecessary third-party confidential data. Do not send passwords, payment-card details, confidential third-party records or unnecessary sensitive information. Use synthetic examples unless you explicitly agree to a scoped real-data pilot test.
 
 ## How information is used
 
 We use this information to authenticate you, provision your private agent, verify that you control the linked WhatsApp number, receive your messages, generate and save answers, send replies when permitted, honor communication controls, investigate failures and protect the service. Generated responses may contain mistakes and should be checked before use.
+
+We store and version authorized course information so your agent can retrieve original evidence, identify changes and support academic work you delegate. Relevant authorized course context may be sent to the Meta Model API when a separately enabled model task needs it. No model calls are part of the bounded P1 collection test. Generated interpretations and drafts require review.
 
 ## Service providers and sharing
 
@@ -31,6 +36,8 @@ We do not sell pilot personal information or use it for targeted advertising. We
 ## Your controls
 
 You can pause your agent, unlink WhatsApp, and change reply consent, timezone and quiet hours in the workspace. Unlinking stops future use of that connection but does not delete previously saved messages, tasks or results. A request already sent to a provider may not be recalled. Pausing is not account deletion.
+
+You can select courses/content, disable collection locally or disconnect Canvas in the workspace. Disconnecting invalidates that connection and blocks new authenticated reads/uploads; it does not automatically erase previously saved records. A request already in flight cannot be recalled, but control checks prevent it from committing or returning content after invalidation. Source-derived private results can become unavailable when source access changes.
 
 For access, correction or deletion requests, email support@wrytely.io. We may need to verify your identity and authority before acting. The pilot does not yet have a self-service account-deletion control. Privacy requests are handled manually, subject to applicable legal requirements and necessary security or legal retention.
 

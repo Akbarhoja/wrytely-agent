@@ -160,3 +160,54 @@ test("async errors and closed popup are caught without exposing error messages",
   );
   await new Promise((r) => setImmediate(r));
 });
+
+test("full own options tab can read status and pause using Chrome top-level sender metadata", async () => {
+  const f = fixture();
+  await registerCanvasHost(f.options).ready;
+  f.calls.length = 0;
+  const sender = {
+    id: f.chrome.runtime.id,
+    url: f.chrome.runtime.getURL("options.html"),
+    origin: "chrome-extension://trusted",
+    frameId: 0,
+    tab: { id: 42 },
+  };
+  for (const action of ["status", "disable"])
+    assert.equal(
+      (await f.send({ type: HOST_MESSAGE, action }, sender)).keep,
+      true,
+    );
+  assert.deepEqual(
+    f.calls.map((x) => x[0]),
+    ["status", "disable"],
+  );
+});
+test("tab metadata never permits web content, frames, another extension, or mismatched options pages", async () => {
+  const f = fixture();
+  await registerCanvasHost(f.options).ready;
+  f.calls.length = 0;
+  const sender = {
+    id: f.chrome.runtime.id,
+    url: f.chrome.runtime.getURL("options.html"),
+    origin: "chrome-extension://trusted",
+    frameId: 0,
+    tab: { id: 42 },
+  };
+  for (const value of [
+    { ...sender, url: "https://canvas.example.edu/" },
+    { ...sender, id: "other" },
+    { ...sender, origin: "https://canvas.example.edu" },
+    { ...sender, frameId: 1 },
+    { ...sender, frameId: undefined },
+    { ...sender, tab: { id: 42, url: "https://canvas.example.edu/" } },
+    { ...sender, tab: { id: -1 } },
+    { ...sender, tab: { id: "42" } },
+    { ...sender, tab: null },
+    { ...sender, url: f.chrome.runtime.getURL("popup.html") },
+  ])
+    assert.equal(
+      (await f.send({ type: HOST_MESSAGE, action: "enable" }, value)).keep,
+      false,
+    );
+  assert.equal(f.calls.length, 0);
+});

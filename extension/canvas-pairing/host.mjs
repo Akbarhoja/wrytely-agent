@@ -1,6 +1,9 @@
 // Connector availability only. No installation, model scheduler or second source journal.
 import { createPairingClient } from "./client.mjs";
 import { checkedOrigin } from "../canvas-feasibility/probe.mjs";
+import { DOCUMENT_COLLECTION_ERRORS } from "./document-collector.mjs";
+import { discoveryConflicts } from "./discovery.mjs";
+import { RECOVERY_DIAGNOSTIC_CODES } from "./collector.mjs";
 
 export const HOST_ALARMS = Object.freeze({
   periodic: "wrytely.canvas.host.periodic.v1",
@@ -13,8 +16,14 @@ const transient = new Set([
   "provider_error",
   "network_or_redirect_blocked",
   "discovery_outcome_unknown",
+  "file_network_failed",
+  "file_access_failed",
 ]);
 const reasons = new Set([
+  ...RECOVERY_DIAGNOSTIC_CODES,
+  ...DOCUMENT_COLLECTION_ERRORS,
+  ...discoveryConflicts.map((code) => `discovery_${code}`),
+  "collector_failed",
   ...transient,
   "login_required",
   "permission_denied",
@@ -26,6 +35,7 @@ const reasons = new Set([
   "storage_cleanup_required",
   "discovery_reconciliation_required",
 ]);
+const stopReasons = new Set([...reasons, "host_failed"]);
 const error = (code) => Object.assign(new Error(code), { code });
 
 export function createCanvasHost({
@@ -33,7 +43,10 @@ export function createCanvasHost({
   canvasOrigin,
   storageArea,
   alarms,
+  fileTransport,
   client,
+  burstSteps = 1,
+  burstBudgetMs = 15000,
   now = Date.now,
   randomUUID = () => crypto.randomUUID(),
 }) {
@@ -41,6 +54,12 @@ export function createCanvasHost({
     if (checkedOrigin(value) !== value) throw error("invalid_configuration");
   }
   if (
+    !Number.isInteger(burstSteps) ||
+    burstSteps < 1 ||
+    burstSteps > 100 ||
+    !Number.isInteger(burstBudgetMs) ||
+    burstBudgetMs < 1000 ||
+    burstBudgetMs > 45000 ||
     !storageArea ||
     !alarms ||
     ["get", "set", "setAccessLevel"].some(
@@ -49,7 +68,12 @@ export function createCanvasHost({
     ["get", "create", "clear"].some((k) => typeof alarms[k] !== "function")
   )
     throw error("invalid_configuration");
-  client ??= createPairingClient({ apiOrigin, canvasOrigin, storageArea });
+  client ??= createPairingClient({
+    apiOrigin,
+    canvasOrigin,
+    storageArea,
+    fileTransport,
+  });
   const key = `wrytely.canvas.host.v1:${apiOrigin}:${canvasOrigin}`;
   let busy = false,
     identityBusy = false,
@@ -68,6 +92,7 @@ export function createCanvasHost({
     failures: 0,
     next_attempt_at: 0,
     device_public_id: null,
+    stop_reason: null,
   });
   async function load() {
     let value;
@@ -81,7 +106,17 @@ export function createCanvasHost({
     if (
       !value ||
       typeof value !== "object" ||
-      Object.keys(value).sort().join() !== Object.keys(fresh()).sort().join() ||
+      Object.keys(value)
+        .filter((k) => k !== "stop_reason")
+        .sort()
+        .join() !==
+        Object.keys(fresh())
+          .filter((k) => k !== "stop_reason")
+          .sort()
+          .join() ||
+      (value.stop_reason !== undefined &&
+        value.stop_reason !== null &&
+        (!stopReasons.has(value.stop_reason) || value.enabled !== false)) ||
       value.version !== 1 ||
       typeof value.enabled !== "boolean" ||
       !(value.control_epoch === null || uuid.test(value.control_epoch)) ||
@@ -94,7 +129,7 @@ export function createCanvasHost({
       !(value.device_public_id === null || uuid.test(value.device_public_id))
     )
       throw error("host_state_invalid");
-    return value;
+    return { ...value, stop_reason: value.stop_reason ?? null };
   }
   async function save(value) {
     try {
@@ -112,6 +147,9 @@ export function createCanvasHost({
   function statusOf(p, override = {}) {
     return {
       ...view,
+      ...(!p.enabled && p.stop_reason
+        ? { state: "blocked", reason: p.stop_reason }
+        : {}),
       enabled: p.enabled && !localPause,
       running: busy,
       retry_after_ms: Math.max(0, p.next_attempt_at - now()),
@@ -162,7 +200,7 @@ export function createCanvasHost({
       const p = await load();
       return statusOf(
         p,
-        !p.enabled || localPause
+        (!p.enabled || localPause) && !p.stop_reason
           ? { state: "paused" }
           : p.next_attempt_at > now()
             ? { state: "cooldown" }
@@ -181,6 +219,7 @@ export function createCanvasHost({
         control_epoch: nextEpoch(),
         failures: 0,
         next_attempt_at: 0,
+        stop_reason: null,
       };
       await save(next);
       localPause = false;
@@ -202,6 +241,7 @@ export function createCanvasHost({
           control_epoch: nextEpoch(),
           failures: 0,
           next_attempt_at: 0,
+          stop_reason: null,
         };
         await save(next);
       } catch (e) {
@@ -231,37 +271,76 @@ export function createCanvasHost({
     try {
       start = await serial(() => load());
       if (!start.enabled || localPause)
-        return statusOf(start, { state: "paused" });
+        return statusOf(start, start.stop_reason ? {} : { state: "paused" });
       if (start.next_attempt_at > now())
         return statusOf(start, { state: "cooldown" });
       let result;
       try {
         const current = await client.readDiscoveryStatus();
-        const dispatch = await serial(async () => {
-          const latest = await load();
-          if (
-            localPause ||
-            !latest.enabled ||
-            latest.control_epoch !== start.control_epoch
-          )
-            return {
-              cancelled: true,
-              status: statusOf(latest, {
-                state: latest.enabled && !localPause ? "ready" : "paused",
-              }),
-            };
-          // Start synchronously under the control queue, but await outside it so pause remains responsive.
-          return {
-            completion:
-              current.state === "finished"
-                ? client.beginDiscovery()
-                : client.collectAssignmentPage(),
+        if (
+          current.state === "finished" &&
+          current.content_requested === false
+        ) {
+          result = {
+            state: "awaiting_resources",
+            reason: "course_selection_required",
           };
-        });
-        if (dispatch.cancelled) return dispatch.status;
-        result = await dispatch.completion;
-        if (current.state === "finished")
-          result = { state: "progress", action: "begin" };
+        } else {
+          const dispatch = await serial(async () => {
+            const latest = await load();
+            if (
+              localPause ||
+              !latest.enabled ||
+              latest.control_epoch !== start.control_epoch
+            )
+              return {
+                cancelled: true,
+                status: statusOf(latest, {
+                  state: latest.enabled && !localPause ? "ready" : "paused",
+                }),
+              };
+            // Start synchronously under the control queue, but await outside it so pause remains responsive.
+            return {
+              completion:
+                current.state === "finished"
+                  ? client.beginDiscovery()
+                  : (
+                      client.collectDocumentPage ?? client.collectAssignmentPage
+                    ).call(client),
+            };
+          });
+          if (dispatch.cancelled) return dispatch.status;
+          result = await dispatch.completion;
+          if (
+            result.state === "blocked" &&
+            result.reason === "discovery_context_changed"
+          ) {
+            // beginDiscovery permits replacement only for a verified forward
+            // scope/generation change, never a revoked credential or new subject.
+            const recovery = await serial(async () => {
+              const latest = await load();
+              if (
+                localPause ||
+                !latest.enabled ||
+                latest.control_epoch !== start.control_epoch
+              )
+                return { cancelled: true };
+              return { completion: client.beginDiscovery() };
+            });
+            if (!recovery.cancelled) await recovery.completion;
+            result = { state: "progress", action: "begin" };
+          }
+          if (current.state === "finished")
+            result = { state: "progress", action: "begin" };
+          if (
+            result.state === "finished" &&
+            current.content_requested === false
+          )
+            result = {
+              state: "awaiting_resources",
+              reason: "course_selection_required",
+            };
+        }
       } catch (e) {
         result = {
           state: "blocked",
@@ -290,6 +369,7 @@ export function createCanvasHost({
             view = { ...view, state: "cooldown", reason };
           } else {
             next.enabled = false;
+            next.stop_reason = reason;
             next.control_epoch = nextEpoch();
             view = { ...view, state: "blocked", reason };
           }
@@ -298,7 +378,10 @@ export function createCanvasHost({
         ) {
           view = {
             state: result.state,
-            reason: null,
+            reason:
+              result.reason === "course_selection_required"
+                ? result.reason
+                : null,
             course_count:
               Number.isSafeInteger(result.seen_count) && result.seen_count >= 0
                 ? result.seen_count
@@ -310,6 +393,7 @@ export function createCanvasHost({
           if (result.action === "begin") view.action = "begin";
         } else {
           next.enabled = false;
+          next.stop_reason = "host_failed";
           next.control_epoch = nextEpoch();
           view = { ...view, state: "blocked", reason: "host_failed" };
         }
@@ -332,7 +416,20 @@ export function createCanvasHost({
     if (busy) return { state: "busy", running: true };
     busy = true;
     try {
-      return { ...(await collectStep()), running: false };
+      const deadline = now() + burstBudgetMs;
+      let result;
+      for (let step = 0; step < burstSteps; step++) {
+        result = await collectStep();
+        // Check the soft event budget between durable steps. A step keeps its
+        // existing request deadlines and fences; finish/pause/failure stops now.
+        if (
+          result.state !== "progress" ||
+          result.enabled !== true ||
+          now() >= deadline
+        )
+          break;
+      }
+      return { ...result, running: false };
     } finally {
       busy = false;
     }

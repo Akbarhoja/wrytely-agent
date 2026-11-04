@@ -10,6 +10,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, ConfigDict, Field, SecretStr
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.private_artifact_api import _integer, _queries
 from contracts.models import Identity
 from shared.db import Store
 from shared.source_connections import PairingLimited, PairingRejected, SourceCredentialRejected
@@ -88,6 +89,39 @@ def register_source_connections(api, *, identity_dependency, database_dependency
     def enabled():
         if not canvas_origins:
             raise HTTPException(503, "Canvas pairing is not configured")
+
+    @router.get("")
+    def listing(request: Request, user: User, db: DB):
+        try:
+            query = _queries(request, {"limit", "cursor"})
+            return db.list_source_connections(
+                user.user_id, limit=_integer(query.get("limit"), 20), cursor=query.get("cursor")
+            )
+        except ValueError:
+            raise HTTPException(400, "Invalid connection request") from None
+        except LookupError:
+            raise HTTPException(404, "Not found") from None
+
+    @router.get("/canvas/setup")
+    def setup(request: Request, user: User):
+        if request.query_params:
+            raise HTTPException(400, "Invalid connection request")
+        return {"origins": list(canvas_origins), "configured": bool(canvas_origins)}
+
+    @router.get("/{connection_id}/canvas/coverage")
+    def coverage(connection_id: str, request: Request, user: User, db: DB):
+        try:
+            query = _queries(request, {"limit", "after"})
+            return db.canvas_coverage(
+                user.user_id,
+                connection_id,
+                limit=_integer(query.get("limit"), 20),
+                after=query.get("after"),
+            )
+        except ValueError:
+            raise HTTPException(400, "Invalid coverage request") from None
+        except LookupError:
+            raise HTTPException(404, "Not found") from None
 
     @router.post("/canvas/context")
     def context(body: PairingIn, request: Request, credentials: Credential, db: DB):

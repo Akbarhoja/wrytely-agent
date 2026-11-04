@@ -81,6 +81,8 @@ function fixture(detail: unknown = result) {
         workflow_state: "ready_for_review",
         artifact_id: id,
       });
+    if (path.includes("/v2/responsibilities/"))
+      return Response.json({ schema_version: 2, artifacts: [], next: null });
     if (path.includes("/responsibilities/"))
       return Response.json({ artifacts: [summary], limit: 50 });
     return Response.json(detail);
@@ -114,7 +116,7 @@ describe("private saved results", () => {
     vi.stubGlobal("fetch", fetcher);
     render(<AcademicResults userId="alice" />);
     fireEvent.click(await screen.findByRole("button", { name: "Open work: Comparison section" }));
-    await screen.findByText(/No saved drafts/);
+    await screen.findByText(/No legacy snapshot drafts/);
     ready = true;
     fireEvent.click(screen.getByRole("button", { name: "Refresh work status" }));
     await screen.findByRole("heading", { name: "Draft ready for your review" });
@@ -126,7 +128,7 @@ describe("private saved results", () => {
       fetcher.mock.calls.every(([, options]) => !options?.method || options.method === "GET"),
     ).toBe(true);
     expect(fetcher.mock.calls.filter(([url]) => String(url).endsWith("/artifacts"))).toHaveLength(
-      2,
+      3,
     );
   });
   it("does not invent a disclosure requirement for a permitted policy", async () => {
@@ -274,11 +276,11 @@ describe("private saved results", () => {
     vi.stubGlobal("fetch", fetcher);
     render(<AcademicResults userId="alice" />);
     fireEvent.click(await screen.findByRole("button", { name: "Open work: Comparison section" }));
-    await screen.findByText(/No saved drafts were found/);
+    await screen.findByText(/No legacy snapshot drafts were found/);
     fetcher.mockResolvedValue(Response.json({ detail: "Unavailable" }, { status: 503 }));
     fireEvent.click(screen.getByRole("button", { name: "Open work: Comparison section" }));
     await screen.findByText(/Saved drafts could not be loaded/);
-    expect(screen.queryByText(/No saved drafts were found/)).toBeNull();
+    expect(screen.queryByText(/No legacy snapshot drafts were found/)).toBeNull();
   });
   it("shows private draft, citation and stored checks without executing source HTML", async () => {
     const fetcher = fixture();
@@ -291,7 +293,7 @@ describe("private saved results", () => {
     expect(screen.getAllByText(evidence.quote).length).toBeGreaterThan(0);
     expect(screen.getByText("Student review required.")).toBeTruthy();
     expect(screen.getByText(/Nothing is shared, sent or submitted/)).toBeTruthy();
-    expect(fetcher.mock.calls).toHaveLength(4);
+    expect(fetcher.mock.calls).toHaveLength(5);
   });
   it.each([
     [true, true, "Source context changed"],

@@ -17,6 +17,15 @@ const runtimeFiles = [
   "canvas-pairing/host.mjs",
   "canvas-pairing/client.mjs",
   "canvas-pairing/discovery.mjs",
+  "canvas-pairing/document-journal.mjs",
+  "canvas-pairing/document-reader.mjs",
+  "canvas-pairing/file-documents.mjs",
+  "canvas-pairing/file-storage.mjs",
+  "canvas-pairing/module-reader.mjs",
+  "canvas-pairing/discussion-thread.mjs",
+  "canvas-pairing/document-collector.mjs",
+  "canvas-pairing/submission-documents.mjs",
+  "canvas/document-parts.mjs",
   "canvas-pairing/collector.mjs",
   "canvas-pairing/assignment-page.mjs",
   "canvas-feasibility/probe.mjs",
@@ -139,15 +148,22 @@ export async function prepareCanvasPackage({
     `:root {\n${tokens.join("\n")}\n  color-scheme: light;\n}\n`,
     { flag: "wx" },
   );
-  const hosts = [...new Set([apiOrigin, canvasOrigin])];
+  const hosts = [
+    ...new Set([
+      apiOrigin,
+      canvasOrigin,
+      "https://inst-fs-iad-prod.inscloudgate.net",
+      "https://cdn.inst-fs-iad-prod.inscloudgate.net",
+    ]),
+  ];
   const manifest = {
     manifest_version: 3,
     name: "Wrytely Canvas collection (development)",
-    version: "0.1.0",
+    version: "0.3.2",
     minimum_chrome_version: "120",
     description:
       "Private student-controlled Canvas collection; inactive until explicitly enabled.",
-    permissions: ["storage", "alarms"],
+    permissions: ["storage", "alarms", "webRequest"],
     host_permissions: hosts.map((value) => `${value}/*`),
     background: { service_worker: "worker.mjs", type: "module" },
     action: {

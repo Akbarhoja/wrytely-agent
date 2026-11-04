@@ -27,6 +27,55 @@ function fixture() {
     },
   };
 }
+test("catalog-only completion directs the student to select scope without claiming complete content", async () => {
+  const f = fixture();
+  f.reply = {
+    state: "awaiting_resources",
+    enabled: true,
+    reason: "course_selection_required",
+    coverage: null,
+  };
+  await f.controls.refresh();
+  assert.equal(f.controls.snapshot().heading, "Choose courses to collect");
+  assert.match(
+    f.controls.snapshot().coverage,
+    /Only course discovery finished/,
+  );
+  assert.ok(!f.controls.snapshot().coverage.includes("complete coverage"));
+});
+test("refresh preserves a restarted collector's stop reason without running collection", async () => {
+  const f = fixture();
+  f.reply = {
+    state: "blocked",
+    enabled: false,
+    reason: "discovery_context_changed",
+  };
+  await f.controls.refresh();
+  assert.equal(f.controls.snapshot().heading, "Collection needs attention");
+  assert.match(f.controls.snapshot().feedback, /current course selection/);
+  assert.equal(f.calls.length, 1);
+  assert.equal(f.calls[0].action, "status");
+});
+test("only fixed diagnostic codes render, never arbitrary provider text", async () => {
+  const f = fixture();
+  for (const code of [
+    "invalid_collection",
+    "discovery_lease_expired",
+    "unsafe_pagination",
+  ]) {
+    f.reply = { state: "blocked", enabled: false, reason: code };
+    await f.controls.refresh();
+    assert.ok(f.controls.snapshot().feedback.includes(code));
+  }
+  f.reply = {
+    state: "blocked",
+    enabled: false,
+    reason: "PRIVATE token and course text",
+  };
+  await f.controls.refresh();
+  assert.ok(!f.controls.snapshot().feedback.includes("PRIVATE"));
+  assert.ok(f.calls.every((x) => x.action === "status"));
+});
 test("opening/refresh asks status only, never pairing, bind or source collection", async () => {
   const f = fixture();
   assert.deepEqual(f.calls, []);

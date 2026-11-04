@@ -1,5 +1,6 @@
 // Worker-side C1 transport and bounded metadata collector. No scheduler or token export.
 import { checkedOrigin, makeReader } from "../canvas-feasibility/probe.mjs";
+import { makeDocumentReader } from "./document-reader.mjs";
 import { discoveryOperations, discoveryConflicts } from "./discovery.mjs";
 
 const active = new WeakSet();
@@ -200,6 +201,7 @@ export function createPairingClient({
   storageArea,
   fetchImpl = fetch,
   canvasFetch = fetch,
+  fileTransport,
 } = {}) {
   const apiOrigin = origin(apiInput),
     canvasOrigin = origin(canvasInput);
@@ -282,7 +284,9 @@ export function createPairingClient({
   }
   async function post(action, body, bearer) {
     const discovery =
-      action.startsWith("discovery/") || action.startsWith("academic/");
+      action.startsWith("discovery/") ||
+      action.startsWith("academic/") ||
+      action.startsWith("documents/");
     const uncertain =
       action === "redeem"
         ? "pairing_outcome_unknown"
@@ -325,7 +329,7 @@ export function createPairingClient({
           response.status === 401
         )
           fail("reconnect_required");
-        if (discovery && response.status === 422)
+        if (discovery && [400, 404, 413, 415, 422].includes(response.status))
           fail("discovery_request_rejected");
         if (discovery) fail(uncertain);
         if (response.status === 429) fail("pairing_rate_limited");
@@ -416,14 +420,23 @@ export function createPairingClient({
       cleanup,
       canvasOrigin,
       validExpiry,
+      readDocumentPage: makeDocumentReader(
+        canvasOrigin,
+        canvasFetch,
+        fileTransport,
+      ),
       readCoursePage: (cursor) => canvas.coursePage(cursor),
       readAssignmentPage: (course, cursor) =>
         canvas.assignmentPage(course, cursor),
       call: (operation, body, item) =>
         post(
-          operation.startsWith("academic_")
-            ? `academic/${operation.slice(9)}`
-            : `discovery/${operation}`,
+          operation.startsWith("document_")
+            ? operation === "document_resource"
+              ? "documents/resource"
+              : `documents/${operation.slice(9)}`
+            : operation.startsWith("academic_")
+              ? `academic/${operation.slice(9)}`
+              : `discovery/${operation}`,
           body,
           item.ingestion_bearer,
         ),

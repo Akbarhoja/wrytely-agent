@@ -5,33 +5,55 @@ existing Wrytely handwriting product for the Meta Global AI Developer Hackathon.
 
 ## Current implementation
 
-The reviewed M2 integration candidate includes a Python/FastAPI API, real Clerk
-sign-in, one private agent per verified user, scoped Postgres storage, a durable
-bounded Meta task loop, academic responsibilities and versioned source memory.
-Students can save manual academic snapshots, explicitly delegate one private draft,
-and inspect saved artifacts, source citations and verification findings. The
-planner chooses internal steps; policy/rubric assessment and mandatory draft checks
-constrain readiness. Supported quoted word ranges and disclosure placement have
-deterministic checks; semantic model assessments remain fallible.
+The November3 delivery target is a **one-course autonomous prototype**: Canvas
+collection, a persisted Meta-powered supervisor that investigates stored evidence
+and offers help, explicit student acceptance, checked private DOCX drafts and
+revisions, source-change reassessment and WhatsApp communication. See the
+[one-course plan and exact owners](docs/ONE-COURSE-DELIVERY.md).
 
-Official WhatsApp linking, webhook handling and delivery controls are implemented.
-Partial live M1 evidence exists, but reply delivery/business requirements and other
-acceptance checks remain open. The bounded live M2 attempt saved real authenticated
-snapshots/delegation, then failed on its first Meta assessment call with NotFoundError;
-no live checked draft was produced. Development workers remain stopped outside
-explicitly bounded tests. No assignment submission or classmate-sharing tool exists.
+Supervisor, budget, offer recovery and checked-file authorization code is on the
+candidate branch. M's student controls, HTTP/download/revision/budgeted service and
+media transport assembly is combined. The Store's explicit WhatsApp command intake
+and its signed parser/webhook consumer are combined. The connected rehearsal sends
+signed HTTP commands and receipt callbacks through the actual application, with
+simulated models/provider responses. It reuses original linkage/inbound replay and
+creates no unrelated generic chat task.
+Scripted integration evidence is separate from actual Meta quality, installed
+collection coverage, continuous cloud operation and phone delivery. Meta business
+verification is submitted and under review; the messaging restriction is not cleared.
 
-Canvas extension and Outlook email connectors, automatic commitment discovery,
-requirement adaptation acceptance and public pilot are still pending. Manual
-snapshots do not monitor course changes. This candidate is on
-`codex/m2-integration-review`; protected main has not received the combined baseline.
-The required first version uses our own Meta-powered runtime with Canvas, Outlook
-and WhatsApp. Teams, handwriting and Hermes adoption are outside its current build
-scope. See [ordered work orders](docs/WORK-ORDERS.md),
-[the reuse/gap audit](docs/IMPLEMENTATION-AUDIT.md),
-[STATUS.md](STATUS.md), [the shared plan](docs/BUILD-PLAN.md),
-[the M2 checkpoint](docs/M2-INTEGRATION-CHECKPOINT.md) and
-[the live attempt](docs/M2-RUN-2026-10-29.md) for evidence and limits.
+The P1 completion candidate on `codex/p1-completion` connects the existing Canvas
+extension to document storage and a student connection/coverage interface. It
+collects discovered courses, assignment instructions/rubrics, syllabus text,
+announcements, discussion threads/replies, modules/items, pages, own submissions/
+feedback, assignment grades and readable course files. PDF support extracts text;
+images, restricted or external content and unsupported formats remain explicit gaps.
+Students can choose course/content scope, inspect coverage and disconnect. Manual
+snapshots remain troubleshooting, not the normal connection flow.
+
+Existing foundations include Clerk sign-in, a private agent per verified account,
+scoped Postgres memory, durable bounded Meta tasks, explicit delegation and checked
+private drafts. Document-based saved drafts now have an explicit v2 inspection view
+with pinned original evidence and current access checks. Saved checks do not grant
+permission to send or submit work.
+
+**P1 is not complete yet.** Synthetic integration checks are separate from
+installed Chrome and live course acceptance. Executable `0abda7b` and migrations023–028 are deployed only to the isolated
+development API. Bounded real Meta checks returned incomplete and model_not_found
+before a usable decision; the monitor is paused,
+budget disabled and reservation held. No completed real course/phone workflow is
+claimed. See [the first live check](docs/ONE-COURSE-LIVE-CHECK.md) and
+[the stopped single-request check](docs/ONE-COURSE-NEXT-META-CHECK.md).
+Independent review/CI and protected-main merge status remain separate. See
+[the P1 candidate and live checklist](docs/P1-COMPLETION-CANDIDATE.md),
+[STATUS.md](STATUS.md) and [work orders](docs/WORK-ORDERS.md).
+
+The broader multi-course semester vision remains P2–P6 roadmap work. Development
+model and WhatsApp workers stay stopped outside separately authorized tests; no
+completed 24/7 academic agent is claimed. WhatsApp live-delivery acceptance remains
+open. Outlook email is optional and paused; Teams, handwriting and Hermes are outside
+the first-version scope. The existing handwriting product and its production
+configuration are not changed by this repository.
 
 ## Setup
 
@@ -62,6 +84,14 @@ an existing product's environment files.
   the backend does not need a Clerk admin secret. Update the key after rotation.
 - `AGENT_AUTHORIZED_PARTIES`: exact allowed frontend origins as a JSON array.
 - `AGENT_META_API_KEY`, `AGENT_META_MODEL`: Meta development key and available model.
+- `AGENT_META_MAX_OUTPUT_TOKENS`, `AGENT_META_REASONING_EFFORT`: bounded output
+  allowance (default2048; maximum16384) and optional reasoning effort. Reasoning
+  counts against output tokens; the cost reservation uses the exact configured cap.
+  New settings do not authorize larger live calls or automatic retries.
+- `AGENT_META_BUDGET_KEY`, `AGENT_META_INPUT_USD_PER_MILLION`,
+  `AGENT_META_OUTPUT_USD_PER_MILLION`: trusted operator budget key and verified
+  nonzero prices. Worker execution requires an operator-configured global budget
+  and student grant; no credit balance creates an allowance automatically.
 
 After reviewing the target database, explicitly apply the additive migration:
 
@@ -70,15 +100,17 @@ uv run --env-file .env python -m app.migrate
 uv run --env-file .env uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-In another terminal, run the persistent worker:
+For a separately authorized bounded academic execution pass:
 
 ```sh
-uv run --env-file .env python -m runtime.worker
+uv run --env-file .env python -m runtime.worker --once
 ```
 
 Routes and semantics are in CONTRACTS.md. The frontend must obtain a real Clerk
 session bearer token. There is no debug-user fallback or public test login.
 `GET /healthz` is liveness; `/readyz` only reports configuration flags.
+The [service preparation](deploy/ONE-COURSE-SERVICES.md) describes separately
+activated supervision and delivery processes; starting the API does not start them.
 
 ## Engineering review
 
@@ -107,7 +139,7 @@ does not mean those services were created during the hackathon.
 - https://clerk.com/docs/guides/sessions/manual-jwt-verification
 - https://neon.com/docs/connect/connection-pooling
 
-Public pilot launch still requires cumulative usage reservation/limits, live
+Public pilot launch still requires configured cumulative usage limits, live
 acceptance evidence, connector permissions and operational validation. Existing
 authentication, private artifact reads and delivery controls have code/test evidence;
 that does not establish production readiness or successful live delivery.

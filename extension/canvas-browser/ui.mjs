@@ -17,6 +17,14 @@ const reasonCopy = {
   canvas_session_unavailable:
     "Canvas could not verify this session. Check your sign-in.",
   reconnect_required: "Reconnect this browser using a new pairing code.",
+  discovery_context_changed:
+    "The saved scan no longer matches the current course selection or connection. Collection stopped; ask Wrytely support to check recovery before pairing again.",
+  discovery_journal_invalid:
+    "The saved collection checkpoint could not be validated. Collection stopped; ask Wrytely support to check recovery.",
+  discovery_reconciliation_required:
+    "The saved checkpoint needs reconciliation with Wrytely. Collection stopped; ask Wrytely support to check recovery.",
+  host_failed:
+    "The browser collector stopped unexpectedly. No automatic retry is running. Ask Wrytely support to check recovery.",
   pause_required: "Pause collection before changing the connection.",
   identity_in_progress: "Wait for identity verification to finish.",
   storage_unavailable:
@@ -25,6 +33,72 @@ const reasonCopy = {
   permission_denied:
     "Canvas did not allow this read. Check the connection and course access.",
 };
+// Display only internal, fixed codes. Never echo a source/provider error string.
+const diagnosticReasons = new Set([
+  ...[
+    "inspect",
+    "begin",
+    "recover",
+    "resume",
+    "finish",
+    "close_courses",
+    "page",
+    "verify",
+  ].map((stage) => `course_${stage}_failed`),
+  ...["inspect", "close_assignments", "assignment_page", "verify"].map(
+    (stage) => `assignment_${stage}_failed`,
+  ),
+  "collector_inspect_failed",
+  "collector_read_failed",
+  "collector_prepare_failed",
+  "collector_commit_failed",
+  "collector_continue_failed",
+  "collector_close_failed",
+  "discovery_request_rejected",
+  "discovery_state_changed",
+  "invalid_document_input",
+  "invalid_collection",
+  "unsafe_pagination",
+  "pagination_cycle",
+  "invalid_pagination",
+  "invalid_provider_id",
+  "size_limit",
+  "login_or_non_json",
+  "invalid_response",
+  "unsafe_file_url",
+  "unsafe_file_redirect",
+  "collector_failed",
+  ...[
+    "ambiguous_observation_time",
+    "document_conflict",
+    "document_expired",
+    "document_not_ready",
+    "resource_format_conflict",
+    "duplicate_resource_item",
+    "finish_previous_resource",
+    "resource_rewind",
+    "checkpoint_changed",
+    "course_not_discovered",
+    "course_scope_limit",
+    "cursor_cycle",
+    "duplicate_course_page",
+    "generation_changed",
+    "identity_required",
+    "incomplete_resource",
+    "lease_expired",
+    "lease_replaced",
+    "pagination_complete_or_limit",
+    "reconnect_required",
+    "replay_conflict",
+    "resource_not_selected",
+    "resource_terminal",
+    "resources_open",
+    "resume_existing_scan",
+    "scan_terminal",
+    "scope_changed",
+    "subject_changed",
+  ].map((code) => `discovery_${code}`),
+]);
 const headings = {
   paused: "Collection is paused",
   ready: "Collection is enabled",
@@ -111,11 +185,21 @@ export function createControls({
             ? "The last reported scan has complete coverage; other content may still be unavailable."
             : "Coverage not measured in this view.",
     };
+    if (
+      reply.state === "awaiting_resources" &&
+      reply.reason === "course_selection_required"
+    ) {
+      view.heading = "Choose courses to collect";
+      view.coverage =
+        "Only course discovery finished. In Wrytely → Connections, choose courses and content, save, then collect again.";
+    }
     if (reply.state === "blocked") {
       view.verified = false;
       view.feedback =
         reasonCopy[reply.reason] ??
-        "Collection needs attention. Refresh status and verify the connection.";
+        (diagnosticReasons.has(reply.reason)
+          ? `Collection stopped. Diagnostic code: ${reply.reason}. Keep it paused and share this code with Wrytely support.`
+          : "Collection needs attention. Refresh status and verify the connection.");
       view.tone = "warning";
     }
     return reply.state !== "blocked";

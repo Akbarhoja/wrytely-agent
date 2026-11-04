@@ -20,8 +20,24 @@ RESOURCE_TYPES = {
     "discussions": {"discussion", "entry"},
     "submissions": {"submission"},
     "grades": {"grade"},
+    "modules": {"module", "module_item"},
 }
 FIELDS = {
+    "module": {
+        "position",
+        "unlock_at",
+        "require_sequential_progress",
+        "prerequisite_module_ids",
+        "state",
+    },
+    "module_item": {
+        "module_id",
+        "position",
+        "type",
+        "content_id",
+        "page_url",
+        "completion_requirement",
+    },
     "assignment": {
         "due_at",
         "unlock_at",
@@ -102,7 +118,13 @@ def _rubric(rows, *, ratings=False):
 class AcademicResource(Strict):
     course_id: str
     kind: Literal[
-        "assignments", "syllabus", "pages", "announcements", "discussions", "submissions", "grades"
+        "assignments",
+        "syllabus",
+        "pages",
+        "announcements",
+        "discussions",
+        "submissions",
+        "grades",
     ]
 
     @field_validator("course_id")
@@ -122,6 +144,8 @@ class EvidenceItem(Strict):
             "entry",
             "submission",
             "grade",
+            "module",
+            "module_item",
         ]
         | None
     ) = None
@@ -150,13 +174,19 @@ class EvidenceItem(Strict):
                 fields[name] = _decimal(value)
             elif name == "rubric":
                 _rubric(value)
-            elif name in {"published", "late", "missing", "required_initial_post"}:
+            elif name in {
+                "published",
+                "late",
+                "missing",
+                "required_initial_post",
+                "require_sequential_progress",
+            }:
                 if value is not None and type(value) is not bool:
                     raise ValueError("Boolean field required")
             elif name == "attempt":
                 if value is not None and (type(value) is not int or not 0 <= value <= 1000000):
                     raise ValueError("Invalid attempt")
-            elif name in {"submission_types", "module_ids"}:
+            elif name in {"submission_types", "module_ids", "prerequisite_module_ids"}:
                 if value is not None and (
                     not isinstance(value, list)
                     or len(value) > 1000

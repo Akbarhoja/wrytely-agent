@@ -16,11 +16,23 @@ const allowedPaths = new Set(
     "academic/batch",
     "academic/resource",
     "academic/extract",
+    ...[
+      "begin",
+      "parts",
+      "finish",
+      "batch",
+      "extract",
+      "file-extract",
+      "resource",
+    ].map((p) => `documents/${p}`),
     ...["begin", "resume", "batch", "resource", "finish"].map(
       (p) => `discovery/${p}`,
     ),
   ].map((p) => `${root}/${p}`),
 );
+// Generated from a synthetic one-page PDF; no student content.
+const syntheticPdf =
+  "JVBERi0xLjMKJeLjz9MKMSAwIG9iago8PAovUHJvZHVjZXIgKHB5cGRmKQo+PgplbmRvYmoKMiAwIG9iago8PAovVHlwZSAvUGFnZXMKL0NvdW50IDEKL0tpZHMgWyA0IDAgUiBdCj4+CmVuZG9iagozIDAgb2JqCjw8Ci9UeXBlIC9DYXRhbG9nCi9QYWdlcyAyIDAgUgo+PgplbmRvYmoKNCAwIG9iago8PAovVHlwZSAvUGFnZQovUmVzb3VyY2VzIDw8Ci9Gb250IDw8Ci9GMSA1IDAgUgo+Pgo+PgovTWVkaWFCb3ggWyAwLjAgMC4wIDMwMCAzMDAgXQovUGFyZW50IDIgMCBSCi9Db250ZW50cyA2IDAgUgo+PgplbmRvYmoKNSAwIG9iago8PAovVHlwZSAvRm9udAovU3VidHlwZSAvVHlwZTEKL0Jhc2VGb250IC9IZWx2ZXRpY2EKPj4KZW5kb2JqCjYgMCBvYmoKPDwKL0xlbmd0aCA1MAo+PgpzdHJlYW0KQlQgL0YxIDEyIFRmIDIwIDI1MCBUZCAoU3ludGhldGljIHN5bGxhYnVzLikgVGogRVQKZW5kc3RyZWFtCmVuZG9iagp4cmVmCjAgNwowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMTUgMDAwMDAgbiAKMDAwMDAwMDA1NCAwMDAwMCBuIAowMDAwMDAwMTEzIDAwMDAwIG4gCjAwMDAwMDAxNjIgMDAwMDAgbiAKMDAwMDAwMDI5NCAwMDAwMCBuIAowMDAwMDAwMzY0IDAwMDAwIG4gCnRyYWlsZXIKPDwKL1NpemUgNwovUm9vdCAzIDAgUgovSW5mbyAxIDAgUgo+PgpzdGFydHhyZWYKNDY0CiUlRU9GCg==";
 const scenarios = [
   "lost_before",
   "lost_after",
@@ -41,6 +53,29 @@ const scenarios = [
   "academic_cross_account",
   "assignment_collector_lifecycle",
   "assignment_collector_lost_after",
+  "auto_documents_pdf",
+  "auto_documents_all",
+  "auto_documents_files",
+  "auto_documents_modules",
+  "auto_documents_replies",
+  "auto_documents_replies_lost",
+  "auto_documents_status",
+  "auto_documents_restricted",
+  "auto_documents_topics",
+  "auto_documents_lifecycle",
+  "auto_documents_lost_batch",
+  "document_complete",
+  "document_empty",
+  "document_syllabus",
+  "document_lost_begin",
+  "document_lost_parts",
+  "document_lost_finish",
+  "document_lost_batch",
+  "document_many_slots",
+  "document_four",
+  "document_pagination",
+  "document_bad_receipt",
+  "document_pending_tamper",
 ];
 let phase = "configuration";
 const rejection = (code) => (e) =>
@@ -72,6 +107,7 @@ try {
   const academicBodies = [];
   const extractionBodies = [];
   let collectionRound = 0;
+  const documentBodies = [];
 
   async function transport(url, init) {
     const requested = new URL(url);
@@ -109,7 +145,46 @@ try {
       injected = true;
       throw Error("synthetic transport loss before dispatch");
     }
+    const documentAction = requested.pathname.split("/documents/")[1];
+    if (documentAction)
+      documentBodies.push({
+        action: documentAction,
+        body: JSON.parse(init.body),
+      });
     const response = await fetch(`${target.origin}${requested.pathname}`, init);
+    if (
+      documentAction &&
+      !injected &&
+      (scenario === `document_lost_${documentAction}` ||
+        (scenario === "auto_documents_lost_batch" &&
+          documentAction === "batch") ||
+        (scenario === "auto_documents_replies_lost" &&
+          documentAction === "batch" &&
+          JSON.parse(init.body).envelope.items.some(
+            (x) => x.kind === "entry",
+          ))) &&
+      response.ok
+    ) {
+      injected = true;
+      await response.arrayBuffer();
+      throw Error("synthetic lost document acknowledgment");
+    }
+    if (
+      documentAction === "finish" &&
+      !injected &&
+      scenario === "document_bad_receipt" &&
+      response.ok
+    ) {
+      injected = true;
+      const bad = await response.json();
+      bad.document_digest = "f".repeat(64);
+      const replacement = Response.json(bad, {
+        headers: { "cache-control": "no-store" },
+      });
+      Object.defineProperty(replacement, "url", { value: requested.href });
+      return replacement;
+    }
+
     assert.equal(response.headers.get("cache-control"), "no-store");
     if (
       isAcademic &&
@@ -182,14 +257,307 @@ try {
         canvasOrigin,
         storageArea,
         fetchImpl: transport,
+        fileTransport: {
+          location: () => null,
+          fetch: async (url, init) => {
+            assert.ok(
+              url.startsWith("https://cdn.inst-fs-iad-prod.inscloudgate.net/"),
+            );
+            assert.equal(init.credentials, "omit");
+            assert.equal(init.redirect, "manual");
+            const response = new Response(
+              scenario === "auto_documents_pdf"
+                ? Uint8Array.from(atob(syntheticPdf), (x) => x.charCodeAt(0))
+                : "Syllabus reading. " +
+                    (collectionRound === 2 ? "Updated." : "Original."),
+              {
+                headers: {
+                  "content-type":
+                    scenario === "auto_documents_pdf"
+                      ? "application/pdf"
+                      : "text/plain",
+                },
+              },
+            );
+            Object.defineProperty(response, "url", { value: url });
+            return response;
+          },
+        },
         canvasFetch: async (url, init) => {
           assert.equal(init.method, "GET");
           assert.equal(init.credentials, "include");
           assert.equal(init.redirect, "error");
           assert.equal(init.cache, "no-store");
           assert.ok(init.signal instanceof AbortSignal);
-          if (url === `${canvasOrigin}/api/v1/users/self/profile`)
-            return Response.json({ id: provider });
+          if (url === `${canvasOrigin}/api/v1/users/self/profile`) {
+            const response = Response.json({ id: provider });
+            Object.defineProperty(response, "url", { value: url });
+            return response;
+          }
+          if (scenario.startsWith("auto_documents_")) {
+            const fileMatch = new URL(url).pathname.match(
+              /^\/api\/v1\/courses\/(101|102)\/files(?:\/(\d+))?$/,
+            );
+            if (fileMatch) {
+              const file = {
+                id: 92,
+                filename:
+                  scenario === "auto_documents_pdf"
+                    ? "Syllabus.pdf"
+                    : "Syllabus.txt",
+                "content-type":
+                  scenario === "auto_documents_pdf"
+                    ? "application/pdf"
+                    : "text/plain",
+                size: 40,
+                url:
+                  scenario === "auto_documents_pdf"
+                    ? "https://cdn.inst-fs-iad-prod.inscloudgate.net/12345678-1234-1234-1234-123456789abc/Syllabus.pdf?token=synthetic&content_type=application%2Fpdf"
+                    : "https://cdn.inst-fs-iad-prod.inscloudgate.net/12345678-1234-1234-1234-123456789abc/Syllabus.txt?token=synthetic&content_type=text%2Fplain",
+              };
+              const response = Response.json(fileMatch[2] ? file : [file]);
+              Object.defineProperty(response, "url", { value: url });
+              return response;
+            }
+            const module = new URL(url).pathname.match(
+              /^\/api\/v1\/courses\/(101|102)\/modules(?:\/90\/items)?$/,
+            );
+            if (module) {
+              const items = url.includes("/items");
+              const response = Response.json(
+                items
+                  ? [
+                      {
+                        id: 91,
+                        module_id: 90,
+                        title: "Quiz reference",
+                        type: "Quiz",
+                        content_id: 80,
+                        position: 1,
+                      },
+                    ]
+                  : [
+                      {
+                        id: 90,
+                        name: "Week 1",
+                        position: 1,
+                        unlock_at: null,
+                        require_sequential_progress: true,
+                        prerequisite_module_ids: [],
+                        state: "started",
+                      },
+                    ],
+              );
+              Object.defineProperty(response, "url", { value: url });
+              return response;
+            }
+            const thread = new URL(url).pathname.match(
+              /^\/api\/v1\/courses\/(101|102)\/discussion_topics\/60\/entries(?:\/(\d+)\/replies)?$/,
+            );
+            if (thread) {
+              assert.ok(
+                scenario.startsWith("auto_documents_replies") ||
+                  scenario === "auto_documents_all",
+              );
+              const [, course, parent] = thread,
+                start = Number(course) * 10;
+              const page = Number(new URL(url).searchParams.get("page") ?? "1");
+              const entry = (id) => ({
+                id,
+                message: `<p>Reply ${id}${collectionRound === 2 && id === 10101 ? " changed" : ""}</p>`,
+                recent_replies: [
+                  { id: 999999, message: "PRIVATE_RECENT_SAMPLE_ONLY" },
+                ],
+              });
+              const body = parent
+                ? Number(parent) === start
+                  ? Array.from({ length: 4 }, (_, i) =>
+                      entry(Number(course) * 100 + (page - 1) * 4 + i + 1),
+                    )
+                  : []
+                : [entry(start), entry(start + 1)];
+              const response = Response.json(body, {
+                headers:
+                  parent && Number(parent) === start && page < 3
+                    ? {
+                        link: `<${url.replace(/&page=\d+$/, "")}&page=${page + 1}>; rel="next"`,
+                      }
+                    : {},
+              });
+              Object.defineProperty(response, "url", { value: url });
+              return response;
+            }
+            const ownSubmission = new URL(url).pathname.match(
+              /^\/api\/v1\/courses\/(101|102)\/assignments\/(17|30)\/submissions\/self$/,
+            );
+            if (ownSubmission) {
+              assert.equal(
+                new URL(url).searchParams.get("include[]"),
+                "submission_comments",
+              );
+              const response = Response.json({
+                assignment_id: Number(ownSubmission[2]),
+                user_id: Number(provider),
+                submitted_at: "2026-11-01T00:00:00Z",
+                workflow_state: "graded",
+                attempt: 1,
+                late: false,
+                missing: false,
+                body: "<p>OWN_SUBMISSION_BODY</p><script>PRIVATE_SCRIPT</script>",
+                submission_comments: [
+                  {
+                    comment: "OWN_FEEDBACK",
+                    created_at: "2026-11-01T01:00:00Z",
+                  },
+                ],
+                attachments: [],
+              });
+              Object.defineProperty(response, "url", { value: url });
+              return response;
+            }
+            const statusMatch = new URL(url).pathname.match(
+              /^\/api\/v1\/courses\/(101|102)\/students\/submissions$/,
+            );
+            if (statusMatch) {
+              const course = statusMatch[1],
+                assignment_id = course === "101" ? 17 : 30;
+              assert.equal(
+                new URL(url).searchParams.get("include[]"),
+                "assignment",
+              );
+              assert.equal(
+                new URL(url).searchParams.has("student_ids[]"),
+                false,
+              );
+              const response = Response.json([
+                {
+                  id: 90,
+                  assignment_id,
+                  user_id: Number(provider),
+                  assignment: {
+                    id: assignment_id,
+                    course_id: Number(course),
+                    name: "Status assignment",
+                    points_possible: 20,
+                    grading_type: "points",
+                  },
+                  submitted_at: "2026-11-01T00:00:00Z",
+                  workflow_state: "graded",
+                  attempt: 1,
+                  late: false,
+                  missing: false,
+                  score: collectionRound === 2 && course === "101" ? 18 : 12,
+                  grade:
+                    collectionRound === 2 && course === "101" ? "18" : "12",
+                  body: "PRIVATE_SUBMISSION_BODY",
+                  submission_comments: [{ comment: "PRIVATE_FEEDBACK" }],
+                },
+              ]);
+              Object.defineProperty(response, "url", { value: url });
+              return response;
+            }
+            const parsed = new URL(url),
+              match = parsed.pathname.match(
+                /^\/api\/v1\/courses\/(101|102)(?:\/(assignments|pages|discussion_topics)(?:\/(\d+))?)?$/,
+              );
+            if (match) {
+              const [, course, kind, id] = match;
+              if (
+                scenario === "auto_documents_restricted" &&
+                course === "102" &&
+                kind === "pages"
+              ) {
+                const response = Response.json(
+                  { error: "permission_denied" },
+                  { status: 403 },
+                );
+                Object.defineProperty(response, "url", { value: url });
+                return response;
+              }
+              const assignment = (n) => ({
+                id: n,
+                course_id: Number(course),
+                name: `Automatic assignment ${n}`,
+                description: `<p>${"Long instruction. ".repeat(1800)}</p><script>PRIVATE_SCRIPT</script>`,
+                due_at:
+                  collectionRound === 2 && n === 17
+                    ? "2026-11-04T00:00:00Z"
+                    : "2026-11-03T00:00:00Z",
+                unlock_at: null,
+                lock_at: null,
+                points_possible: 20,
+                submission_types: ["online_upload"],
+                published: true,
+                rubric: [
+                  {
+                    id: "criterion",
+                    description: "Explain evidence",
+                    points: 20,
+                    ratings: [],
+                  },
+                ],
+              });
+              let body,
+                link = "";
+              if (!kind)
+                body = {
+                  id: Number(course),
+                  name: `Automatic course ${course}`,
+                  syllabus_body: "<p>Attendance is required.</p>",
+                };
+              else if (kind === "discussion_topics") {
+                const announcement = id
+                  ? id === "50"
+                  : parsed.searchParams.get("only_announcements") === "true";
+                const value = {
+                  id: announcement ? 50 : 60,
+                  title: announcement ? "Deadline update" : "Weekly discussion",
+                  message: announcement
+                    ? "<p>The exam moved to Friday.</p>"
+                    : "<p>Discuss the reading.</p>",
+                  posted_at: "2026-11-01T00:00:00Z",
+                  is_announcement: announcement,
+                  require_initial_post: !announcement,
+                  user_can_see_posts:
+                    announcement ||
+                    scenario.startsWith("auto_documents_replies") ||
+                    scenario === "auto_documents_all",
+                  discussion_subentry_count: 0,
+                };
+                body = id ? value : [value];
+              } else if (kind === "assignments") {
+                if (id) body = assignment(Number(id));
+                else {
+                  const second = parsed.searchParams.get("page") === "2";
+                  assert.equal(parsed.searchParams.get("per_page"), "4");
+                  assert.equal(
+                    parsed.searchParams.get("override_assignment_dates"),
+                    "true",
+                  );
+                  body =
+                    course === "101"
+                      ? second
+                        ? [assignment(21)]
+                        : [17, 18, 19, 20].map(assignment)
+                      : [assignment(30)];
+                  if (course === "101" && !second)
+                    link = `<${url}&page=2>; rel="next"`;
+                }
+              } else
+                body = id
+                  ? {
+                      page_id: Number(id),
+                      title: "Course page",
+                      body: "<p>Office hours on Tuesday.</p>",
+                    }
+                  : [{ page_id: 40 }];
+              const response = Response.json(body, {
+                headers: link ? { link } : {},
+              });
+              Object.defineProperty(response, "url", { value: url });
+              return response;
+            }
+          }
           if (scenario.startsWith("assignment_collector_")) {
             const match = new URL(url).pathname.match(
               /^\/api\/v1\/courses\/(101|102)\/assignments$/,
@@ -226,7 +594,8 @@ try {
           }
           assert.ok(
             scenario.startsWith("collector_") ||
-              scenario.startsWith("assignment_collector_"),
+              scenario.startsWith("assignment_collector_") ||
+              scenario.startsWith("auto_documents_"),
           );
           assert.ok([courseStart, courseNext].includes(url));
           courseRequests.push(url);
@@ -305,11 +674,267 @@ try {
   if (
     !scenario.startsWith("collector_") &&
     !scenario.startsWith("academic_") &&
-    !scenario.startsWith("assignment_collector_")
+    !scenario.startsWith("assignment_collector_") &&
+    !scenario.startsWith("document_") &&
+    !scenario.startsWith("auto_documents_")
   )
     await alice.client.beginDiscovery();
 
-  if (scenario.startsWith("assignment_collector_")) {
+  if (scenario.startsWith("auto_documents_")) {
+    const context = await alice.fresh().readCurrentContext();
+    assert.equal(
+      (
+        await request(`${root}/scope`, "alice", {
+          connection_id: context.connection_id,
+          generation: context.generation,
+          mode: "all_active",
+          course_ids: [],
+          resource_kinds: [
+            "assignments",
+            "syllabus",
+            "pages",
+            ...(scenario === "auto_documents_all"
+              ? [
+                  "announcements",
+                  "discussions",
+                  "submissions",
+                  "grades",
+                  "modules",
+                  "files",
+                ]
+              : scenario === "auto_documents_topics"
+                ? ["announcements", "discussions"]
+                : scenario === "auto_documents_status"
+                  ? ["submissions", "grades"]
+                  : scenario.startsWith("auto_documents_replies") ||
+                      scenario === "auto_documents_all"
+                    ? ["discussions"]
+                    : scenario === "auto_documents_modules"
+                      ? ["modules"]
+                      : ["auto_documents_files", "auto_documents_pdf"].includes(
+                            scenario,
+                          )
+                        ? ["files"]
+                        : []),
+          ],
+        })
+      ).status,
+      200,
+    );
+    for (collectionRound = 0; collectionRound < 3; collectionRound++) {
+      if (collectionRound) await alice.fresh().beginDiscovery();
+      let finished = false;
+      for (let tick = 0; tick < 500; tick++) {
+        phase = "automatic_document_tick";
+        const result = await alice.fresh().collectDocumentPage();
+        if (result.state === "blocked") {
+          phase =
+            "automatic_" + result.reason + "_" + documentBodies.at(-1)?.action;
+          assert.ok(
+            [
+              "auto_documents_lost_batch",
+              "auto_documents_replies_lost",
+            ].includes(scenario),
+          );
+          assert.equal(result.reason, "discovery_outcome_unknown");
+          continue; // Next tick replays durable pending request before re-reading.
+        }
+        assert.ok(!JSON.stringify(result).includes("Long instruction"));
+        if (result.state === "finished") {
+          assert.equal(result.coverage, "partial");
+          finished = true;
+          break;
+        }
+      }
+      assert.ok(finished);
+    }
+    assert.equal(alice.record().discovery.document, null);
+    if (
+      ["auto_documents_lost_batch", "auto_documents_replies_lost"].includes(
+        scenario,
+      )
+    ) {
+      assert.ok(injected);
+      const requests = documentBodies.filter(
+        (x) =>
+          x.action === "batch" &&
+          (scenario !== "auto_documents_replies_lost" ||
+            x.body.envelope.items.some((i) => i.kind === "entry")),
+      );
+      assert.deepEqual(requests[0], requests[1]);
+    }
+  } else if (scenario.startsWith("document_")) {
+    phase = "document_scope";
+    await alice.fresh().beginDiscovery();
+    await alice.fresh().commitDiscoveryPage(page());
+    await completeCourses(alice.fresh());
+    await alice.fresh().finishDiscovery();
+    const context = await alice.fresh().readCurrentContext();
+    const documentKind =
+      scenario === "document_syllabus" ? "syllabus" : "assignments";
+    assert.equal(
+      (
+        await request(`${root}/scope`, "alice", {
+          connection_id: context.connection_id,
+          generation: context.generation,
+          mode: "explicit_set",
+          course_ids: ["101"],
+          resource_kinds: [documentKind],
+        })
+      ).status,
+      200,
+    );
+    await alice.fresh().beginDiscovery();
+    await alice.fresh().commitDiscoveryPage(page());
+    await completeCourses(alice.fresh());
+    const input = {
+      resource_key: `101/${documentKind}`,
+      observed_at: new Date().toISOString(),
+      next_cursor: null,
+      coverage: { state: "complete", reason: null },
+      documents: Array.from(
+        {
+          length:
+            scenario === "document_empty"
+              ? 0
+              : ["document_four", "document_pagination"].includes(scenario)
+                ? 4
+                : 1,
+        },
+        (_, i) => ({
+          owner_object: {
+            kind: documentKind === "syllabus" ? "syllabus" : "assignment",
+            provider_id: String(17 + i),
+          },
+          object_fields:
+            documentKind === "syllabus"
+              ? { page_id: null, module_ids: null, source_format: "text" }
+              : {
+                  due_at: "2026-11-03T00:00:00Z",
+                  unlock_at: null,
+                  lock_at: null,
+                  points_possible: "20",
+                  submission_types: ["online_upload"],
+                  rubric: [],
+                  published: true,
+                },
+          metadata: {
+            title: `Synthetic original ${i}`,
+            format: "text",
+            extractor_version: "fixture.v1",
+            provider_updated_at: null,
+            coverage: "complete",
+            missing: [],
+          },
+          source: { text: "Cafe\u0301\r\n📚 " + i },
+          reference: `${canvasOrigin}/courses/101/assignments/${17 + i}`,
+        }),
+      ),
+    };
+    if (scenario === "document_pagination") {
+      input.next_cursor = "page-two";
+      input.coverage = { state: "partial", reason: "more_pages" };
+    }
+    if (scenario === "document_many_slots")
+      input.documents[0].source = {
+        text: "x".repeat(512),
+        sectionCharacters: 1,
+      };
+    phase = "document_begin";
+    const recover = async (work) => {
+      try {
+        return await work();
+      } catch (error) {
+        if (
+          ![
+            "document_lost_begin",
+            "document_lost_parts",
+            "document_lost_finish",
+            "document_lost_batch",
+            "document_bad_receipt",
+          ].includes(scenario) ||
+          !rejection("discovery_outcome_unknown")(error)
+        )
+          throw error;
+        const pending = structuredClone(alice.record().discovery.pending);
+        if (scenario === "document_lost_batch")
+          await alice.fresh().resumeDiscovery();
+        const recovered = await alice.fresh().retryDiscovery();
+        const repetitions = documentBodies.filter(
+          (x) => x.action === pending.operation.slice(9),
+        );
+        assert.equal(repetitions.length, 2);
+        const canonical = (x) => {
+          const y = structuredClone(x);
+          delete y.lease_token;
+          return JSON.stringify(y);
+        };
+        assert.equal(
+          canonical(repetitions[0].body),
+          canonical(repetitions[1].body),
+        );
+        return recovered;
+      }
+    };
+    await recover(() => alice.fresh().commitDocumentPage(input));
+    if (scenario === "document_pending_tamper") {
+      alice.record().discovery.document.documents[0].parts[0].text =
+        "corrupted";
+      const before = documentBodies.length;
+      await assert.rejects(
+        alice.fresh().continueDocumentPage(),
+        rejection("discovery_journal_invalid"),
+      );
+      assert.equal(documentBodies.length, before);
+    } else {
+      for (let i = 0; alice.record().discovery.document && i < 20; i++) {
+        phase = "document_" + alice.record().discovery.document.phase;
+        await recover(() => alice.fresh().continueDocumentPage());
+      }
+      assert.equal(alice.record().discovery.document, null);
+      assert.equal(
+        alice.record().discovery.academic.seen_count,
+        input.documents.length,
+      );
+      if (scenario === "document_pagination") {
+        const second = structuredClone(input);
+        second.next_cursor = null;
+        second.coverage = { state: "complete", reason: null };
+        second.documents = [structuredClone(input.documents[0])];
+        second.documents[0].owner_object.provider_id = "30";
+        second.documents[0].reference = `${canvasOrigin}/courses/101/assignments/30`;
+        await alice.fresh().commitDocumentPage(second);
+        while (alice.record().discovery.document)
+          await alice.fresh().continueDocumentPage();
+        assert.equal(alice.record().discovery.academic.seen_count, 5);
+        assert.equal(alice.record().discovery.academic.incomplete, false);
+      }
+      if (scenario === "document_many_slots") {
+        const puts = documentBodies.filter((x) => x.action === "parts");
+        assert.equal(puts.length, 11);
+        assert.ok(puts.every((x) => x.body.parts.length <= 50));
+      }
+      phase = "document_close";
+      await alice.fresh().finishDocumentResource({
+        resource_key: `101/${documentKind}`,
+        outcome: "complete",
+        reason: null,
+      });
+      assert.equal(
+        (await alice.fresh().finishDiscovery()).coverage,
+        "complete",
+      );
+      if (
+        scenario !== "document_complete" &&
+        scenario !== "document_four" &&
+        scenario !== "document_empty" &&
+        scenario !== "document_syllabus" &&
+        scenario !== "document_many_slots" &&
+        scenario !== "document_pagination"
+      )
+        assert.ok(injected);
+    }
+  } else if (scenario.startsWith("assignment_collector_")) {
     phase = "assignment_collector_scope";
     const context = await alice.fresh().readCurrentContext();
     assert.equal(

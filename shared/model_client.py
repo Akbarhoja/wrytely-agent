@@ -7,7 +7,7 @@ from shared.config import Settings
 class ModelCallFailed(RuntimeError):
     """Safe unsuccessful-call metadata; never provider text, output or credentials."""
 
-    def __init__(self, *, status, http_status=None, code=None, usage=None):
+    def __init__(self, *, status, http_status=None, code=None, usage=None, incomplete_reason=None):
         super().__init__("Model response did not complete")
         statuses = {"incomplete", "failed", "cancelled", "in_progress", "queued", "http_error"}
         codes = {
@@ -29,6 +29,13 @@ class ModelCallFailed(RuntimeError):
             "input_tokens": None,
             "output_tokens": None,
         }
+        if incomplete_reason is not None:
+            self._evidence["incomplete_reason"] = (
+                incomplete_reason
+                if isinstance(incomplete_reason, str)
+                and incomplete_reason in {"max_output_tokens", "content_filter"}
+                else "unknown"
+            )
         if usage is not None:
             for key in ("input_tokens", "output_tokens"):
                 value = getattr(usage, key, None)
@@ -46,6 +53,8 @@ class MetaModelClient:
         if not settings.meta_api_key:
             raise RuntimeError("AGENT_META_API_KEY is not configured")
         self._model = settings.meta_model
+        self._max_output_tokens = settings.meta_max_output_tokens
+        self._reasoning_effort = settings.meta_reasoning_effort
         self._client = OpenAI(
             api_key=settings.meta_api_key.get_secret_value(),
             base_url="https://api.meta.ai/v1",
@@ -53,7 +62,17 @@ class MetaModelClient:
             max_retries=0,  # Task retries are managed durably by the worker.
         )
 
+    @property
+    def max_output_tokens(self):
+        """The budget wrapper must reserve against this exact provider limit."""
+        return self._max_output_tokens
+
     def turn(self, history: list[dict], tools: list[dict]) -> ModelTurn:
+        options = (
+            {"reasoning": {"effort": self._reasoning_effort}}
+            if self._reasoning_effort is not None
+            else {}
+        )
         try:
             response = self._client.responses.create(
                 model=self._model,
@@ -61,18 +80,24 @@ class MetaModelClient:
                 tools=tools,
                 store=False,
                 include=["reasoning.encrypted_content"],
-                max_output_tokens=2048,
+                max_output_tokens=self.max_output_tokens,
+                **options,
             )
         except APIStatusError as exc:
             raise ModelCallFailed(
                 status="http_error", http_status=exc.status_code, code=exc.code
             ) from None
         if response.status != "completed":
-            raise ModelCallFailed(status=response.status, usage=response.usage)
+            raise ModelCallFailed(
+                status=response.status,
+                usage=response.usage,
+                incomplete_reason=getattr(response.incomplete_details, "reason", None),
+            )
         usage = response.usage
         return ModelTurn(
             output=[item.model_dump(exclude_none=True) for item in response.output],
             text=response.output_text,
             input_tokens=usage.input_tokens if usage else 0,
             output_tokens=usage.output_tokens if usage else 0,
+            usage_known=usage is not None,
         )

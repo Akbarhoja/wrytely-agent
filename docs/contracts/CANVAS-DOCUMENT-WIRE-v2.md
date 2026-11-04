@@ -1,5 +1,29 @@
 # Canvas document-only wire v2 — review candidate
 
+November2 discussion-reply amendment: resource discussions now accepts owner kinds
+discussion and entry. Entry uses the existing EvidenceItem entry field set, including
+topic_id and parent_entry_id; all other resource/owner combinations remain exact.
+No discriminator, staging/replay/authority semantics, schema1 shape or database
+schema changes. [Durable entry/reply collection](../P1-CONNECTED-PUBLICATION.md#durable-discussion-entries-and-replies).
+
+November2 status amendment on the same P1 branch: schema2 additionally accepts
+submissions/submission and grades/grade, using their existing EvidenceItem fields.
+The collector creates explicit selected-field JSON projections with trusted
+canvas.json.v1 formatting, partial coverage and uncollected-body/policy/total gaps.
+No new HTTP extraction route or database schema is added. The configured trusted
+extractor list must include the formatter for staging; defaults remain off.
+[Status/grade collection](../P1-CONNECTED-PUBLICATION.md#read-only-submission-status-and-assignment-grades).
+
+November2 implementation amendment under Akbar's P1 reassignment: schema2 now also
+accepts announcements/announcement and discussions/discussion, using their existing
+EvidenceItem field sets/canonicalization. This is an additive pair extension, not
+mixed inline/document publication. All original pairs, discriminator, authority,
+bounded staging, digest and replay semantics remain. HTTP extraction/collector
+support is implemented on codex/p1-completion; discussion replies remain unread and
+explicitly partial. [Connected implementation](../P1-CONNECTED-PUBLICATION.md).
+This supersedes the four-pair-only scope and old preimplementation ownership wording
+below; the historical vectors remain unchanged and continue to apply.
+
 Owner A; consumer reviewer M. Tracks [#77](https://github.com/Akbarhoja/wrytely-agent/issues/77)
 and the [explicit follow-up gate](https://github.com/Akbarhoja/wrytely-agent/pull/78#issuecomment-6551693307).
 **Proposed, not agreed, implemented, deployed or permission to upload.**

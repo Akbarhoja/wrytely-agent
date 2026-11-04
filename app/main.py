@@ -16,13 +16,18 @@ from starlette.concurrency import run_in_threadpool
 
 from app.canvas_document_api import register_canvas_documents
 from app.canvas_sync_api import register_canvas_sync
+from app.course_result_api import register_course_results
+from app.course_supervision_api import register_course_supervision
+from app.private_artifact_api import register_private_artifacts
 from app.source_connections import register_source_connections
 from contracts.delivery import WhatsAppStatusEvent
 from contracts.models import AgentControl, Identity, MessageIn, SessionVerifier, SourceObservation
 from integrations.whatsapp import extract_statuses, extract_texts, verify_signature
+from integrations.whatsapp_commands import InvalidWhatsAppCommand, parse_command
 from shared.auth import AuthenticationError, ClerkSessionVerifier
 from shared.config import Settings
 from shared.db import QueueFull, RequestConflict, Store
+from shared.whatsapp_commands import WhatsAppCommandRejected
 
 log = logging.getLogger(__name__)
 
@@ -91,9 +96,11 @@ def create_app(
     *,
     store: Store | None = None,
     verifier: SessionVerifier | None = None,
-    canvas_document_extractors: tuple[str, ...] = (),
+    canvas_document_extractors: tuple[str, ...] | None = None,
 ) -> FastAPI:
     settings = settings or Settings()
+    if canvas_document_extractors is None:
+        canvas_document_extractors = settings.canvas_document_extractors
     api = FastAPI(title="Wrytely Academic Agent", version="0.1.0")
     bearer = HTTPBearer(auto_error=False)
     verifier = verifier or ClerkSessionVerifier(settings)
@@ -127,6 +134,10 @@ def create_app(
 
     User = Annotated[Identity, Depends(identity)]
     DB = Annotated[Store, Depends(database)]
+
+    register_private_artifacts(api, identity_dependency=identity, database_dependency=database)
+    register_course_supervision(api, identity_dependency=identity, database_dependency=database)
+    register_course_results(api, identity_dependency=identity, database_dependency=database)
 
     register_source_connections(
         api,
@@ -450,6 +461,30 @@ def create_app(
             raise HTTPException(400, "Invalid webhook payload") from None
         try:
             for message in messages:
+                try:
+                    command = parse_command(
+                        message,
+                        business_id=settings.whatsapp_business_account_id,
+                        phone_number_id=settings.whatsapp_phone_number_id,
+                    )
+                except InvalidWhatsAppCommand:
+                    continue
+                if command is not None:
+                    try:
+                        await run_in_threadpool(
+                            db.execute_whatsapp_command,
+                            command,
+                            business_id=settings.whatsapp_business_account_id,
+                            phone_number_id=settings.whatsapp_phone_number_id,
+                        )
+                    except WhatsAppCommandRejected:
+                        # Permanent envelope/replay rejection is not a chat task.
+                        pass
+                    except Exception:
+                        # No acknowledgment of an unpersisted command or echoed
+                        # provider/source diagnostics. Replay is Store-idempotent.
+                        raise HTTPException(503, "Command could not be stored") from None
+                    continue
                 await run_in_threadpool(
                     db.ingest_whatsapp, message, limit=settings.pending_task_limit
                 )

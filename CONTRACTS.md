@@ -1,5 +1,23 @@
 # Contracts — implemented boundaries and historical increments
 
+## November 3 one-course supervisor candidate
+
+[Executable Store/runtime boundary](docs/contracts/COURSE-SUPERVISION-v1.md).
+Migration023 adds private persisted checks/offers. No paid worker or channel
+authorization is enabled by this implementation.
+
+Current dependent candidates: [proactive offer/recovery boundary](docs/contracts/COURSE-OFFER-DELIVERY-v1.md)
+(024), [cumulative model budgets](docs/contracts/MODEL-BUDGET-v1.md) (025),
+source-event wakeup026, [immutable revisions](docs/contracts/ARTIFACT-REVISION-v1.md)
+and [typed checked attachment delivery](docs/contracts/ARTIFACT-DELIVERY-v1.md) (027).
+[Signed explicit WhatsApp commands](docs/contracts/WHATSAPP-COMMANDS-v1.md) (028)
+compose existing actions atomically under the original inbound replay receipt;
+M supplies actual raw-signature parser/webhook assembly. No generic reasoning task
+is created merely to accept/decline/revise/request a file.
+All use the original Store/runtime/outbox. Candidate code is not live activation;
+see STATUS for exact CI/deployment/provider evidence.
+
+
 > November 1 supervisor execution update: mandatory preimplementation consumer
 > agreement is removed. The interface owner may version/document and implement
 > owned boundaries, notifying consumers asynchronously. Historical “await agreement”
@@ -12,6 +30,32 @@
 > are proposals until both owners agree a version. No sync endpoint, supervisor
 > action, freshness relaxation or proactive send permission exists merely because
 > the plan names it. Existing private-draft and policy gates remain effective.
+
+## Opt-in HTML text readiness candidate — November 3
+
+[Canvas literal HTML v2](docs/contracts/CANVAS-HTML-v2.md) introduces a separate,
+default-off converter for newly supplied self-contained text fragments. Legacy v1
+and stored evidence stay partial. Scope checks, independent rubric/constraint gaps,
+resource completeness, drafting and delivery authorization remain unchanged.
+No migration, deployed converter change or live recollection is implied.
+
+## Connected P1 candidate — November 2
+
+On codex/p1-completion, modules/module-items are additional schema2 document owner
+pairs using shared typed field validation. Schema1 inline resource literals remain
+unchanged. Credential-scoped `/documents/resource` closes selected document
+resources; `/documents/file-extract` accepts bounded base64 PDF/plain-text/HTML
+bytes with exact connection/generation/scope/course/file context, not a remote URL.
+Trusted converter Settings default to an empty tuple and allow only local
+canvas.html.v1/json.v1/text.v1/pdf.v1 implementations. Authority is rechecked after
+conversion. Existing source publication/read behavior and protected-main gates remain.
+
+Session-owned connection listing, configured Canvas origins and paginated course/
+resource coverage are assembled on `/v1/source-connections`; student proxy access
+excludes ingestion routes. Web v2 document-result reads use the exact existing
+artifact/check/reference identities and never coerce schema2 into legacy v1 IDs.
+[Exact candidate boundaries and acceptance](docs/P1-COMPLETION-CANDIDATE.md).
+These routes/UI are locally tested; they are not yet deployed/live-accepted.
 
 ## Agreed connection and sync design; implementation pending
 
@@ -52,6 +96,53 @@ contracts remain in force until the new implementation is separately reviewed.
 No new paid allowance, migration, runtime, queue or source activation is implied.
 
 ## Implemented private v2 artifact Store reads
+
+Latest P1 continuation adds discussion entry documents: discussions permits both
+discussion and entry owner kinds with original EvidenceItem fields. Shared header
+and publication validators use one kind predicate. The existing host/reader follows
+topic entries and each top-level entry's full paginated replies, keeping content-free
+topic/parent/page continuation in the existing private scan cursor. Derived topic/
+parent context is checked and cannot come from a provider-forged marker. Every page
+refreshes topic visibility; no initial-post/locked-content bypass or quiz/write route.
+Original text, identity, source authority, partial gaps and replay fences remain.
+[Implemented behavior](docs/P1-CONNECTED-PUBLICATION.md#durable-discussion-entries-and-replies).
+
+November2 status/grade continuation adds schema2 pairs submissions/submission and
+grades/grade using existing academic fields. Own-student course submissions GETs
+validate returned student/assignment/course IDs and feed explicit partial JSON
+projections into the existing producer/journal/publication. Trusted canvas.json.v1
+formatting requires server configuration; defaults stay off. No model, provider
+write, quiz attempt read or new schema/HTTP extraction route. Null grades remain
+unknown; grade_basis distinguishes verified current/previous/unverified attempt;
+excusal/visibility and omitted body/feedback/course-total/policy gaps remain explicit.
+[Exact scope](docs/P1-CONNECTED-PUBLICATION.md#read-only-submission-status-and-assignment-grades).
+
+November2 P1 extension: schema2 document header/publication now also accepts
+announcements/announcement and discussions/discussion with the existing canonical
+EvidenceItem fields. The existing documents/extract endpoint accepts those selected
+resource kinds using the same trusted canvas.html.v1 parser. The host automatically
+collects full announcement/discussion-prompt text through course-scoped list/detail
+GETs. Replies remain explicitly unread; author roles and effective discussion dates
+are not inferred. A403 closes only that resource as restricted; a404 records partial
+read failure rather than deletion. [Exact behavior](docs/P1-CONNECTED-PUBLICATION.md#announcements-discussion-prompts-and-resource-failures).
+No schema migration, new permission, external write or deployment is introduced.
+
+P1 collection assembly now also registers POST
+`/v1/source-connections/canvas/documents/extract`. Exact schema2/operation
+extract_document, current ingestion connection/generation/scope and selected-course
+resource are required. At most four HTML items pass through the original bounded
+parser; actual extractor canvas.html.v1 must be enabled by server configuration.
+It returns text and explicit partial gaps, stores nothing and rechecks context after
+conversion. The host connects assignment/syllabus/page reads to the original document
+producer/journal/publication. [Scope and remaining gaps](docs/P1-CONNECTED-PUBLICATION.md).
+
+November1 P1 reassignment implementation: the proposed `/v2` list/detail/evidence
+HTTP routes are now registered with verified sessions, no-store, strict queries and
+bounded encoded cursors. The website proxy explicitly forwards these GET routes;
+the student results UI remains unwired. Document publication is now available at
+`POST /v1/source-connections/canvas/documents/batch`, using the existing Store and
+durable discovery journal. [Exact assembly and evidence](docs/P1-CONNECTED-PUBLICATION.md).
+These updates supersede the HTTP-missing/M-owned statements in older evidence.
 
 [Private artifact reads v2](docs/contracts/PRIVATE-ARTIFACT-READ-v2.md) and
 [implementation evidence](docs/P1-PRIVATE-ARTIFACT-READS.md) define implemented
@@ -1625,3 +1716,16 @@ its operator reservation; this recovery mechanism is not a billing cap. Repeated
 user controls may cause more claims, so cumulative per-account/global inference
 budgets remain a separate M4 gate before public pilot. Nothing starts a worker,
 resumes outbound sends or changes consent by itself.
+
+
+## Explicit model-provider factory
+
+`BudgetedMetaRouter(store, settings).for_user(verified_user)` remains the service
+boundary. `Settings.meta_provider` is operator-only `meta` (default) or `fireworks`;
+selected constructor validates its own key. Consumers must not duplicate a
+Meta-hosted-key requirement. Readiness reports selected-key presence, not endpoint
+health. The same budget reservation/settlement and tool authorization apply.
+[Fireworks transcript/configuration contract](docs/FIREWORKS-PROVIDER.md) specifies
+canonical text/tool conversion and private reasoning replay. Do not migrate an
+in-flight episode's provider-specific reasoning state across providers. No live
+activation, fallback, model-controlled routing or wider user access is implied.

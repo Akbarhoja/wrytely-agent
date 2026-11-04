@@ -44,6 +44,7 @@ class ModelTurn:
     text: str
     input_tokens: int = 0
     output_tokens: int = 0
+    usage_known: bool = True
 
 
 class ModelClient(Protocol):

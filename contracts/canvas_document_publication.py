@@ -7,12 +7,40 @@ from pydantic import Field, field_validator, model_validator
 
 from contracts.canvas_sync import DiscoveryBatch, Strict, course_id
 
-PAIRS = {"assignments": "assignment", "syllabus": "syllabus", "pages": "page", "files": "file"}
+PAIRS = {
+    "assignments": "assignment",
+    "syllabus": "syllabus",
+    "pages": "page",
+    "files": "file",
+    "announcements": "announcement",
+    "discussions": "discussion",
+    "submissions": "submission",
+    "grades": "grade",
+    "modules": "module",
+}
+
+
+def document_kind_allowed(resource, kind):
+    return (
+        kind == PAIRS.get(resource)
+        or (resource == "discussions" and kind == "entry")
+        or (resource == "modules" and kind == "module_item")
+    )
 
 
 class DocumentResource(Strict):
     course_id: str
-    kind: Literal["assignments", "syllabus", "pages", "files"]
+    kind: Literal[
+        "assignments",
+        "syllabus",
+        "pages",
+        "files",
+        "announcements",
+        "discussions",
+        "submissions",
+        "grades",
+        "modules",
+    ]
 
     @field_validator("course_id")
     @classmethod
@@ -21,7 +49,19 @@ class DocumentResource(Strict):
 
 
 class DocumentItem(Strict):
-    kind: Literal["assignment", "syllabus", "page", "file"]
+    kind: Literal[
+        "assignment",
+        "syllabus",
+        "page",
+        "file",
+        "announcement",
+        "discussion",
+        "submission",
+        "grade",
+        "entry",
+        "module",
+        "module_item",
+    ]
     provider_id: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z0-9._:-]+$")
     provider_updated_at: str | None
     title: str = Field(max_length=300)
@@ -51,7 +91,7 @@ class DocumentBatch(DiscoveryBatch):
 
     @model_validator(mode="after")
     def document_kinds(self):
-        if any(item.kind != PAIRS[self.resource.kind] for item in self.items):
+        if any(not document_kind_allowed(self.resource.kind, item.kind) for item in self.items):
             raise ValueError("Document kind/resource mismatch")
         if len({item.upload_id for item in self.items}) != len(self.items):
             raise ValueError("Duplicate document upload")

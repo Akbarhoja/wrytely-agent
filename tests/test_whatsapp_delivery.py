@@ -4,11 +4,144 @@ from datetime import UTC, datetime
 
 import httpx
 import pytest
+from test_canvas_sync import device as device
 
 from integrations.whatsapp import WhatsAppAdapter, WhatsAppText
 from shared.db import Store
 
 ACCOUNT = {"business_id": "456", "phone_number_id": "123"}
+
+
+@pytest.mark.parametrize(
+    "mode", ["success", "upload_timeout", "send_timeout", "pause_after_upload"]
+)
+def test_checked_file_upload_rechecks_control_and_never_retries(device, mode):
+    import json
+
+    from test_artifact_delivery import ACCOUNT as file_account
+    from test_artifact_delivery import prepared_file
+
+    from integrations.whatsapp_delivery import run_once
+    from runtime.artifact_rendering import render_private_artifact_docx
+
+    db, saved = prepared_file(device)
+    file_account = {**file_account, "phone_number_id": "123"}
+    expected = render_private_artifact_docx(db, "user_alice", saved["id"]).content
+    db.enqueue_checked_artifact_delivery("user_alice", saved["id"])
+    calls = []
+
+    def handle(request):
+        calls.append(request)
+        if request.url.path.endswith("/media"):
+            assert expected in request.content
+            assert request.headers["content-type"].startswith("multipart/form-data;")
+            if mode == "upload_timeout":
+                raise httpx.ReadTimeout("Lost upload", request=request)
+            if mode == "pause_after_upload":
+                db.set_paused("user_alice", True)
+            return httpx.Response(200, json={"id": "media_one"})
+        payload = json.loads(request.content)
+        assert payload["type"] == "document"
+        assert payload["document"] == {"id": "media_one", "filename": f"wrytely-{saved['id']}.docx"}
+        assert "link" not in payload["document"]
+        if mode == "send_timeout":
+            raise httpx.ReadTimeout("Lost send", request=request)
+        return httpx.Response(200, json={"messages": [{"id": "wamid.file"}]})
+
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        adapter = WhatsAppAdapter(
+            client=client,
+            token="test",
+            phone_number_id=file_account["phone_number_id"],
+            api_version="v23.0",
+        )
+        args = dict(worker_id="file-one", **file_account)
+        assert run_once(db, adapter, **args) == ("accepted" if mode == "success" else "unknown")
+        assert run_once(db, adapter, **args) == "idle"
+    assert len(calls) == (1 if mode in {"upload_timeout", "pause_after_upload"} else 2)
+
+
+@pytest.mark.parametrize("lost", [False, True])
+def test_reply_template_uses_typed_payload_and_never_resends(store, ready_reply, lost):
+    import json
+
+    from contracts.templates import ApprovedTemplate
+    from integrations.whatsapp_delivery import run_once
+
+    with store.connection() as conn:
+        conn.execute(
+            "UPDATE wrytely_agent.channel_links SET last_event_at=now()-interval '25 hours'"
+        )
+    approved = ApprovedTemplate(
+        key="reply",
+        name="reply",
+        language="en_US",
+        **ACCOUNT,
+        provider_approved=True,
+        body_parameters=[{"source": "reply_text", "max_length": 1024}],
+    )
+    calls = []
+
+    def send(request):
+        calls.append(json.loads(request.content))
+        if lost:
+            raise httpx.ReadTimeout("Ambiguous dispatch", request=request)
+        return httpx.Response(200, json={"messages": [{"id": "wamid.template"}]})
+
+    with httpx.Client(transport=httpx.MockTransport(send)) as client:
+        adapter = WhatsAppAdapter(
+            client=client, token="test", phone_number_id="123", api_version="v23.0"
+        )
+        args = dict(
+            worker_id="one", **ACCOUNT, approved_templates=[approved], reply_template_key="reply"
+        )
+        assert run_once(store, adapter, **args) == ("unknown" if lost else "accepted")
+        assert run_once(store, adapter, **args) == "idle"
+    assert len(calls) == 1 and calls[0]["type"] == "template"
+    assert calls[0]["template"]["components"][0]["parameters"] == [
+        {"type": "text", "text": "Checked reply"}
+    ]
+
+
+def test_offer_transport_uses_separate_template_and_original_queue(device):
+    import json
+
+    from test_course_offer_delivery import ACCOUNT as offer_account
+    from test_course_offer_delivery import prepared, queue, template
+
+    from integrations.whatsapp_delivery import run_once
+
+    db, monitor, offer = prepared(device)
+    offer_account = {**offer_account, "phone_number_id": "123"}
+    approved = template().model_copy(update={"phone_number_id": "123"})
+    queue(db, monitor, offer)
+    with db.connection() as conn:
+        conn.execute(
+            "UPDATE wrytely_agent.channel_links SET last_event_at=now()-interval '25 hours'"
+        )
+    calls = []
+
+    def send(request):
+        calls.append(json.loads(request.content))
+        return httpx.Response(200, json={"messages": [{"id": "wamid.offer"}]})
+
+    with httpx.Client(transport=httpx.MockTransport(send)) as client:
+        adapter = WhatsAppAdapter(
+            client=client,
+            token="test",
+            phone_number_id=offer_account["phone_number_id"],
+            api_version="v23.0",
+        )
+        args = dict(
+            worker_id="one",
+            **offer_account,
+            approved_offer_templates=[approved],
+            offer_template_key="test_offer",
+        )
+        assert run_once(db, adapter, **args) == "accepted"
+        assert run_once(db, adapter, **args) == "idle"
+    assert len(calls) == 1 and calls[0]["type"] == "template"
+    assert calls[0]["template"]["components"][0]["parameters"][0]["text"] == offer["message"]
 
 
 def test_worker_startup_rejects_missing_delivery_configuration(monkeypatch, capsys):
