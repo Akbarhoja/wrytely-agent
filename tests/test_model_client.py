@@ -17,6 +17,8 @@ def test_meta_transport_and_incomplete_response(status):
         assert body["store"] is False
         assert body["include"] == ["reasoning.encrypted_content"]
         assert body["model"] == "muse-spark-1.3"
+        assert body["max_output_tokens"] == 2048
+        assert "reasoning" not in body
         return httpx.Response(
             200,
             json={
@@ -88,6 +90,7 @@ def test_incomplete_response_retains_safe_usage_without_output(usage):
         "code": None,
         "input_tokens": 10 if usage else None,
         "output_tokens": 7 if usage else None,
+        "incomplete_reason": "max_output_tokens",
     }
     assert "private-response-id" not in str(raised.value)
 
@@ -133,3 +136,50 @@ def test_http_failure_metadata_is_allowlisted_and_not_retried(code, expected):
         "output_tokens": None,
     }
     assert "secret-provider-text" not in str(raised.value)
+
+
+def test_configured_reasoning_and_output_cap_reach_meta_without_retry():
+    seen = []
+
+    def handle(request):
+        seen.append(json.loads(request.content))
+        return httpx.Response(
+            200,
+            json={
+                "id": "local-configured",
+                "object": "response",
+                "created_at": 1,
+                "status": "completed",
+                "output": [],
+                "usage": {"input_tokens": 10, "output_tokens": 2, "total_tokens": 12},
+            },
+        )
+
+    client = MetaModelClient(
+        Settings(
+            meta_api_key="local-test-placeholder",
+            meta_max_output_tokens=8192,
+            meta_reasoning_effort="low",
+        )
+    )
+    client._client.close()
+    with OpenAI(
+        api_key="local-test-placeholder",
+        base_url="https://api.meta.ai/v1",
+        max_retries=0,
+        http_client=httpx.Client(transport=httpx.MockTransport(handle)),
+    ) as transport:
+        client._client = transport
+        client.turn([], [])
+    assert len(seen) == 1
+    assert seen[0]["max_output_tokens"] == client.max_output_tokens == 8192
+    assert seen[0]["reasoning"] == {"effort": "low"}
+
+
+@pytest.mark.parametrize("reason", ["private-provider-message", {"private": "payload"}])
+def test_incomplete_reason_never_exposes_arbitrary_provider_content(reason):
+    from shared.model_client import ModelCallFailed
+
+    failure = ModelCallFailed(status="incomplete", incomplete_reason=reason)
+    assert failure.evidence()["incomplete_reason"] == "unknown"
+    assert "private" not in str(failure.evidence())

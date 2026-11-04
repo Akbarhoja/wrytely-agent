@@ -91,7 +91,8 @@ scripted model/provider responses. This is not external provider acceptance.
 
 Executable `92568ab` is the combined candidate. Its dedicated realPostgres integration
 step plus web/build/extension/diagnostic jobs pass in run 41752360843; full backend
-regression remains running. Earlier `1c4b6e0` full run 41742559685 is SUCCESS, but does
+regression is now SUCCESS (1834 tests plus346 focused checks). Earlier
+`1c4b6e0` full run 41742559685 is SUCCESS, but does
 not cover the newest signed assembly/partial-inspection change. Local 146 web,
 TypeScript/format and pure schema checks pass. Detailed evidence is in STATUS.
 
@@ -102,8 +103,9 @@ drafting, citation and delivery still require their original complete/current
 checks. Real course action readiness is not established. Owner submitted Meta
 business verification; under review, not approved. Real Meta decisions/quality,
 phone file receipt/native layout, restart/laptop-closed duration, demo and submission
-remain. No new retained 023–028 migration, grant, deployment, inference or send.
+remain. The later approved bounded activation deployed023–028 and ran one incomplete
+Meta request; monitor paused, budget disabled, no send. See the execution record.
 
-The concrete next activation request is documented in
-[the bounded development check](ONE-COURSE-LIVE-CHECK.md). It is a proposal awaiting
-Akbar's scoped approval; its presence does not start any operation.
+The completed bounded activation is documented in
+[the bounded development check](ONE-COURSE-LIVE-CHECK.md). It records Akbar's approved,
+executed and stopped check; it does not authorize a repeat.

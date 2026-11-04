@@ -38,9 +38,11 @@ with pinned original evidence and current access checks. Saved checks do not gra
 permission to send or submit work.
 
 **P1 is not complete yet.** Synthetic integration checks are separate from
-installed Chrome and live course acceptance. The isolated development API has an
-earlier P1 deployment; the new supervisor/delivery candidate and migrations023–028
-are not deployed.
+installed Chrome and live course acceptance. Executable `92568ab` and migrations
+023–028 are deployed only to the isolated development API. A bounded
+real Meta check returned incomplete before a usable decision; its monitor is paused,
+budget disabled and reservation held. No completed real course/phone workflow is
+claimed. See [the live-check record](docs/ONE-COURSE-LIVE-CHECK.md).
 Independent review/CI and protected-main merge status remain separate. See
 [the P1 candidate and live checklist](docs/P1-COMPLETION-CANDIDATE.md),
 [STATUS.md](STATUS.md) and [work orders](docs/WORK-ORDERS.md).
@@ -81,6 +83,10 @@ an existing product's environment files.
   the backend does not need a Clerk admin secret. Update the key after rotation.
 - `AGENT_AUTHORIZED_PARTIES`: exact allowed frontend origins as a JSON array.
 - `AGENT_META_API_KEY`, `AGENT_META_MODEL`: Meta development key and available model.
+- `AGENT_META_MAX_OUTPUT_TOKENS`, `AGENT_META_REASONING_EFFORT`: bounded output
+  allowance (default2048; maximum16384) and optional reasoning effort. Reasoning
+  counts against output tokens; the cost reservation uses the exact configured cap.
+  New settings do not authorize larger live calls or automatic retries.
 - `AGENT_META_BUDGET_KEY`, `AGENT_META_INPUT_USD_PER_MILLION`,
   `AGENT_META_OUTPUT_USD_PER_MILLION`: trusted operator budget key and verified
   nonzero prices. Worker execution requires an operator-configured global budget

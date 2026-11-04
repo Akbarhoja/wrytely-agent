@@ -12,7 +12,31 @@ supervisor work on codex/p1-completion and fixes M’s empty-all_active finding.
 M owns WhatsApp/app/web/service assembly in parallel. This supersedes stop-before-P2;
 P0/P1 remain open. No new live activation is inferred.
 
-## One-course implementation candidate
+## November3 approved bounded development activation
+
+Akbar approved the concrete deployment/migrations and at most two manual ECE253
+turns/$0.35 within the unchanged $2 total ceiling. Exact92568ab full Linux CI
+41752360843 is SUCCESS:1834 backend +346 fast integration tests; web/build,
+extension and diagnostic all pass. APIb2e3fa83 deployed successfully and existing
+predeploy migration applied023–028. Health200 and protected unauthenticated401.
+
+The one-off private-network operator checked the newest of two original connections
+and original selection, then ran ONE Meta request. Response incomplete at2048
+output tokens (32796 input); no completed typed decision/inspection/offer/draft.
+No second call or automatic retry occurred. New0.14494900 reservation remains
+unknown/held; historical1.33114350 is unchanged; aggregate1.47609250 of2.00.
+Budget disabled and ECE253 monitor PAUSED. Authenticated UI independently shows
+paused,1 of2 checks reserved and no offers. No WhatsApp send, new scan, scope/
+pairing change, SSH credential or public database proxy. Normal migration-only
+predeploy restored; cleanup deploymentf319ab4d SUCCESS with API-only startup.
+
+[Exact authorized scope and evidence](docs/ONE-COURSE-LIVE-CHECK.md). Actual course
+coverage is still partial/restricted/open, and Meta business review is not known
+approved. A completed real supervisory decision/draft/phone journey is NOT proven.
+Next code candidate adds bounded output/reasoning controls and matching reservation
+accounting; it is not deployed or retested live. Existing failure holds stay intact.
+
+## One-course implementation candidate (pre-activation record)
 
 Executable `92568ab` combines the one-course supervisor, budgeted reasoning, checked
 DOCX/revision flow, recoverable offers, student controls, document transport and

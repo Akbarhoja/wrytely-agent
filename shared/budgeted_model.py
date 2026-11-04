@@ -29,8 +29,11 @@ class BudgetedModelClient:
         if size > 250000:
             raise ValueError("Model input byte limit")
         # UTF8 bytes conservatively bound text tokens; add framing/tool overhead.
+        output_limit = getattr(self.model, "max_output_tokens", 2048)
+        if type(output_limit) is not int or not 256 <= output_limit <= 16384:
+            raise ValueError("Invalid configured model output limit")
         maximum = usd(
-            (self.input_rate * (size + 4096) + self.output_rate * 2048) / Decimal(1000000)
+            (self.input_rate * (size + 4096) + self.output_rate * output_limit) / Decimal(1000000)
         )
         reservation = self.store.reserve_model_call(self.user, self.key, maximum)
         try:

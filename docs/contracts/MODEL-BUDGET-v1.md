@@ -32,8 +32,11 @@ AGENT_META_OUTPUT_USD_PER_MILLION with independently verified model prices. No
 pricing defaults, automatic credit grant or per-monitor allowance refill exists.
 
 The wrapper bounds full JSON history+tools to250KB, reserves a conservative UTF8
-byte token estimate plus4096framing tokens and2048output tokens (the existing Meta
-Responses cap). Persist reservation before inference; no SDK or wrapper retry.
+byte token estimate plus4096framing tokens and the exact configured provider output cap
+(default2048; validated256–16384). MetaModelClient exposes its actual read-only
+max_output_tokens; the wrapper reads and validates it BEFORE reserving/calling.
+Optional reasoning effort does not create extra output allowance or retry authority.
+Persist reservation before inference; no SDK or wrapper retry.
 Known usage settles at configured rates, rounded up; missing/failed usage keeps
 maximum held. Provider pricing/framing must be verified at activation: this is a
 conservative application estimate, not a guarantee against provider billing errors.
