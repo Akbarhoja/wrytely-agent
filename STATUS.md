@@ -12,6 +12,15 @@ supervisor work on codex/p1-completion and fixes M’s empty-all_active finding.
 M owns WhatsApp/app/web/service assembly in parallel. This supersedes stop-before-P2;
 P0/P1 remain open. No new live activation is inferred.
 
+## PR168 CI isolation repair
+
+M cleared production boundary1833361 but reported fullCI4fail/1920pass: empty
+caplog in four new diagnostic tests. Reproduced exact failure ordering after mocked
+Outlook sign-in tests, whose standalone probe globally disables logging. Test-only
+explicit caplog WARNING capture repairs isolation without altering production or
+weakening redaction/hold assertions. Ordered/provider/config/CLI109checks pass;
+Ruff/format/diff pass. Corrected fullCI pending. No new model call/deployment.
+
 ## Native document smoke check
 
 Existing synthetic16-word DOCX matches the current renderer byte-for-byte. Bundled

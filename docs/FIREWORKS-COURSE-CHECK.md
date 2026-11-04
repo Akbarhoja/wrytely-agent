@@ -61,3 +61,19 @@ still hold work and never automatically retry. This makes the next failure actio
 it does not establish which field failed in this past run or guarantee the prompt
 change resolves it. Future deployment/calls require a tested candidate and separate
 scoped approval; the completedbb626d3 approval is not reused for a new candidate.
+
+## Full-suite logging isolation repair
+
+M reviewed executable1833361 and found no blocking production boundary issue, but
+full CI failed four new caplog assertions (1920 other tests passed). The ordered
+local sequence `test_outlook_signin.py` then `test_supervisor_protocol.py` reproduced
+exactly four failures/31 passes. The earlier standalone sign-in probe calls global
+`logging.disable(CRITICAL)`; the diagnostic test had assumed logging was enabled.
+
+The test now explicitly sets WARNING capture for `runtime.supervisor` through
+pytest's caplog fixture, which also restores the previous logging threshold. No
+production logging, schema, validation, redaction assertion or no-retry rule changes.
+The same ordered sequence plus provider/config/output/service CLI tests passes109
+checks. Ruff/format/diff pass. Corrected exact-head full CI remains required; no new
+live call or deployment is supplied by this test repair. The original real-course
+validation field remains unknown, distinct from this confirmed CI failure cause.

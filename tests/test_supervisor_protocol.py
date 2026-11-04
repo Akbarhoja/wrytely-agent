@@ -1,6 +1,7 @@
 """Provider protocol failures cannot turn model text into arbitrary actions."""
 
 import json
+import logging
 from uuid import uuid4
 
 import pytest
@@ -94,6 +95,9 @@ def test_valid_wait_is_persisted_not_claimed_as_external_completion():
 def test_rejected_decision_reports_safe_issue_without_source_text(change, code, caplog):
     from runtime.supervisor import CourseDecisionRejected
 
+    # The standalone Outlook sign-in probe suppresses logging in earlier tests.
+    # caplog enables capture here and restores the previous global threshold.
+    caplog.set_level(logging.WARNING, logger="runtime.supervisor")
     store = Boundary()
     provider = Provider([call(**change)])
     with pytest.raises(CourseDecisionRejected) as rejected:
