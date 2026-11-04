@@ -248,6 +248,10 @@ function Session({
               )}
             </article>
           ))}
+          <p className={styles.notice}>
+            On WhatsApp, reply to an offer with /accept or /decline. After the draft is ready, reply
+            /file for the checked file, or /revise followed by your changes.
+          </p>
         </>
       )}
       {busy && <p role="status">Saving or refreshing supervision…</p>}
