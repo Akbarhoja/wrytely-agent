@@ -1566,3 +1566,21 @@ counterpart review remain pending at this checkpoint.
 See [consumer evidence and limits](docs/M-COURSE-PREPARATION-VIEW.md). This does not
 activate029, refresh source coverage, authorize submissions or demonstrate live
 phone delivery. Existing blockers, budgets and historical evidence remain intact.
+
+## M Telegram assembly candidate — November4
+
+M consumes A588c504 on `codex/telegram-assembly`, combined with M PR172.
+Authenticated link/status/preferences/unlink, private web controls, secret-first
+bounded callback and explicit one-use dispatch worker are implemented. Original
+Store/runtime are reused; no provider/Store duplication. Telegram consents remain
+separate/defaultfalse. Session/account changes clear pairing data. HTTP/UI do not
+invoke models or send. Worker preserves unknown outcomes and stops without blind
+retry. Configured bot identity is never browser-provided.
+
+Local61 adapter/Store/HTTP/worker checks and4 focused web checks passed with
+synthetic/scripted data and disposable Postgres. Full web/build/combined backend
+CI and counterpart review remain pending. [Operator preparation](deploy/TELEGRAM-ASSEMBLY.md)
+is not activation permission. No migration/deployment/webhook/send performed.
+Telegram v1 lacks /accept /file /revise and checked-coursework file delivery;
+WhatsApp verification/full-product/live-phone gates remain open. Existing pauses,
+source/policy gates and historical budget liabilities remain preserved.
