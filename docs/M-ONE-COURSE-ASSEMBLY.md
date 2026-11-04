@@ -91,6 +91,19 @@ is safely acknowledged with no outward send; unexpected persistence failure retu
 503 without private diagnostics, allowing the provider's idempotent event replay.
 Valid signed delivery-status siblings still persist after malformed commands.
 
+## Connected signed rehearsal
+
+[Signed journey test](../tests/test_signed_course_journey.py) reuses A's original
+one-course journey unchanged and routes command/receipt entrypoints through the
+actual HMAC-signed webhook. Its test-only facade delegates every other operation
+to the same real Store and captures actual handler results. Six command requests
+and replays plus two signed delivery callbacks cover acceptance, checked file,
+revision, immutable versions and changed-source fencing. No authentication flag,
+parallel runtime or fabricated Store receipt is used. Scripted models and simulated
+provider transport remain explicit; this is not live Meta, phone or native Word
+acceptance. The first isolated rehearsal passed in 13.76 seconds, with one existing
+Starlette/httpx deprecation warning.
+
 ## Remaining acceptance
 
 - Student web controls now wire explicit supervision/notification/offer decisions,
