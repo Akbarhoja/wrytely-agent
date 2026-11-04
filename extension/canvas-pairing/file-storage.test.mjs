@@ -191,3 +191,38 @@ test("unsupported restricted file stays an unsupported gap without download or c
   ]);
   assert.equal(result.documents[0].source.text, "");
 });
+
+test("new HTML converter identity survives file preparation as html_text", async () => {
+  const { prepareFileDocuments } = await import("./file-documents.mjs");
+  const result = await prepareFileDocuments({
+    resource_key: "101/files",
+    origin: "https://canvas.example.edu",
+    page: {
+      data: [
+        {
+          id: "9",
+          filename: "instructions.html",
+          updated_at: null,
+          _wrytely_file: {
+            contentType: "text/html",
+            encoded: "dGV4dA==",
+            gap: null,
+          },
+        },
+      ],
+      next_cursor: null,
+    },
+    extractFile: async () => ({
+      schema_version: 2,
+      extractor_version: "canvas.html.v2",
+      source: { text: "Original instructions" },
+      coverage: "complete",
+      missing: [],
+    }),
+  });
+  assert.equal(result.documents[0].metadata.format, "html_text");
+  assert.equal(
+    result.documents[0].metadata.extractor_version,
+    "canvas.html.v2",
+  );
+});
