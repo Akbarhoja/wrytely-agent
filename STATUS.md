@@ -68,6 +68,23 @@ limits stopped Turbopack/ordinary watchers; no persistent build config change.
 Ignored historical model ledger reconciles1.33114350 charged/held of2.00 (including
 unknown1.32); remaining0.66885650 is NOT new-test authorization. No grant was created.
 
+M signed parser/webhook0bafa22 and connected signed-ingress rehearsalbae6085 are
+now read/reviewed and imported EXACTLY asd4a5ecb/daf00d6 with original authorship.
+No blocking finding in that code/test scope. Real raw HMAC/account filtering,
+bounded slash command parsing, current linked-owner/context/replay, permanent
+command rejection without generic fallback and unexpected DB503/replay are wired.
+M's rehearsal reuses the original realStore/HTTP/runtime/transport journey and routes
+six command/replay requests plus two status callbacks through actual signed HTTP;
+models/provider replies remain simulated. No external signature/provider acceptance
+is inferred from these fixtures. M0bafa22 Linux checks all pass; combined current
+head is under its own realPostgres/full CI, including both signed test files.
+Latest local146web/TypeScript/Prettier and292-fileRuff/format pass before integration;
+the UI guidance-only addition is checked again in combined CI. The4c467c0 fast
+failure was a schema1 fixture reading object_id from a receipt that does not contain
+it;973757e uses the actual stored object identity. Partial-document and age/restriction
+cases passed that earlier run; no production gate was relaxed to fix the fixture.
+Runtime now asks offers to explain the actual /accept,/decline,/file,/revise commands.
+
 Current executable candidate79bd138 combines M017946f exactly (importdd90a2e),
 adds independent saved-offer recovery c17dd88, typed checked attachment authority
 53e3e9e and read-only course supervision lookup79bd138. A read M's diff and tests;
