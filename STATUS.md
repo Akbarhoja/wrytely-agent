@@ -1,6 +1,6 @@
 # Engineering status
 
-Updated November 3, 2026. [Plan revision8](docs/BUILD-PLAN.md) ·
+Updated November 4, 2026. [Plan revision8](docs/BUILD-PLAN.md) ·
 [Work orders](docs/WORK-ORDERS.md) · [Code audit](docs/IMPLEMENTATION-AUDIT.md) ·
 [Team coordination](https://github.com/Akbarhoja/wrytely-agent/issues/4)
 
@@ -25,22 +25,31 @@ draft/task/offer/send or submission permission. Full drafting gates stay intact.
 Consumer projection and M-owned UI work are documented in
 [course preparation v1](docs/contracts/COURSE-PREPARATION-v1.md).
 
-Initial40 pure preparation/protocol tests pass. Local disposable Postgres could not
-start under the sandbox: the helper process inspection and direct PostgreSQL shared
-memory initialization are denied. No live database was substituted. Real transaction
-integration and full required regression remain pending CI; no deployment, migration,
-paid inference, scan, outward send or continuous activation performed for this feature.
+Exact executablece7e6f8 fullCI41928882027 SUCCESS:521 real-Postgres integration
+tests and1969 full backend tests (two existing warnings), web/build, extension and
+access diagnostics pass.40 local pure preparation/protocol tests and repository
+lint/309-file format checks also pass. Local Postgres was blocked by sandbox
+process/shared-memory restrictions; CI supplied the actual disposable database proof,
+not a live-database substitute. The initial two fixture lookup failures were corrected
+before this successful run. No deployment, retained migration, paid inference, scan,
+outward send or continuous activation performed for this feature.
+
+M acknowledged the concrete existing-status projection and started the separate
+`codex/course-preparation-view` consumer in coordination6644234620. His view/API tests
+and counterpart feature review remain pending; backend CI is not live acceptance.
+A separately reviewed M worker5978ae6/client6cb452f fixes in PR166 comment6644391046;
+no blocking finding in those scoped changes, successful exact-commit CI observed.
+They are not imported into this feature or deployed by this track.
 
 ### Reviewed0.3.4 linked-file activation and real attachment proof
 
 Follow-up private saved-text audit completed: manual/starter/syllabus requirements
 read, with no new collection/model call. The target requires physical work and TA
 check-off; actual results are unknown. Saved policy does not establish permission
-for AI-written graded submissions. Full drafting remains blocked. Preparation/study
-is mentioned in supervisor instructions but is not a distinct typed workflow: all
-current offers still require usable complete assignment evidence. A separate bounded
-non-submission preparation path is a concrete remaining implementation gap, not an
-already delivered capability. No parent/PDF/policy gaps were relaxed. Detailed
+for AI-written graded submissions. Full drafting remains blocked. At audit time,
+preparation/study existed only in supervisor wording; all work offers required
+usable complete evidence. This led to the separate checklist candidate above,
+which is implemented/tested but not live-delivered. No parent/PDF/policy gaps were relaxed. Detailed
 student-facing requirements and original source text remain in ignored local files.
 
 M final review6642536978 clears exact executabled3d0ff1; fullCI41911052694
