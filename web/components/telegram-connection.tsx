@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { api, ApiError } from "../lib/client";
+import styles from "./telegram-connection.module.css";
 
 type Preferences = {
   consent: boolean;
@@ -126,7 +127,11 @@ function Session({
   const trustedUsername =
     typeof username === "string" && /^[A-Za-z0-9_]{5,32}$/.test(username) ? username : null;
   return (
-    <section className="whatsapp-panel" aria-label="Telegram fallback connection" aria-busy={busy}>
+    <section
+      className={`whatsapp-panel ${styles.panel}`}
+      aria-label="Telegram fallback connection"
+      aria-busy={busy}
+    >
       <header className="whatsapp-heading">
         <h2>Telegram fallback</h2>
         <span>{status?.linked ? "Linked" : "Not linked"}</span>
