@@ -194,3 +194,38 @@ student content, Canvas scan, offer/draft or WhatsApp send. Normal migration-onl
 predeploy was restored and read back; cleanup deployment25be6ce1 is SUCCESS and
 healthz returns200. API-only start remains unchanged; diagnostic code is no longer
 configured as predeploy. No executable application code changed.
+
+## Actual course-client follow-up after supervisor go-ahead
+
+Akbar said to proceed to the next bounded actual-agent workflow. A announced a
+single ECE253 request capped0.20USD inside the original2USD ceiling. Existing
+tested0abda7b client/runtime was used unchanged, Standard muse-spark-1.3,
+low reasoning/output8192, no retry/drafting/outward send. The existing monitor's
+limit was extended2→3 without resetting its two earlier reservations.
+
+Preflight at2026-11-04T04:14:24.458994+00:00 confirmed the unique existing owner,
+newest of two connections, unchanged course selection,104 saved/90 inspectable
+sources, six original model holds and global liability1.68102075. The call reserved
+maximum0.17106100 in the original Store. At04:14:25.913476+00:00 it returned404
+model_not_found again. No completed decision, inspection, offer or draft persisted.
+Monitor was paused and budget disabled in cleanup at04:14:25.967744+00:00.
+Aggregate conservative liability is now1.85208175; remaining ceiling0.14791825.
+The monitor retains3/3 calls. No holds were released or reset.
+Migration-only/API-only cleanup367ada22 is SUCCESS; healthz200 verified.
+
+Offline mocked comparison subsequently confirmed that the minimal SDK and raw
+requests have identical URLs and decoded JSON. Headers differ in Accept, User-Agent
+and SDK telemetry headers. No proxy variables are present locally or configured
+on the Railway service. These differences are candidates for controlled comparison,
+not demonstrated causes. The earlier raw success must not be called an SDK fix or
+sustained provider recovery. No additional paid retry followed the failed course call.
+
+Next proposed diagnostic batch, not authorized or executed: at most four small
+synthetic requests to compare raw/SDK and any individually isolated header difference,
+then at most two real course turns only if access works, with at most0.50USD new
+charged/held liability and a requested global ceiling3USD. Preserve all historical
+holds, same Standard model/key, same ECE253 context, no Canvas scan/provider switch/
+WhatsApp/draft/continuous worker. No automatic retry. Stop on an ambiguous outcome;
+pause/disable and restore normal service afterward. Any code correction must be
+supported by the comparison and tested before deployment. No budget increase is
+inferred from the credit balance.

@@ -38,6 +38,12 @@ claimed. Additional0.02 conservatively held, aggregate1.68102075 under2.00. Budg
 disabled before calls; supervisor/continuous workers remain paused. Migration-only
 configuration restored; cleanup25be6ce1 SUCCESS/healthz200 verified. Real agent proof
 remains open; no executable code, provider, key, course or WhatsApp scope changed.
+Actual single ECE253 follow-up after Akbar's go-ahead subsequently returned404 again
+on unchanged tested client0abda7b (low/8192). No usable decision/inspection/offer.
+The monitor is paused at3/3, budget disabled; additional0.17106100 held, aggregate
+1.85208175/2.00. No paid retry followed. Offline raw/SDK minimal URL/JSON match;
+header differences are unproven candidates, not an identified fix. Normal predeploy
+restored; cleanup367ada22 SUCCESS/healthz200 verified.
 
 ## Latest approved single-request check — November3,8:10PM Mountain
 
