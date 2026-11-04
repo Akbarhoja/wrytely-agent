@@ -1,5 +1,14 @@
 # Wrytely team agreement
 
+## November 4 Telegram fallback
+
+Akbar selected a new Telegram bot while WhatsApp business review remains pending.
+A owns new Telegram contracts/shared Store/transport/tests on `codex/telegram-fallback`;
+M retains HTTP/web/worker/deploy assembly and the separate PR171 preparation view.
+Reuse original task/runtime/source gates; do not duplicate the collector or reinterpret
+Telegram as proof of the WhatsApp gate. Bot creation/local credential storage was
+explicitly approved; new live data/sends/deployment remain separately bounded.
+
 
 ## November 3 supervisor delivery amendment
 

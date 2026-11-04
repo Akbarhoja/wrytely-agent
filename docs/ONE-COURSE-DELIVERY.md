@@ -1,5 +1,16 @@
 # One-course autonomous submission — November 3, 2026
 
+## November 4 messaging amendment
+
+Akbar explicitly selected Telegram while Meta business verification remains pending,
+then selected/approved creation of the new Wrytely bot. Follow
+[the fallback execution record](TELEGRAM-FALLBACK.md). This supersedes the WhatsApp-only
+submission channel below. A owns new Telegram contracts/shared/transport; M retains
+HTTP/web/worker assembly and the preparation view. The owned Meta runtime and source,
+policy, identity and cost checks remain. Disclose Telegram in the demo; do not mark
+the original WhatsApp gate complete. New deployment/data/sends still need scoped
+activation. No claim that the public event page alone proves every formal rule.
+
 Supervisor approved this delivery scope in chat. Target: November 4, 2026 at 7:00 PM America/Denver (9:00 PM ET), verified
 on the [event page](https://cerebralvalley.ai/e/meta-ai-developer-hackathon) November 3.
 Feature freeze target: November 4 at 3:00 PM Mountain; recording/upload by 5:00 PM.
