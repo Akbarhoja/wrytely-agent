@@ -34,6 +34,11 @@ class Settings(BaseSettings):
     whatsapp_offer_template_key: str | None = None
     whatsapp_business_number: str | None = Field(default=None, pattern=r"^[1-9][0-9]{6,14}$")
     whatsapp_access_token: SecretStr | None = None
+    telegram_bot_token: SecretStr | None = None
+    telegram_webhook_secret: SecretStr | None = None
+    telegram_bot_username: str | None = Field(
+        default=None, pattern=r"^[A-Za-z][A-Za-z0-9_]{3,28}[Bb][Oo][Tt]$"
+    )
     whatsapp_api_version: str | None = Field(default=None, pattern=r"^v[0-9]+\.0$")
     whatsapp_app_secret: SecretStr | None = None
     whatsapp_verify_token: SecretStr | None = None
