@@ -37,16 +37,16 @@ private drafts. Document-based saved drafts now have an explicit v2 inspection v
 with pinned original evidence and current access checks. Saved checks do not grant
 permission to send or submit work.
 
-**The live academic journey is not complete yet.** Reviewed executable `bb626d3`
-and migrations023–028 are deployed only to the isolated development API. Meta-hosted
-inference was unreliable in the bounded checks. Explicitly selected Meta Muse Spark
-Open through Fireworks now passes a synthetic two-turn tool/result test. One real
-ECE253 request also completed, but its proposed decision failed typed validation
-before a saved investigation or offer. The exact invalid field was not retained.
-Supervision is paused and the budget disabled; no real course/phone workflow is
-claimed. See [the latest run and cleanup](docs/FIREWORKS-COURSE-CHECK.md) and
-[the provider boundary](docs/FIREWORKS-PROVIDER.md). The validation-guidance and
-safe-diagnostic follow-up is a separate candidate, not deployed.
+**The live academic journey is not complete yet.** Reviewed executable `fe196c6`
+and migrations023–028 are deployed only to the isolated development API. Explicitly
+selected Meta Muse Spark Open through Fireworks passes synthetic tool continuation
+and now a real ECE253 supervisor turn: Wrytely chose to inspect original evidence
+and saved the investigation. An earlier turn failed typed validation; its exact
+invalid field remains unknown. Supervision is paused and the budget disabled after
+the bounded test. Real offers, checked academic drafts, phone delivery and continuous
+operation are not yet proved. See [the successful decision record](docs/FIREWORKS-COURSE-DECISION-PASS.md),
+[the earlier stopped check](docs/FIREWORKS-COURSE-CHECK.md) and
+[the provider boundary](docs/FIREWORKS-PROVIDER.md).
 Independent review/CI and protected-main merge status remain separate. See
 [the P1 candidate and live checklist](docs/P1-COMPLETION-CANDIDATE.md),
 [STATUS.md](STATUS.md) and [work orders](docs/WORK-ORDERS.md).

@@ -12,6 +12,20 @@ supervisor work on codex/p1-completion and fixes M’s empty-all_active finding.
 M owns WhatsApp/app/web/service assembly in parallel. This supersedes stop-before-P2;
 P0/P1 remain open. No new live activation is inferred.
 
+## First persisted real ECE253 investigation — November4
+
+Exactfe196c6 fullCI41792034739 SUCCESS:1924backendPASS/2existingwarnings,
+all web/extension/diagnostic jobs green. Mreview6625580314 independently clears
+production and test-isolation fix. Approved single max0.20 run completed one real
+Meta Muse Spark Open/Fireworks request33019input/320output. Typed action INSPECT
+accepted; one real original-evidence investigation saved, callcounter advanced4→5.
+No student prompt, offer, draft, send, rescan or continuous operation in this pass.
+[Exact proof and remaining gates](docs/FIREWORKS-COURSE-DECISION-PASS.md).
+New token-derived liability0.04263375; original/externalholds retained, aggregate
+1.99391225/3USD. Monitor PAUSED and budgetdisabled; migration-only/API-only cleanup
+5035c993 SUCCESS and health200/config verified.
+CanvasPR167 and HTMLv2 remain separate/unactivated. Live offer/draft/phone proof open.
+
 ## PR168 CI isolation repair
 
 M cleared production boundary1833361 but reported fullCI4fail/1920pass: empty
@@ -30,7 +44,7 @@ disclosure correctly. No document or renderer changes. This checks one simple lo
 file, not real academic quality, equations/tables, revision delivery or phone receipt.
 Private visual/hash evidence saved locally; no model call or external send.
 
-## Latest real-course Fireworks result
+## Earlier rejected real-course Fireworks result
 
 Approved exactbb626d3 fullCI and Mreview cleared. Isolated API now runs that candidate
 with explicit Fireworks and API-only startup. Real ECE253 preflight104sources/
