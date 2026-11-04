@@ -60,3 +60,26 @@ drafting and outbound delivery stopped until their separate checks are authorize
 - [Chat Completions parameters](https://docs.fireworks.ai/api-reference/post-chatcompletions)
 - [Reasoning and replay](https://docs.fireworks.ai/guides/reasoning)
 - [Meta deployment options](https://dev.meta.ai/docs/muse-spark-open/deploy)
+
+## Approved synthetic live check — November 3
+
+Akbar approved one development key and at most two synthetic requests, capped at
+0.03USD within the existing 3USD aggregate ceiling. The key was created in the
+Wrytely Fireworks account and saved only in ignored local credentials (mode0600),
+not Railway or source. Billing showed1USD prepaid credit, auto-reload off.
+
+Exact adapter51ad506 completed BOTH requests: first tool call676input/100output
+tokens, then continuation825input/30output tokens. The fictional tool returned a
+Friday deadline; final answer correctly reported Friday. This proves the live
+adapter's two-turn text/tool replay for synthetic data, not an academic decision,
+student-content authorization, continuous service or end-to-end user journey.
+
+Token-derived estimated cost is0.00242875USD at1.25input/4.25output per million;
+it is not a reconciled provider invoice. Keep the entire0.03USD approval reserved
+locally, in addition to the prior1.87838375 liability: conservative aggregate
+1.90838375/3USD. Actual computed request maxima totaled0.02144025. The durable
+one-shot local record prevents an accidental rerun. The existing Railway budget
+remains disabled and still contains its original liabilities; the additional local
+0.03 hold MUST be included in aggregate accounting before any subsequent activation.
+Do not silently release it, reset old holds, or treat account credit as permission.
+No further call, student content, deployment, rescan or WhatsApp send occurred.

@@ -21,10 +21,15 @@ initialize disposable Postgres under sandbox shared-memory restrictions; full CI
 required. [Configuration, replay and evidence](docs/FIREWORKS-PROVIDER.md).
 M pushed service consumer fd7f6fb on PR166: selected factory is sole credential
 validation authority; targeted10 tests pass, full validation/review pending.
-Fireworks account created with approved support@wrytely.io; payment method present,
-zero credits/spend, auto-reload off. No key/purchase/call/deployment by Codex.
+Fireworks account created with approved support@wrytely.io; user added1USD credit,
+auto-reload off. Approved development key saved only in ignored mode0600 local file.
+Two approved synthetic requests PASS: actual tool call then result-based continuation,
+1501input/130output tokens; no student content. Token-rate estimate0.00242875USD,
+full0.03 approval held locally; conservative aggregate1.90838375/3USD. Existing
+Railway ledger remains unchanged/disabled at1.87838375; include the external0.03
+hold before any new activation. No deployment/extra call/continuous worker/send.
 Baseten application submitted with approval; invitation/credits unconfirmed. Existing
-aggregate1.87838375/3USD liability remains, no release of historical holds or new calls.
+historical holds remain preserved; no repeat is authorized.
 
 ## Current Meta API diagnosis
 
