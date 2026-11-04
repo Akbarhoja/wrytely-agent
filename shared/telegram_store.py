@@ -4,7 +4,7 @@ import hashlib
 import json
 import re
 import secrets
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
@@ -98,7 +98,9 @@ class TelegramStore:
                 "AND s.state<>'paused' AND (p->>'created_at')::timestamptz>"
                 "clock_timestamp()-interval '24 hours' AND NOT EXISTS "
                 "(SELECT 1 FROM wrytely_agent.telegram_outbound o WHERE o.agent_id=a.id "
-                "AND o.intent_key='preparation:'||(p->>'id')||':'||l.generation::text) "
+                "AND (o.intent_key='preparation:'||(p->>'id')||':'||l.generation::text "
+                "OR (o.preparation_id::text=p->>'id' "
+                "AND o.state IN ('sending','accepted','unknown')))) "
                 "ORDER BY p->>'created_at',s.id LIMIT %s",
                 (bot_id, limit),
             ).fetchall()
@@ -349,6 +351,15 @@ class TelegramStore:
             record = next((p for p in status["preparations"] if p["id"] == preparation_id), None)
             if not record or not record["current"]:
                 raise SourceRefreshRequired()
+            previous = conn.execute(
+                "SELECT id,state FROM wrytely_agent.telegram_outbound WHERE agent_id=%s "
+                "AND preparation_id=%s AND state IN ('sending','accepted','unknown') "
+                "ORDER BY created_at LIMIT 1",
+                (agent["id"], _uuid(preparation_id)),
+            ).fetchone()
+            if previous:
+                # A relink is not consent to repeat an already attempted result.
+                return previous
             key = f"preparation:{preparation_id}:{link['generation']}"
             conn.execute(
                 "INSERT INTO wrytely_agent.telegram_outbound "
@@ -536,13 +547,20 @@ class TelegramStore:
             ).fetchone():
                 return False
             state = result.state
+            now = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
+            available = now + timedelta(seconds=60)
             if state == "deferred":
+                if result.retry_at is not None:
+                    retry_at = datetime.fromisoformat(result.retry_at)
+                    if retry_at.tzinfo is None or retry_at > now + timedelta(hours=24):
+                        raise ValueError("Invalid Telegram retry time")
+                    available = max(available, retry_at.astimezone(UTC))
                 state = "queued" if row["attempts"] < 3 else "failed"
             conn.execute(
                 "UPDATE wrytely_agent.telegram_outbound SET state=%s,provider_ref=%s,"
                 "attempt_token=NULL,lease_until=NULL,"
-                "available_at=clock_timestamp()+interval '60 seconds' "
+                "available_at=%s "
                 "WHERE id=%s",
-                (state, result.provider_ref, row["id"]),
+                (state, result.provider_ref, available, row["id"]),
             )
             return True
