@@ -12,6 +12,17 @@ supervisor work on codex/p1-completion and fixes M’s empty-all_active finding.
 M owns WhatsApp/app/web/service assembly in parallel. This supersedes stop-before-P2;
 P0/P1 remain open. No new live activation is inferred.
 
+## Current Meta API diagnosis
+
+Murtazo completed a read-only wire-contract review with no demonstrated shape
+mismatch. A independently verified the exact team/project and deployed/local key
+association against the masked dashboard row, correct model default/no override,
+model catalog and provider operational status. Usage shows historical tokens but
+no individual error trace; billing remains loading. No root cause/fix is claimed.
+A prepared a two-case synthetic compatibility probe (typed vs minimal Responses),
+max0.02 additional USD under original2.00; approval pending. Monitor/budget remain
+stopped, holds unchanged; no new inference or deployment. [Diagnosis record](docs/META-API-DIAGNOSIS.md).
+
 ## Latest approved single-request check — November3,8:10PM Mountain
 
 Exact tested0abda7b is now deployed to isolated development API. The approved single
