@@ -1518,3 +1518,20 @@ code, schemas, model tool registration and draft paths preserved.
 inactive Chrome host claim. Review requested when available; P0reviews#139/#46
 remain pending. No monitor/browser/provider/model/send/spend/grant/install/retained
 migration/worker/deploy/mainmerge. P1 remains open.
+
+## M private preparation consumer — November4 candidate
+
+M claimed [preparation consumer scope](https://github.com/Akbarhoja/wrytely-agent/issues/4#issuecomment-6644234620)
+on `codex/course-preparation-view`, based on A PR170 `ce7e6f8`. The existing private
+supervision panel now displays bounded literal excerpts, clarification questions,
+notice, original gaps/unread continuation and current/historical limited evidence.
+No preparation draft/download/send actions exist. Session/access/account changes
+and failed refreshes clear cached preparation data. No new backend route/runtime.
+
+Evidence: 165 web tests, TypeScript, 27 preparation/API tests against disposable
+Postgres, Ruff/310-file format checks passed; synthetic IAB layout inspected at
+390/768/1440px; production webpack build passed. Full backend regression/CI and
+counterpart review remain pending at this checkpoint.
+See [consumer evidence and limits](docs/M-COURSE-PREPARATION-VIEW.md). This does not
+activate029, refresh source coverage, authorize submissions or demonstrate live
+phone delivery. Existing blockers, budgets and historical evidence remain intact.

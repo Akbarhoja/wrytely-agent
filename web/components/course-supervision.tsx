@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { api, ApiError } from "../lib/client";
 import styles from "./course-supervision.module.css";
+import { CoursePreparations } from "./course-preparations";
+import { parsePreparations, type Preparation } from "../lib/preparations";
 
 type Monitor = {
   id: string;
@@ -13,6 +15,7 @@ type Monitor = {
   notification_consent: boolean;
   reason: string | null;
   offers: { id: string; message: string; reason: string; state: string }[];
+  preparations?: Preparation[];
 };
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -65,7 +68,8 @@ function Session({
       typeof value.notification_consent !== "boolean"
     )
       throw Error();
-    if (!signal.aborted) setMonitor(value);
+    const preparations = parsePreparations(value.preparations);
+    if (!signal.aborted) setMonitor({ ...value, preparations });
   }
   async function run(work: (signal: AbortSignal) => Promise<void>) {
     if (!available || active.current) return;
@@ -75,6 +79,8 @@ function Session({
     setBusy(true);
     setError(null);
     setNotice("");
+    // A failed refresh cannot leave old checklists claiming current evidence.
+    setMonitor((previous) => (previous ? { ...previous, preparations: [] } : previous));
     try {
       await work(request.signal);
     } catch (e) {
@@ -252,6 +258,7 @@ function Session({
             On WhatsApp, reply to an offer with /accept or /decline. After the draft is ready, reply
             /file for the checked file, or /revise followed by your changes.
           </p>
+          {!busy && <CoursePreparations records={monitor.preparations ?? []} />}
         </>
       )}
       {busy && <p role="status">Saving or refreshing supervision…</p>}
