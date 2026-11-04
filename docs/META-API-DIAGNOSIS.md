@@ -229,3 +229,48 @@ WhatsApp/draft/continuous worker. No automatic retry. Stop on an ambiguous outco
 pause/disable and restore normal service afterward. Any code correction must be
 supported by the comparison and tested before deployment. No budget increase is
 inferred from the credit balance.
+
+## Approved comparison batch — executed and stopped
+
+Akbar approved raising the original total ceiling2→3USD and at most0.50USD new
+liability across four synthetic comparisons plus two gated course turns. Preflight
+at2026-11-04T04:22:03.202399+00:00 verified all seven old unknown reservations,
+opening1.33114350 and total1.85208175, disabled budget and paused3/3 monitor.
+No existing liability was reset or released. Original Store ceiling was raised to
+the approved3USD and student cumulative grant bounded to prior usage plus0.50USD.
+
+| Synthetic case | UTC | HTTP | Code |
+| --- | --- | --- | --- |
+| Minimal OpenAI SDK | 04:22:03.715217 | 404 | model_not_found |
+| Minimal raw HTTP | 04:22:03.906082 | 404 | model_not_found |
+| SDK with raw-style Accept/User-Agent and X-Stainless headers removed | 04:22:04.036555 | 404 | model_not_found |
+| Actual typed Wrytely client on synthetic course-decision schema | 04:22:04.349527 | 404 | model_not_found |
+
+All timestamps above are2026-11-04 UTC. Minimal cases used identical decoded JSON:
+model muse-spark-1.3, Reply with exactly OK., output256, store:false. Typed case
+used low/output256 and the existing synthetic-only course-decision tool. Header
+normalization was diagnostic only; no production client was modified. Mocked
+transport checks preceded the batch; no real request was made by those mock checks.
+There were four provider requests total, no retries. Since the normal client did
+not pass, both real course turns were skipped. No student context was transmitted.
+
+Conclusion: raw HTTP also fails; SDK/header replacement is not a demonstrated fix.
+The earlier successful raw calls followed by this failure show variable availability,
+not a proven SDK-only defect. Exact upstream cause remains unknown. Read-only Railway
+outbound-network status reports staticIp disabled/no assigned static IPs and IPv6
+disabled. This does not establish which public egress IP served any failed request
+or prove IP filtering. Do not change IP/region, rotate keys or implement speculative
+provider hacks based on this observation.
+
+Budget disabled and course monitor unchanged paused at04:22:04.373166 UTC.
+New conservative held liability0.02630200, total1.87838375 under3.00. The remaining
+0.47369800 of this batch was not spent/reserved; it is not permission for another
+unscoped batch. Private request IDs are retained in ignored evidence and a prepared,
+unsent support addendum. No account, provider, model, source scope or WhatsApp change.
+Normal migration-only/API-only configuration was restored/read back; cleanup
+6838be14 is SUCCESS and healthz200 verified. No executable application code changed.
+
+Backup-access check: no Baseten invitation was found in the connected Gmail mailbox
+with a focused recent Baseten sender/subject search. This does not establish whether
+an invitation exists in Akbar's separate school mailbox or Murtazo's account. No
+Baseten credential was created, copied or activated and no credit form was submitted.

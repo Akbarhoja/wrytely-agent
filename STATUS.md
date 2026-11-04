@@ -44,6 +44,14 @@ The monitor is paused at3/3, budget disabled; additional0.17106100 held, aggrega
 1.85208175/2.00. No paid retry followed. Offline raw/SDK minimal URL/JSON match;
 header differences are unproven candidates, not an identified fix. Normal predeploy
 restored; cleanup367ada22 SUCCESS/healthz200 verified.
+Akbar approved the next0.50USD/six-request batch and total ceiling3USD. Executed
+four synthetic comparisons (normal SDK/raw/normalized-header SDK/typed Wrytely):
+ALL404 model_not_found. Both gated course turns skipped; no student context/retry.
+No SDK/header fix established. New0.02630200 held; aggregate1.87838375/3.00. Budget
+disabled; monitor remains paused3/3. Same application/model/key; private support
+addendum prepared, not sent. Normal predeploy/API-only start restored; cleanup
+6838be14 SUCCESS/healthz200 verified. Baseten access is unconfirmed; M asked to
+report invitation availability only, never keys. No provider switch is activated.
 
 ## Latest approved single-request check — November3,8:10PM Mountain
 
