@@ -14,6 +14,33 @@ P0/P1 remain open. No new live activation is inferred.
 
 ## November4 fresh ECE253 collection completed with gaps
 
+### Reviewed0.3.4 linked-file activation and real attachment proof
+
+M final review6642536978 clears exact executabled3d0ff1; fullCI41911052694
+SUCCESS as recorded below. Akbar approved isolated development deployment and one
+maximum30-minute ECE253 assignments/files/syllabus-only refresh. API deployment
+e8ee152c SUCCESS and subsequent health200 verified. Existing installed folder was
+updated with identical permissions/hosts/CSP/config; no new migration or model/send
+worker. Current scope was restored after a discovery-only round and independently
+verified before the content run.
+
+Content scan started15:16:13 Mountain, independently observed FINISHED by15:27:07
+(under11 minutes).53 records seen/retained:25 assignments,27 files,1 syllabus.
+Files:11 complete text observations,16 with gaps. All three resource categories
+closed partial; denied course-wide enumeration and parent requirements remain gaps.
+
+Direct read-only stored-row audit verifies the target upcoming lab's starter has
+8134 original text characters, canvas.text.v1, complete/no missing reasons. Its
+manual has9 extracted PDF pages/18860 characters, canvas.pdf.v1, with explicit
+pdf_layout_and_images_unread/pdf_text_only gaps. Both files carry the correct
+assignment linked_from provenance in their current immutable roots. This is actual
+private stored-file evidence, not link labels, fixture-only success or a bypass of
+the earlier Chrome client block. No original file body is published here.
+
+Owner confirmed collection PAUSED after completion. No further scan/model/
+send is authorized. Manual figures, assignment HTML, course policy and draft gates
+remain unresolved; this proves attachment capture, not an end-to-end usable draft.
+
 Corrected linked-file executabled3d0ff1 fullCI41911052694 SUCCESS:519 targeted
 integration tests,1942 full backend tests (two existing warnings),647 extension
 tests, web/build and access diagnostics pass. M independently passed171 upload/wire
