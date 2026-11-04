@@ -13,7 +13,10 @@ not select this fallback. Files and each parent category must already be selecte
 for that same course. The existing context/profile checks fence reads and commit.
 
 The fallback enumerates links from selected syllabus and assignment bodies, skipping
-locked assignments and quiz objects. It recognizes quoted anchor hrefs for exact
+locked assignments and quiz objects. Assignment links require explicit unlocked
+status and a nonempty recognized ordinary submission-type list. Positive or malformed
+quiz flags, any non-null quiz ID, external-tool/quiz/unknown submission types, and
+missing/malformed submission types are skipped conservatively. It recognizes quoted anchor hrefs for exact
 same-origin, same-course Canvas file paths. Script/comments, unrecognized markup,
 external/cross-course links, credentials, traversal and unexpected query parameters
 are not followed. It never evaluates or executes linked content.

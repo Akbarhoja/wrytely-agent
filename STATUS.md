@@ -15,9 +15,12 @@ P0/P1 remain open. No new live activation is inferred.
 ## November4 fresh ECE253 collection completed with gaps
 
 A implemented the [linked-file candidate](docs/contracts/CANVAS-LINKED-FILES-v1.md)
-on codex/p1-linked-files after Akbar's instruction. It reuses the existing bounded
+on codex/p1-linked-files after Akbar's instruction. Exact5157d39 fullCI41906081295
+passed. Mreview6641600084 found a quiz-marker filter mismatch; A corrected it with
+15 regression cases covering positive/malformed flags and unknown submission types.
+The corrected head requires fresh CI and M final review. It reuses the existing bounded
 file transport/journal with selected assignment/syllabus discovery, provenance and
-parent-scope validation.632 extension and112 pure root-validation tests pass;
+parent-scope validation.647 extension and112 pure root-validation tests pass;
 Ruff/306-file format pass. Local disposable Postgres initialization is blocked by
 sandbox filesystem access, so DB/full CI remains required. Existing0.3.3 installation
 and development deployment are untouched. No real file-read proof or parent-readiness

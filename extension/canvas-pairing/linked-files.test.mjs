@@ -4,6 +4,7 @@ import {
   linkedFileIds,
   readLinkedFilePage,
   LINKED_FILES_CURSOR,
+  ordinaryLinkedAssignment,
 } from "./linked-files.mjs";
 import { makeDocumentReader } from "./document-reader.mjs";
 import { prepareFileDocuments } from "./file-documents.mjs";
@@ -11,6 +12,56 @@ const origin = "https://canvas.example.edu";
 const link = (id) =>
   `<a href="${origin}/courses/101/files/${id}?wrap=1">manual</a>`;
 const denied = () => Object.assign(Error(), { code: "permission_denied" });
+
+for (const patch of [
+  { is_quiz_assignment: true },
+  { is_quiz_lti_assignment: true },
+  { submission_types: ["online_quiz"] },
+  { submission_types: ["external_tool"] },
+  { submission_types: ["online_upload", "online_quiz"] },
+  { quiz_id: 9 },
+  { quiz_id: 0 },
+  { is_quiz_assignment: "false" },
+  { is_quiz_lti_assignment: null },
+  { submission_types: undefined },
+  { submission_types: [] },
+  { submission_types: "online_upload" },
+  { locked_for_user: undefined },
+  { locked_for_user: true },
+]) {
+  test(`quiz or unknown assignment cannot seed attachments: ${JSON.stringify(patch)}`, async () => {
+    const row = {
+      id: 17,
+      course_id: 101,
+      locked_for_user: false,
+      submission_types: ["online_upload"],
+      description: link(44),
+      ...patch,
+    };
+    assert.equal(ordinaryLinkedAssignment(row), false);
+    const result = await readLinkedFilePage({
+      course: "101",
+      cursor: null,
+      origin,
+      selectedKinds: ["files", "assignments"],
+      get: async () => ({ data: [row], link: "" }),
+    });
+    assert.deepEqual(result.data, []);
+    assert.equal(result.next_cursor, null);
+  });
+}
+test("explicit ordinary assignment remains discoverable with negative quiz flags", () => {
+  assert.equal(
+    ordinaryLinkedAssignment({
+      locked_for_user: false,
+      quiz_id: null,
+      is_quiz_assignment: false,
+      is_quiz_lti_assignment: false,
+      submission_types: ["online_upload"],
+    }),
+    true,
+  );
+});
 
 test("only same-course actual anchor hrefs are discoverable; no script/title/foreign/credential links", () => {
   assert.deepEqual(
@@ -48,7 +99,13 @@ function fixture({
     if (path === "/api/v1/courses/101/assignments")
       return {
         data: [
-          { id: 31, course_id: 101, description: link(17) + link(18) },
+          {
+            id: 31,
+            course_id: 101,
+            locked_for_user: false,
+            submission_types: ["online_upload"],
+            description: link(17) + link(18),
+          },
           {
             id: 32,
             course_id: 101,
@@ -197,7 +254,15 @@ test("canonical cursor bounds reject invalid offsets and invented provenance", a
 test("pagination is durable, bounded and cannot leave the selected course", async () => {
   let reads = 0;
   const get = async () => ({
-    data: [{ id: ++reads, course_id: 101, description: link(17) }],
+    data: [
+      {
+        id: ++reads,
+        course_id: 101,
+        locked_for_user: false,
+        submission_types: ["online_upload"],
+        description: link(17),
+      },
+    ],
     link: `<${origin}/api/v1/courses/101/assignments?per_page=4&page=${reads + 1}>; rel="next"`,
   });
   let cursor = null;

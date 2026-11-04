@@ -8,6 +8,29 @@ const fail = (code = "unsafe_pagination") => {
   throw new ProbeError(code);
 };
 
+// Require an explicitly recognized ordinary assignment shape. Missing/malformed
+// types or quiz markers are not evidence that this is a non-quiz assignment.
+export function ordinaryLinkedAssignment(row) {
+  if (row.locked_for_user !== false || row.quiz_id != null) return false;
+  for (const key of ["is_quiz_assignment", "is_quiz_lti_assignment"]) {
+    if (Object.hasOwn(row, key) && row[key] !== false) return false;
+  }
+  const allowed = new Set([
+    "online_upload",
+    "online_text_entry",
+    "online_url",
+    "media_recording",
+    "on_paper",
+    "none",
+    "not_graded",
+  ]);
+  return (
+    Array.isArray(row.submission_types) &&
+    row.submission_types.length > 0 &&
+    row.submission_types.every((t) => allowed.has(t))
+  );
+}
+
 // Deliberately a narrow recognizer, not an HTML renderer or completeness claim.
 // Ignore script/comment/embedded regions; accept quoted hrefs on actual anchors.
 export function linkedFileIds(html, origin, course) {
@@ -244,7 +267,7 @@ export async function readLinkedFilePage({
         if (!numeric(id) || String(row.course_id) !== course || seen.has(id))
           fail("invalid_collection");
         seen.add(id);
-        if (row.locked_for_user !== true && !row.quiz_id)
+        if (ordinaryLinkedAssignment(row))
           add(row.description, `assignment:${id}`);
       }
       const next = nextLink(link);
