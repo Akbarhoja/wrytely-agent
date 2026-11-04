@@ -1,6 +1,7 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { CourseSupervision } from "../components/course-supervision";
+import { preparation } from "./preparation-fixture";
 
 const id = "00000000-0000-4000-8000-000000000001";
 const offer = "00000000-0000-4000-8000-000000000002";
@@ -34,6 +35,41 @@ afterEach(() => {
   sessionStorage.clear();
   vi.unstubAllGlobals();
 });
+
+it.each(["access", "session", "account", "malformed"])(
+  "clears preparation on %s change",
+  async (mode) => {
+    const p = preparation();
+    let changed = false;
+    const expired = vi.fn();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: unknown) => {
+        if (changed && mode === "session") return Response.json({}, { status: 401 });
+        const value = {
+          ...monitor(),
+          offers: [],
+          preparations: [changed && mode === "malformed" ? { ...p, current: "yes" } : p],
+        };
+        return Response.json(
+          String(url).includes("?connection_id=")
+            ? { supervision: changed && mode === "account" ? null : value }
+            : value,
+        );
+      }),
+    );
+    const view = render(<CourseSupervision {...props} onSessionExpired={expired} />);
+    await screen.findByText(p.title);
+    expect(screen.queryByRole("button", { name: /accept|download|send this/i })).toBeNull();
+    changed = true;
+    if (mode === "access") view.rerender(<CourseSupervision {...props} enabled={false} />);
+    else if (mode === "account") view.rerender(<CourseSupervision {...props} userId="user_bob" />);
+    else fireEvent.click(screen.getByText("Refresh supervision"));
+    await waitFor(() => expect(screen.queryByText(p.title)).toBeNull());
+    if (mode === "session") await waitFor(() => expect(expired).toHaveBeenCalledOnce());
+    if (mode === "malformed") await screen.findByRole("alert");
+  },
+);
 
 it("requires explicit enable, consent and acceptance; displays saved state", async () => {
   const value = monitor();
