@@ -14,76 +14,60 @@ P0/P1 remain open. No new live activation is inferred.
 
 ## One-course implementation candidate
 
-Latest executable1c4b6e0 combines M785149e/fcccc19 exactly as638dcc8/b1fa9d5,
-preserving authorship after code/test review. Student supervision controls, private
-download/revision/send actions, cross-device lookup, crash-to-enqueue service
-recovery and exact-byte multipart/document transport are assembled. Local146web,
-TypeScript/Prettier/Ruff/format pass. Earlier912961d full CI41734859568 is now fully
-green; current1c4b6e0 CI41742559685 passes its realPostgres integration gate plus
-web/build/extension/diagnostic. That exact full CI is now SUCCESS, as is f320c9c's
-41742308918. This evidence covers commands, MUI/document integration and both
-connected scripted journeys, not a real Meta/phone run.
+Executable `92568ab` combines the one-course supervisor, budgeted reasoning, checked
+DOCX/revision flow, recoverable offers, student controls, document transport and
+signed WhatsApp command intake. M017946f/785149e/fcccc19/0bafa22/bae6085 are reviewed
+and imported exactly, preserving authorship. No blocking consumer finding remains
+in the reviewed code/test scope. This is not independent human merge approval.
 
-A added post-signature command boundary in028 on ORIGINAL whatsapp_inbound.
-It resolves current linked owner/account/reply target internally, atomically applies
-existing offer acceptance+responsibility, decline, private revision or file enqueue,
-and saves replay receipt without a generic user-chat/reply task. Unexpected crashes
-roll back action/receipt together; expected business rejection rolls back partial
-work but retains a safe receipt. Per-Store/execution transaction context composes
-existing methods without a parallel ledger/runtime. Pending offers expire24h.
-Student may request the first finished file by replying to the exact accepted offer;
-resolution is restricted to that offer's responsibility, never a global latest file.
-Both HTTP and linked-command scripted journeys now include actual checked-byte
-upload/typed document send assembly with simulated HTTP/receipts and immutable
-revision/source-change checks. Signature assembly and live phone proof are separate.
+Run 41752360843 passes its dedicated realPostgres integration step (including partial
+source inspection, signed commands and the connected signed-ingress journey),
+web/build, extension and Canvas-diagnostic jobs. Full backend regression is still
+running. Earlier `1c4b6e0` full run 41742559685 is SUCCESS; it does not cover the newest
+signed assembly/partial-inspection code. Latest local 146 web, TypeScript/Prettier,
+pure schemas and292-file Ruff/format pass. Local disposable Postgres remains
+sandbox-blocked; actual Store integration evidence is from isolated GitHub Postgres.
 
-The first3ec2b86 fast result294PASS/2FAIL (a6ffac7:311PASS/2FAIL) exposed only test
-assertions incorrectly counting original INTERNAL work notes as generic chat.
-Correctedf320c9c explicitly requires no new USER messages or reply tasks while
-retaining internal planner/revision notes. Current realDB gate passes those cases;
-no production authorization/check was relaxed. Local5command-schema/38pure pass.
-M's final dependency is bounded parser + signed webhook routing/consumer tests
-against docs/contracts/WHATSAPP-COMMANDS-v1.md, published in issue4. No M consumer
-code is presumed finished. P0/P1 live gaps, actual Meta quality/tool-loop proof,
-bounded cloud/laptop-closed run, native Word/phone acceptance and submission remain.
-Meta business verification is owner-reported under review, not approved.
-No new retained023–028 migration, allowance grant, deployment, inference or send.
+Signed rehearsal routes six commands/replays plus two receipt callbacks through
+actual HMAC HTTP, Store, runtime and typed transport. Models/provider responses
+remain simulated. Acceptance, decline, file and revision intake derives the linked
+owner/account/reply target internally; original inbound receipts and actions commit
+atomically, with no generic chat fallback. A student can request the checked result
+by replying /file to its exact accepted offer. Source-change and duplicate fences
+remain intact. Real Meta quality/phone delivery is not inferred from fixtures.
 
-Live readiness inspection: signed-in owner website shows NEWEST connection's
-original scan still active, with ECE253 assignments/announcements/grades/modules
-partial, files restricted and submissions/syllabus open. No new scan/scope/re-pair
-was started. Railway read-only inspection confirms isolated development project and
-all4extractors configured. Converter source is unchanged since2f30819. HTML parser
-always reports partial html_text_only; resource extraction_failed can label content
-gaps rather than a network/parser crash. Therefore current real course data is NOT
-proven action-ready. No full real-course draft/delivery claim is justified yet.
+Actual signed-in owner website shows the NEWEST connection's original scan active:
+ECE253 assignments/announcements/grades/modules partial, files restricted and
+submissions/syllabus open. No new scan, scope or pairing change occurred. Read-only
+Railway inspection confirms all four extractors configured; HTML conversion deliberately
+reports partial html_text_only, which can surface as extraction_failed coverage.
+Current partial originals are now inspectable with their missing reasons and
+independent age/restriction checks. Original freshness.usable, work-offer, draft,
+citation and delivery requirements are unchanged. Real course action readiness is
+NOT established; do not label partial evidence complete for a demo.
 
-A is fixing supervisor read-only inspection of current partial originals: computed
-inspection_ready plus original missing reasons and independent age/restriction
-checks; original partial/freshness/work-offer/draft/citation/file/send gates remain.
-7pure protocol checks pass; new actual-Store partial inline/document regression
-tests are being validated separately. This does not promote any live source.
-Local UI verification needed webpack+WATCHPACK_POLLING=1000 because macOS watcher
-limits stopped Turbopack/ordinary watchers; no persistent build config change.
-Ignored historical model ledger reconciles1.33114350 charged/held of2.00 (including
-unknown1.32); remaining0.66885650 is NOT new-test authorization. No grant was created.
+Native file viewing failed on this computer; DOCX byte/XML checks are automated,
+but native Word/phone layout acceptance remains unverified. Meta business verification
+is owner-reported submitted/under review, not approved. WhatsApp restriction is not
+known cleared. Real bounded cloud/laptop-closed proof, demo and submission remain.
 
-M signed parser/webhook0bafa22 and connected signed-ingress rehearsalbae6085 are
-now read/reviewed and imported EXACTLY asd4a5ecb/daf00d6 with original authorship.
-No blocking finding in that code/test scope. Real raw HMAC/account filtering,
-bounded slash command parsing, current linked-owner/context/replay, permanent
-command rejection without generic fallback and unexpected DB503/replay are wired.
-M's rehearsal reuses the original realStore/HTTP/runtime/transport journey and routes
-six command/replay requests plus two status callbacks through actual signed HTTP;
-models/provider replies remain simulated. No external signature/provider acceptance
-is inferred from these fixtures. M0bafa22 Linux checks all pass; combined current
-head is under its own realPostgres/full CI, including both signed test files.
-Latest local146web/TypeScript/Prettier and292-fileRuff/format pass before integration;
-the UI guidance-only addition is checked again in combined CI. The4c467c0 fast
-failure was a schema1 fixture reading object_id from a receipt that does not contain
-it;973757e uses the actual stored object identity. Partial-document and age/restriction
-cases passed that earlier run; no production gate was relaxed to fix the fixture.
-Runtime now asks offers to explain the actual /accept,/decline,/file,/revise commands.
+Historical model ledger reconciles 1.33114350 charged/held of 2.00, including unknown
+1.32; remaining 0.66885650 is not new-test authorization. No new retained 023–028
+migration, allowance grant, deployment, model call or send occurred this turn.
+[Concrete bounded development check](docs/ONE-COURSE-LIVE-CHECK.md) is prepared for
+scoped approval after exact candidate regression passes: ECE253 only, at most two
+manual turns, at most 0.35 additional USD within the unchanged 2.00 global ceiling,
+no outward send/scan and pause afterward. It proves inspection/decision only.
+
+Earlier failed gates were corrected without loosening production checks: schema1
+fixture now reads the actual persisted observation identity (973757e), and command
+fixtures distinguish original INTERNAL work notes from generic USER chat/reply tasks
+(f320c9c). M's Windows result 1824 PASS / 3 known PDF failures is separate from Linux and
+does not constitute an all-platform pass. Current exact Linux regression remains
+the gate before activation. M was notified of the integrated signatures/fixes in
+[the tested-boundary handoff](https://github.com/Akbarhoja/wrytely-agent/issues/4#issuecomment-6619950478).
+
+## Earlier one-course implementation evidence (historical)
 
 Current executable candidate79bd138 combines M017946f exactly (importdd90a2e),
 adds independent saved-offer recovery c17dd88, typed checked attachment authority

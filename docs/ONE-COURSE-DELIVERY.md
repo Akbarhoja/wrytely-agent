@@ -82,23 +82,28 @@ existing monitor without enrolling/resuming it. Exact APIs and tests are publish
 in docs/contracts/COURSE-SUPERVISION-v1.md, COURSE-OFFER-DELIVERY-v1.md,
 MODEL-BUDGET-v1.md, ARTIFACT-REVISION-v1.md and ARTIFACT-DELIVERY-v1.md.
 
-M017946f HTTP/typed dispatch/budgeted service/download/revision assembly is reviewed
-and combined in A's branch; M retains student web, signed linked command routing,
-attachment media transport and selector consumption. Full backend at earlier044b8df
-passed1707tests on GitHub PostgreSQL. Newer combined79bd138 run41734459420
-passes its dedicated realPostgres integration and web/extension/diagnostic jobs;
-full backend regression remains running.
-Local pure/service/limit checks and Ruff/format pass; local disposable PostgreSQL
-remains sandbox-blocked. Scripted models/receipts are separate from live acceptance.
+M017946f/785149e/fcccc19 HTTP, student controls, typed dispatch, document media,
+recovery and budgeted-service assembly is reviewed and combined. M0bafa22 signed
+slash-command parser/webhook and bae6085 connected signed-ingress rehearsal are
+also imported exactly, preserving authorship. The real Store/runtime/transport
+journey exercises signed accept, file, revision, replay and receipt paths with
+scripted model/provider responses. This is not external provider acceptance.
 
-Latest1c4b6e0 also combines M785149e/fcccc19 student controls, source-scoped lookup,
-recovery and exact-byte document transport. Post-signature explicit command intake028
-now owns atomic accept/delegation/revision/file-request replay on original inbound;
-M must finish its signed parser/webhook consumer. RealPostgres gate41742559685 and
-web/build/extension/diagnostic pass; current full backend still runs. Local146web,
-TypeScript/format and pure schema checks pass. Detailed current evidence is in STATUS.
+Executable `92568ab` is the combined candidate. Its dedicated realPostgres integration
+step plus web/build/extension/diagnostic jobs pass in run 41752360843; full backend
+regression remains running. Earlier `1c4b6e0` full run 41742559685 is SUCCESS, but does
+not cover the newest signed assembly/partial-inspection change. Local 146 web,
+TypeScript/format and pure schema checks pass. Detailed evidence is in STATUS.
 
-Owner submitted Meta business verification; under review, not approved. Actual
-one-course collection coverage, real Meta decision/draft quality, typed phone file
-receipt/native layout, restart/laptop-closed duration, demo and submission remain.
-No new retained023–028 migration, grant, deployment, model call or send is implied.
+Actual newest Canvas connection still reports partial assignments/announcements/
+grades/modules, restricted files and open submissions/syllabus for ECE253. Current
+partial originals can be inspected with explicit missing reasons; work offers,
+drafting, citation and delivery still require their original complete/current
+checks. Real course action readiness is not established. Owner submitted Meta
+business verification; under review, not approved. Real Meta decisions/quality,
+phone file receipt/native layout, restart/laptop-closed duration, demo and submission
+remain. No new retained 023–028 migration, grant, deployment, inference or send.
+
+The concrete next activation request is documented in
+[the bounded development check](ONE-COURSE-LIVE-CHECK.md). It is a proposal awaiting
+Akbar's scoped approval; its presence does not start any operation.

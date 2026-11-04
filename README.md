@@ -14,8 +14,10 @@ revisions, source-change reassessment and WhatsApp communication. See the
 Supervisor, budget, offer recovery and checked-file authorization code is on the
 candidate branch. M's student controls, HTTP/download/revision/budgeted service and
 media transport assembly is combined. The Store's explicit WhatsApp command intake
-is implemented; signed parser/webhook consumer assembly remains pending. It reuses
-original linkage/inbound replay and creates no unrelated generic chat task.
+and its signed parser/webhook consumer are combined. The connected rehearsal sends
+signed HTTP commands and receipt callbacks through the actual application, with
+simulated models/provider responses. It reuses original linkage/inbound replay and
+creates no unrelated generic chat task.
 Scripted integration evidence is separate from actual Meta quality, installed
 collection coverage, continuous cloud operation and phone delivery. Meta business
 verification is submitted and under review; the messaging restriction is not cleared.
