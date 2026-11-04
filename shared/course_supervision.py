@@ -16,6 +16,7 @@ from contracts.canvas_sync import course_id as validate_course
 from contracts.course_supervision import CourseDecision
 from shared.academic_reads import student_json
 from shared.canvas_reads import SourceRefreshRequired, _uuid
+from shared.course_preparation import preparation_projection, preparation_record
 from shared.freshness import legacy_freshness
 
 
@@ -126,7 +127,13 @@ class CourseSupervisionStore:
         digest = hashlib.sha256(
             json.dumps(
                 sorted(
-                    (str(s["object_id"]), str(s["document_version_id"] or s["latest_version_id"]))
+                    (
+                        str(s["object_id"]),
+                        str(s["document_version_id"] or s["latest_version_id"]),
+                        # Partial inline originals may have no published version.
+                        # Their observation must still fence changed preparation text.
+                        str(s["latest_observation_id"]) if not s["freshness"]["usable"] else "",
+                    )
                     for s in sources
                 )
             ).encode()
@@ -198,6 +205,9 @@ class CourseSupervisionStore:
                 sources=sources,
                 inspections=inspections,
                 offers=student_json(offers),
+                preparations=[
+                    {k: p[k] for k in ("key", "object_id", "evidence")} for p in row["preparations"]
+                ],
                 last_decision=row["last_decision"],
                 snapshot_digest=digest,
             )
@@ -219,6 +229,7 @@ class CourseSupervisionStore:
             if digest != claim["snapshot_digest"]:
                 raise SourceRefreshRequired()
             inspections = row["inspections"]
+            preparations = row["preparations"]
             if decision.action != "wait":
                 source = next((s for s in sources if s["object_id"] == decision.object_id), None)
                 if not source or source["historical"]:
@@ -231,6 +242,15 @@ class CourseSupervisionStore:
                     inspections[decision.object_id] = student_json(inspection)
                     if len(json.dumps(inspections).encode()) > 100000:
                         raise ValueError("Inspection context limit")
+                elif decision.action == "prepare":
+                    record = preparation_record(decision, sources, inspections)
+                    if not any(p["key"] == record["key"] for p in preparations):
+                        if len(preparations) >= 20:
+                            raise ValueError("Preparation history limit")
+                        preparations = [
+                            *preparations,
+                            {**record, "id": str(uuid4()), "created_at": now.isoformat()},
+                        ]
                 else:
                     if not source["freshness"]["usable"]:
                         raise SourceRefreshRequired()
@@ -266,11 +286,12 @@ class CourseSupervisionStore:
                     )
             return conn.execute(
                 "UPDATE wrytely_agent.course_supervisions SET state='ready',lease_token=NULL,"
-                "lease_until=NULL,inspections=%s,last_decision=%s,reason=NULL,"
+                "lease_until=NULL,inspections=%s,preparations=%s,last_decision=%s,reason=NULL,"
                 "next_check_at=clock_timestamp()+(%s * interval '1 second') WHERE id=%s "
                 "RETURNING id,state,next_check_at,calls_reserved,call_limit",
                 (
                     Jsonb(inspections),
+                    Jsonb(preparations),
                     Jsonb(decision.model_dump()),
                     0 if decision.action == "inspect" else decision.next_check_seconds,
                     row["id"],
@@ -292,12 +313,30 @@ class CourseSupervisionStore:
             agent, _ = self._read_identity(conn, verified_user, None)
             row = conn.execute(
                 "SELECT id,state,next_check_at,calls_reserved,call_limit,last_decision,reason, "
-                "notification_consent "
+                "notification_consent,connection_id,course_id,generation,scope_revision,"
+                "preparations "
                 "FROM wrytely_agent.course_supervisions WHERE agent_id=%s AND id=%s",
                 (agent, _uuid(supervision_id)),
             ).fetchone()
             if not row:
                 raise LookupError("Not found")
+            connection = self._read_connection(conn, agent, row.pop("connection_id"))
+            course = row.pop("course_id")
+            scope_current = (row.pop("generation"), row.pop("scope_revision")) == (
+                connection["generation"],
+                connection["scope_revision"],
+            )
+            sources = []
+            if row["preparations"]:
+                sources, _ = self._supervision_snapshot(conn, agent, connection, course)
+            owner = conn.execute(
+                "SELECT paused FROM wrytely_agent.agents WHERE id=%s", (agent,)
+            ).fetchone()
+            row["preparations"] = preparation_projection(
+                row["preparations"],
+                sources,
+                active=scope_current and not owner["paused"] and row["state"] != "paused",
+            )
             row["offers"] = conn.execute(
                 "SELECT id,object_id,version_id,message,reason,state "
                 "FROM wrytely_agent.course_offers "

@@ -323,3 +323,81 @@ def test_new_source_wakes_a_future_check_and_known_race_replans_within_same_allo
     assert resumed["token"] != claim["token"]
     db.pause_course_supervision("user_alice", monitor["id"])
     assert not db.reschedule_course_source_change("user_alice", resumed)
+
+
+def prepared_course(device):
+    import test_canvas_evidence as evidence
+
+    scan = evidence.prepare(device)
+    item = evidence.assignment()
+    item.update(coverage="partial", missing=["linked_content_unread"])
+    receipt = evidence.upload(device, scan, evidence.body(device, scan, [item]))
+    evidence.close(device, scan, receipt, partial=True)
+    db = device[0]
+    obj = evidence.rows(device, "canvas_evidence_objects")[0]["id"]
+    monitor = db.enable_course_supervision("user_alice", device[1]["connection_id"], "101")
+    run_course_supervision_once(db, Model(decision("inspect", obj)), "user_alice", monitor["id"])
+    value = decision("inspect", obj).model_dump()
+    value.update(
+        action="prepare",
+        preparation={
+            "excerpts": [dict(object_id=str(obj), quote=item["content"], kind="review")],
+            "questions": ["Can you read the linked original?"],
+        },
+    )
+    choice = CourseDecision.model_validate(value)
+    run_course_supervision_once(db, Model(choice), "user_alice", monitor["id"])
+    return db, monitor, obj, choice
+
+
+def test_partial_preparation_is_persisted_private_idempotent_and_never_draft_authority(device):
+    from shared.db import Store
+
+    db, monitor, obj, choice = prepared_course(device)
+    status = db.course_supervision_status("user_alice", monitor["id"])
+    assert len(status["preparations"]) == 1
+    record = status["preparations"][0]
+    assert record["current"] and record["kind"] == "preparation_checklist"
+    assert record["evidence"][0]["missing"] == ["linked_content_unread"]
+    assert status["offers"] == [] and status["calls_reserved"] == 2
+    due(db, monitor)
+    run_course_supervision_once(db, Model(choice), "user_alice", monitor["id"])
+    assert db.course_supervision_status("user_alice", monitor["id"])["preparations"] == [record]
+    with db.connection() as conn:
+        for table in ["responsibilities", "artifacts", "whatsapp_outbound"]:
+            assert (
+                conn.execute(f"SELECT count(*) AS n FROM wrytely_agent.{table}").fetchone()["n"]
+                == 0
+            )
+    restarted = Store(db._url, canvas_origins=tuple(db._canvas_origins))
+    assert restarted.course_supervision_status("user_alice", monitor["id"])["preparations"] == [
+        record
+    ]
+    db.provision("user_bob")
+    with pytest.raises(LookupError):
+        db.course_supervision_status("user_bob", monitor["id"])
+    db.pause_course_supervision("user_alice", monitor["id"])
+    historical = db.course_supervision_status("user_alice", monitor["id"])["preparations"][0]
+    assert not historical["current"] and historical["id"] == record["id"]
+
+
+def test_changed_partial_source_fences_preparation_and_marks_saved_checklist_historical(device):
+    import test_canvas_evidence as evidence
+
+    db, monitor, _, choice = prepared_course(device)
+    due(db, monitor)
+    claim = db.claim_course_supervision("user_alice", monitor["id"])
+    scan = evidence.next_scan(device, "changed-partial-preparation")
+    item = evidence.assignment()
+    item.update(
+        content="Changed instructions require different equipment.",
+        coverage="partial",
+        missing=["linked_content_unread"],
+    )
+    receipt = evidence.upload(device, scan, evidence.body(device, scan, [item]))
+    evidence.close(device, scan, receipt, partial=True)
+    with pytest.raises(SourceRefreshRequired):
+        db.finish_course_supervision("user_alice", claim, choice)
+    assert not db.course_supervision_status("user_alice", monitor["id"])["preparations"][0][
+        "current"
+    ]

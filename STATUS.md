@@ -1,6 +1,6 @@
 # Engineering status
 
-Updated November 3, 2026. [Plan revision8](docs/BUILD-PLAN.md) ·
+Updated November 4, 2026. [Plan revision8](docs/BUILD-PLAN.md) ·
 [Work orders](docs/WORK-ORDERS.md) · [Code audit](docs/IMPLEMENTATION-AUDIT.md) ·
 [Team coordination](https://github.com/Akbarhoja/wrytely-agent/issues/4)
 
@@ -13,6 +13,69 @@ M owns WhatsApp/app/web/service assembly in parallel. This supersedes stop-befor
 P0/P1 remain open. No new live activation is inferred.
 
 ## November4 fresh ECE253 collection completed with gaps
+
+### Private preparation workflow candidate
+
+A owns `codex/course-preparation`, coordinated in #4 comment6643960622. A distinct
+typed non-submission checklist path is now implemented in the existing supervisor
+and Store, with additive029 persistence. It verifies excerpts against inspected
+current originals, pins target/syllabus/linked files, preserves gaps/continuations,
+deduplicates history and marks changed/paused evidence historical. It creates no
+draft/task/offer/send or submission permission. Full drafting gates stay intact.
+Consumer projection and M-owned UI work are documented in
+[course preparation v1](docs/contracts/COURSE-PREPARATION-v1.md).
+
+Exact executablece7e6f8 fullCI41928882027 SUCCESS:521 real-Postgres integration
+tests and1969 full backend tests (two existing warnings), web/build, extension and
+access diagnostics pass.40 local pure preparation/protocol tests and repository
+lint/309-file format checks also pass. Local Postgres was blocked by sandbox
+process/shared-memory restrictions; CI supplied the actual disposable database proof,
+not a live-database substitute. The initial two fixture lookup failures were corrected
+before this successful run. No deployment, retained migration, paid inference, scan,
+outward send or continuous activation performed for this feature.
+
+M acknowledged the concrete existing-status projection and started the separate
+`codex/course-preparation-view` consumer in coordination6644234620. His view/API tests
+and counterpart feature review remain pending; backend CI is not live acceptance.
+A separately reviewed M worker5978ae6/client6cb452f fixes in PR166 comment6644391046;
+no blocking finding in those scoped changes, successful exact-commit CI observed.
+They are not imported into this feature or deployed by this track.
+
+### Reviewed0.3.4 linked-file activation and real attachment proof
+
+Follow-up private saved-text audit completed: manual/starter/syllabus requirements
+read, with no new collection/model call. The target requires physical work and TA
+check-off; actual results are unknown. Saved policy does not establish permission
+for AI-written graded submissions. Full drafting remains blocked. At audit time,
+preparation/study existed only in supervisor wording; all work offers required
+usable complete evidence. This led to the separate checklist candidate above,
+which is implemented/tested but not live-delivered. No parent/PDF/policy gaps were relaxed. Detailed
+student-facing requirements and original source text remain in ignored local files.
+
+M final review6642536978 clears exact executabled3d0ff1; fullCI41911052694
+SUCCESS as recorded below. Akbar approved isolated development deployment and one
+maximum30-minute ECE253 assignments/files/syllabus-only refresh. API deployment
+e8ee152c SUCCESS and subsequent health200 verified. Existing installed folder was
+updated with identical permissions/hosts/CSP/config; no new migration or model/send
+worker. Current scope was restored after a discovery-only round and independently
+verified before the content run.
+
+Content scan started15:16:13 Mountain, independently observed FINISHED by15:27:07
+(under11 minutes).53 records seen/retained:25 assignments,27 files,1 syllabus.
+Files:11 complete text observations,16 with gaps. All three resource categories
+closed partial; denied course-wide enumeration and parent requirements remain gaps.
+
+Direct read-only stored-row audit verifies the target upcoming lab's starter has
+8134 original text characters, canvas.text.v1, complete/no missing reasons. Its
+manual has9 extracted PDF pages/18860 characters, canvas.pdf.v1, with explicit
+pdf_layout_and_images_unread/pdf_text_only gaps. Both files carry the correct
+assignment linked_from provenance in their current immutable roots. This is actual
+private stored-file evidence, not link labels, fixture-only success or a bypass of
+the earlier Chrome client block. No original file body is published here.
+
+Owner confirmed collection PAUSED after completion. No further scan/model/
+send is authorized. Manual figures, assignment HTML, course policy and draft gates
+remain unresolved; this proves attachment capture, not an end-to-end usable draft.
 
 Corrected linked-file executabled3d0ff1 fullCI41911052694 SUCCESS:519 targeted
 integration tests,1942 full backend tests (two existing warnings),647 extension
