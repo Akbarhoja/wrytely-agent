@@ -87,6 +87,47 @@ def test_cli_requires_explicit_mode_and_configured_budget(monkeypatch):
     assert missing_budget.value.code == 2
 
 
+@pytest.mark.parametrize("factory_ready", [False, True])
+def test_cli_delegates_credentials_to_budgeted_factory(monkeypatch, capsys, factory_ready):
+    settings = Settings(
+        _env_file=None,
+        database_url="postgresql://localhost/disposable",
+        meta_api_key=None,
+        meta_budget_key="approved",
+        meta_input_usd_per_million="1",
+        meta_output_usd_per_million="1",
+    )
+    store, model, events = object(), object(), []
+    monkeypatch.setattr("app.course_service.Settings", lambda: settings)
+    monkeypatch.setattr("app.course_service.Store", lambda *a, **kw: store)
+
+    def factory(actual_store, actual_settings):
+        assert actual_store is store and actual_settings is settings
+        events.append("factory")
+        if not factory_ready:
+            raise RuntimeError("private provider credential diagnostic")
+        return model
+
+    def scheduled(actual_store, actual_model, **options):
+        assert actual_store is store and actual_model is model
+        assert options["queue_offers"] is False
+        events.append("tick")
+        return {"checked": 0, "queued": 0, "errors": 0}
+
+    monkeypatch.setattr("app.course_service.BudgetedMetaRouter", factory)
+    monkeypatch.setattr("app.course_service.tick", scheduled)
+    if factory_ready:
+        main(["--once"])
+        assert events == ["factory", "tick"]
+    else:
+        with pytest.raises(SystemExit) as rejected:
+            main(["--once"])
+        assert rejected.value.code == 2 and events == ["factory"]
+        error = capsys.readouterr().err
+        assert "Configured budgeted model is unavailable" in error
+        assert "private provider" not in error
+
+
 @pytest.mark.parametrize("unknown", [False, True])
 def test_real_store_restart_keeps_due_time_or_unknown_hold(device, unknown):
     db, monitor, _ = setup(device)

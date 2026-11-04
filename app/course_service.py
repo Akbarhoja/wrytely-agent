@@ -75,7 +75,6 @@ def main(argv=None):
     if not all(
         (
             settings.database_url,
-            settings.meta_api_key,
             settings.meta_budget_key,
             settings.meta_input_usd_per_million,
             settings.meta_output_usd_per_million,
@@ -84,7 +83,12 @@ def main(argv=None):
         parser.error("Configure database, development model key, budget key and verified prices")
     logging.basicConfig(level=logging.INFO)
     store = Store(settings.database_url.get_secret_value(), canvas_origins=settings.canvas_origins)
-    model = BudgetedMetaRouter(store, settings)
+    # The shared budgeted factory owns selected-provider credential validation.
+    # Requiring a Meta key here would block an explicitly selected alternative.
+    try:
+        model = BudgetedMetaRouter(store, settings)
+    except (ValueError, RuntimeError):
+        parser.error("Configured budgeted model is unavailable; verify provider configuration")
     stop = Event()
 
     def stopping():

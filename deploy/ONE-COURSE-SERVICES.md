@@ -18,6 +18,13 @@ budget key; it uses `BudgetedMetaRouter`, never an unguarded model. Global/stude
 budget setup remains an operator-only action under separate approval. Preserve
 historical spent and unknown liabilities and the existing total development cap.
 
+The shared budgeted factory validates credentials for its selected provider. The
+service does not require an unrelated Meta credential before consulting that
+factory. Missing or invalid provider configuration stops startup before scheduling
+and returns a generic configuration error. This does not select or activate an
+alternative provider; only a published, explicitly configured shared factory can
+do that. No automatic provider fallback is introduced.
+
 Use `--limit 1` for a one-course scheduling pass. Poll cadence is an opportunity to
 check persisted due work; the model chooses intervention and next check times.
 Restart reuses the same Store leases, reservations, due times and holds. Unknown
