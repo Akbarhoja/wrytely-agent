@@ -174,6 +174,10 @@ def _extract(content, max_bytes, max_chars, max_events, max_depth, *, literal_te
     parser = _Text(max_chars, max_events, max_depth, literal_text=literal_text)
     try:
         parser.feed(source)
+        if literal_text and parser.rawdata:
+            # Some Python versions discard unfinished tag tokens on close rather
+            # than emitting a data callback. Inspect the pending tail first.
+            parser.reasons.add("unresolved_markup_or_reference")
         parser.close()
     except _Blocked as exc:
         return HtmlExtraction("", "blocked", (str(exc),))
