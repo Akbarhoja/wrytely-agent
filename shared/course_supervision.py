@@ -7,6 +7,7 @@ Offers are private pending intents, not authorized WhatsApp deliveries.
 
 import hashlib
 import json
+from datetime import timedelta
 from uuid import uuid4
 
 from psycopg.types.json import Jsonb
@@ -320,6 +321,9 @@ class CourseSupervisionStore:
             ).fetchone()
             if not offer:
                 raise LookupError("Not found")
+            now = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
+            if offer["state"] == "pending" and now >= offer["created_at"] + timedelta(hours=24):
+                raise ValueError("Offer expired")
             sources, _ = self._supervision_snapshot(conn, agent["id"], connection, row["course_id"])
             source = next((s for s in sources if s["object_id"] == str(offer["object_id"])), None)
             if (

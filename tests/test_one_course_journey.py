@@ -28,6 +28,7 @@ from test_typed_document_drafting import (
     ref,
     requirements,
 )
+from test_whatsapp_commands import envelope as command_envelope
 from test_worker import ScriptedModel
 
 from integrations.whatsapp import WhatsAppAdapter, WhatsAppText
@@ -46,7 +47,8 @@ def bound(db, model):
     )
 
 
-def test_one_course_offer_accept_checked_file_revision_and_new_deadline(device):
+@pytest.mark.parametrize("command_channel", [False, True], ids=["session-http", "linked-command"])
+def test_one_course_offer_accept_checked_file_revision_and_new_deadline(device, command_channel):
     db = device[0]
     deadline = datetime.now(UTC) + timedelta(days=1)
     observed, _ = publish(device, due=deadline.isoformat())
@@ -127,8 +129,23 @@ def test_one_course_offer_accept_checked_file_revision_and_new_deadline(device):
         status().model_copy(update=transport_account), **transport_account
     )["matched"]
     path = f"{ROOT}/{monitor['id']}/offers/{offer['id']}/decision"
-    accepted = checked(api.post(path, headers=auth(), json={"accept": True}))
-    assert checked(api.post(path, headers=auth(), json={"accept": True})) == accepted
+    if command_channel:
+        incoming = command_envelope(
+            None,
+            provider_id="journey-accept",
+            reply_to_provider_ref="wamid.one",
+            **transport_account,
+        )
+        receipt = db.execute_whatsapp_command(incoming, **transport_account)
+        assert receipt["state"] == "applied"
+        assert db.execute_whatsapp_command(incoming, **transport_account) == {
+            **receipt,
+            "replayed": True,
+        }
+        accepted = receipt["result"]
+    else:
+        accepted = checked(api.post(path, headers=auth(), json={"accept": True}))
+        assert checked(api.post(path, headers=auth(), json={"accept": True})) == accepted
     policy = dict(status="disclosure_required", evidence=ref(device, observed, POLICY))
     rubric = [dict(evidence=ref(device, observed, RUBRIC))]
     draft = dict(
@@ -159,10 +176,58 @@ def test_one_course_offer_accept_checked_file_revision_and_new_deadline(device):
     assert download.status_code == 200 and download.headers["cache-control"] == "no-store"
     assert download.content == first_file.content
     assert download.headers["x-artifact-sha256"] == first_file.sha256
+    if command_channel:
+        incoming = command_envelope(
+            None,
+            kind="send_artifact",
+            provider_id="journey-send",
+            reply_to_provider_ref="wamid.one",
+            **transport_account,
+        )
+        file_receipt = db.execute_whatsapp_command(incoming, **transport_account)
+        assert file_receipt["state"] == "applied"
+        assert db.execute_whatsapp_command(incoming, **transport_account)["replayed"]
+    else:
+        checked(api.post(f"/v2/artifacts/{saved['id']}/delivery", headers=auth()))
+    file_requests = []
+
+    def simulated_file(request):
+        file_requests.append(request)
+        if request.url.path.endswith("/media"):
+            assert first_file.content in request.content
+            return httpx.Response(200, json={"id": "media_journey"})
+        return httpx.Response(200, json={"messages": [{"id": "wamid.file"}]})
+
+    with httpx.Client(transport=httpx.MockTransport(simulated_file)) as transport:
+        adapter = WhatsAppAdapter(
+            client=transport, token="synthetic-token", phone_number_id="123", api_version="v23.0"
+        )
+        assert (
+            dispatch_once(db, adapter, worker_id="simulated-file", **transport_account)
+            == "accepted"
+        )
+        assert dispatch_once(db, adapter, worker_id="restart-file", **transport_account) == "idle"
+    assert len(file_requests) == 2
+    assert db.record_whatsapp_status(
+        status(provider_ref="wamid.file").model_copy(update=transport_account), **transport_account
+    )["matched"]
     revision_path = f"/v2/artifacts/{saved['id']}/revisions"
     revision_request = {"instructions": "Use a clearer title", "request_key": "student-r1"}
-    revision = checked(api.post(revision_path, headers=auth(), json=revision_request))
-    assert checked(api.post(revision_path, headers=auth(), json=revision_request)) == revision
+    if command_channel:
+        incoming = command_envelope(
+            None,
+            kind="revise_artifact",
+            provider_id="journey-revise",
+            reply_to_provider_ref="wamid.file",
+            **transport_account,
+        )
+        receipt = db.execute_whatsapp_command(incoming, **transport_account)
+        assert receipt["state"] == "applied"
+        assert db.execute_whatsapp_command(incoming, **transport_account)["replayed"]
+        revision = receipt["result"]
+    else:
+        revision = checked(api.post(revision_path, headers=auth(), json=revision_request))
+        assert checked(api.post(revision_path, headers=auth(), json=revision_request)) == revision
     revised = deepcopy(draft)
     revised["title"] = "Clearer private comparison"
     model = bound(
