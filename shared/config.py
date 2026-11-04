@@ -69,10 +69,17 @@ class Settings(BaseSettings):
                 raise ValueError("Canvas extractors require a JSON list") from None
         if (
             not isinstance(versions, (list, tuple))
-            or len(versions) > 4
+            or len(versions) > 5
             or any(
                 type(v) is not str
-                or v not in {"canvas.html.v1", "canvas.json.v1", "canvas.text.v1", "canvas.pdf.v1"}
+                or v
+                not in {
+                    "canvas.html.v1",
+                    "canvas.html.v2",
+                    "canvas.json.v1",
+                    "canvas.text.v1",
+                    "canvas.pdf.v1",
+                }
                 for v in versions
             )
             or len(set(versions)) != len(versions)

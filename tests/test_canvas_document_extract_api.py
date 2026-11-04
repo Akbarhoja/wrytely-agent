@@ -109,3 +109,62 @@ def test_missing_and_malformed_body_return_explicit_gaps_not_fabricated_text(dev
     response = checked(post(client(device), device, "/extract", deepcopy(request)))
     assert all(item["text"] == "" and item["coverage"] == "partial" for item in response["items"])
     assert response["items"][1]["missing"] == ["malformed_markup"]
+
+
+@pytest.mark.parametrize(
+    "versions,expected",
+    [
+        (("canvas.html.v1",), "partial"),
+        (("canvas.html.v2",), "complete"),
+        (("canvas.html.v1", "canvas.html.v2"), "complete"),
+    ],
+)
+def test_opt_in_v2_is_versioned_without_promoting_v1_or_storing_evidence(
+    device, versions, expected
+):
+    request = body(device)
+    result = checked(post(client_for(device, versions=versions), device, "/extract", request))
+    item = result["items"][0]
+    assert item["coverage"] == expected
+    assert item["text"] == "Full instructions."
+    assert result["extractor_version"] == (
+        "canvas.html.v2" if expected == "complete" else "canvas.html.v1"
+    )
+    assert item["missing"] == ([] if expected == "complete" else ["html_text_only"])
+    assert (
+        count(device, "canvas_evidence_observations")
+        == count(device, "canvas_document_uploads")
+        == 0
+    )
+
+
+@pytest.mark.parametrize(
+    "html",
+    [
+        None,
+        '<p>Read <a href="/files/1">attachment</a></p>',
+        "<table><tr><td>Required</td></tr></table>",
+    ],
+)
+def test_v2_does_not_certify_missing_linked_or_structural_requirements(device, html):
+    request = body(device)
+    request["items"][0]["html"] = html
+    item = checked(
+        post(client_for(device, versions=("canvas.html.v2",)), device, "/extract", request)
+    )["items"][0]
+    assert item["coverage"] == "partial" and item["missing"]
+
+
+def test_v2_rechecks_scope_after_conversion(device, monkeypatch):
+    request = body(device)
+    original = module.extract_html_v2
+
+    def revoke(*args, **kwargs):
+        result = original(*args, **kwargs)
+        device[0].rotate_or_revoke("user_alice", request["connection_id"])
+        return result
+
+    monkeypatch.setattr(module, "extract_html_v2", revoke)
+    response = post(client_for(device, versions=("canvas.html.v2",)), device, "/extract", request)
+    checked(response, 401)
+    assert "Full instructions" not in response.text

@@ -12,6 +12,21 @@ supervisor work on codex/p1-completion and fixes M’s empty-all_active finding.
 M owns WhatsApp/app/web/service assembly in parallel. This supersedes stop-before-P2;
 P0/P1 remain open. No new live activation is inferred.
 
+## Current source-readiness candidate (not activated)
+
+A is adding separate operator-opt-in canvas.html.v2 for supplied literal HTML text.
+Legacy v1 remains partial; stored observations are never relabeled. V2 accepts only
+nonempty text and narrow attribute-free prose markup; links/images, code/tables,
+hidden/ambiguous/embedded content and unsupported structures retain gaps. Existing
+HTTP authority rechecks and document journal are reused; extension propagates exact
+version and preserves independent rubric/constraint/author/resource gaps. No existing
+work/draft/freshness/send gate is relaxed. [Exact boundary](docs/contracts/CANVAS-HTML-v2.md).
+Local 121 parser/config/model tests and 606 extension tests pass, plus Ruff/format.
+RealPostgres HTTP regressions and combined CI are pending for this new candidate.
+No deployment, converter activation, scan, scope change, inference or send occurred.
+The earlier0abda7b model-limit fix has passed focused realPostgres integration plus
+web/build/extension/diagnostic; its full backend run41756915922 is still running.
+
 ## November3 approved bounded development activation
 
 Akbar approved the concrete deployment/migrations and at most two manual ECE253

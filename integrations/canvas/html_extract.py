@@ -1,4 +1,4 @@
-"""Inert, bounded text preparation; never certifies complete Canvas coverage."""
+"""Inert, bounded HTML text extraction; completeness applies only to supplied bytes."""
 
 import re
 import unicodedata
@@ -15,12 +15,15 @@ BLOCK = frozenset(
     "address article aside blockquote div dl dt dd fieldset figcaption figure footer form "
     "h1 h2 h3 h4 h5 h6 header hr li main nav ol p pre section table tr ul".split()
 )
+# V2 recognizes only structure whose text rendering is preserved here. Other
+# tags/attributes may contain meaning or CSS/embedded dependencies we cannot read.
+LITERAL = frozenset("p div span br h1 h2 h3 h4 h5 h6 strong b em i".split())
 
 
 @dataclass(frozen=True)
 class HtmlExtraction:
     text: str
-    status: Literal["partial", "blocked"]
+    status: Literal["complete", "partial", "blocked"]
     reasons: tuple[str, ...]
 
 
@@ -29,13 +32,14 @@ class _Blocked(Exception):
 
 
 class _Text(HTMLParser):
-    def __init__(self, max_chars, max_events, max_depth):
+    def __init__(self, max_chars, max_events, max_depth, *, literal_text=False):
         super().__init__(convert_charrefs=True)
         self.max_chars, self.max_events, self.max_depth = max_chars, max_events, max_depth
         self.events = self.chars = 0
         self.stack = []
         self.parts = []
-        self.reasons = {"html_text_only"}
+        self.literal_text = literal_text
+        self.reasons = set() if literal_text else {"html_text_only"}
 
     def event(self):
         self.events += 1
@@ -50,6 +54,11 @@ class _Text(HTMLParser):
 
     def handle_starttag(self, tag, attrs):
         self.event()
+        if self.literal_text:
+            if tag not in LITERAL:
+                self.reasons.add("unsupported_text_structure")
+            if attrs:
+                self.reasons.add("attributes_not_interpreted")
         if len({name for name, _ in attrs}) != len(attrs):
             raise _Blocked("malformed_markup")
         attrs = dict(attrs)
@@ -100,12 +109,18 @@ class _Text(HTMLParser):
 
     def handle_comment(self, data):
         self.event()
+        if self.literal_text:
+            self.reasons.add("nontext_markup_unread")
 
     def handle_decl(self, decl):
         self.event()
+        if self.literal_text:
+            self.reasons.add("nontext_markup_unread")
 
     def handle_pi(self, data):
         self.event()
+        if self.literal_text:
+            self.reasons.add("nontext_markup_unread")
 
     def unknown_decl(self, data):
         raise _Blocked("malformed_markup")
@@ -122,7 +137,21 @@ class _Text(HTMLParser):
 def extract_html(
     content: bytes, *, max_bytes=1048576, max_chars=200000, max_events=20000, max_depth=128
 ) -> HtmlExtraction:
-    """Parse supplied UTF-8 bytes. Limits can only lower fixed ceilings; no IO/logging."""
+    """Legacy v1 remains partial even for plain text; no existing evidence promotion."""
+    return _extract(content, max_bytes, max_chars, max_events, max_depth, literal_text=False)
+
+
+def extract_html_v2(
+    content: bytes, *, max_bytes=1048576, max_chars=200000, max_events=20000, max_depth=128
+) -> HtmlExtraction:
+    """Complete only for bounded literal text with no unread markup/dependencies.
+
+    No claim about other course resources, dates, rubric or a finished source scan.
+    """
+    return _extract(content, max_bytes, max_chars, max_events, max_depth, literal_text=True)
+
+
+def _extract(content, max_bytes, max_chars, max_events, max_depth, *, literal_text):
     limits = (max_bytes, max_chars, max_events, max_depth)
     if any(
         type(n) is not int or not 1 <= n <= cap for n, cap in zip(limits, CEILINGS, strict=True)
@@ -138,7 +167,7 @@ def extract_html(
         return HtmlExtraction("", "blocked", ("invalid_encoding",))
     if any(ord(c) < 32 and c not in "\t\r\n" for c in source):
         return HtmlExtraction("", "blocked", ("invalid_encoding",))
-    parser = _Text(max_chars, max_events, max_depth)
+    parser = _Text(max_chars, max_events, max_depth, literal_text=literal_text)
     try:
         parser.feed(source)
         parser.close()
@@ -146,10 +175,16 @@ def extract_html(
         return HtmlExtraction("", "blocked", (str(exc),))
     if parser.stack:
         parser.reasons.add("unclosed_markup")
+    if literal_text and re.search(r"&#(?:x[0-9a-f]+|[0-9]+);?", source, re.I):
+        # Numeric references can normalize/drop invalid controls. V2 refuses to
+        # certify them rather than silently treating a replacement as full text.
+        parser.reasons.add("numeric_reference_unverified")
     lines = [" ".join(line.split()) for line in "".join(parser.parts).splitlines()]
     text = unicodedata.normalize("NFC", "\n".join(line for line in lines if line))
     if len(text) > max_chars:
         return HtmlExtraction("", "blocked", ("resource_limit",))
     if not text:
         return HtmlExtraction("", "blocked", ("no_text",))
-    return HtmlExtraction(text, "partial", tuple(sorted(parser.reasons)))
+    return HtmlExtraction(
+        text, "partial" if parser.reasons else "complete", tuple(sorted(parser.reasons))
+    )

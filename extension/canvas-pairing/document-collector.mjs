@@ -136,7 +136,9 @@ export async function prepareCollectedDocuments({
       if (
         inputs.length &&
         (extracted?.schema_version !== 2 ||
-          extracted.extractor_version !== "canvas.html.v1" ||
+          !["canvas.html.v1", "canvas.html.v2"].includes(
+            extracted.extractor_version,
+          ) ||
           extracted.resource?.course_id !== course ||
           extracted.resource?.kind !== kind ||
           extracted.items?.length !== inputs.length)
@@ -184,7 +186,9 @@ export async function prepareCollectedDocuments({
   if (
     inputs.length &&
     (extracted?.schema_version !== 2 ||
-      extracted.extractor_version !== "canvas.html.v1" ||
+      !["canvas.html.v1", "canvas.html.v2"].includes(
+        extracted.extractor_version,
+      ) ||
       extracted.resource?.course_id !== course ||
       extracted.resource?.kind !== kind ||
       !Array.isArray(extracted.items) ||
@@ -197,9 +201,13 @@ export async function prepareCollectedDocuments({
       !item ||
       byId.has(item.provider_id) ||
       !inputs.some((i) => i.provider_id === item.provider_id) ||
-      item.coverage !== "partial" ||
+      !["partial", "complete"].includes(item.coverage) ||
+      (item.coverage === "complete" &&
+        extracted.extractor_version !== "canvas.html.v2") ||
       !Array.isArray(item.missing) ||
-      !item.missing.length ||
+      (item.coverage === "partial" && !item.missing.length) ||
+      (item.coverage === "complete" &&
+        (item.missing.length || !item.text?.trim())) ||
       item.missing.length > 50 ||
       item.missing.some(
         (x) =>
@@ -210,18 +218,18 @@ export async function prepareCollectedDocuments({
     validText(item.text, 200000);
     if (
       inputs.find((i) => i.provider_id === item.provider_id).html === null &&
-      item.text !== ""
+      (item.text !== "" || item.coverage === "complete")
     )
       throw Error();
     byId.set(item.provider_id, item);
   }
   const documents = page.data.map((raw, index) => {
     const provider_id = inputs[index].provider_id,
-      extracted = byId.get(provider_id);
+      extractedItem = byId.get(provider_id);
     let title,
       fields,
-      coverage = extracted.coverage,
-      missing = [...extracted.missing],
+      coverage = extractedItem.coverage,
+      missing = [...extractedItem.missing],
       reference;
     if (kind === "discussions" && raw._wrytely_entry) {
       title = `Discussion entry ${provider_id}`;
@@ -302,6 +310,7 @@ export async function prepareCollectedDocuments({
         missing.push("content_locked");
       }
     }
+    if (coverage === "complete" && missing.length) coverage = "partial";
     return {
       owner_object: {
         kind:
@@ -322,12 +331,12 @@ export async function prepareCollectedDocuments({
       metadata: {
         title: validText(title, 300),
         format: "html_text",
-        extractor_version: "canvas.html.v1",
+        extractor_version: extracted.extractor_version,
         provider_updated_at: raw.updated_at ?? null,
         coverage,
         missing: [...new Set(missing)].sort(),
       },
-      source: { text: validText(extracted.text, 200000) },
+      source: { text: validText(extractedItem.text, 200000) },
       reference,
     };
   });

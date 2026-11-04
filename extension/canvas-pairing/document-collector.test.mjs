@@ -461,3 +461,120 @@ test("a missing resource records an incomplete read, not a deletion or permissio
     reason: "extraction_failed",
   });
 });
+
+function literalAssignment() {
+  return {
+    id: 17,
+    course_id: 101,
+    name: "Self-contained instructions",
+    description: "<p>Explain three steps.</p>",
+    due_at: null,
+    unlock_at: null,
+    lock_at: null,
+    points_possible: 10,
+    submission_types: ["online_text_entry"],
+    rubric: [],
+    published: true,
+    locked_for_user: false,
+  };
+}
+const v2Extract = async (course_id, kind, inputs) => ({
+  schema_version: 2,
+  extractor_version: "canvas.html.v2",
+  resource: { course_id, kind },
+  items: inputs.map(({ provider_id }) => ({
+    provider_id,
+    text: "Explain three steps.",
+    coverage: "complete",
+    missing: [],
+  })),
+});
+test("v2 literal text can stay complete only with complete assignment metadata", async () => {
+  const result = await prepareCollectedDocuments({
+    resource_key: "101/assignments",
+    page: { data: [literalAssignment()], next_cursor: null },
+    origin,
+    extract: v2Extract,
+  });
+  assert.equal(
+    result.documents[0].metadata.extractor_version,
+    "canvas.html.v2",
+  );
+  assert.equal(result.documents[0].metadata.coverage, "complete");
+  assert.deepEqual(result.documents[0].metadata.missing, []);
+});
+for (const constraint of ["rubric", "allowed_attempts", "locked_for_user"]) {
+  test(`v2 text never erases independent ${constraint} gap`, async () => {
+    const raw = literalAssignment();
+    if (constraint === "rubric") delete raw.rubric;
+    else raw[constraint] = constraint === "allowed_attempts" ? 1 : true;
+    if (constraint === "locked_for_user") {
+      await assert.rejects(
+        prepareCollectedDocuments({
+          resource_key: "101/assignments",
+          page: { data: [raw], next_cursor: null },
+          origin,
+          extract: v2Extract,
+        }),
+      );
+    } else {
+      const result = await prepareCollectedDocuments({
+        resource_key: "101/assignments",
+        page: { data: [raw], next_cursor: null },
+        origin,
+        extract: v2Extract,
+      });
+      assert.equal(result.documents[0].metadata.coverage, "partial");
+      assert.ok(result.documents[0].metadata.missing.length);
+    }
+  });
+}
+for (const change of [
+  "old_version",
+  "unknown_version",
+  "missing_reason",
+  "empty_text",
+  "missing_body",
+]) {
+  test(`rejects invalid v2 complete projection: ${change}`, async () => {
+    const raw = literalAssignment();
+    const extract = async (...args) => {
+      const result = await v2Extract(...args);
+      if (change === "old_version") result.extractor_version = "canvas.html.v1";
+      if (change === "unknown_version")
+        result.extractor_version = "untrusted.v99";
+      if (change === "missing_reason")
+        result.items[0].missing = ["linked_content_unread"];
+      if (change === "empty_text") result.items[0].text = "";
+      return result;
+    };
+    if (change === "missing_body") raw.description = null;
+    await assert.rejects(
+      prepareCollectedDocuments({
+        resource_key: "101/assignments",
+        page: { data: [raw], next_cursor: null },
+        origin,
+        extract,
+      }),
+    );
+  });
+}
+test("v2 paragraph still leaves independent announcement author gap", async () => {
+  const raw = {
+    id: 17,
+    title: "Notice",
+    message: "<p>Explain three steps.</p>",
+    posted_at: "2026-11-01T00:00:00Z",
+    discussion_subentry_count: 0,
+  };
+  const result = await prepareCollectedDocuments({
+    resource_key: "101/announcements",
+    page: { data: [raw], next_cursor: null },
+    origin,
+    extract: v2Extract,
+  });
+  assert.equal(result.documents[0].metadata.coverage, "partial");
+  assert.ok(
+    result.documents[0].metadata.missing.includes("author_role_not_observed"),
+  );
+});

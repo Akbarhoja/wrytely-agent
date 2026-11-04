@@ -173,9 +173,12 @@ export async function prepareFileDocuments({
       );
     if (
       converted?.schema_version !== 2 ||
-      !["canvas.pdf.v1", "canvas.html.v1", "canvas.text.v1"].includes(
-        converted.extractor_version,
-      ) ||
+      ![
+        "canvas.pdf.v1",
+        "canvas.html.v1",
+        "canvas.html.v2",
+        "canvas.text.v1",
+      ].includes(converted.extractor_version) ||
       !["complete", "partial", "unsupported"].includes(converted.coverage) ||
       !Array.isArray(converted.missing) ||
       !converted.source
@@ -195,7 +198,9 @@ export async function prepareFileDocuments({
         format:
           "pages" in converted.source
             ? "pdf_text"
-            : converted.extractor_version === "canvas.html.v1"
+            : ["canvas.html.v1", "canvas.html.v2"].includes(
+                  converted.extractor_version,
+                )
               ? "html_text"
               : "text",
         extractor_version: converted.extractor_version,

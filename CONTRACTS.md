@@ -31,6 +31,14 @@ see STATUS for exact CI/deployment/provider evidence.
 > action, freshness relaxation or proactive send permission exists merely because
 > the plan names it. Existing private-draft and policy gates remain effective.
 
+## Opt-in HTML text readiness candidate — November 3
+
+[Canvas literal HTML v2](docs/contracts/CANVAS-HTML-v2.md) introduces a separate,
+default-off converter for newly supplied self-contained text fragments. Legacy v1
+and stored evidence stay partial. Scope checks, independent rubric/constraint gaps,
+resource completeness, drafting and delivery authorization remain unchanged.
+No migration, deployed converter change or live recollection is implied.
+
 ## Connected P1 candidate — November 2
 
 On codex/p1-completion, modules/module-items are additional schema2 document owner

@@ -126,3 +126,20 @@ def test_revocation_during_pdf_extraction_discards_the_result(device, monkeypatc
     )
     checked(response, 401)
     assert "PRIVATE_RESULT_MUST_NOT_LEAVE" not in response.text
+
+
+@pytest.mark.parametrize(
+    "source,coverage",
+    [
+        (b"<p>Full literal instructions.</p>", "complete"),
+        (b'<p>Read <a href="/required">more</a></p>', "partial"),
+    ],
+)
+def test_html_file_v2_uses_its_own_version_and_preserves_gaps(device, source, coverage):
+    request = body(device, source, "text/html")
+    result = checked(
+        post(client_for(device, versions=("canvas.html.v2",)), device, "/file-extract", request)
+    )
+    assert result["extractor_version"] == "canvas.html.v2"
+    assert result["coverage"] == coverage
+    assert bool(result["missing"]) == (coverage == "partial")

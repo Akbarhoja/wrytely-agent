@@ -99,3 +99,17 @@ def test_canvas_extractors_are_default_off_and_operator_allowlisted(monkeypatch)
     ]:
         with pytest.raises(ValueError):
             Settings(_env_file=None, canvas_document_extractors=value)
+
+
+def test_html_v2_requires_explicit_operator_allowlist_and_can_coexist_with_legacy():
+    versions = [
+        "canvas.html.v1",
+        "canvas.html.v2",
+        "canvas.pdf.v1",
+        "canvas.text.v1",
+        "canvas.json.v1",
+    ]
+    assert Settings(
+        _env_file=None, canvas_document_extractors=versions
+    ).canvas_document_extractors == tuple(versions)
+    assert "canvas.html.v2" not in Settings(_env_file=None).canvas_document_extractors

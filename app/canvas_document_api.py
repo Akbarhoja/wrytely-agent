@@ -12,7 +12,7 @@ from app.canvas_sync_api import CONFLICT_CODES
 from app.source_connections import CanvasRoute
 from contracts.canvas_document_publication import DocumentResource
 from contracts.canvas_sync import course_id, replay_key
-from integrations.canvas.html_extract import extract_html
+from integrations.canvas.html_extract import extract_html, extract_html_v2
 from integrations.canvas.pdf_extract import extract_pdf
 from shared.canvas_document_uploads import CanvasDocumentUploadLimited
 from shared.canvas_sync import CanvasSyncConflict
@@ -118,7 +118,10 @@ def register_canvas_documents(api, *, database_dependency, canvas_origins, extra
     ):
         def convert(token):
             # Trusted implementation identifier; provider text never chooses a parser.
-            if "canvas.html.v1" not in extractor_versions:
+            version = (
+                "canvas.html.v2" if "canvas.html.v2" in extractor_versions else "canvas.html.v1"
+            )
+            if version not in extractor_versions:
                 raise HTTPException(503, "Canvas HTML extraction is not configured")
             if (
                 body.keys()
@@ -194,22 +197,23 @@ def register_canvas_documents(api, *, database_dependency, canvas_origins, extra
 
             context()
             converted = []
+            parser = extract_html_v2 if version == "canvas.html.v2" else extract_html
             for item in items:
-                result = (
-                    extract_html(item["html"].encode("utf-8")) if item["html"] is not None else None
-                )
+                result = parser(item["html"].encode("utf-8")) if item["html"] is not None else None
                 converted.append(
                     {
                         "provider_id": item["provider_id"],
                         "text": result.text if result else "",
-                        "coverage": "partial",
+                        "coverage": "complete"
+                        if result and result.status == "complete"
+                        else "partial",
                         "missing": list(result.reasons) if result else ["description_not_observed"],
                     }
                 )
             context()
             return {
                 "schema_version": 2,
-                "extractor_version": "canvas.html.v1",
+                "extractor_version": version,
                 "resource": resource,
                 "items": converted,
             }
@@ -360,6 +364,8 @@ def register_canvas_documents(api, *, database_dependency, canvas_origins, extra
                 "text/plain": "canvas.text.v1",
                 "text/html": "canvas.html.v1",
             }[body["content_type"]]
+            if body["content_type"] == "text/html" and "canvas.html.v2" in extractor_versions:
+                version = "canvas.html.v2"
             if version not in extractor_versions:
                 raise HTTPException(503, "Canvas file extraction is not configured")
 
@@ -400,7 +406,8 @@ def register_canvas_documents(api, *, database_dependency, canvas_origins, extra
                     if version not in extractor_versions:
                         raise HTTPException(503, "Canvas text extraction is not configured")
             elif body["content_type"] == "text/html":
-                result = extract_html(content)
+                parser = extract_html_v2 if version == "canvas.html.v2" else extract_html
+                result = parser(content)
                 source, missing = {"text": result.text}, list(result.reasons)
             else:
                 text = (
