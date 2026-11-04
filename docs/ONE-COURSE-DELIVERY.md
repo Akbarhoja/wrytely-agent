@@ -109,3 +109,12 @@ Meta request; monitor paused, budget disabled, no send. See the execution record
 The completed bounded activation is documented in
 [the bounded development check](ONE-COURSE-LIVE-CHECK.md). It records Akbar's approved,
 executed and stopped check; it does not authorize a repeat.
+
+
+Latest approved one-request check deployed model-control fix0abda7b and stopped on
+Meta404 model_not_found; its key still lists the model in a read-only catalog. No
+completed real supervisory decision is claimed. Monitor paused, budget disabled,
+all holds retained; API/migration-only cleanup verified. See
+[the single-request record](ONE-COURSE-NEXT-META-CHECK.md). HTMLv2 candidateeaa2d45
+has full CI41758876557 SUCCESS (1891 backend/507 focused plus web/extension), but
+remains inactive and does not promote any saved partial source.

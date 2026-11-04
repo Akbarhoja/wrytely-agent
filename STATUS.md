@@ -12,6 +12,23 @@ supervisor work on codex/p1-completion and fixes M’s empty-all_active finding.
 M owns WhatsApp/app/web/service assembly in parallel. This supersedes stop-before-P2;
 P0/P1 remain open. No new live activation is inferred.
 
+## Latest approved single-request check — November3,8:10PM Mountain
+
+Exact tested0abda7b is now deployed to isolated development API. The approved single
+additional ECE253 request used StandardMuseSpark1.3/low/output8192. Preflight verified
+same unique linked owner, newest of two connections, unchanged scope,104 saved sources
+and90 inspectable. Existing reservations/call limit preserved. Meta returned404
+model_not_found, before any usable typed decision/inspection/offer/draft. No retry
+or fallback. Read-only GET/v1/models using deployed key returned200 and lists that
+model; exact provider/account/parameter incompatibility remains unresolved.
+
+New0.17106100 remains held alongside prior0.14494900 and opening1.33114350;
+aggregate1.64715350 under2.00. Conservative liabilities are not actual-charge proof.
+Course PAUSED, budget disabled. Normal API-only/migration-only config restored;
+cleanup deployment69bc53b0 SUCCESS, health200, protected401. HTMLv2 remains inactive;
+no scan/scope/pairing/new migration/draft/WhatsApp/continuous worker occurred.
+[Exact scope and evidence](docs/ONE-COURSE-NEXT-META-CHECK.md). No repeat authorized.
+
 ## Current source-readiness candidate (not activated)
 
 A added separate operator-opt-in canvas.html.v2 for supplied literal HTML text.
@@ -23,7 +40,8 @@ version and preserves independent rubric/constraint/author/resource gaps. No wor
 draft, freshness or send gate is relaxed. [Exact boundary](docs/contracts/CANVAS-HTML-v2.md).
 Local125 parser/config/model tests and607 full extension tests pass, plus Ruff/format.
 Exact executableeaa2d45 CI41758876557 passes its realPostgres integration gate plus
-web/build/extension/diagnostic jobs; full backend regression is still running.
+web/build/extension/diagnostic jobs; full backend is now SUCCESS:1891 tests
+plus507 focused checks in41758876557.
 Truncated tag tails were caught by added local tests, fixed before any activation,
 and remain gaps even when Python discards their incomplete tokens on parser close.
 The final separately prepared0.3.2 package matches that candidate and uses the same
@@ -33,7 +51,7 @@ Superseded/duplicate CI on A's own branch was stopped; current exact PR run reta
 Earlier0abda7b model-limit fix is FULL CI SUCCESS in41756915922:394 focused and1850
 backend tests, all web/build/extension/diagnostic jobs pass. It adds bounded output
 and optional reasoning controls with matching cost reservations, preserving defaults
-and unknown holds. Neither that fix nor HTMLv2 is deployed. Live API remains92568ab;
+and unknown holds. That fix is now deployed (see latest check); HTMLv2 is not. Live API is0abda7b;
 ECE253 monitor PAUSED and budget disabled. No new paid call/send/scan/scope change.
 M received the precise implementation/review handoff in coordination comment6620658210.
 

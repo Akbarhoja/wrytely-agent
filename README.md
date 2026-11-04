@@ -38,11 +38,12 @@ with pinned original evidence and current access checks. Saved checks do not gra
 permission to send or submit work.
 
 **P1 is not complete yet.** Synthetic integration checks are separate from
-installed Chrome and live course acceptance. Executable `92568ab` and migrations
-023–028 are deployed only to the isolated development API. A bounded
-real Meta check returned incomplete before a usable decision; its monitor is paused,
+installed Chrome and live course acceptance. Executable `0abda7b` and migrations023–028 are deployed only to the isolated
+development API. Bounded real Meta checks returned incomplete and model_not_found
+before a usable decision; the monitor is paused,
 budget disabled and reservation held. No completed real course/phone workflow is
-claimed. See [the live-check record](docs/ONE-COURSE-LIVE-CHECK.md).
+claimed. See [the first live check](docs/ONE-COURSE-LIVE-CHECK.md) and
+[the stopped single-request check](docs/ONE-COURSE-NEXT-META-CHECK.md).
 Independent review/CI and protected-main merge status remain separate. See
 [the P1 candidate and live checklist](docs/P1-COMPLETION-CANDIDATE.md),
 [STATUS.md](STATUS.md) and [work orders](docs/WORK-ORDERS.md).
