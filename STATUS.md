@@ -14,18 +14,28 @@ P0/P1 remain open. No new live activation is inferred.
 
 ## Current source-readiness candidate (not activated)
 
-A is adding separate operator-opt-in canvas.html.v2 for supplied literal HTML text.
+A added separate operator-opt-in canvas.html.v2 for supplied literal HTML text.
 Legacy v1 remains partial; stored observations are never relabeled. V2 accepts only
 nonempty text and narrow attribute-free prose markup; links/images, code/tables,
 hidden/ambiguous/embedded content and unsupported structures retain gaps. Existing
 HTTP authority rechecks and document journal are reused; extension propagates exact
-version and preserves independent rubric/constraint/author/resource gaps. No existing
-work/draft/freshness/send gate is relaxed. [Exact boundary](docs/contracts/CANVAS-HTML-v2.md).
-Local 121 parser/config/model tests and 606 extension tests pass, plus Ruff/format.
-RealPostgres HTTP regressions and combined CI are pending for this new candidate.
-No deployment, converter activation, scan, scope change, inference or send occurred.
-The earlier0abda7b model-limit fix has passed focused realPostgres integration plus
-web/build/extension/diagnostic; its full backend run41756915922 is still running.
+version and preserves independent rubric/constraint/author/resource gaps. No work,
+draft, freshness or send gate is relaxed. [Exact boundary](docs/contracts/CANVAS-HTML-v2.md).
+Local125 parser/config/model tests and607 full extension tests pass, plus Ruff/format.
+Exact executableeaa2d45 CI41758876557 passes its realPostgres integration gate plus
+web/build/extension/diagnostic jobs; full backend regression is still running.
+Truncated tag tails were caught by added local tests, fixed before any activation,
+and remain gaps even when Python discards their incomplete tokens on parser close.
+The final separately prepared0.3.2 package matches that candidate and uses the same
+origins/permissions as0.3.1; installed package and saved scan were not modified.
+Superseded/duplicate CI on A's own branch was stopped; current exact PR run retained.
+
+Earlier0abda7b model-limit fix is FULL CI SUCCESS in41756915922:394 focused and1850
+backend tests, all web/build/extension/diagnostic jobs pass. It adds bounded output
+and optional reasoning controls with matching cost reservations, preserving defaults
+and unknown holds. Neither that fix nor HTMLv2 is deployed. Live API remains92568ab;
+ECE253 monitor PAUSED and budget disabled. No new paid call/send/scan/scope change.
+M received the precise implementation/review handoff in coordination comment6620658210.
 
 ## November3 approved bounded development activation
 
