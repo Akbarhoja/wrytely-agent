@@ -19,8 +19,10 @@ Meta-hosted remains default. No third-party runtime or automatic fallback. 72 fo
 mocked checks pass; Ruff/299-file formatting pass. Full local DB regression could not
 initialize disposable Postgres under sandbox shared-memory restrictions; full CI is
 required. [Configuration, replay and evidence](docs/FIREWORKS-PROVIDER.md).
-M pushed service consumer fd7f6fb on PR166: selected factory is sole credential
-validation authority; targeted10 tests pass, full validation/review pending.
+Combined executablebb626d3 imports M servicefd7f6fb, acceptancec2b3f4d and
+private-control recoveryfb8b8a6 with authorship intact. Narrow compatibility review
+finds no mismatch;75 focused backend/5 affected UI tests and Ruff/301-format pass.
+Full exact-candidate CI and counterpart adapter review pending; no deployment.
 Fireworks account created with approved support@wrytely.io; user added1USD credit,
 auto-reload off. Approved development key saved only in ignored mode0600 local file.
 Two approved synthetic requests PASS: actual tool call then result-based continuation,

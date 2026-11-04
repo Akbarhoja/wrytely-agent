@@ -83,3 +83,35 @@ remains disabled and still contains its original liabilities; the additional loc
 0.03 hold MUST be included in aggregate accounting before any subsequent activation.
 Do not silently release it, reset old holds, or treat account credit as permission.
 No further call, student content, deployment, rescan or WhatsApp send occurred.
+
+## Combined candidate and next bounded acceptance
+
+Executablebb626d3 combines adapter51ad506 with M's servicefd7f6fb, acceptance
+packetc2b3f4d and private-control recoveryfb8b8a6, preserving authorship. Combined
+75 focused backend and5 affected UI tests pass; Ruff/301-file format/diff pass.
+Full exact-head CI is running; deployment is not yet authorized or performed.
+
+Official Fireworks data-handling documentation states that open-model inference
+has no persistent prompt/generation storage by default; transient prompt caches and
+billing metadata are distinct. Enterprise enforcement of an account-wide policy is
+a separate feature, not something verified on this account. This adapter uses Chat
+Completions, not stored Responses, training, batches or dataset upload. Sources:
+[baseline handling](https://docs.fireworks.ai/guides/security_compliance/data_handling)
+and [enterprise enforcement](https://docs.fireworks.ai/accounts/zero-data-retention).
+No provider-side account toggle was changed. New student-data destination needs
+Akbar's scoped consent before sending saved course content.
+
+Prepared next scope (NOT authorization): once exact candidate CI and counterpart
+review clear, configure this existing key only on the isolated agent development API,
+select Fireworks explicitly and keep API-only start. No migration is added by this
+adapter. Preserve original global ledger/history, include the external0.03 hold,
+and bound at most two manual ECE253 supervisor turns to0.40USD additional liability
+within3USD aggregate. Maximum aggregate after that allowance would be2.30838375.
+Use only the existing approved newest connection/course; source fields, saved
+instructions and previous/current inspection excerpts may reach Fireworks. No
+rescan, HTMLv2 enablement, new course, assignment draft, offer enqueue, external
+send or continuous worker. Pause the monitor and disable the budget after the run,
+including failures. Preserve unknown outcomes and stop at the first concrete error.
+A valid inspect/wait decision is progress; partial evidence still cannot authorize
+an assignment offer or draft. The operator must preflight live ledger and scope
+instead of relying on historical script assertions or resetting call counters.
