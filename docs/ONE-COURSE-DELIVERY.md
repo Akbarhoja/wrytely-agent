@@ -91,7 +91,14 @@ full backend regression remains running.
 Local pure/service/limit checks and Ruff/format pass; local disposable PostgreSQL
 remains sandbox-blocked. Scripted models/receipts are separate from live acceptance.
 
+Latest1c4b6e0 also combines M785149e/fcccc19 student controls, source-scoped lookup,
+recovery and exact-byte document transport. Post-signature explicit command intake028
+now owns atomic accept/delegation/revision/file-request replay on original inbound;
+M must finish its signed parser/webhook consumer. RealPostgres gate41742559685 and
+web/build/extension/diagnostic pass; current full backend still runs. Local146web,
+TypeScript/format and pure schema checks pass. Detailed current evidence is in STATUS.
+
 Owner submitted Meta business verification; under review, not approved. Actual
 one-course collection coverage, real Meta decision/draft quality, typed phone file
 receipt/native layout, restart/laptop-closed duration, demo and submission remain.
-No new retained023–027 migration, grant, deployment, model call or send is implied.
+No new retained023–028 migration, grant, deployment, model call or send is implied.

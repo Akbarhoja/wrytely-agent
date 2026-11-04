@@ -65,6 +65,26 @@ automatic drafting from a source. Updated source details must come from a new sy
 No DOCX/PDF rendering, revisions, proactive channel delivery or paid deployment is
 claimed complete by this first supervisor candidate; those remain delivery work.
 
+## Read-only inspection of incomplete sources
+
+The supervisor snapshot now includes original `missing` codes and server-computed
+`inspection_ready`. A current selected complete/partial original may be inspected
+with its gaps retained when its connection/account/generation is current, it is not
+historical/missing, both observation clocks are within the existing24h read bound,
+and its resource is open/partial/complete. Restricted/unsupported/unknown resources,
+old/future observations, changed scope and revoked identity cannot use this path.
+The existing pinned readers and character/section/page limits are unchanged.
+
+This is **read-only investigation**, not a completeness promotion. HTML extraction
+deliberately reports html_text_only/linked-content limitations, so partial coverage
+does not itself mean an HTTP/parser crash. The agent can read available originals
+to understand these gaps and explain why work is blocked. `freshness.usable`, original
+coverage and missing fields remain unchanged. Work offers, acceptance, draft/citation
+checks, file readiness and dispatch keep their existing complete-evidence gates.
+Invalid model work-offer decisions on incomplete evidence hold instead of retrying
+another paid inference. Real-course action readiness still requires resolving the
+actual required content gaps; this inspection change does not pass that live gate.
+
 ## Checked private Word output
 
 A supplies runtime.artifact_rendering.render_private_artifact_docx(store,

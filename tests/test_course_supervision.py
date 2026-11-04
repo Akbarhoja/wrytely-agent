@@ -216,6 +216,94 @@ def test_restart_restores_due_time_without_a_new_prompt(device):
     )
 
 
+@pytest.mark.parametrize("document", [False, True])
+def test_supervisor_can_inspect_current_partial_originals_without_authorizing_work(
+    device, document
+):
+    import test_canvas_evidence as evidence
+
+    scan = evidence.prepare(device)
+    if document:
+        from test_canvas_document_publication import page
+        from test_canvas_document_uploads import (
+            begin,
+            begin_body,
+            finish,
+            finish_body,
+            put,
+            put_body,
+        )
+
+        body = begin_body(device, scan)
+        body["metadata"].update(coverage="partial", missing=["html_text_only"])
+        upload = begin(device, body)
+        put(device, put_body(body, upload["upload_id"]))
+        finish(device, finish_body(body, upload["upload_id"]))
+        receipt = evidence.upload(device, scan, page(device, scan, body, upload))
+        obj = receipt["observations"][0]["object_id"]
+    else:
+        item = evidence.assignment()
+        item.update(coverage="partial", missing=["html_text_only"])
+        receipt = evidence.upload(device, scan, evidence.body(device, scan, [item]))
+        obj = receipt["observations"][0]["object_id"]
+    evidence.close(device, scan, receipt, partial=True)
+    db = device[0]
+    monitor = db.enable_course_supervision("user_alice", device[1]["connection_id"], "101")
+
+    class PartialModel(Model):
+        def turn(self, history, tools):
+            source = json.loads(history[-1]["content"])["sources"][0]
+            assert source["inspection_ready"] and not source["freshness"]["usable"]
+            assert source["coverage"] == "partial" and source["missing"] == ["html_text_only"]
+            return super().turn(history, tools)
+
+    result = run_course_supervision_once(
+        db, PartialModel(decision("inspect", obj)), "user_alice", monitor["id"]
+    )
+    assert result["state"] == "ready"
+    with db.connection() as conn:
+        saved = conn.execute(
+            "SELECT inspections FROM wrytely_agent.course_supervisions"
+        ).fetchone()["inspections"]
+    assert str(obj) in saved and saved[str(obj)]["coverage"] == "partial"
+    assert not saved[str(obj)]["freshness"]["usable"]
+    with pytest.raises(ValueError, match="Complete current evidence"):
+        run_course_supervision_once(
+            db, Model(decision("offer", obj, "Unsafe work offer")), "user_alice", monitor["id"]
+        )
+    assert db.course_supervision_status("user_alice", monitor["id"])["offers"] == []
+    assert db.course_supervision_status("user_alice", monitor["id"])["state"] == "blocked"
+    with db.connection() as conn:
+        assert (
+            conn.execute("SELECT count(*) AS n FROM wrytely_agent.responsibilities").fetchone()["n"]
+            == 0
+        )
+
+
+@pytest.mark.parametrize("mode", ["old", "restricted", "missing", "future"])
+def test_partial_inspection_does_not_bypass_source_age_or_restrictions(device, mode):
+    db, monitor, _ = setup(device)
+    with db.connection() as conn:
+        if mode == "old":
+            conn.execute(
+                "UPDATE wrytely_agent.canvas_evidence_observations "
+                "SET observed_at=now()-interval '25h',received_at=now()-interval '25h'"
+            )
+        elif mode == "future":
+            conn.execute(
+                "UPDATE wrytely_agent.canvas_evidence_observations "
+                "SET observed_at=now()+interval '6 minutes'"
+            )
+        elif mode == "missing":
+            conn.execute(
+                "UPDATE wrytely_agent.canvas_evidence_objects SET missing_pending_confirmation=true"
+            )
+        else:
+            conn.execute("UPDATE wrytely_agent.canvas_resources SET coverage='restricted'")
+    claim = db.claim_course_supervision("user_alice", monitor["id"])
+    assert claim is not None and claim["sources"][0]["inspection_ready"] is False
+
+
 def test_new_source_wakes_a_future_check_and_known_race_replans_within_same_allowance(device):
     import test_canvas_evidence as evidence
 

@@ -12,8 +12,10 @@ revisions, source-change reassessment and WhatsApp communication. See the
 [one-course plan and exact owners](docs/ONE-COURSE-DELIVERY.md).
 
 Supervisor, budget, offer recovery and checked-file authorization code is on the
-candidate branch. M's HTTP/download/revision/budgeted service assembly is combined;
-student controls, signed WhatsApp decisions and media transport are being assembled.
+candidate branch. M's student controls, HTTP/download/revision/budgeted service and
+media transport assembly is combined. The Store's explicit WhatsApp command intake
+is implemented; signed parser/webhook consumer assembly remains pending. It reuses
+original linkage/inbound replay and creates no unrelated generic chat task.
 Scripted integration evidence is separate from actual Meta quality, installed
 collection coverage, continuous cloud operation and phone delivery. Meta business
 verification is submitted and under review; the messaging restriction is not cleared.
@@ -35,7 +37,7 @@ permission to send or submit work.
 
 **P1 is not complete yet.** Synthetic integration checks are separate from
 installed Chrome and live course acceptance. The isolated development API has an
-earlier P1 deployment; the new supervisor/delivery candidate and migrations023–027
+earlier P1 deployment; the new supervisor/delivery candidate and migrations023–028
 are not deployed.
 Independent review/CI and protected-main merge status remain separate. See
 [the P1 candidate and live checklist](docs/P1-COMPLETION-CANDIDATE.md),

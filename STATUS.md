@@ -14,6 +14,60 @@ P0/P1 remain open. No new live activation is inferred.
 
 ## One-course implementation candidate
 
+Latest executable1c4b6e0 combines M785149e/fcccc19 exactly as638dcc8/b1fa9d5,
+preserving authorship after code/test review. Student supervision controls, private
+download/revision/send actions, cross-device lookup, crash-to-enqueue service
+recovery and exact-byte multipart/document transport are assembled. Local146web,
+TypeScript/Prettier/Ruff/format pass. Earlier912961d full CI41734859568 is now fully
+green; current1c4b6e0 CI41742559685 passes its realPostgres integration gate plus
+web/build/extension/diagnostic. That exact full CI is now SUCCESS, as is f320c9c's
+41742308918. This evidence covers commands, MUI/document integration and both
+connected scripted journeys, not a real Meta/phone run.
+
+A added post-signature command boundary in028 on ORIGINAL whatsapp_inbound.
+It resolves current linked owner/account/reply target internally, atomically applies
+existing offer acceptance+responsibility, decline, private revision or file enqueue,
+and saves replay receipt without a generic user-chat/reply task. Unexpected crashes
+roll back action/receipt together; expected business rejection rolls back partial
+work but retains a safe receipt. Per-Store/execution transaction context composes
+existing methods without a parallel ledger/runtime. Pending offers expire24h.
+Student may request the first finished file by replying to the exact accepted offer;
+resolution is restricted to that offer's responsibility, never a global latest file.
+Both HTTP and linked-command scripted journeys now include actual checked-byte
+upload/typed document send assembly with simulated HTTP/receipts and immutable
+revision/source-change checks. Signature assembly and live phone proof are separate.
+
+The first3ec2b86 fast result294PASS/2FAIL (a6ffac7:311PASS/2FAIL) exposed only test
+assertions incorrectly counting original INTERNAL work notes as generic chat.
+Correctedf320c9c explicitly requires no new USER messages or reply tasks while
+retaining internal planner/revision notes. Current realDB gate passes those cases;
+no production authorization/check was relaxed. Local5command-schema/38pure pass.
+M's final dependency is bounded parser + signed webhook routing/consumer tests
+against docs/contracts/WHATSAPP-COMMANDS-v1.md, published in issue4. No M consumer
+code is presumed finished. P0/P1 live gaps, actual Meta quality/tool-loop proof,
+bounded cloud/laptop-closed run, native Word/phone acceptance and submission remain.
+Meta business verification is owner-reported under review, not approved.
+No new retained023–028 migration, allowance grant, deployment, inference or send.
+
+Live readiness inspection: signed-in owner website shows NEWEST connection's
+original scan still active, with ECE253 assignments/announcements/grades/modules
+partial, files restricted and submissions/syllabus open. No new scan/scope/re-pair
+was started. Railway read-only inspection confirms isolated development project and
+all4extractors configured. Converter source is unchanged since2f30819. HTML parser
+always reports partial html_text_only; resource extraction_failed can label content
+gaps rather than a network/parser crash. Therefore current real course data is NOT
+proven action-ready. No full real-course draft/delivery claim is justified yet.
+
+A is fixing supervisor read-only inspection of current partial originals: computed
+inspection_ready plus original missing reasons and independent age/restriction
+checks; original partial/freshness/work-offer/draft/citation/file/send gates remain.
+7pure protocol checks pass; new actual-Store partial inline/document regression
+tests are being validated separately. This does not promote any live source.
+Local UI verification needed webpack+WATCHPACK_POLLING=1000 because macOS watcher
+limits stopped Turbopack/ordinary watchers; no persistent build config change.
+Ignored historical model ledger reconciles1.33114350 charged/held of2.00 (including
+unknown1.32); remaining0.66885650 is NOT new-test authorization. No grant was created.
+
 Current executable candidate79bd138 combines M017946f exactly (importdd90a2e),
 adds independent saved-offer recovery c17dd88, typed checked attachment authority
 53e3e9e and read-only course supervision lookup79bd138. A read M's diff and tests;

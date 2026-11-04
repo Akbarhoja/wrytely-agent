@@ -10,6 +10,10 @@ Current dependent candidates: [proactive offer/recovery boundary](docs/contracts
 (024), [cumulative model budgets](docs/contracts/MODEL-BUDGET-v1.md) (025),
 source-event wakeup026, [immutable revisions](docs/contracts/ARTIFACT-REVISION-v1.md)
 and [typed checked attachment delivery](docs/contracts/ARTIFACT-DELIVERY-v1.md) (027).
+[Signed explicit WhatsApp commands](docs/contracts/WHATSAPP-COMMANDS-v1.md) (028)
+compose existing actions atomically under the original inbound replay receipt;
+M supplies actual raw-signature parser/webhook assembly. No generic reasoning task
+is created merely to accept/decline/revise/request a file.
 All use the original Store/runtime/outbox. Candidate code is not live activation;
 see STATUS for exact CI/deployment/provider evidence.
 

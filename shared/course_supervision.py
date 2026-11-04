@@ -16,6 +16,7 @@ from contracts.canvas_sync import course_id as validate_course
 from contracts.course_supervision import CourseDecision
 from shared.academic_reads import student_json
 from shared.canvas_reads import SourceRefreshRequired, _uuid
+from shared.freshness import legacy_freshness
 
 
 class CourseSupervisionStore:
@@ -100,10 +101,24 @@ class CourseSupervisionStore:
         if len(rows) > 200:
             raise ValueError("course_supervision_catalog_limit")
         sources = []
+        now = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
         for row in rows:
-            source = self._evidence_projection(conn, connection, row)[0]
+            source, selected, state = self._evidence_projection(conn, connection, row)
             fields = row["private_payload"]["fields"]
             source["fields"] = fields.get("object_fields", fields)
+            source["missing"] = list(row["private_payload"]["missing"])
+            # Reading original partial text to discover its gaps is not authority
+            # to offer/perform work. Keep original coverage/freshness unchanged.
+            source["inspection_ready"] = bool(
+                selected
+                and state == "connected"
+                and not source["historical"]
+                and not source["missing_pending_confirmation"]
+                and source["coverage"] in ("complete", "partial")
+                and source["resource_coverage"] in ("complete", "partial", "open")
+                and max(row["observed_at"], row["received_at"]) <= now + timedelta(minutes=5)
+                and legacy_freshness(min(row["observed_at"], row["received_at"]), now=now).usable
+            )
             sources.append(source)
         if len(json.dumps(student_json(sources)).encode()) > 200000:
             raise ValueError("course_supervision_context_limit")
@@ -206,15 +221,19 @@ class CourseSupervisionStore:
             inspections = row["inspections"]
             if decision.action != "wait":
                 source = next((s for s in sources if s["object_id"] == decision.object_id), None)
-                if not source or not source["freshness"]["usable"] or source["historical"]:
+                if not source or source["historical"]:
                     raise SourceRefreshRequired()
                 if decision.action == "inspect":
+                    if not source["inspection_ready"]:
+                        raise SourceRefreshRequired()
                     if not inspection or str(inspection["object_id"]) != decision.object_id:
                         raise ValueError("Missing inspection")
                     inspections[decision.object_id] = student_json(inspection)
                     if len(json.dumps(inspections).encode()) > 100000:
                         raise ValueError("Inspection context limit")
                 else:
+                    if not source["freshness"]["usable"]:
+                        raise SourceRefreshRequired()
                     if source["kind"] != "assignment" or decision.object_id not in inspections:
                         raise ValueError("Offer requires inspected assignment")
                     evidence = [

@@ -18,6 +18,10 @@ INSTRUCTIONS = (
     "Up to eight inspected current objects are pinned to an accepted offer. "
     "first_slot pages document investigations. Source titles "
     "are not full requirements. Respect coverage, missing sections, freshness and pagination. "
+    "inspection_ready allows reading current partial originals to understand their gaps; "
+    "it does not change freshness.usable or authorize an offer/draft/send. Only offer work "
+    "on an inspected assignment whose freshness.usable is true. If necessary evidence is "
+    "incomplete, inspect available originals or wait and explain exactly what is missing. "
     "Offer useful help on an inspected assignment, or wait when no intervention helps. "
     "Do not repeat a pending, accepted or declined offer for the same source version. "
     "Explain changed priorities when versions change. You may propose a draft, study or "
@@ -64,7 +68,11 @@ def run_course_supervision_once(store, model, verified_user, supervision_id):
             )
             if not source:
                 raise ValueError("Target outside course scope")
+            if decision.action == "offer" and not source["freshness"]["usable"]:
+                raise ValueError("Complete current evidence required for a work offer")
         if decision.action == "inspect":
+            if not source["inspection_ready"]:
+                raise ValueError("Current readable source required for inspection")
             if source["document_version_id"]:
                 inspection = store.read_canvas_document_sections(
                     verified_user,
