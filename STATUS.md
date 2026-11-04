@@ -14,6 +14,15 @@ P0/P1 remain open. No new live activation is inferred.
 
 ## November4 fresh ECE253 collection completed with gaps
 
+Corrected linked-file executabled3d0ff1 fullCI41911052694 SUCCESS:519 targeted
+integration tests,1942 full backend tests (two existing warnings),647 extension
+tests, web/build and access diagnostics pass. M independently passed171 upload/wire
+tests and2 C-MIME tests on prior5157d39, then identified the quiz-marker finding.
+A corrected it with15 regressions; M final corrected-head disposition is pending,
+requested in coordination6642323404. Compatible0.3.4 package/source archive prepared
+with no permission or migration change. No deployment/install/scan/model/send in
+this follow-up. Exact activation remains separate; collection and budgets paused.
+
 A implemented the [linked-file candidate](docs/contracts/CANVAS-LINKED-FILES-v1.md)
 on codex/p1-linked-files after Akbar's instruction. Exact5157d39 fullCI41906081295
 passed. Mreview6641600084 found a quiz-marker filter mismatch; A corrected it with
