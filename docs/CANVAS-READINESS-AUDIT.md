@@ -57,3 +57,29 @@ observation mutation, model call or deployment occurred.
    its instructions, required linked material, policy and constraints are available.
 5. Preserve all unresolved gaps. A real inspect/wait decision can pass independently;
    a help offer, accepted draft and file delivery need their own readiness evidence.
+
+## Combined collector package 0.3.3
+
+M counterpart review6626273183 clears exact8cd3151 narrow reader interpretation;
+it does not establish CSU live compatibility or authorize collection. The collector
+candidate now incorporates the successful reviewed supervisor executablefe196c6 and
+later evidence docs, while retaining the independently tested HTMLv2 implementation.
+Package version0.3.3 distinguishes this preparation from prior inactive0.3.2.
+
+Combined checks:621 extension tests/zero skips and163 focused Python tests pass,
+including HTML conversion, supervisor protocol, providers/config/output limits.
+Ruff/304-file formatting, changed JS formatting and diff checks pass. Fresh ignored
+local package preparation verified identical permissions/host allowlist/CSP to0.3.2,
+exact reader bytes and no credential files. Installed collector was not overwritten,
+reloaded, paired, enabled or scanned. Full exact-candidate CI remains separate.
+
+Prepared next activation for Akbar's review (not yet authorized): after fullCI and
+review, deploy only this API candidate, retain model/draft/delivery shutdown, add
+canvas.html.v2 to the existing extractor allowlist and load the matching0.3.3 local
+collector. Select ECE253 only for this scan (preserve/review prior scope explicitly),
+verify the same Canvas identity and run one resumable collection round with finite
+request/time bounds. Store only the selected course's authorized readable content in
+the existing isolated database; no quiz attempts, course writes or model/send calls.
+Pause collection afterward and inspect original per-object/per-resource missing
+reasons, not just the finished badge. Stop on login/scope mismatch or concrete errors;
+no repeated full scans. Existing saved evidence is not rewritten or upgraded in place.

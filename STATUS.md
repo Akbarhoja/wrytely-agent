@@ -137,6 +137,16 @@ cleanup deployment69bc53b0 SUCCESS, health200, protected401. HTMLv2 remains inac
 no scan/scope/pairing/new migration/draft/WhatsApp/continuous worker occurred.
 [Exact scope and evidence](docs/ONE-COURSE-NEXT-META-CHECK.md). No repeat authorized.
 
+## Combined Canvas collector0.3.3 — prepared only
+
+Mreview6626273183 clears readerfix8cd3151; prior exactCIgreen. Separate candidate
+combines it with reviewed/successful supervisorfe196c6 and retains inactiveHTMLv2.
+Fresh0.3.3 package has unchanged permissions/hosts/CSP and exact source bytes;
+installed collector untouched.621extension/163focusedPythonPASS, Ruff304format/
+JSformat/diffPASS. Full combinedCI pending; no APIallowlist/install/scope/scan/model/
+send change. Next required is bounded authorized ECE253 refresh and actual gap audit,
+not another model rerun on unchanged partial evidence. WhatsApp still unverified.
+
 ## Independent Canvas readiness correction — not activated
 
 A audited collector/mapper/provider semantics on codex/p1-canvas-readiness, separate
