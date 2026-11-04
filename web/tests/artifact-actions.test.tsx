@@ -49,6 +49,22 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+it("clears private revision instructions when an expired session returns HTML", async () => {
+  const expired = vi.fn();
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => new Response("<html>Expired</html>", { status: 401 })),
+  );
+  render(<ArtifactActions artifactId={id} enabled onSessionExpired={expired} />);
+  fireEvent.change(screen.getByRole("textbox"), { target: { value: "Private revision feedback" } });
+  fireEvent.click(screen.getByText("Request a revision"));
+  await waitFor(() => expect(expired).toHaveBeenCalledOnce());
+  expect(screen.getByRole<HTMLTextAreaElement>("textbox").value).toBe("");
+  expect(
+    screen.getByRole<HTMLButtonElement>("button", { name: "Request a revision" }).disabled,
+  ).toBe(true);
+});
+
 it("retains the same revision key after an uncertain response and does not send on render", async () => {
   let first = true;
   const fetch = vi.fn(async () => {

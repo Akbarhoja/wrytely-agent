@@ -20,6 +20,7 @@ from app.course_result_api import register_course_results
 from app.course_supervision_api import register_course_supervision
 from app.private_artifact_api import register_private_artifacts
 from app.source_connections import register_source_connections
+from app.telegram_api import register_telegram
 from contracts.delivery import WhatsAppStatusEvent
 from contracts.models import AgentControl, Identity, MessageIn, SessionVerifier, SourceObservation
 from integrations.whatsapp import extract_statuses, extract_texts, verify_signature
@@ -135,6 +136,9 @@ def create_app(
     User = Annotated[Identity, Depends(identity)]
     DB = Annotated[Store, Depends(database)]
 
+    register_telegram(
+        api, settings=settings, identity_dependency=identity, database_dependency=database
+    )
     register_private_artifacts(api, identity_dependency=identity, database_dependency=database)
     register_course_supervision(api, identity_dependency=identity, database_dependency=database)
     register_course_results(api, identity_dependency=identity, database_dependency=database)

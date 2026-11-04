@@ -1,0 +1,42 @@
+.panel fieldset {
+  border: 0;
+  padding: 0;
+  margin: 16px 0;
+  min-width: 0;
+  display: grid;
+  gap: 14px;
+}
+.panel legend {
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+.panel label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.panel label:has(input[type="checkbox"]) {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+.panel input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.panel input {
+  max-width: 100%;
+}
+.panel button,
+.panel a {
+  min-height: 44px;
+  font-size: 14px;
+  padding: 8px 0;
+  margin-right: 16px;
+  display: inline-flex;
+  align-items: center;
+}
+.panel {
+  overflow-wrap: anywhere;
+}

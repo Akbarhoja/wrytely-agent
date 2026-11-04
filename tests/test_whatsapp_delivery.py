@@ -172,6 +172,46 @@ def test_worker_once_on_empty_database_exits_without_external_request(
     assert main(["--once"]) is None
 
 
+@pytest.mark.parametrize("origin_configured", [True, False])
+def test_worker_cli_preserves_canvas_origin_authority(device, monkeypatch, origin_configured):
+    from test_course_offer_delivery import ACCOUNT as offer_account
+    from test_course_offer_delivery import prepared
+
+    from app.whatsapp_worker import main
+    from shared.config import Settings
+
+    db, monitor, offer = prepared(device)
+    queued = db.enqueue_course_offer("user_alice", monitor["id"], offer["id"])
+    settings = Settings(
+        _env_file=None,
+        database_url=db._url,
+        canvas_origins=tuple(db._canvas_origins) if origin_configured else (),
+        whatsapp_access_token="synthetic-test-token",
+        whatsapp_api_version="v23.0",
+        whatsapp_business_account_id=offer_account["business_id"],
+        whatsapp_phone_number_id="123",
+    )
+    requests = []
+
+    def handle(request):
+        requests.append(request)
+        return httpx.Response(200, json={"messages": [{"id": "wamid.cli-origin"}]})
+
+    monkeypatch.setattr("app.whatsapp_worker.Settings", lambda: settings)
+    monkeypatch.setattr(
+        "app.whatsapp_worker.httpx.HTTPTransport", lambda **kw: httpx.MockTransport(handle)
+    )
+    main(["--once"])
+    with db.connection() as conn:
+        row = conn.execute(
+            "SELECT state FROM wrytely_agent.whatsapp_outbound WHERE id=%s", (queued["id"],)
+        ).fetchone()
+    assert row["state"] == ("accepted" if origin_configured else "cancelled")
+    assert len(requests) == int(origin_configured)
+    main(["--once"])
+    assert len(requests) == int(origin_configured)
+
+
 @pytest.fixture
 def ready_reply(store, alice):
     phone = "15555550123"
