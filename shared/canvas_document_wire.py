@@ -113,7 +113,13 @@ def validate_canvas_document_header(
     ):
         raise ValueError("Invalid document coverage")
     if kind == "file":
-        _keys(object_fields, ("filename", "content_type"))
+        if type(object_fields) is not dict:
+            raise ValueError("Invalid document file fields")
+        linked = "linked_from" in object_fields
+        _keys(
+            object_fields,
+            ("filename", "content_type", "linked_from") if linked else ("filename", "content_type"),
+        )
         filename = _bounded_text(object_fields["filename"], 300, nonblank=True)
         content_type = object_fields["content_type"]
         if (
@@ -122,7 +128,13 @@ def validate_canvas_document_header(
             or not re.fullmatch(r"[a-z0-9.+-]{1,64}/[a-z0-9.+-]{1,128}", content_type)
         ):
             raise ValueError("Invalid document file fields")
-        if content_type not in {"application/pdf", "text/plain", "text/html"} and (
+        if content_type not in {
+            "application/pdf",
+            "text/plain",
+            "text/html",
+            "text/x-c",
+            "text/x-csrc",
+        } and (
             coverage != "unsupported"
             or manifest
             or metadata["total_characters"] != 0
@@ -130,6 +142,24 @@ def validate_canvas_document_header(
         ):
             raise ValueError("Unsupported file must remain an empty explicit gap")
         fields = {"filename": filename, "content_type": content_type}
+        if linked:
+            parents = object_fields["linked_from"]
+            if (
+                type(parents) is not list
+                or not 1 <= len(parents) <= 32
+                or any(
+                    type(parent) is not str
+                    or not re.fullmatch(r"(?:assignment|syllabus):[1-9][0-9]{0,19}", parent)
+                    for parent in parents
+                )
+                or parents != sorted(set(parents))
+                or any(
+                    parent.startswith("syllabus:") and parent != "syllabus:" + resource["course_id"]
+                    for parent in parents
+                )
+            ):
+                raise ValueError("Invalid linked file provenance")
+            fields["linked_from"] = list(parents)
     else:
         # Reuse schema1 academic field validation/canonicalization, without its
         # short-body/complete constraint: the full document was validated above.

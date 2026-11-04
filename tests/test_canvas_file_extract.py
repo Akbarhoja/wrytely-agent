@@ -69,6 +69,8 @@ def body(device, content=b"Visible original file.", mime="text/plain"):
     "mime,content",
     [
         ("text/plain", b"Visible original file."),
+        ("text/x-c", b"int main(void) { return 0; }"),
+        ("text/x-csrc", b"#include <stdio.h>\nint counter = 0;"),
         ("text/html", b"<p>Read this.</p><script>PRIVATE</script>"),
         ("application/pdf", None),
     ],

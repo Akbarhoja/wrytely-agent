@@ -20,6 +20,7 @@ const runtimeFiles = [
   "canvas-pairing/document-journal.mjs",
   "canvas-pairing/document-reader.mjs",
   "canvas-pairing/file-documents.mjs",
+  "canvas-pairing/linked-files.mjs",
   "canvas-pairing/file-storage.mjs",
   "canvas-pairing/module-reader.mjs",
   "canvas-pairing/discussion-thread.mjs",
@@ -159,7 +160,7 @@ export async function prepareCanvasPackage({
   const manifest = {
     manifest_version: 3,
     name: "Wrytely Canvas collection (development)",
-    version: "0.3.3",
+    version: "0.3.4",
     minimum_chrome_version: "120",
     description:
       "Private student-controlled Canvas collection; inactive until explicitly enabled.",

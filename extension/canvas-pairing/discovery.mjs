@@ -1317,6 +1317,7 @@ export function discoveryOperations({
           kind,
           cursor,
           p.j.binding.subject,
+          p.context.resource_kinds,
         );
         await prepare();
         return page;

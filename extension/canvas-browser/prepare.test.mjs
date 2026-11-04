@@ -38,7 +38,7 @@ test("package pins API, Canvas and two file origins with bounded redirect observ
     await readFile(resolve(f.output, "manifest.json"), "utf8"),
   );
   assert.equal(manifest.manifest_version, 3);
-  assert.equal(manifest.version, "0.3.3");
+  assert.equal(manifest.version, "0.3.4");
   assert.equal(manifest.minimum_chrome_version, "120");
   assert.deepEqual(manifest.permissions, ["storage", "alarms", "webRequest"]);
   assert.deepEqual(manifest.host_permissions, [
