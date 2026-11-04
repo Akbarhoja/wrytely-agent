@@ -14,14 +14,17 @@ P0/P1 remain open. No new live activation is inferred.
 
 ## Current Meta API diagnosis
 
-Murtazo completed a read-only wire-contract review with no demonstrated shape
-mismatch. A independently verified the exact team/project and deployed/local key
-association against the masked dashboard row, correct model default/no override,
-model catalog and provider operational status. Usage shows historical tokens but
-no individual error trace; billing remains loading. No root cause/fix is claimed.
-A prepared a two-case synthetic compatibility probe (typed vs minimal Responses),
-max0.02 additional USD under original2.00; approval pending. Monitor/budget remain
-stopped, holds unchanged; no new inference or deployment. [Diagnosis record](docs/META-API-DIAGNOSIS.md).
+Murtazo's static review found no demonstrated request-shape mismatch. A verified
+correct team/project/key and exact model metadata without exposing credentials.
+Akbar then approved two synthetic cases/max0.02USD. BOTH typed Wrytely and minimal
+documented Responses requests returned404: "The requested model was not found."
+No student content/tool execution/retry. Exact model detail GET still returns200.
+Root cause remains unresolved; correlation IDs/timestamps saved privately for Meta.
+New0.01386725 held; aggregate1.66102075 under2.00, all old unknown holds preserved.
+Diagnostic budget disabled; course monitor unchanged PAUSED; migration-only predeploy
+restored. [Diagnosis and prepared escalation](docs/META-API-DIAGNOSIS.md). Support
+draft contains only technical metadata/synthetic request shapes; nothing sent yet.
+No model/key/HTMLv2/collector/scope/WhatsApp changes. Live agent decision proof remains open.
 
 ## Latest approved single-request check — November3,8:10PM Mountain
 

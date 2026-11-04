@@ -58,3 +58,25 @@ Never label the academic agent functional from a synthetic routing test alone.
 Official references: [Responses](https://dev.meta.ai/docs/protocols/responses),
 [reasoning](https://dev.meta.ai/docs/reasoning),
 [error handling](https://dev.meta.ai/docs/error-handling).
+
+
+## Approved comparison result — November3,8:35PM Mountain
+
+Akbar approved the prepared0.02USD synthetic probe. Both distinct requests returned
+HTTP404 with identical "The requested model was not found." messages; the typed
+case reported model_not_found and both parameter fields were null. Neither optional
+tools nor reasoning fields distinguish success from failure in this comparison.
+This does not establish the exact root cause or rule out every shared SDK/provider
+issue. Request IDs and timestamps are retained privately for provider investigation.
+
+No student content, course reads, tool execution, fallback or automatic retry.
+Additional conservative liability0.01386725; aggregate1.66102075 under2.00. All old
+unknown holds remain intact. Diagnostic budget disabled; course monitor unchanged
+PAUSED. Migration-only predeploy restored; cleanup deployment1ab11a5c is SUCCESS; health200 verified. Application code remains0abda7b; HTMLv2 remains inactive.
+
+Read-only exact GET/models/muse-spark-1.3 also returned200 after the failed inference
+requests. The account/key/model metadata checks therefore succeed, while these
+inference requests do not. A private provider-support draft is prepared at ignored
+.local/meta-support-request.txt, containing correlation IDs and synthetic request
+shapes without any API key or course content. No support message has been sent;
+contacting Meta requires the owner's explicit communication authorization.
