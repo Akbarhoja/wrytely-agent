@@ -29,11 +29,22 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
     credentials: "same-origin",
     headers: { "Content-Type": "application/json", ...options.headers },
   });
-  const data = await response.json();
+  let data: unknown;
+  try {
+    data = await response.json();
+  } catch {
+    if (!response.ok) throw new ApiError(response.status, "Please try again.");
+    throw new Error("Invalid API response");
+  }
   if (!response.ok)
     throw new ApiError(
       response.status,
-      typeof data.detail === "string" ? data.detail : "Please try again.",
+      data !== null &&
+        typeof data === "object" &&
+        "detail" in data &&
+        typeof data.detail === "string"
+        ? data.detail
+        : "Please try again.",
     );
   return data as T;
 }
