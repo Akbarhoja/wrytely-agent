@@ -132,7 +132,7 @@ class CourseSupervisionStore:
                         str(s["document_version_id"] or s["latest_version_id"]),
                         # Partial inline originals may have no published version.
                         # Their observation must still fence changed preparation text.
-                        s["latest_observation_id"] if not s["freshness"]["usable"] else "",
+                        str(s["latest_observation_id"]) if not s["freshness"]["usable"] else "",
                     )
                     for s in sources
                 )
