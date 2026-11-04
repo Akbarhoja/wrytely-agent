@@ -37,13 +37,16 @@ private drafts. Document-based saved drafts now have an explicit v2 inspection v
 with pinned original evidence and current access checks. Saved checks do not grant
 permission to send or submit work.
 
-**P1 is not complete yet.** Synthetic integration checks are separate from
-installed Chrome and live course acceptance. Executable `0abda7b` and migrations023–028 are deployed only to the isolated
-development API. Bounded real Meta checks returned incomplete and model_not_found
-before a usable decision; the monitor is paused,
-budget disabled and reservation held. No completed real course/phone workflow is
-claimed. See [the first live check](docs/ONE-COURSE-LIVE-CHECK.md) and
-[the stopped single-request check](docs/ONE-COURSE-NEXT-META-CHECK.md).
+**The live academic journey is not complete yet.** Reviewed executable `bb626d3`
+and migrations023–028 are deployed only to the isolated development API. Meta-hosted
+inference was unreliable in the bounded checks. Explicitly selected Meta Muse Spark
+Open through Fireworks now passes a synthetic two-turn tool/result test. One real
+ECE253 request also completed, but its proposed decision failed typed validation
+before a saved investigation or offer. The exact invalid field was not retained.
+Supervision is paused and the budget disabled; no real course/phone workflow is
+claimed. See [the latest run and cleanup](docs/FIREWORKS-COURSE-CHECK.md) and
+[the provider boundary](docs/FIREWORKS-PROVIDER.md). The validation-guidance and
+safe-diagnostic follow-up is a separate candidate, not deployed.
 Independent review/CI and protected-main merge status remain separate. See
 [the P1 candidate and live checklist](docs/P1-COMPLETION-CANDIDATE.md),
 [STATUS.md](STATUS.md) and [work orders](docs/WORK-ORDERS.md).
@@ -83,10 +86,16 @@ an existing product's environment files.
   public verification key. A public key is sufficient for initial verification;
   the backend does not need a Clerk admin secret. Update the key after rotation.
 - `AGENT_AUTHORIZED_PARTIES`: exact allowed frontend origins as a JSON array.
-- `AGENT_META_API_KEY`, `AGENT_META_MODEL`: Meta development key and available model.
+- `AGENT_META_PROVIDER`: `meta` by default; explicitly select `fireworks` only for
+  an authorized Fireworks run. There is no automatic fallback.
+- `AGENT_META_API_KEY`, `AGENT_META_MODEL`: key/model for the Meta-hosted provider.
+- `AGENT_FIREWORKS_API_KEY`: key for the selected Fireworks provider. That adapter
+  fixes the model to `accounts/fireworks/models/muse-spark-open`; it does not use
+  `AGENT_META_MODEL`, and it does not require a Meta-hosted key.
 - `AGENT_META_MAX_OUTPUT_TOKENS`, `AGENT_META_REASONING_EFFORT`: bounded output
   allowance (default2048; maximum16384) and optional reasoning effort. Reasoning
   counts against output tokens; the cost reservation uses the exact configured cap.
+  Fireworks accepts unset/low/medium/high effort; other effort values are rejected.
   New settings do not authorize larger live calls or automatic retries.
 - `AGENT_META_BUDGET_KEY`, `AGENT_META_INPUT_USD_PER_MILLION`,
   `AGENT_META_OUTPUT_USD_PER_MILLION`: trusted operator budget key and verified
@@ -100,7 +109,17 @@ uv run --env-file .env python -m app.migrate
 uv run --env-file .env uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-For a separately authorized bounded academic execution pass:
+The course supervisor and delegated drafting are separate entrypoints. The supervisor
+reads stored course evidence and chooses inspect/offer/wait; acceptance is required
+before the existing draft worker prepares work. For a separately authorized one-course
+supervisor pass (with the current owner explicitly enrolled and its budget granted):
+
+```sh
+uv run --env-file .env python -m app.course_service --once --limit 1
+```
+
+This does not enqueue notifications by default and does not send WhatsApp messages.
+For a separately authorized delegated academic execution pass:
 
 ```sh
 uv run --env-file .env python -m runtime.worker --once
