@@ -1,5 +1,13 @@
 # Contracts — implemented boundaries and historical increments
 
+## Linked Canvas file candidate — November4
+
+[Selected linked files v1](docs/contracts/CANVAS-LINKED-FILES-v1.md) adds optional,
+digest-bound file `linked_from` provenance and parent-category scope validation,
+plus inert C-source text MIME aliases. Collector0.3.4 uses the original file/journal
+pipeline after an initial denied listing. No migration or live activation is implied.
+Parent completeness and automatic dependency readiness remain unchanged.
+
 ## November 3 one-course supervisor candidate
 
 [Executable Store/runtime boundary](docs/contracts/COURSE-SUPERVISION-v1.md).

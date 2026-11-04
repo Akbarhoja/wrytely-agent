@@ -262,6 +262,63 @@ def test_file_fields_and_page_resource_are_validated_without_provider_io():
     assert validate_canvas_document(**data).owner_kind == "page"
 
 
+def test_linked_file_provenance_is_immutable_digest_bound_and_legacy_compatible():
+    data = file_data()
+    original = validate_canvas_document(**data)
+    data["object_fields"]["linked_from"] = ["assignment:31", "syllabus:101"]
+    linked = validate_canvas_document(**data)
+    assert linked.document_digest != original.document_digest
+    assert linked.payload["fields"]["object_fields"]["linked_from"] == [
+        "assignment:31",
+        "syllabus:101",
+    ]
+    data["object_fields"]["linked_from"].append("assignment:99")
+    assert len(linked.payload["fields"]["object_fields"]["linked_from"]) == 2
+
+
+@pytest.mark.parametrize(
+    "parents",
+    [
+        [],
+        None,
+        "assignment:31",
+        ["assignment:31"] * 2,
+        ["syllabus:102"],
+        ["assignment:0"],
+        ["assignment:1", "https://outside.example"],
+        ["syllabus:101", "assignment:31"],
+        [True],
+        ["assignment:1"] * 33,
+    ],
+)
+def test_invalid_file_provenance_is_rejected(parents):
+    data = file_data()
+    data["object_fields"]["linked_from"] = parents
+    with pytest.raises(ValueError):
+        validate_canvas_document(**data)
+
+
+@pytest.mark.parametrize("mime", ["text/x-c", "text/x-csrc"])
+def test_c_source_is_retained_as_text_without_execution(mime):
+    data = file_data()
+    data["object_fields"]["content_type"] = mime
+    assert (
+        validate_canvas_document(**data).payload["fields"]["object_fields"]["content_type"] == mime
+    )
+
+
+def test_linked_file_parent_scope_guard_is_additive():
+    from shared.canvas_document_uploads import CanvasDocumentUploadStore
+    from shared.canvas_sync import CanvasSyncConflict
+
+    check = CanvasDocumentUploadStore._linked_file_scope
+    header = {"object_fields": {"linked_from": ["assignment:31", "syllabus:101"]}}
+    check({"resource_kinds": ["files", "assignments", "syllabus"]}, header)
+    with pytest.raises(CanvasSyncConflict, match="resource_not_selected"):
+        check({"resource_kinds": ["files", "assignments"]}, header)
+    check({"resource_kinds": ["files"]}, {"object_fields": {"filename": "legacy.txt"}})
+
+
 @pytest.mark.parametrize(
     "filename,content_type",
     [

@@ -18,6 +18,49 @@ from shared.document_sections import split_document_text
 from shared.source_connections import SourceCredentialRejected
 
 
+def test_linked_file_requires_parent_scope_and_leaves_no_staging_when_denied(device):
+    scan = evidence.prepare(device, kinds=["files"])
+    body = begin_body(device, scan)
+    body["resource"]["kind"] = "files"
+    body["owner_object"] = {"kind": "file", "provider_id": "17"}
+    body["object_fields"] = {
+        "filename": "manual.txt",
+        "content_type": "text/plain",
+        "linked_from": ["assignment:31"],
+    }
+    with pytest.raises(CanvasSyncConflict, match="resource_not_selected"):
+        begin(device, body)
+    assert count(device, "canvas_document_uploads") == 0
+
+
+def test_linked_file_staging_keeps_parent_provenance_across_restart(device):
+    scan = evidence.prepare(device, kinds=["files", "assignments"])
+    body = begin_body(device, scan)
+    body["resource"]["kind"] = "files"
+    body["owner_object"] = {"kind": "file", "provider_id": "17"}
+    body["object_fields"] = {
+        "filename": "starter.c",
+        "content_type": "text/x-c",
+        "linked_from": ["assignment:31"],
+    }
+    upload = begin(device, body)
+    put(device, put_body(body, upload["upload_id"]))
+    root = finish(device, finish_body(body, upload["upload_id"]))
+    restarted = Store(device[0]._url, canvas_origins=(sync.ORIGIN,))
+    assert (
+        finish((restarted, device[1]), finish_body(body, upload["upload_id"]))[
+            "document_version_id"
+        ]
+        == root["document_version_id"]
+    )
+    with restarted.connection() as conn:
+        payload = conn.execute(
+            "SELECT protocol_payload FROM wrytely_agent.canvas_document_versions WHERE id=%s",
+            (root["document_version_id"],),
+        ).fetchone()["protocol_payload"]
+    assert payload["fields"]["object_fields"]["linked_from"] == ["assignment:31"]
+
+
 def begin_body(device, scan, key="begin-doc"):
     data = assignment_data()
     return {

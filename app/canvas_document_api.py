@@ -355,7 +355,8 @@ def register_canvas_documents(api, *, database_dependency, canvas_origins, extra
             course_id(body["file_id"])
             if (
                 type(body["content_type"]) is not str
-                or body["content_type"] not in {"application/pdf", "text/plain", "text/html"}
+                or body["content_type"]
+                not in {"application/pdf", "text/plain", "text/html", "text/x-c", "text/x-csrc"}
                 or type(body["data"]) is not str
             ):
                 raise ValueError()
@@ -363,6 +364,8 @@ def register_canvas_documents(api, *, database_dependency, canvas_origins, extra
                 "application/pdf": "canvas.pdf.v1",
                 "text/plain": "canvas.text.v1",
                 "text/html": "canvas.html.v1",
+                "text/x-c": "canvas.text.v1",
+                "text/x-csrc": "canvas.text.v1",
             }[body["content_type"]]
             if body["content_type"] == "text/html" and "canvas.html.v2" in extractor_versions:
                 version = "canvas.html.v2"

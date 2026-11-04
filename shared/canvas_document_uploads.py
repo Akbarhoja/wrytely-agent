@@ -68,6 +68,13 @@ def _request(body, operation):
 
 
 class CanvasDocumentUploadStore:
+    @staticmethod
+    def _linked_file_scope(row, header):
+        for parent in header.get("object_fields", {}).get("linked_from", []):
+            kind = "assignments" if parent.startswith("assignment:") else "syllabus"
+            if kind not in row["resource_kinds"]:
+                raise CanvasSyncConflict("resource_not_selected")
+
     def _document_context(self, conn, actor, body):
         row, scan = self._scan(conn, actor, body["scan_id"], body["generation"])
         if str(row["id"]) != body["connection_id"] or row["provider_subject"] != body["subject"]:
@@ -94,6 +101,7 @@ class CanvasDocumentUploadStore:
         ).fetchone()
         if not resource or resource["coverage"] != "open":
             raise CanvasSyncConflict("resource_terminal")
+        self._linked_file_scope(row, upload["header"])
         return upload
 
     def _document_receipt(self, conn, actor, row, scan, body, digest):
@@ -157,6 +165,7 @@ class CanvasDocumentUploadStore:
         )
         with self.connection() as conn:
             row, scan = self._document_context(conn, actor, body)
+            self._linked_file_scope(row, header)
             replay = self._document_receipt(conn, actor, row, scan, body, digest)
             if replay:
                 return replay

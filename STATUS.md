@@ -12,6 +12,74 @@ supervisor work on codex/p1-completion and fixes M’s empty-all_active finding.
 M owns WhatsApp/app/web/service assembly in parallel. This supersedes stop-before-P2;
 P0/P1 remain open. No new live activation is inferred.
 
+## November4 fresh ECE253 collection completed with gaps
+
+A implemented the [linked-file candidate](docs/contracts/CANVAS-LINKED-FILES-v1.md)
+on codex/p1-linked-files after Akbar's instruction. It reuses the existing bounded
+file transport/journal with selected assignment/syllabus discovery, provenance and
+parent-scope validation.632 extension and112 pure root-validation tests pass;
+Ruff/306-file format pass. Local disposable Postgres initialization is blocked by
+sandbox filesystem access, so DB/full CI remains required. Existing0.3.3 installation
+and development deployment are untouched. No real file-read proof or parent-readiness
+promotion is claimed; review and activation remain separate.
+
+Follow-up [exact gap audit](docs/CANVAS-COLLECTION-GAP-AUDIT.md) completed through
+read-only Railway dashboard queries, without exposing Postgres or redeploying.
+Of24 assignments:10 have HTML/link gaps,9 are locked with missing instructions/
+constraints/rubric,3 lack instructions/rubric,2 have no text. None is ready. The
+best upcoming lab's saved instructions are only manual/starter link labels; those
+linked bytes were not collected. Direct Canvas links exist, but the attempted
+manual download reached a Chrome client block. No bypass or file-read proof.
+Main next repair is assignment-linked file discovery/publication using the existing
+reader/journal, not another blind full scan or promotion of partial evidence.
+
+Akbar approved a new maximum30-minute round after the earlier upload expired.
+The website scope controls ended that stale scan and restored exactly ECE253 with
+all nine categories. A subsequent discovery-only round showed cleared scope; A
+restored and independently re-read the current connection selection before content
+collection. No new deployment, pairing by A, model call or WhatsApp send occurred.
+
+The fresh content scan started12:37:03 Mountain and was independently observed
+FINISHED by12:56:57 (under20 minutes).117 records were seen and retained:
+announcements5, assignments24, grades24, modules/items39, submissions24, syllabus1.
+All117 have partial coverage. Discussions closed complete with0 records; files
+closed restricted/permission_denied; pages closed partial with0 records. All nine
+resource categories are terminal, but complete course or assignment readiness is
+NOT established. Per-source missing reasons still need an audit; the generic
+`extraction_failed` resource label alone does not identify a parser failure.
+
+Owner confirmed the extension PAUSED after completion. Do not
+start another round, re-pair or enable supervision automatically. Original model
+budget/monitor pauses remain in place. Counts-only and visual proof are local;
+no private course bodies are published in this record. No code changed this turn.
+
+## Earlier November4 Canvas activation and expired-upload stop
+
+Approved c63dc31 passed full CI41801510271 and was deployed only to the isolated
+development API. Deployment76b70c29 and HTMLv2 activation153cb00f completed with
+health200. Collector0.3.3 was installed/paired by the owner; the newest connection
+completed course discovery. Its saved scope was independently verified as ECE253
+only, with all nine content categories selected. No model or WhatsApp workers ran.
+
+The content round began November4 at02:53:19 Mountain. Last independently observed
+counts were5 announcements and12 assignments, all partial; other resources remained
+open. Owner subsequently reported `discovery_document_expired` and collection paused.
+The server rejects expired document staging after at most30 minutes; its expiry
+does not erase committed source observations. The paused scan was resumed after a
+long gap; exact upload timestamps were not queried. No completed content round or
+assignment readiness is claimed. Repeated Collect cannot renew the expired upload.
+
+Correction: resource reason `extraction_failed` is also emitted for any incomplete
+document, including missing metadata. Announcement mapping always records an
+unobserved author role. The earlier5 announcement gaps therefore did not establish
+a text-parser failure; pausing on that label alone was premature.
+
+Safe existing recovery requires ending the stale scan through a deliberate scope
+reset, restoring the same ECE253-only scope, then starting a fresh bounded round.
+That recovery was subsequently approved and executed as recorded above. Do not extend upload expiry,
+erase the local journal manually, re-pair, promote partial evidence or retry forever.
+Original30-minute activation window has elapsed. Model supervision/budget stay paused.
+
 ## First persisted real ECE253 investigation — November4
 
 Exactfe196c6 fullCI41792034739 SUCCESS:1924backendPASS/2existingwarnings,

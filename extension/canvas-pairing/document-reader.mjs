@@ -12,6 +12,7 @@ import {
 } from "./discussion-thread.mjs";
 import { readModulePage } from "./module-reader.mjs";
 import { readFilePage } from "./file-documents.mjs";
+import { readLinkedFilePage, LINKED_FILES_CURSOR } from "./linked-files.mjs";
 const identifier = (x) => {
   if (
     !["string", "number"].includes(typeof x) ||
@@ -29,7 +30,13 @@ export function makeDocumentReader(
 ) {
   const origin = checkedOrigin(originValue),
     api = makeReader(origin, fetchImpl);
-  return async function documentPage(course, kind, cursor, expectedSubject) {
+  return async function documentPage(
+    course,
+    kind,
+    cursor,
+    expectedSubject,
+    selectedKinds = [],
+  ) {
     course = identifier(course);
     if (
       ![
@@ -58,15 +65,34 @@ export function makeDocumentReader(
       return response;
     }
     const base = `/api/v1/courses/${course}`;
-    if (kind === "files")
-      return readFilePage({
+    if (kind === "files") {
+      const args = {
         course,
         cursor,
         origin,
         get,
         transport: fileTransport,
         identity,
-      });
+        selectedKinds,
+      };
+      if (typeof cursor === "string" && cursor.startsWith(LINKED_FILES_CURSOR))
+        return readLinkedFilePage(args);
+      try {
+        return await readFilePage(args);
+      } catch (e) {
+        // Only a denied INITIAL listing qualifies. Never hide a lost later page,
+        // login/account failure, network block, or malformed file response.
+        if (
+          cursor !== null ||
+          e?.code !== "permission_denied" ||
+          e.fileListingDenied !== true ||
+          !selectedKinds.includes("files") ||
+          !selectedKinds.some((k) => ["assignments", "syllabus"].includes(k))
+        )
+          throw e;
+        return readLinkedFilePage({ ...args, cursor: null });
+      }
+    }
     if (kind === "modules")
       return readModulePage({ course, cursor, origin, get });
     if (kind === "discussions" && isDiscussionCursor(cursor))

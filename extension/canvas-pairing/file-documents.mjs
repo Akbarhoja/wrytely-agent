@@ -1,7 +1,13 @@
 // Browser-only bounded file download. Signed URLs and bytes never enter the journal.
 import { ProbeError, nextLink } from "../canvas-feasibility/probe.mjs";
 import { readStorageFile } from "./file-storage.mjs";
-const supported = new Set(["application/pdf", "text/plain", "text/html"]);
+const supported = new Set([
+  "application/pdf",
+  "text/plain",
+  "text/html",
+  "text/x-c",
+  "text/x-csrc",
+]);
 const id = (x) => {
   if (
     !["string", "number"].includes(typeof x) ||
@@ -55,16 +61,48 @@ export async function readFilePage({
     }
   }
   const u = checked(cursor ?? `${origin}${path}?per_page=4`);
-  const { data, link } = await get(path, u.search);
+  let listed;
+  try {
+    listed = await get(path, u.search);
+  } catch (e) {
+    if (e?.code === "permission_denied")
+      throw Object.assign(new ProbeError("permission_denied"), {
+        fileListingDenied: true,
+      });
+    throw e;
+  }
+  const { data, link } = listed;
   if (
     !Array.isArray(data) ||
     data.length > 4 ||
     new TextEncoder().encode(link).length > 16384
   )
     throw new ProbeError("invalid_collection");
+  const result = await readFileObjects({
+    course,
+    items: data,
+    origin,
+    get,
+    transport,
+    identity,
+  });
+  const next = nextLink(link),
+    next_cursor = next === null ? null : checked(next).href;
+  if (next_cursor === u.href) throw new ProbeError("pagination_cycle");
+  return { data: result, next_cursor };
+}
+export async function readFileObjects({
+  course,
+  items,
+  origin,
+  get,
+  transport,
+  identity,
+}) {
+  const path = `/api/v1/courses/${course}/files`;
   const seen = new Set(),
     result = [];
-  for (const item of data) {
+  for (const item of items) {
     const fileId = id(item?.id);
     if (seen.has(fileId)) throw new ProbeError("invalid_collection");
     seen.add(fileId);
@@ -135,10 +173,7 @@ export async function readFilePage({
       _wrytely_file: { contentType, encoded, gap },
     });
   }
-  const next = nextLink(link),
-    next_cursor = next === null ? null : checked(next).href;
-  if (next_cursor === u.href) throw new ProbeError("pagination_cycle");
-  return { data: result, next_cursor };
+  return result;
 }
 export async function prepareFileDocuments({
   resource_key,
@@ -192,7 +227,13 @@ export async function prepareFileDocuments({
       throw new ProbeError("invalid_collection");
     documents.push({
       owner_object: { kind: "file", provider_id: id(raw.id) },
-      object_fields: { filename, content_type: file.contentType },
+      object_fields: {
+        filename,
+        content_type: file.contentType,
+        ...(raw._wrytely_linked_from
+          ? { linked_from: raw._wrytely_linked_from }
+          : {}),
+      },
       metadata: {
         title: filename,
         format:
@@ -218,8 +259,10 @@ export async function prepareFileDocuments({
     documents,
     next_cursor: page.next_cursor,
     coverage: {
-      state: page.next_cursor ? "partial" : "complete",
-      reason: page.next_cursor ? "more_pages" : null,
+      state: page.next_cursor
+        ? "partial"
+        : (page.coverage?.state ?? "complete"),
+      reason: page.next_cursor ? "more_pages" : (page.coverage?.reason ?? null),
     },
   };
 }
