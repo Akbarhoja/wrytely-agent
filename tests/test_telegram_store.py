@@ -270,3 +270,28 @@ def test_preparation_requires_its_own_telegram_notification_consent(device):
     )
     with pytest.raises(LookupError):
         db.queue_telegram_preparation("user_alice", BOT, uuid4(), record["id"])
+
+
+def test_known_rate_limit_respects_wait_and_three_dispatch_ceiling(store):
+    from datetime import timedelta
+
+    claim = queued_reply(store)
+    for attempt in range(3):
+        assert store.authorize_telegram_dispatch(claim).state == "permitted"
+        retry_at = datetime.now(UTC) + timedelta(hours=1)
+        receipt = DeliveryResult(
+            state="deferred", internal_id=claim.action_id, retry_at=retry_at.isoformat()
+        )
+        assert store.finish_telegram_delivery(claim, receipt)
+        assert store.claim_telegram_delivery(BOT) is None
+        with store.connection() as conn:
+            row = conn.execute(
+                "SELECT state,available_at,attempts FROM wrytely_agent.telegram_outbound"
+            ).fetchone()
+            assert row["available_at"] >= retry_at
+            assert row["attempts"] == attempt + 1
+            assert row["state"] == ("failed" if attempt == 2 else "queued")
+            conn.execute("UPDATE wrytely_agent.telegram_outbound SET available_at=now()")
+        if attempt < 2:
+            claim = store.claim_telegram_delivery(BOT)
+    assert store.claim_telegram_delivery(BOT) is None

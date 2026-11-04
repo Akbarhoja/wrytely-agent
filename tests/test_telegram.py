@@ -184,3 +184,27 @@ def test_timeout_is_unknown_without_exception_url_or_second_request():
         )
     assert result.state == "unknown" and len(requests) == 1
     assert TOKEN not in result.model_dump_json()
+
+
+def test_explicit_rate_limit_preserves_provider_wait_without_retry():
+    body = {"ok": False, "error_code": 429, "parameters": {"retry_after": 3600}}
+    with httpx.Client(
+        transport=httpx.MockTransport(lambda r: httpx.Response(429, json=body))
+    ) as client:
+        result = TelegramAdapter(TOKEN, client).send(
+            recipient="991", text="hello", action_id=uuid4()
+        )
+    assert result.state == "deferred"
+    assert datetime.fromisoformat(result.retry_at) > datetime.now(UTC) + timedelta(minutes=59)
+
+
+@pytest.mark.parametrize("delay", [0, -1, True, 86401])
+def test_invalid_rate_limit_delay_does_not_authorize_a_retry(delay):
+    body = {"ok": False, "error_code": 429, "parameters": {"retry_after": delay}}
+    with httpx.Client(
+        transport=httpx.MockTransport(lambda r: httpx.Response(429, json=body))
+    ) as client:
+        result = TelegramAdapter(TOKEN, client).send(
+            recipient="991", text="hello", action_id=uuid4()
+        )
+    assert result.state == "unknown" and result.retry_at is None

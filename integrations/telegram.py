@@ -123,8 +123,19 @@ class TelegramAdapter:
                     and body.get("ok") is False
                     and body.get("error_code") == 429
                 )
+                retry_after = (
+                    body.get("parameters", {}).get("retry_after", 60) if rejected else None
+                )
+                if type(retry_after) is not int or not 1 <= retry_after <= 86400:
+                    rejected = False
                 return DeliveryResult(
-                    state="deferred" if rejected else "unknown", internal_id=action_id
+                    state="deferred" if rejected else "unknown",
+                    internal_id=action_id,
+                    retry_at=(
+                        datetime.now(UTC) + timedelta(seconds=max(60, retry_after))
+                    ).isoformat()
+                    if rejected
+                    else None,
                 )
             if response.status_code != 200 or len(response.content) > 200000:
                 return DeliveryResult(state="unknown", internal_id=action_id)
