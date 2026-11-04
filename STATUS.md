@@ -14,7 +14,34 @@ P0/P1 remain open. No new live activation is inferred.
 
 ## November4 fresh ECE253 collection completed with gaps
 
+### Private preparation workflow candidate
+
+A owns `codex/course-preparation`, coordinated in #4 comment6643960622. A distinct
+typed non-submission checklist path is now implemented in the existing supervisor
+and Store, with additive029 persistence. It verifies excerpts against inspected
+current originals, pins target/syllabus/linked files, preserves gaps/continuations,
+deduplicates history and marks changed/paused evidence historical. It creates no
+draft/task/offer/send or submission permission. Full drafting gates stay intact.
+Consumer projection and M-owned UI work are documented in
+[course preparation v1](docs/contracts/COURSE-PREPARATION-v1.md).
+
+Initial40 pure preparation/protocol tests pass. Local disposable Postgres could not
+start under the sandbox: the helper process inspection and direct PostgreSQL shared
+memory initialization are denied. No live database was substituted. Real transaction
+integration and full required regression remain pending CI; no deployment, migration,
+paid inference, scan, outward send or continuous activation performed for this feature.
+
 ### Reviewed0.3.4 linked-file activation and real attachment proof
+
+Follow-up private saved-text audit completed: manual/starter/syllabus requirements
+read, with no new collection/model call. The target requires physical work and TA
+check-off; actual results are unknown. Saved policy does not establish permission
+for AI-written graded submissions. Full drafting remains blocked. Preparation/study
+is mentioned in supervisor instructions but is not a distinct typed workflow: all
+current offers still require usable complete assignment evidence. A separate bounded
+non-submission preparation path is a concrete remaining implementation gap, not an
+already delivered capability. No parent/PDF/policy gaps were relaxed. Detailed
+student-facing requirements and original source text remain in ignored local files.
 
 M final review6642536978 clears exact executabled3d0ff1; fullCI41911052694
 SUCCESS as recorded below. Akbar approved isolated development deployment and one

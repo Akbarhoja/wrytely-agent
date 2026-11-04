@@ -1,5 +1,14 @@
 # Contracts — implemented boundaries and historical increments
 
+## Private preparation checklist candidate — November4
+
+[Course preparation v1](docs/contracts/COURSE-PREPARATION-v1.md) adds a typed `prepare`
+supervisor decision and migration029 private checklist history inside the existing
+monitor. Current inspected partial originals may supply verified quotations and
+student-input questions, with missing reasons retained. Existing full drafting,
+offer acceptance and channel gates are unchanged. M consumes `preparations` through
+the existing session-owned supervision status route; UI/live activation remain separate.
+
 ## Linked Canvas file candidate — November4
 
 [Selected linked files v1](docs/contracts/CANVAS-LINKED-FILES-v1.md) adds optional,
