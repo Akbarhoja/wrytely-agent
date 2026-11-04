@@ -295,3 +295,29 @@ def test_known_rate_limit_respects_wait_and_three_dispatch_ceiling(store):
         if attempt < 2:
             claim = store.claim_telegram_delivery(BOT)
     assert store.claim_telegram_delivery(BOT) is None
+
+
+def test_relink_does_not_automatically_repeat_an_unknown_preparation(device):
+    db, monitor, _, _ = prepared_course(device)
+    link(db)
+    record = db.course_supervision_status("user_alice", monitor["id"])["preparations"][0]
+    first = db.queue_telegram_preparation("user_alice", BOT, monitor["id"], record["id"])
+    claim = db.claim_telegram_delivery(BOT)
+    assert db.authorize_telegram_dispatch(claim).state == "permitted"
+    db.finish_telegram_delivery(claim, DeliveryResult(state="unknown", internal_id=claim.action_id))
+    db.unlink_telegram("user_alice", BOT)
+    challenge = db.create_telegram_challenge("user_alice", BOT)
+    assert db.ingest_telegram(BOT, event(challenge["message"], 3)) == "linked"
+    db.set_telegram_preferences(
+        "user_alice",
+        BOT,
+        consent=True,
+        notification_consent=True,
+        timezone="UTC",
+        quiet_start=0,
+        quiet_end=0,
+    )
+    assert db.pending_telegram_preparations(BOT) == []
+    repeated = db.queue_telegram_preparation("user_alice", BOT, monitor["id"], record["id"])
+    assert repeated == dict(id=first["id"], state="unknown")
+    assert db.claim_telegram_delivery(BOT) is None
