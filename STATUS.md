@@ -27,6 +27,17 @@ report submitted with Akbar's explicit approval under API Troubleshooting. Meta
 confirmed receipt and1–2 business day standard response; no ticket number displayed.
 It includes only technical metadata/synthetic request shapes, no keys/student content.
 No model/key/HTMLv2/collector/scope/WhatsApp changes. Live agent decision proof remains open.
+Read-only Discord follow-up found matching origin-dependent participant reports;
+Connor (Meta) recommends raw HTTP comparison and request IDs, not a confirmed fix.
+Current development region is sfo; local catalog200 lists the model too.
+Baseten Muse Spark Open is a researched backup only.
+Akbar subsequently approved and A executed that exact two-origin check: BOTH raw
+requests returned200/completed/OK (Railway13/120 tokens, local13/134). The prior404
+did not reproduce. Root cause remains unproven; no SDK fix/provider migration is
+claimed. Additional0.02 conservatively held, aggregate1.68102075 under2.00. Budget
+disabled before calls; supervisor/continuous workers remain paused. Migration-only
+configuration restored; cleanup25be6ce1 SUCCESS/healthz200 verified. Real agent proof
+remains open; no executable code, provider, key, course or WhatsApp scope changed.
 
 ## Latest approved single-request check — November3,8:10PM Mountain
 

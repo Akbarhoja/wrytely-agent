@@ -93,3 +93,104 @@ signed-in account's existing email. No ticket number was displayed. A private
 confirmation screenshot is retained locally; do not publish its account details.
 The API issue remains unresolved pending provider findings. No new inference,
 worker/budget activation, scan, model/key change or WhatsApp send occurred.
+
+## Discord investigation and next discriminating test
+
+Read-only investigation November 3, following Akbar's request. No Discord messages
+were sent. Distinguish participant reports, automated help and human Meta replies.
+
+- In [this Railway thread](https://discord.com/channels/1557169028080869426/1564634568529543298/1564654704728866959),
+  Connor (Meta), October 27, recommends checking the actual outbound request with
+  raw HTTP from Railway and retaining provider request IDs. He supplies no confirmed
+  fix. The participant reports the same key working locally but failing in several
+  Railway regions, even after key replacement.
+- Other participant reports in the Meta channel describe successful Codespaces or
+  local inference but failures on Render/Railway. These are reports, not proof of
+  our root cause. The Cerebral Valley help bot mentions geographic restrictions,
+  cached denials and an investigation across accounts. Do not present its answers
+  as a human provider diagnosis or conclude that every US cloud host is blocked.
+- Actual current development deployment 1ab11a5c has multiRegionConfig sfo with
+  one replica. Local authenticated GET /v1/models returns200, nine models, including
+  muse-spark-1.3. Neither metadata check is inference proof. No geographic routing
+  change, proxy or VPN workaround was made.
+- [Meta's geographic policy](https://dev.meta.ai/legal/geographic-use-policy)
+  does not guarantee availability in every jurisdiction and prohibits evading
+  geographic controls. Its published restricted-territory list does not itself
+  establish a US-only service or a blanket EU restriction.
+- [Agents102 recording](https://vimeo.com/1239918451) was opened; introductory
+  transcript and workshop setup were inspected, and transcript search for404
+  returned no matches. It teaches agent verification and points to
+  https://github.com/meta-models/legal-agent-workshop. This was not a complete
+  recording review and supplied no verified404 resolution.
+
+Recommended next bounded comparison, requiring new scoped paid-call approval:
+one raw HTTP Responses request from this computer and one from the existing
+Railway development service, same existing key/model and synthetic Reply OK input,
+store:false/output256/no tools/no optional reasoning/no retries. At most0.02USD
+additional, still within the original2USD ceiling. Reserve in the original Store
+before either request; preserve all historical holds; keep supervision and workers
+paused and disable the diagnostic budget afterward. No separate budget ledger,
+new public database endpoint, new credential or source-content transmission.
+
+Interpretation: local success/cloud failure isolates an origin-associated difference
+for follow-up; it does not prove IP blocking. Raw success where SDK failed motivates
+a transport comparison; timing alone does not prove an SDK bug. Both failing leaves
+account/model-serving investigation open. A200 with incomplete output proves route
+access only. Do not make speculative code changes or rotate keys repeatedly.
+
+Alternatives in preference order, not activated:
+
+1. Keep our runtime and Muse Spark1.3; if local inference succeeds, prepare a
+   clearly disclosed local demo worker using the existing scoped Store/API boundary.
+   This is not hosted24/7 proof and must not require exposing Postgres publicly.
+2. Muse Spark Open on Baseten as a separately reviewed provider adapter. The
+   [provider's pinned instructions](https://discord.com/channels/1557169028080869426/1563300081346805871/1564379615517089792)
+   specify selected-builder access and a separate hackathon key; the
+   [credit clarification](https://discord.com/channels/1557169028080869426/1563300081346805871/1565053702484795515)
+   says those credits attach to that key, not a personal Baseten workspace.
+   Model slug observed in the channel is meta-models/muse-spark-open-1026.
+   Verify Wrytely's access, current API/tool schema, prices, data terms and request
+   caps before activation. It is not a drop-in Responses replacement or guaranteed
+   reliable service; another participant reports intermittent long hangs.
+3. A different supported Meta model/provider only after actual access and tool
+   compatibility checks. Switching Hermes/OpenClaw would not repair the inference
+   endpoint and would add unrelated migration work.
+
+No plan revision, provider switch, paid request or application change occurred in
+this investigation. Existing Canvas readiness and WhatsApp blockers remain separate.
+
+## Approved raw two-origin comparison — November 3, 9:06 PM Mountain
+
+Akbar approved the proposed two synthetic requests with a total0.02USD cap.
+The original Store reserved0.01USD per origin before either call; both liabilities
+remain conservatively held. No second budget ledger or public database endpoint.
+After reservation, the diagnostic budget was disabled before making the requests.
+All four prior unknown reservations and opening1.33114350 remain untouched.
+
+Both requests used raw httpx POST to https://api.meta.ai/v1/responses with the same
+existing key and exactly model:muse-spark-1.3, input:Reply with exactly OK.,
+max_output_tokens:256, store:false. No tools, reasoning override, SDK, redirect or
+automatic retry. Key/payload fingerprints matched privately across origins.
+
+| Origin | UTC | HTTP | Response | Input/output tokens | Synthetic answer |
+| --- | --- | --- | --- | --- | --- |
+| Railway development | 2026-11-04T04:06:22.757335+00:00 | 200 | completed | 13/120 | OK |
+| Local computer | 2026-11-04T04:07:11.798264+00:00 | 200 | completed | 13/134 | OK |
+
+Provider correlation IDs and receipts are retained only in ignored local evidence.
+The local runner consumed its pre-reserved call with an exclusive one-use marker;
+re-running it fails before another request. The cloud preflight requires the exact
+four prior reservations, so it cannot repeat after its two new holds exist.
+
+Conclusion: the route worked from both origins at this time. This does not establish
+why earlier requests failed, prove an SDK bug, establish sustained provider recovery,
+or demonstrate our real agent workflow. No origin-dependent failure was reproduced.
+Do not migrate provider, rotate keys or move regions based on this result alone.
+
+Additional conservative held liability0.02USD; aggregate1.68102075 under the original
+2USD ceiling. This is a liability bound, not a claimed invoice charge. Budget remains
+disabled, course supervisor paused, continuous/draft/delivery workers stopped. No
+student content, Canvas scan, offer/draft or WhatsApp send. Normal migration-only
+predeploy was restored and read back; cleanup deployment25be6ce1 is SUCCESS and
+healthz returns200. API-only start remains unchanged; diagnostic code is no longer
+configured as predeploy. No executable application code changed.
