@@ -309,7 +309,8 @@ class TelegramStore:
                 agent = self._telegram_owner(conn, row["user_id"])
                 conn.execute(
                     "INSERT INTO wrytely_agent.telegram_outbound "
-                    "(id,agent_id,bot_id,chat_id,generation,intent_key,kind,task_id,content,state,reason) "
+                    "(id,agent_id,bot_id,chat_id,generation,intent_key,kind,"
+                    "task_id,content,state,reason) "
                     "SELECT %s,a.id,l.bot_id,l.chat_id,l.generation,'reply:'||t.id::text,"
                     "'reply',t.id,CASE WHEN length(m.content) BETWEEN 1 AND 24000 THEN m.content "
                     "ELSE '' END,CASE WHEN length(m.content) BETWEEN 1 AND 24000 THEN 'queued' "
