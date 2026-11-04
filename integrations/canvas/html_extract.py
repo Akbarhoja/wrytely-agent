@@ -104,6 +104,10 @@ class _Text(HTMLParser):
 
     def handle_data(self, data):
         self.event()
+        if self.literal_text and ("<" in data or re.search(r"&[A-Za-z][A-Za-z0-9]*;", data)):
+            # HTMLParser flushes a truncated '<img ...' as data on close. Do not
+            # certify that ambiguous tail or a still-unresolved named reference.
+            self.reasons.add("unresolved_markup_or_reference")
         if not self.stack or not self.stack[-1][1]:
             self.append(data)
 

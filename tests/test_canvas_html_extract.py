@@ -182,6 +182,10 @@ def test_v2_only_certifies_supplied_literal_text_and_leaves_v1_partial(source, e
         b"<!-- conditional content --><p>Read</p>",
         b"<p>Read &#0;</p>",
         b"<p>Read &#x41;</p>",
+        b"<p>Read</p><img src=",
+        b"<p>Read</p><script",
+        b"<p>Read</p><",
+        b"<p>Read &unknown;</p>",
     ],
 )
 def test_v2_unread_structure_or_normalization_never_becomes_complete(source):
