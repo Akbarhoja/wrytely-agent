@@ -1,5 +1,8 @@
 # M one-course assembly
 
+See the [integration evidence handoff](M-INTEGRATION-EVIDENCE.md) for scoped check
+results, synthetic Word examples and remaining acceptance gates.
+
 Supervisor assignment: [coordination claim](https://github.com/Akbarhoja/wrytely-agent/issues/4#issuecomment-6615708768).
 Plan: [one-course delivery](ONE-COURSE-DELIVERY.md). Shared boundary:
 [course supervision v1](contracts/COURSE-SUPERVISION-v1.md).
