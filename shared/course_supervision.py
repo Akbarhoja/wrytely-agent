@@ -105,6 +105,10 @@ class CourseSupervisionStore:
         now = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
         for row in rows:
             source, selected, state = self._evidence_projection(conn, connection, row)
+            if not selected or source["historical"]:
+                # Retention does not authorize model disclosure after scope or
+                # identity-generation changes. Exclude before private fields enter context.
+                continue
             fields = row["private_payload"]["fields"]
             source["fields"] = fields.get("object_fields", fields)
             source["missing"] = list(row["private_payload"]["missing"])
