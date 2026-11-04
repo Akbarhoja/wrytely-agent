@@ -12,7 +12,21 @@ supervisor work on codex/p1-completion and fixes M’s empty-all_active finding.
 M owns WhatsApp/app/web/service assembly in parallel. This supersedes stop-before-P2;
 P0/P1 remain open. No new live activation is inferred.
 
-## Fireworks adapter candidate — not activated
+## Latest real-course Fireworks result
+
+Approved exactbb626d3 fullCI and Mreview cleared. Isolated API now runs that candidate
+with explicit Fireworks and API-only startup. Real ECE253 preflight104sources/
+90inspectable; one completed request32881input/422output failed typed decision
+validation. No persisted decision/inspection/offer/draft, second request or send.
+Exact invalid field is unknown because raw output was not retained. Paid route works;
+agent decision acceptance remains open. [Run and cleanup](docs/FIREWORKS-COURSE-CHECK.md).
+Token-derived newliability0.04289475; old holds preserved plus external0.03 yields
+1.95127850/3USD. Internal ceiling2.97 retains externalhold. Monitor PAUSED and budget
+disabled; migration-only/API-only cleanup e06de2c3 SUCCESS/health200. No rescan/HTMLv2.
+Separate offline validation-guidance/safe-diagnostic candidate:87 focused checks pass;
+fullCI/review and any new live activation remain separate. CanvasPR167 is not deployed.
+
+## Fireworks adapter implementation and preceding synthetic evidence
 
 A implemented explicit Muse Spark Open transport in the existing budgeted factory;
 Meta-hosted remains default. No third-party runtime or automatic fallback. 72 focused
