@@ -12,6 +12,15 @@ supervisor work on codex/p1-completion and fixes M’s empty-all_active finding.
 M owns WhatsApp/app/web/service assembly in parallel. This supersedes stop-before-P2;
 P0/P1 remain open. No new live activation is inferred.
 
+## Native document smoke check
+
+Existing synthetic16-word DOCX matches the current renderer byte-for-byte. Bundled
+headless rendering produces one readable page/disclosure but omits its emoji;
+native Microsoft Word opens without a repair prompt and displays the emoji/text/
+disclosure correctly. No document or renderer changes. This checks one simple local
+file, not real academic quality, equations/tables, revision delivery or phone receipt.
+Private visual/hash evidence saved locally; no model call or external send.
+
 ## Latest real-course Fireworks result
 
 Approved exactbb626d3 fullCI and Mreview cleared. Isolated API now runs that candidate
