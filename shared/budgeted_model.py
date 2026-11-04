@@ -64,6 +64,7 @@ class BudgetedMetaRouter:
     """Service factory: app never chooses an unguarded paid model from student input."""
 
     def __init__(self, store, settings):
+        from shared.fireworks_model import FireworksModelClient
         from shared.model_client import MetaModelClient
 
         if not (
@@ -72,7 +73,10 @@ class BudgetedMetaRouter:
             and settings.meta_output_usd_per_million
         ):
             raise ValueError("Configure model budget key and verified prices before activation")
-        self.store, self.settings, self.model = store, settings, MetaModelClient(settings)
+        model_type = (
+            FireworksModelClient if settings.meta_provider == "fireworks" else MetaModelClient
+        )
+        self.store, self.settings, self.model = store, settings, model_type(settings)
 
     def for_user(self, verified_user):
         return BudgetedModelClient(

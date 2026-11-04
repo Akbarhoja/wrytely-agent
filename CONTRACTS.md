@@ -1716,3 +1716,16 @@ its operator reservation; this recovery mechanism is not a billing cap. Repeated
 user controls may cause more claims, so cumulative per-account/global inference
 budgets remain a separate M4 gate before public pilot. Nothing starts a worker,
 resumes outbound sends or changes consent by itself.
+
+
+## Explicit model-provider factory
+
+`BudgetedMetaRouter(store, settings).for_user(verified_user)` remains the service
+boundary. `Settings.meta_provider` is operator-only `meta` (default) or `fireworks`;
+selected constructor validates its own key. Consumers must not duplicate a
+Meta-hosted-key requirement. Readiness reports selected-key presence, not endpoint
+health. The same budget reservation/settlement and tool authorization apply.
+[Fireworks transcript/configuration contract](docs/FIREWORKS-PROVIDER.md) specifies
+canonical text/tool conversion and private reasoning replay. Do not migrate an
+in-flight episode's provider-specific reasoning state across providers. No live
+activation, fallback, model-controlled routing or wider user access is implied.

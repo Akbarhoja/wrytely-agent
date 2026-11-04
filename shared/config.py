@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     canvas_origins: Annotated[tuple[str, ...], NoDecode] = Field(default=(), max_length=20)
     canvas_document_extractors: Annotated[tuple[str, ...], NoDecode] = ()
     meta_api_key: SecretStr | None = None
+    meta_provider: Literal["meta", "fireworks"] = "meta"
+    fireworks_api_key: SecretStr | None = None
     meta_model: str = "muse-spark-1.3"
     meta_max_output_tokens: int = Field(default=2048, ge=256, le=16384)
     meta_reasoning_effort: Literal["minimal", "low", "medium", "high", "xhigh", "max"] | None = None
@@ -93,5 +95,7 @@ class Settings(BaseSettings):
             "authentication": bool(
                 self.clerk_issuer and self.clerk_jwt_key and self.authorized_parties
             ),
-            "meta_model": bool(self.meta_api_key),
+            "meta_model": bool(
+                self.fireworks_api_key if self.meta_provider == "fireworks" else self.meta_api_key
+            ),
         }

@@ -12,6 +12,20 @@ supervisor work on codex/p1-completion and fixes M’s empty-all_active finding.
 M owns WhatsApp/app/web/service assembly in parallel. This supersedes stop-before-P2;
 P0/P1 remain open. No new live activation is inferred.
 
+## Fireworks adapter candidate — not activated
+
+A implemented explicit Muse Spark Open transport in the existing budgeted factory;
+Meta-hosted remains default. No third-party runtime or automatic fallback. 72 focused
+mocked checks pass; Ruff/299-file formatting pass. Full local DB regression could not
+initialize disposable Postgres under sandbox shared-memory restrictions; full CI is
+required. [Configuration, replay and evidence](docs/FIREWORKS-PROVIDER.md).
+M pushed service consumer fd7f6fb on PR166: selected factory is sole credential
+validation authority; targeted10 tests pass, full validation/review pending.
+Fireworks account created with approved support@wrytely.io; payment method present,
+zero credits/spend, auto-reload off. No key/purchase/call/deployment by Codex.
+Baseten application submitted with approval; invitation/credits unconfirmed. Existing
+aggregate1.87838375/3USD liability remains, no release of historical holds or new calls.
+
 ## Current Meta API diagnosis
 
 Murtazo's static review found no demonstrated request-shape mismatch. A verified

@@ -206,8 +206,8 @@ def main():
     parser.add_argument("--once", action="store_true")
     args = parser.parse_args()
     settings = Settings()
-    if not settings.database_url or not settings.meta_api_key:
-        parser.error("Configure AGENT_DATABASE_URL and AGENT_META_API_KEY")
+    if not settings.database_url or not settings.readiness()["meta_model"]:
+        parser.error("Configure AGENT_DATABASE_URL and the selected provider's model key")
     logging.basicConfig(level=logging.INFO)
     store = Store(settings.database_url.get_secret_value(), canvas_origins=settings.canvas_origins)
     model = BudgetedMetaRouter(store, settings)
