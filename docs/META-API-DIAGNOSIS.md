@@ -80,3 +80,16 @@ inference requests do not. A private provider-support draft is prepared at ignor
 .local/meta-support-request.txt, containing correlation IDs and synthetic request
 shapes without any API key or course content. No support message has been sent;
 contacting Meta requires the owner's explicit communication authorization.
+
+
+## Support report submitted with owner approval
+
+Akbar explicitly approved submission. The Meta Model API Contact Us form was
+submitted under API Troubleshooting, with bug/error details, both synthetic request
+shapes, request IDs/timestamps, and the verified team/project association. No API
+key or student content was included. Meta visibly confirmed "We've received your
+case" and a standard response time of1–2 business days. Correspondence goes to the
+signed-in account's existing email. No ticket number was displayed. A private
+confirmation screenshot is retained locally; do not publish its account details.
+The API issue remains unresolved pending provider findings. No new inference,
+worker/budget activation, scan, model/key change or WhatsApp send occurred.

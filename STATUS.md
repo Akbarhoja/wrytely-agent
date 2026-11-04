@@ -23,7 +23,9 @@ Root cause remains unresolved; correlation IDs/timestamps saved privately for Me
 New0.01386725 held; aggregate1.66102075 under2.00, all old unknown holds preserved.
 Diagnostic budget disabled; course monitor unchanged PAUSED; migration-only predeploy
 restored. [Diagnosis and prepared escalation](docs/META-API-DIAGNOSIS.md). Support
-draft contains only technical metadata/synthetic request shapes; nothing sent yet.
+report submitted with Akbar's explicit approval under API Troubleshooting. Meta
+confirmed receipt and1–2 business day standard response; no ticket number displayed.
+It includes only technical metadata/synthetic request shapes, no keys/student content.
 No model/key/HTMLv2/collector/scope/WhatsApp changes. Live agent decision proof remains open.
 
 ## Latest approved single-request check — November3,8:10PM Mountain
