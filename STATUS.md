@@ -12,7 +12,53 @@ supervisor work on codex/p1-completion and fixes M’s empty-all_active finding.
 M owns WhatsApp/app/web/service assembly in parallel. This supersedes stop-before-P2;
 P0/P1 remain open. No new live activation is inferred.
 
-## Fireworks adapter candidate — not activated
+## First persisted real ECE253 investigation — November4
+
+Exactfe196c6 fullCI41792034739 SUCCESS:1924backendPASS/2existingwarnings,
+all web/extension/diagnostic jobs green. Mreview6625580314 independently clears
+production and test-isolation fix. Approved single max0.20 run completed one real
+Meta Muse Spark Open/Fireworks request33019input/320output. Typed action INSPECT
+accepted; one real original-evidence investigation saved, callcounter advanced4→5.
+No student prompt, offer, draft, send, rescan or continuous operation in this pass.
+[Exact proof and remaining gates](docs/FIREWORKS-COURSE-DECISION-PASS.md).
+New token-derived liability0.04263375; original/externalholds retained, aggregate
+1.99391225/3USD. Monitor PAUSED and budgetdisabled; migration-only/API-only cleanup
+5035c993 SUCCESS and health200/config verified.
+CanvasPR167 and HTMLv2 remain separate/unactivated. Live offer/draft/phone proof open.
+
+## PR168 CI isolation repair
+
+M cleared production boundary1833361 but reported fullCI4fail/1920pass: empty
+caplog in four new diagnostic tests. Reproduced exact failure ordering after mocked
+Outlook sign-in tests, whose standalone probe globally disables logging. Test-only
+explicit caplog WARNING capture repairs isolation without altering production or
+weakening redaction/hold assertions. Ordered/provider/config/CLI109checks pass;
+Ruff/format/diff pass. Corrected fullCI pending. No new model call/deployment.
+
+## Native document smoke check
+
+Existing synthetic16-word DOCX matches the current renderer byte-for-byte. Bundled
+headless rendering produces one readable page/disclosure but omits its emoji;
+native Microsoft Word opens without a repair prompt and displays the emoji/text/
+disclosure correctly. No document or renderer changes. This checks one simple local
+file, not real academic quality, equations/tables, revision delivery or phone receipt.
+Private visual/hash evidence saved locally; no model call or external send.
+
+## Earlier rejected real-course Fireworks result
+
+Approved exactbb626d3 fullCI and Mreview cleared. Isolated API now runs that candidate
+with explicit Fireworks and API-only startup. Real ECE253 preflight104sources/
+90inspectable; one completed request32881input/422output failed typed decision
+validation. No persisted decision/inspection/offer/draft, second request or send.
+Exact invalid field is unknown because raw output was not retained. Paid route works;
+agent decision acceptance remains open. [Run and cleanup](docs/FIREWORKS-COURSE-CHECK.md).
+Token-derived newliability0.04289475; old holds preserved plus external0.03 yields
+1.95127850/3USD. Internal ceiling2.97 retains externalhold. Monitor PAUSED and budget
+disabled; migration-only/API-only cleanup e06de2c3 SUCCESS/health200. No rescan/HTMLv2.
+Separate offline validation-guidance/safe-diagnostic candidate:87 focused checks pass;
+fullCI/review and any new live activation remain separate. CanvasPR167 is not deployed.
+
+## Fireworks adapter implementation and preceding synthetic evidence
 
 A implemented explicit Muse Spark Open transport in the existing budgeted factory;
 Meta-hosted remains default. No third-party runtime or automatic fallback. 72 focused
