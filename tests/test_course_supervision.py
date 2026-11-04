@@ -334,7 +334,7 @@ def prepared_course(device):
     receipt = evidence.upload(device, scan, evidence.body(device, scan, [item]))
     evidence.close(device, scan, receipt, partial=True)
     db = device[0]
-    obj = receipt["observations"][0]["object_id"]
+    obj = evidence.rows(device, "canvas_evidence_objects")[0]["id"]
     monitor = db.enable_course_supervision("user_alice", device[1]["connection_id"], "101")
     run_course_supervision_once(db, Model(decision("inspect", obj)), "user_alice", monitor["id"])
     value = decision("inspect", obj).model_dump()
