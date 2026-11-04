@@ -22,6 +22,7 @@ function Actions({ artifactId, enabled, onSessionExpired }: Props) {
     if (!enabled) {
       controller.current?.abort();
       active.current = false;
+      setBusy(false);
       setInstructions("");
       setMessage("");
       setError(null);

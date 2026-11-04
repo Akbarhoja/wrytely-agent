@@ -3,6 +3,46 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { ArtifactActions } from "../components/artifact-actions";
 
 const id = "00000000-0000-4000-8000-000000000001";
+
+it("recovers controls after access loss without replaying an aborted action", async () => {
+  let finish: (response: Response) => void = () => {};
+  const fetch = vi
+    .fn()
+    .mockImplementationOnce(
+      () =>
+        new Promise<Response>((resolve) => {
+          finish = resolve;
+        }),
+    )
+    .mockResolvedValue(Response.json({ id, state: "ready" }));
+  vi.stubGlobal("fetch", fetch);
+  const props = { artifactId: id, onSessionExpired: vi.fn() };
+  const view = render(<ArtifactActions {...props} enabled />);
+  fireEvent.click(screen.getByText("Send this file to my WhatsApp"));
+  expect(fetch).toHaveBeenCalledTimes(1);
+  view.rerender(<ArtifactActions {...props} enabled={false} />);
+  expect(
+    screen.getByRole<HTMLButtonElement>("button", { name: "Send this file to my WhatsApp" })
+      .disabled,
+  ).toBe(true);
+  const signal = (fetch.mock.calls[0][1] as RequestInit).signal;
+  expect(signal?.aborted).toBe(true);
+  view.rerender(<ArtifactActions {...props} enabled />);
+  finish(Response.json({ id, state: "ready" }));
+  await waitFor(() =>
+    expect(
+      screen.getByRole<HTMLButtonElement>("button", { name: "Send this file to my WhatsApp" })
+        .disabled,
+    ).toBe(false),
+  );
+  expect(fetch).toHaveBeenCalledTimes(1);
+  expect(
+    screen.queryByText("File delivery requested. Phone delivery has not been confirmed."),
+  ).toBeNull();
+  fireEvent.click(screen.getByText("Send this file to my WhatsApp"));
+  await screen.findByText("File delivery requested. Phone delivery has not been confirmed.");
+  expect(fetch).toHaveBeenCalledTimes(2);
+});
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
