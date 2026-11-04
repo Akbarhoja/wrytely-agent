@@ -3,6 +3,9 @@
 This describes code entrypoints. It does not authorize deployment, retained
 migrations, new allowances, model calls or WhatsApp sends.
 
+Use the [assembly acceptance handoff](ONE-COURSE-ACCEPTANCE.md) for check order,
+evidence fields and cleanup criteria before a separately approved live run.
+
 Keep these separate processes in the approved development environment:
 
 - Existing authenticated API: `uv run uvicorn app.main:app --host 127.0.0.1`.
