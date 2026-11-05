@@ -1765,3 +1765,29 @@ This UI follow-up has a new web head and does not inherit an older web CI result
 No backend executable changed, so that completed full backend run remains the
 relevant local evidence. Scripted transport and model tests do not establish
 completed live preparation, revision or recipient delivery.
+
+## Connected Telegram full revision rehearsal
+
+Claim [6650755523](https://github.com/Akbarhoja/wrytely-agent/issues/4#issuecomment-6650755523)
+extends M's existing authenticated Telegram HTTP/Store/worker journey. A scripted
+revision now runs through the original drafting/checking runtime to a ready v2,
+then explicit `/file` delivers its exact private-download bytes through the official
+adapter with MockTransport. The test compares SHA-256 and decoded multipart bytes,
+retains the original v1 draft/file, and replays revision/file callbacks across a new
+Store instance without another revision or document send. Pause prevents model work
+and file reads until the owner resumes. Additional queued-file cases exercise pause,
+HTTP unlink and source revocation; revoked sources prevent file delivery while the
+fixed command acknowledgment can still be sent.
+
+This change touches the connected test and status only. It does not alter runtime,
+Store, provider, transport implementation, deployment or live authorizations. Model
+turns and Telegram responses are scripted; checked content quality and real revised
+phone-file receipt remain independent live gates. Verification results and exact
+candidate CI are recorded in the handoff; no earlier green is transferred.
+
+Focused connected journey, academic delivery, original artifact revisions and
+Telegram worker regression: 30 passed/1 existing warning in 116.38s. Ruff/345-file
+format and diff checks passed. Initial rehearsal failures were test assumptions
+(UUID/string comparison, unlink route and missing bot identity in the scripted
+response), corrected without implementation changes. Required full regression
+and exact candidate CI remain pending; this is not yet a full-green handoff.
