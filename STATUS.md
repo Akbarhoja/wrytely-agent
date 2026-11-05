@@ -1680,3 +1680,135 @@ is not activation permission. No migration/deployment/webhook/send performed.
 Telegram v1 lacks /accept /file /revise and checked-coursework file delivery;
 WhatsApp verification/full-product/live-phone gates remain open. Existing pauses,
 source/policy gates and historical budget liabilities remain preserved.
+
+## M post-submission app and setup follow-up
+
+M claim [6647198922](https://github.com/Akbarhoja/wrytely-agent/issues/4#issuecomment-6647198922),
+branch `codex/post-submission-app` from A9538c51. A retains final integration.
+Worker now reports unknown when its receipt persistence fence is lost; it cannot
+advertise a late provider result as persisted acceptance or retry it. Three actual
+expired/reconciled-fence regressions reproduced the old behavior before the fix.
+Private supervision now uses fixed provider-hold labels with generic fallback and
+no automatic retry. [Fresh-clone setup](deploy/LOCAL-SETUP.md),
+[three-minute script](docs/M-DEMO-SCRIPT.md) and
+[channel gaps/evidence](docs/M-POST-SUBMISSION-HANDOFF.md) distinguish post-submission
+changes, actual pairing/collection, scripted files and unproved live preparation.
+
+Focused disposable-Postgres Telegram/HTTP/worker/supervision85PASS; focusedUI23PASS;
+Ruff333format and new-doc relative links pass. Executable `fa93efd` now has successful
+full CI runs [41950738416](https://github.com/Akbarhoja/wrytely-agent/actions/runs/41950738416)
+and [41950631248](https://github.com/Akbarhoja/wrytely-agent/actions/runs/41950631248),
+including foundation, web/build, extension and access checks. Local Windows full
+regression finished 2076 passed/4 PDF extraction-discovery failures/2 warnings in
+3649.41s; it is not a local all-green result. The four failures match the recorded
+Windows PDF boundary; independent Linux CI is green. Documentation-only verification
+updates do not change the tested executable. A review/import and actual live
+acceptance remain separate. No live operation,
+credential inspection, provider retry, hold release, migration or deployment.
+Existing held liabilities and submitted history remain preserved; no full-product
+acceptance is implied by the documentation or fixed status labels.
+
+## State-specific supervision wording correction
+
+A review6647367169 correctly identified that `source_changed_during_decision` in
+state `ready` is scheduled for autonomous reassessment. M now restricts the
+no-automatic-retry statement to `blocked` holds and shows scheduled reassessment
+for that ready/source-change pair. The Store schedule is unchanged. A regression
+reproduced the incorrect wording before correction; focused24 and full196 web
+tests plus TypeScript now pass. POSIX `cp` and test-environment equivalents were
+added alongside PowerShell setup. Production build/new exact CI are tracked in
+the PR; earlier fa93efd full CI covers unchanged Python only, not this new web head.
+
+## M Telegram academic delivery consumer candidate
+
+M claim [6649206861](https://github.com/Akbarhoja/wrytely-agent/issues/4#issuecomment-6649206861),
+branch `codex/telegram-delivery-consumer`, composes A c17d327 and corrected M9b397e9
+preserving authorship. A retains final integration. Existing worker now recovers
+academic offers/acks, requests typed document permits, reads the fenced immutable
+file, compares the exact descriptor and calls official send_document once. False
+receipt persistence remains unknown. UI shows only fixed current-link command
+labels/time, clears private state and does not equate recorded with completed work
+or delivery. No runtime/Store/adapter/contract edits by M.
+
+Focused worker/Store/document checks28PASS; final connected HTTP/worker/command/
+control checks34PASS113.01s (overlapping scopes, not62 distinct checks). PrivateUI20
+focused and212fullweb/TypeScript/webpackbuild PASS; Ruff345format/Prettier/diff pass.
+Synthetic real-component IAB390/768/1440 inspected, temporary preview stopped and
+viewport restored. Rehearsal verifies stable acceptance intent, explicit checked
+file + fixed ack, exact replay without resend and private revision intent/ack;
+models/providers scripted, no actual completed new revision or phone proof.
+Required exact full backend CI/regression and A review remain pending. Additive
+031–032 stay undeployed by M. No new live call/send/spend/migration/deployment or
+hold release; submitted history and all existing source/policy/control gates remain.
+See [consumer handoff](docs/M-TELEGRAM-DELIVERY-CONSUMER.md).
+
+## M fixed timeout/connection supervision labels
+
+Claim [6650345770](https://github.com/Akbarhoja/wrytely-agent/issues/4#issuecomment-6650345770)
+adds only fixed UI labels for A's published `model_request_timed_out` and
+`model_connection_failed` reasons. Both explain that the outcome is unknown.
+Blocked supervision retains the no-automatic-retry message; refresh only reads
+saved state. Unknown provider text still uses the generic label and is not echoed.
+No scheduler, runtime, provider or Store changes. Focused UI27 and full web215
+passed; TypeScript, Ruff/345-file format, Prettier and diff checks passed.
+Webpack production build passed. The default Turbopack build could not resolve
+Next.js through this isolated worktree's shared dependency scaffold; it is not
+a successful default-build result. Exact new CI is tracked in the handoff. Initial
+Vitest runs could not rename sandbox temporary files and executed no tests;
+the successful reruns used the normal local test environment.
+
+The earlier frozen M5c1b0eb full local regression is complete: 2129 passed,
+3 PDF extraction/discovery failures and 2 warnings in 3451.95s. Those failures
+are Windows-local evidence; exact Linux CI for M5c1 and A's c6f6530 integration
+passed separately. A reviewed and imported the consumer preserving authorship.
+This UI follow-up has a new web head and does not inherit an older web CI result.
+No backend executable changed, so that completed full backend run remains the
+relevant local evidence. Scripted transport and model tests do not establish
+completed live preparation, revision or recipient delivery.
+
+## Connected Telegram full revision rehearsal
+
+Claim [6650755523](https://github.com/Akbarhoja/wrytely-agent/issues/4#issuecomment-6650755523)
+extends M's existing authenticated Telegram HTTP/Store/worker journey. A scripted
+revision now runs through the original drafting/checking runtime to a ready v2,
+then explicit `/file` delivers its exact private-download bytes through the official
+adapter with MockTransport. The test compares SHA-256 and decoded multipart bytes,
+retains the original v1 draft/file, and replays revision/file callbacks across a new
+Store instance without another revision or document send. Pause prevents model work
+and file reads until the owner resumes. Additional queued-file cases exercise pause,
+HTTP unlink and source revocation; revoked sources prevent file delivery while the
+fixed command acknowledgment can still be sent.
+
+This change touches the connected test and status only. It does not alter runtime,
+Store, provider, transport implementation, deployment or live authorizations. Model
+turns and Telegram responses are scripted; checked content quality and real revised
+phone-file receipt remain independent live gates. Verification results and exact
+candidate CI are recorded in the handoff; no earlier green is transferred.
+
+Focused connected journey, academic delivery, original artifact revisions and
+Telegram worker regression: 30 passed/1 existing warning in 116.38s. Ruff/345-file
+format and diff checks passed. Initial rehearsal failures were test assumptions
+(UUID/string comparison, unlink route and missing bot identity in the scripted
+response), corrected without implementation changes. Required full regression
+and exact candidate CI remain pending; this is not yet a full-green handoff.
+
+## M666 revision verification closure and judge-entry preparation
+
+Exact executable `666f49a0a9a26bb34f72dce96efe48d6692ac25a` completed the required
+local full regression: 2132 passed,3 recorded Windows PDF extraction/discovery
+failures,2 warnings in3477.54s. The failed cases are auto_documents_pdf discovery,
+bounded-child PDF original extraction and scoped PDF page extraction. This is
+not local all-green. Exact Linux M666 CI passed independently, and A reviewed/
+imported the rehearsal preserving authorship. No active M full/reset suite remains.
+New documentation does not change that executable or require redundant suites.
+
+A assigned isolated judge-frontend preparation6651657301; M claim6652182735 delivers
+[the concrete handoff](deploy/JUDGE-FRONTEND-HANDOFF.md), corrects stale unsupported
+Canvas/Telegram claims in web setup and selects the A release-review path rather
+than the old app branch. It records a reviewed candidate SHA, web root/build/start,
+configuration names only, unresolved exact-origin choices, public/private smoke
+acceptance and A's already built collector0.3.4 identity. No package inspection,
+new collector build, hosted entrypoint, real sign-in or deployment is claimed.
+A must supply/select the final release/package location, hosting target and auth
+origins for scoped owner approval. No original product, account configuration,
+DNS, deployment, provider spend, retained migration or live service was changed.
