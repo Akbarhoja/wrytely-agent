@@ -1,5 +1,13 @@
 # Contracts — implemented boundaries and historical increments
 
+## Telegram fallback candidate — November4
+
+[Telegram v1](docs/contracts/TELEGRAM-v1.md) adds a distinct provider link, replay
+receipts and transport outbox inside the original Store/runtime. Migration030 is not
+deployed. A owns new transport/shared code; M consumes it in HTTP/web/worker assembly.
+No Telegram chat ID, consent, source readiness or delivery state is substituted for
+WhatsApp authority. Bot creation/getMe proof is separate from end-to-end delivery.
+
 ## Private preparation checklist candidate — November4
 
 [Course preparation v1](docs/contracts/COURSE-PREPARATION-v1.md) adds a typed `prepare`

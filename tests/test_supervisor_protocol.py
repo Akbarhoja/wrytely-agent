@@ -137,3 +137,51 @@ def test_schema_explains_action_specific_fields_without_relaxing_validation():
     assert set(TOOL["parameters"]["required"]) == set(CourseDecision.model_fields)
     assert fields["next_check_seconds"]["minimum"] == 60
     assert TOOL["parameters"]["additionalProperties"] is False
+
+
+def test_model_snapshot_excludes_unselected_and_historical_private_fields(monkeypatch):
+    from datetime import UTC, datetime
+    from types import SimpleNamespace
+
+    from shared.course_supervision import CourseSupervisionStore
+
+    now = datetime.now(UTC)
+    rows = []
+    for selected, historical, secret in [
+        (True, False, "ALLOWED"),
+        (False, False, "UNSELECTED_SECRET"),
+        (True, True, "HISTORICAL_SECRET"),
+    ]:
+        rows.append(
+            dict(
+                selected=selected,
+                source=dict(
+                    object_id=uuid4(),
+                    latest_observation_id=uuid4(),
+                    latest_version_id=uuid4(),
+                    document_version_id=None,
+                    historical=historical,
+                    missing_pending_confirmation=False,
+                    coverage="complete",
+                    resource_coverage="complete",
+                    freshness={"usable": True},
+                ),
+                private_payload={"fields": {"value": secret}, "missing": []},
+                observed_at=now,
+                received_at=now,
+            )
+        )
+    store = CourseSupervisionStore()
+    monkeypatch.setattr(store, "_evidence_rows", lambda *a, **k: rows, raising=False)
+    monkeypatch.setattr(
+        store,
+        "_evidence_projection",
+        lambda conn, connection, row: (row["source"].copy(), row["selected"], "connected"),
+        raising=False,
+    )
+    conn = SimpleNamespace(execute=lambda *a, **k: SimpleNamespace(fetchone=lambda: {"now": now}))
+    sources, digest = store._supervision_snapshot(conn, uuid4(), {}, "101")
+    assert len(sources) == 1 and sources[0]["fields"]["value"] == "ALLOWED"
+    assert "SECRET" not in json.dumps(sources)
+    rows[1]["private_payload"]["fields"]["value"] = "CHANGED_UNSELECTED_SECRET"
+    assert store._supervision_snapshot(conn, uuid4(), {}, "101")[1] == digest

@@ -318,6 +318,7 @@ def test_new_source_wakes_a_future_check_and_known_race_replans_within_same_allo
     assert db.due_course_supervisions() == [{"id": monitor["id"], "user_id": "user_alice"}]
     claim = db.claim_course_supervision("user_alice", monitor["id"])
     assert claim is not None  # next_check_at is still in the future
+    assert claim["last_decision"] is None  # Do not replay private old-source decisions.
     assert db.reschedule_course_source_change("user_alice", claim)
     resumed = db.claim_course_supervision("user_alice", monitor["id"])
     assert resumed["token"] != claim["token"]

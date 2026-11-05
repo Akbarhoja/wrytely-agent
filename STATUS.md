@@ -14,6 +14,28 @@ P0/P1 remain open. No new live activation is inferred.
 
 ## November4 fresh ECE253 collection completed with gaps
 
+### Telegram fallback candidate
+
+Akbar selected a new Telegram bot while WhatsApp business verification remains under
+review. A owns `codex/telegram-fallback` shared/contracts/adapter; M retains the
+preparation view and HTTP/web/worker assembly. Scope is recorded in
+[the fallback decision](docs/TELEGRAM-FALLBACK.md) and
+[the executable boundary](docs/contracts/TELEGRAM-v1.md).
+
+Owner approved bot issuance/local credential storage. Verified BotFather created
+`wrytely_agent_bot`; owner saved its token in ignored600-mode local credentials.
+Official getMe returned200/ok and matching bot identity. This is bot/key identity
+proof only; no webhook, link, student-data message, model call or delivery was enabled.
+The proposed Telegram privacy addition is a draft, not an approved/published notice.
+
+Candidate uses the original Store/task/runtime, additive030 Telegram transport
+records, separate consents and link generations, authenticated private-chat ingress,
+durable replies/preparation recovery and one-use dispatch fences. Unknown sends do
+not retry. /stop reuses the original agent pause. Full-draft/WhatsApp gates remain.
+75 local pure Telegram/preparation/protocol tests and lint/317format pass; actual
+Telegram Store transaction/full CI evidence is pending. No retained migration or
+deployment performed. M owns remaining UI/HTTP/worker wiring and its acceptance.
+
 ### Private preparation workflow candidate
 
 A owns `codex/course-preparation`, coordinated in #4 comment6643960622. A distinct
