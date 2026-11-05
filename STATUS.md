@@ -6,6 +6,27 @@ Updated November 4, 2026. [Plan revision8](docs/BUILD-PLAN.md) ·
 
 ## Post-submission continuation
 
+### Real preparation delivered and received
+
+Exacttimeout7abbefc fullCI41971364035 SUCCESS714integration/2164backend+alljobs,
+Mreview6650387117 passed. Ownerconditional3call/$0.30/90s/4096/oneprep/300s test
+deployedbe5384b1 SUCCESS/health200, no newmigrations. Oneoff1cfee224 reused existing
+Lab8inspections, persisted2realMetainspectdecisions then1prepare, and sent exactly
+one authorized preparation through officialTelegram. Provideraccepted; owner
+explicitlyconfirmedreceipt. No model/send retry. Newknown0.03746950, allold2.28416050
+unchanged, cumulative2.32163000/3. Supervisionpaused,budgetoff,Telegramconsentsfalse/
+UTCquiet22–08restored. Migration-only/API-onlycleanup2c4574b3 SUCCESS/health200;
+JSONmode/90sretained,no continuousworkers. Completedapproval permits no morecalls.
+Full record: docs/JSON-PREPARATION-DELIVERY-ACCEPTANCE.md. NativeUIcontentinspection
+was blocked by computer controls; receipt is owner-confirmed, not independent
+human evaluation of every recommendation. No private course content published.
+
+Releasebranchcodex/telegram-final-integration now includes exact7abb plus reviewed
+M UI0259796 cherry-picked preserving authorship. Its newcombinedCI is pending;
+earlierruntime/consumerchecks are recorded separately. Real checkedDOCX/revision,
+scheduledlaptop-closed/restart and continuousacceptance remain; this success does
+not close original full-product P0–P6 or establish all-course coverage.
+
 ### Real JSON course check completed and stopped
 
 Owner-approved exactb806 isolated deployment10267f68 SUCCESS/health200 and031–032

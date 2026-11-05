@@ -11,9 +11,11 @@ extension discovers courses and collects authorized originals; the cloud supervi
 chooses inspections, preparations, work offers or waiting from saved evidence. Closing
 Chrome stops collection, so the agent cannot claim unseen course updates.
 
-The reviewed combined application is **992fe0d**; its full CI run41939102967 passed
-582 real-Postgres integration and2042 backend tests plus web/build, extension and
-access checks. It contains Clerk authentication, private account-bound memory,
+The live-tested backend is **7abbefc**; full CI41971364035 passed714 integration
+and2164 backend tests plus web/build, extension and access. The release candidate
+also includes M's separately reviewed timeout-status UI labels; its combined CI
+is tracked in the release PR rather than inferred from the backend result.
+It contains Clerk authentication, private account-bound memory,
 resumable scoped Canvas collection, persisted supervision, a source-backed preparation
 view, original checked-draft/revision/download machinery and the official Telegram
 fallback. [Plan](docs/ONE-COURSE-DELIVERY.md), [status](STATUS.md),
@@ -28,28 +30,30 @@ Actual pilot evidence:
 - The official Telegram bot is [@wrytely_agent_bot](https://t.me/wrytely_agent_bot).
   Real authenticated webhook pairing and a short inbound test message reached the
   existing task journal. Reply and proactive-preparation consents are separate.
-- The latest live model test stopped on its first request, with no outbound send.
-  Two later authorized synthetic requests, minimal and tool-enabled, both returned
-  HTTP503. Fireworks' official status reported a MuseSparkOpenUS incident. The exact
-  causal relationship is not established; the failed reservations remain held.
-  **Real preparation output, Telegram receipt and continuous operation are not yet
-  proven.** Model and delivery workers remain stopped outside bounded tests.
+- A real bounded course test reused stored ECE253 evidence, made two Meta inspection
+  decisions and generated a source-backed preparation. Telegram accepted one send;
+  the owner confirmed receipt. This used explicit JSON action mode on the same Meta
+  model after native tool requests failed503. Earlier unknown reservations remain
+  held. [Exact build, test and cleanup](docs/JSON-PREPARATION-DELIVERY-ACCEPTANCE.md).
+  **Continuous operation and real checked-coursework file/revision receipt remain
+  unproven.** Model and delivery workers are stopped after the bounded test.
 - Existing draft, revision and Word-export acceptance evidence uses scripted models
   and synthetic sources. It must not be presented as completed real coursework.
   [Evidence and synthetic examples](docs/M-INTEGRATION-EVIDENCE.md).
 
 The owned runtime uses Meta models; Fireworks serves Meta MuseSparkOpen via an
 explicit adapter. The OpenAI SDK is an HTTP client, not the inference model.
-[Provider boundary](docs/FIREWORKS-PROVIDER.md). Earlier bounded runs did establish
-synthetic tool continuation and one real ECE253 inspection; they do not establish
-that the current provider request or complete journey works.
+[Provider boundary](docs/FIREWORKS-PROVIDER.md). The live-proven configuration uses
+[explicit JSON actions](docs/FIREWORKS-JSON-ACTIONS.md), with the original runtime
+validating/executing Meta's decisions. There is no automatic model/provider fallback.
 
 Telegram replaces WhatsApp only for the disclosed submission fallback. WhatsApp
-business verification remains pending. The deployed Telegram v1 supports ordinary
-replies and preparation text/TXT. The post-submission candidate adds explicit
+business verification remains pending. The development deployment supports ordinary
+replies and preparation text/TXT plus explicit
 `/accept`, `/decline`, `/revise` and checked-DOCX `/file` commands, offer notifications,
-command acknowledgments and private command status. These require the reviewed
-compatible worker and migrations031–032; they are not deployed or live-proven.
+command acknowledgments and private command status. These use the compatible worker
+and migrations031–032. Preparation receipt is live-proven; the real checked-file/
+revision journey remains separate from its connected scripted acceptance evidence.
 See the [academic delivery boundary](docs/contracts/TELEGRAM-ACADEMIC-DELIVERY-v1.md).
 Current partial real-course evidence and unknown AI-submission policy do not authorize
 graded drafting. Labs require the student's physical work and actual results.
@@ -99,6 +103,11 @@ an existing product's environment files.
 - `AGENT_FIREWORKS_API_KEY`: key for the selected Fireworks provider. That adapter
   fixes the model to `accounts/fireworks/models/muse-spark-open`; it does not use
   `AGENT_META_MODEL`, and it does not require a Meta-hosted key.
+- `AGENT_FIREWORKS_ACTION_MODE`: explicit `json` is the live-tested action transport.
+  Default `native` preserves native tool calling; there is no automatic fallback.
+- `AGENT_META_REQUEST_TIMEOUT_SECONDS`: network timeout5–120 seconds, default30.
+  The successful bounded preparation used90, low reasoning and4096 output tokens.
+  This configuration does not activate a worker or grant a model budget.
 - `AGENT_META_MAX_OUTPUT_TOKENS`, `AGENT_META_REASONING_EFFORT`: bounded output
   allowance (default2048; maximum16384) and optional reasoning effort. Reasoning
   counts against output tokens; the cost reservation uses the exact configured cap.
