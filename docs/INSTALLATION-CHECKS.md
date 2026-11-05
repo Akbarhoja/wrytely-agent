@@ -49,3 +49,26 @@ worker and messaging dispatcher are separate processes. An enabled cumulative
 budget, account grant, explicit student controls and verified source evidence
 remain required by the existing runtime. A provider outage remains a live blocker;
 this command performs no inference, paid diagnostic, retry, send, enrollment or scan.
+
+## A stopped supervisor
+
+New runtime failures retain a fixed reason in the existing private supervision
+status rather than relying only on process logs:
+
+| Reason | Meaning |
+| --- | --- |
+| `model_provider_unavailable` | Model endpoint returned a server error. |
+| `model_rate_limited` | Model endpoint returned HTTP 429. |
+| `model_access_denied` | Model endpoint returned HTTP 401 or 403. |
+| `model_not_found` | Provider returned the recognized model-not-found code. |
+| `model_response_incomplete` | Provider reported an incomplete response. |
+| `model_request_failed` | Other controlled provider failure. |
+| `episode_failed_or_unknown` | Existing fallback for other failed/unknown episodes. |
+
+These are fixed classifications, not raw provider text or a determination of exact
+root cause. Historical failed rows are not rewritten. A blocked monitor remains
+blocked: none of these reasons authorizes a retry or releases held model costs.
+The original verified-owner/lease/state checks fence failure persistence, so a late
+failure cannot overwrite a later pause or a previously committed hold. The existing
+`hold_course_supervision(user, claim)` call remains compatible; trusted runtime can
+add the keyword-only allowlisted `reason` argument. No schema migration is needed.

@@ -302,14 +302,24 @@ class CourseSupervisionStore:
                 ),
             ).fetchone()
 
-    def hold_course_supervision(self, verified_user, claim):
+    def hold_course_supervision(self, verified_user, claim, *, reason="episode_failed_or_unknown"):
+        if reason not in {
+            "episode_failed_or_unknown",
+            "model_provider_unavailable",
+            "model_rate_limited",
+            "model_access_denied",
+            "model_not_found",
+            "model_response_incomplete",
+            "model_request_failed",
+        }:
+            raise ValueError("Invalid supervision hold reason")
         with self.connection() as conn:
             agent, _ = self._read_identity(conn, verified_user, None)
             conn.execute(
                 "UPDATE wrytely_agent.course_supervisions SET state='blocked',"
-                "reason='episode_failed_or_unknown',lease_token=NULL,lease_until=NULL "
+                "reason=%s,lease_token=NULL,lease_until=NULL "
                 "WHERE agent_id=%s AND id=%s AND lease_token=%s AND state='running'",
-                (agent, claim["id"], claim["token"]),
+                (reason, agent, claim["id"], claim["token"]),
             )
 
     def course_supervision_status(self, verified_user, supervision_id):

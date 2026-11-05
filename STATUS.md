@@ -23,6 +23,13 @@ lint/format pass; exact candidate full CI is pending. Local full-suite attempt
 stopped at disposable Postgres startup because sandbox access to its cache lock
 was denied; no existing/live database was substituted.
 
+Runtime also stores allowlisted provider-failure classifications in the existing
+supervision reason field (no migration) instead of leaving only the generic hold.
+Lease/owner/state fences, blocked scheduling and unknown-cost reservations remain
+unchanged.61 focused pure checks pass; real-ledger/held-monitor integration tests
+are included in CI. M is notified to consume these existing status strings without
+putting provider text into the UI or automatically retrying a hold.
+
 Prior provider-diagnostics candidate4ba5185 exact fullCI41945583713 now SUCCESS.
 This covers safe failure metadata/full budget holds, not live model recovery.
 Latest two approved synthetic inference requests both returned503; the official

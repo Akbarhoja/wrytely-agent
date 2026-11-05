@@ -165,6 +165,25 @@ def test_lost_inference_is_held_without_retry(device):
     assert model.calls == 0
 
 
+def test_safe_provider_hold_is_durable_fenced_and_does_not_reclaim(device):
+    db, monitor, _ = setup(device)
+    claim = db.claim_course_supervision("user_alice", monitor["id"])
+    with pytest.raises(ValueError, match="hold reason"):
+        db.hold_course_supervision("user_alice", claim, reason="private provider text")
+    assert db.course_supervision_status("user_alice", monitor["id"])["state"] == "running"
+    db.hold_course_supervision("user_alice", claim, reason="model_provider_unavailable")
+    status = db.course_supervision_status("user_alice", monitor["id"])
+    assert status["state"] == "blocked"
+    assert status["reason"] == "model_provider_unavailable"
+    assert status["calls_reserved"] == 1
+    assert db.claim_course_supervision("user_alice", monitor["id"]) is None
+    db.hold_course_supervision("user_alice", claim, reason="model_access_denied")
+    assert db.course_supervision_status("user_alice", monitor["id"])["reason"] == status["reason"]
+    db.provision("user_bob")
+    with pytest.raises(LookupError):
+        db.course_supervision_status("user_bob", monitor["id"])
+
+
 def test_uninspected_or_foreign_offer_cannot_create_work(device):
     db, monitor, obj = setup(device)
     with pytest.raises(ValueError, match="inspected"):
