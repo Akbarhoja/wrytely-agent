@@ -16,6 +16,33 @@ P0/P1 remain open. No new live activation is inferred.
 
 ### Telegram fallback candidate
 
+Approved combined executable992fe0d fullCI41939102967 SUCCESS:582 realPostgres
+integration/2042 full backend tests (two existing warnings), web/build, extension
+and access checks pass. Owner-approved Telegram/Fireworks privacy notice published
+at5d4bdd5 (notice-only follow-up; executable tree unchanged). Owner then approved
+isolated development deployment,029–030, credential/webhook setup and one bounded
+five-minute ECE253/short-message test, max6 model requests/$0.45 additional within
+$3 total and3 Telegram replies/checklists. Existing handwriting production untouched.
+
+API3f443faa SUCCESS/health200;029–030 verified, official webhook registered and real
+Telegram private /start paired the owner's signed-in account. Both test consents
+were explicitly enabled only for the approved run. One-shot0f9223af stopped on its
+FIRST Fireworks request with ModelBudgetExceeded; exact provider cause is not saved
+by that generic failure wrapper.1 request/0 sends/0 real course preparations.
+The0.04123225 reservation stays held; prior1.99391225 liabilities preserved,
+combined2.03514450 under3. No blind retry. Read-only Fireworks catalog200 lists
+configured MuseSparkOpen, which does not establish successful inference.
+
+Test budget disabled, original test reply blocked, default Telegram consentsfalse
+and UTCquiet22–08 restored. No model/delivery continuous workers. Migration-only
+predeploy restored/read back and cleanup05de1ada SUCCESS/health200; API-only start
+unchanged. Duplicate automatically created64c49863 cancelled before operator ran;
+only one preflight/call observed. Collector remains paused. Owner remains linked,
+not a claim of outbound receipt, working preparation quality or24/7 acceptance.
+Coordination6646463405 records exact stopped evidence for M; investigate failure
+metadata before proposing a separately scoped diagnostic. No repeat run authorized
+by this completed activation. Private count/budget and UI evidence stays ignored.
+
 Akbar selected a new Telegram bot while WhatsApp business verification remains under
 review. A owns `codex/telegram-fallback` shared/contracts/adapter; M retains the
 preparation view and HTTP/web/worker assembly. Scope is recorded in
