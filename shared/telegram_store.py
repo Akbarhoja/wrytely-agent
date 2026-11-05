@@ -8,8 +8,12 @@ from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
+from psycopg.types.json import Jsonb
+
 from contracts.telegram import TelegramClaim, TelegramPermit, positive_id
+from contracts.telegram_commands import parse_academic_command
 from shared.canvas_reads import SourceRefreshRequired, _uuid
+from shared.telegram_commands import apply_academic_command
 
 
 def preparation_text(record):
@@ -81,7 +85,23 @@ class TelegramStore:
                 if row
                 else None
             )
-            return {"linked": row is not None, "preferences": row, "latest_delivery": delivery}
+            command = (
+                conn.execute(
+                    "SELECT outcome,command_result,received_at FROM wrytely_agent.telegram_inbound "
+                    "WHERE agent_id=%s AND bot_id=%s AND generation=%s "
+                    "AND command_result IS NOT NULL "
+                    "ORDER BY received_at DESC,update_id DESC LIMIT 1",
+                    (agent["id"], bot_id, generation),
+                ).fetchone()
+                if row
+                else None
+            )
+            return {
+                "linked": row is not None,
+                "preferences": row,
+                "latest_delivery": delivery,
+                "latest_command": command,
+            }
 
     def pending_telegram_preparations(self, bot_id, *, limit=20):
         """Internal recovery hints only. Queueing/dispatch independently recheck all authority."""
@@ -205,6 +225,7 @@ class TelegramStore:
             if not now - timedelta(hours=24) <= event.event_at <= now + timedelta(minutes=5):
                 raise ValueError("Telegram update outside accepted age")
             outcome, agent_id, generation, task_id = "ignored", None, None, None
+            command_result = None
             if event.text.startswith("/start "):
                 token = event.text[7:]
                 if re.fullmatch(r"[A-Za-z0-9_-]{43}", token):
@@ -270,21 +291,44 @@ class TelegramStore:
                             (agent_id,),
                         )
                         outcome = "stopped"
-                    elif (
-                        fresh_link
-                        and not owner["paused"]
-                        and link["consent"]
-                        and not event.text.startswith("/")
-                    ):
-                        task = self.enqueue(
-                            owner["user_id"], event.text, f"telegram:{bot_id}:{event.update_id}"
-                        )
-                        task_id, outcome = task["task_id"], "queued"
+                    elif fresh_link and not owner["paused"] and link["consent"]:
+                        if event.text.lstrip().startswith("/"):
+                            try:
+                                command = parse_academic_command(event.text)
+                            except ValueError:
+                                command_result = {"state": "rejected", "reason": "invalid_command"}
+                            else:
+                                if command is not None:
+                                    command_result = apply_academic_command(
+                                        self,
+                                        conn,
+                                        owner,
+                                        command,
+                                        bot_id=bot_id,
+                                        update_id=event.update_id,
+                                    )
+                            if command_result is not None:
+                                outcome = "command_" + command_result["state"]
+                        else:
+                            task = self.enqueue(
+                                owner["user_id"], event.text, f"telegram:{bot_id}:{event.update_id}"
+                            )
+                            task_id, outcome = task["task_id"], "queued"
             conn.execute(
                 "INSERT INTO wrytely_agent.telegram_inbound "
-                "(bot_id,update_id,agent_id,generation,digest,outcome,task_id) VALUES "
-                "(%s,%s,%s,%s,%s,%s,%s)",
-                (bot_id, event.update_id, agent_id, generation, digest, outcome, task_id),
+                "(bot_id,update_id,agent_id,generation,digest,outcome,task_id,command_result) "
+                "VALUES "
+                "(%s,%s,%s,%s,%s,%s,%s,%s)",
+                (
+                    bot_id,
+                    event.update_id,
+                    agent_id,
+                    generation,
+                    digest,
+                    outcome,
+                    task_id,
+                    Jsonb(command_result) if command_result is not None else None,
+                ),
             )
             return outcome
 

@@ -6,6 +6,15 @@ Updated November 4, 2026. [Plan revision8](docs/BUILD-PLAN.md) ·
 
 ## Post-submission continuation
 
+A next owned workflow: `codex/telegram-academic-commands` from9538c51, coordinated
+in6647208640. Original authenticated Telegram ingestion now parses explicit
+accept/decline/revision targets and atomically composes original scoped academic
+work with its replay receipt. Additive031 is not deployed. Current-link-only private
+command status is additive; file delivery/acknowledgments/offer transport remain
+M consumer work. No generic model interpretation or WhatsApp identity substitution.
+Pure/parser/protocol checks pass; real Store transaction tests/full CI pending.
+M acknowledged his distinct active app/web/install work in6647198922; no overlap.
+
 Owner reports submission complete in chat; this is not an independently observed
 submission receipt or proof of the exact submitted revision. A starts
 `codex/post-submission-readiness` from4ba5185, preserving earlier candidate history.
