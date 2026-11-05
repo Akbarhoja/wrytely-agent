@@ -1801,3 +1801,27 @@ Required exact full backend CI/regression and A review remain pending. Additive
 031–032 stay undeployed by M. No new live call/send/spend/migration/deployment or
 hold release; submitted history and all existing source/policy/control gates remain.
 See [consumer handoff](docs/M-TELEGRAM-DELIVERY-CONSUMER.md).
+
+## M fixed timeout/connection supervision labels
+
+Claim [6650345770](https://github.com/Akbarhoja/wrytely-agent/issues/4#issuecomment-6650345770)
+adds only fixed UI labels for A's published `model_request_timed_out` and
+`model_connection_failed` reasons. Both explain that the outcome is unknown.
+Blocked supervision retains the no-automatic-retry message; refresh only reads
+saved state. Unknown provider text still uses the generic label and is not echoed.
+No scheduler, runtime, provider or Store changes. Focused UI27 and full web215
+passed; TypeScript, Ruff/345-file format, Prettier and diff checks passed.
+Webpack production build passed. The default Turbopack build could not resolve
+Next.js through this isolated worktree's shared dependency scaffold; it is not
+a successful default-build result. Exact new CI is tracked in the handoff. Initial
+Vitest runs could not rename sandbox temporary files and executed no tests;
+the successful reruns used the normal local test environment.
+
+The earlier frozen M5c1b0eb full local regression is complete: 2129 passed,
+3 PDF extraction/discovery failures and 2 warnings in 3451.95s. Those failures
+are Windows-local evidence; exact Linux CI for M5c1 and A's c6f6530 integration
+passed separately. A reviewed and imported the consumer preserving authorship.
+This UI follow-up has a new web head and does not inherit an older web CI result.
+No backend executable changed, so that completed full backend run remains the
+relevant local evidence. Scripted transport and model tests do not establish
+completed live preparation, revision or recipient delivery.

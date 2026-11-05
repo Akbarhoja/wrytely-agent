@@ -162,23 +162,38 @@ it("does not enable an unselected course or expose a late prior-account response
   ).toBe(true);
 });
 
-it("explains a provider hold without rendering raw failure text or starting a retry", async () => {
-  const value = {
-    ...monitor(),
-    state: "blocked",
-    offers: [],
-    reason: "model_provider_unavailable",
-  };
-  const fetch = vi.fn(async (url: unknown) =>
-    Response.json(String(url).includes("?connection_id=") ? { supervision: value } : value),
-  );
-  vi.stubGlobal("fetch", fetch);
-  render(<CourseSupervision {...props} />);
-  await screen.findByText(/The model service is unavailable/);
-  expect(screen.getByText(/No automatic retry was started/)).toBeTruthy();
-  expect(screen.queryByRole("button", { name: /retry|resume/i })).toBeNull();
-  expect(fetch.mock.calls).toHaveLength(2);
-});
+it.each([
+  ["model_provider_unavailable", "The model service is unavailable."],
+  ["model_request_timed_out", "The model request timed out. Its outcome is unknown."],
+  [
+    "model_connection_failed",
+    "The connection to the model service failed. Its outcome is unknown.",
+  ],
+  [
+    "PRIVATE provider body/token",
+    "Supervision needs attention. The saved reason is not recognized.",
+  ],
+])(
+  "explains a blocked %s without leaking raw failure text or starting a retry",
+  async (reason, label) => {
+    const value = {
+      ...monitor(),
+      state: "blocked",
+      offers: [],
+      reason,
+    };
+    const fetch = vi.fn(async (url: unknown) =>
+      Response.json(String(url).includes("?connection_id=") ? { supervision: value } : value),
+    );
+    vi.stubGlobal("fetch", fetch);
+    render(<CourseSupervision {...props} />);
+    await screen.findByText((content) => content.includes(label));
+    expect(screen.queryByText(/PRIVATE provider body\/token/)).toBeNull();
+    expect(screen.getByText(/No automatic retry was started/)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /retry|resume/i })).toBeNull();
+    expect(fetch.mock.calls).toHaveLength(2);
+  },
+);
 
 it("shows ready source-change reassessment without describing it as a blocked retry", async () => {
   const value = {
