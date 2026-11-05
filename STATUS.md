@@ -4,6 +4,33 @@ Updated November 4, 2026. [Plan revision8](docs/BUILD-PLAN.md) ·
 [Work orders](docs/WORK-ORDERS.md) · [Code audit](docs/IMPLEMENTATION-AUDIT.md) ·
 [Team coordination](https://github.com/Akbarhoja/wrytely-agent/issues/4)
 
+## Post-submission continuation
+
+Owner reports submission complete in chat; this is not an independently observed
+submission receipt or proof of the exact submitted revision. A starts
+`codex/post-submission-readiness` from4ba5185, preserving earlier candidate history.
+Coordination6646969986 asks M to continue his receipt-persistence outcome fix,
+fresh-clone install instructions and remaining channel assembly. No newer M head
+than8a6daa5 was observed at this handoff; ownership remains unchanged.
+
+New A-owned `python -m runtime.preflight` reports missing local API/Canvas/model/
+budget/Telegram configuration without printing values or opening connections.
+Explicit `--database-check` compares only the migration ledger in a read-only
+transaction; it never migrates or reads student data. Configuration success never
+claims a working live agent. Root configuration example now lists Telegram fields.
+See [installation checks](docs/INSTALLATION-CHECKS.md). Focused tests and full
+lint/format pass; exact candidate full CI is pending. Local full-suite attempt
+stopped at disposable Postgres startup because sandbox access to its cache lock
+was denied; no existing/live database was substituted.
+
+Prior provider-diagnostics candidate4ba5185 exact fullCI41945583713 now SUCCESS.
+This covers safe failure metadata/full budget holds, not live model recovery.
+Latest two approved synthetic inference requests both returned503; the official
+Fireworks status still lists Muse degradation. All old holds remain retained,
+combined maximum liability2.08984575/3. No new paid call, scan, deployment, send or
+worker activation occurred in this continuation. Live reply/preparation, phone
+receipt, continuous operation and full one-course journey remain unverified.
+
 ## November 3 current delivery decision
 
 Supervisor approved revision8 one-course autonomous submission; see
