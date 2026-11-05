@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Wrytely access check</title>
+  </head>
+  <body style="width: 420px; font: 14px system-ui; padding: 12px">
+    <h1 style="font-size: 18px">Canvas access check · v5</h1>
+    <p>
+      Read-only local diagnostic. No course content is uploaded. Keep this panel
+      open until it finishes.
+    </p>
+    <button id="run">Run document and rubric check</button>
+    <pre
+      id="report"
+      style="white-space: pre-wrap; overflow-wrap: anywhere"
+      aria-live="polite"
+    >
+Ready. Results contain counts and status only.</pre>
+    <script type="module" src="popup.mjs"></script>
+  </body>
+</html>

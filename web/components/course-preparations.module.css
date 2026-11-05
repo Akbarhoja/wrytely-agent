@@ -1,0 +1,66 @@
+.section {
+  margin-top: 24px;
+  overflow-wrap: anywhere;
+}
+.section h4 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+.section h5 {
+  margin: 24px 0 8px;
+  font-size: 14px;
+}
+.section > p {
+  margin-bottom: 16px;
+}
+.record {
+  border-top: 1px solid var(--border);
+  padding: 16px 0;
+}
+.record summary {
+  cursor: pointer;
+  min-height: 44px;
+}
+.record summary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+}
+.title {
+  font-weight: 600;
+}
+.state {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+  margin: 4px 0 0 16px;
+}
+.notice {
+  margin-top: 12px;
+  font-weight: 600;
+}
+.meta {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.excerpt {
+  margin: 12px 0;
+}
+.excerpt p {
+  margin-bottom: 8px;
+}
+.excerpt blockquote {
+  margin: 0;
+  padding: 8px 16px;
+  border-left: 2px solid var(--border);
+  white-space: pre-wrap;
+}
+.sources {
+  padding-left: 20px;
+}
+.sources > li {
+  margin-bottom: 16px;
+}
+.unread {
+  font-weight: 600;
+}

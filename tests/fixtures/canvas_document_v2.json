@@ -1,0 +1,698 @@
+{
+  "status": "proposal_not_agreed",
+  "vectors": [
+    {
+      "name": "unicode-raw",
+      "raw_text": "Café\r\n📚",
+      "raw_pages": null,
+      "normalized_text": "Café\n📚",
+      "parts": [
+        {
+          "slot": 0,
+          "text": "Café\n📚"
+        }
+      ],
+      "digest_payload": {
+        "digest_version": 1,
+        "kind": "document",
+        "title": "Synthetic document",
+        "content": "",
+        "fields": {
+          "format": "text",
+          "extractor_version": "fixture.v1",
+          "total_pages": null,
+          "total_characters": 6,
+          "slots": [
+            {
+              "slot": 0,
+              "start": 0,
+              "end": 6,
+              "page": null,
+              "text_sha256": "73e9053ebabaab674df6a9062f83a8e77e85034de72d150899e979edffb914cb"
+            }
+          ],
+          "owner_kind": "syllabus",
+          "object_fields": {
+            "page_id": null,
+            "module_ids": null,
+            "source_format": "text"
+          }
+        },
+        "coverage": "complete",
+        "missing": []
+      },
+      "canonical_utf8": "{\"content\":\"\",\"coverage\":\"complete\",\"digest_version\":1,\"fields\":{\"extractor_version\":\"fixture.v1\",\"format\":\"text\",\"object_fields\":{\"module_ids\":null,\"page_id\":null,\"source_format\":\"text\"},\"owner_kind\":\"syllabus\",\"slots\":[{\"end\":6,\"page\":null,\"slot\":0,\"start\":0,\"text_sha256\":\"73e9053ebabaab674df6a9062f83a8e77e85034de72d150899e979edffb914cb\"}],\"total_characters\":6,\"total_pages\":null},\"kind\":\"document\",\"missing\":[],\"title\":\"Synthetic document\"}",
+      "sha256": "36832fb295e5598e7c8ff285a1494e9a850c720cbca6c4c1de3a8c83e8d04113"
+    },
+    {
+      "name": "unicode-normal",
+      "raw_text": "Café\n📚",
+      "raw_pages": null,
+      "normalized_text": "Café\n📚",
+      "parts": [
+        {
+          "slot": 0,
+          "text": "Café\n📚"
+        }
+      ],
+      "digest_payload": {
+        "digest_version": 1,
+        "kind": "document",
+        "title": "Synthetic document",
+        "content": "",
+        "fields": {
+          "format": "text",
+          "extractor_version": "fixture.v1",
+          "total_pages": null,
+          "total_characters": 6,
+          "slots": [
+            {
+              "slot": 0,
+              "start": 0,
+              "end": 6,
+              "page": null,
+              "text_sha256": "73e9053ebabaab674df6a9062f83a8e77e85034de72d150899e979edffb914cb"
+            }
+          ],
+          "owner_kind": "syllabus",
+          "object_fields": {
+            "page_id": null,
+            "module_ids": null,
+            "source_format": "text"
+          }
+        },
+        "coverage": "complete",
+        "missing": []
+      },
+      "canonical_utf8": "{\"content\":\"\",\"coverage\":\"complete\",\"digest_version\":1,\"fields\":{\"extractor_version\":\"fixture.v1\",\"format\":\"text\",\"object_fields\":{\"module_ids\":null,\"page_id\":null,\"source_format\":\"text\"},\"owner_kind\":\"syllabus\",\"slots\":[{\"end\":6,\"page\":null,\"slot\":0,\"start\":0,\"text_sha256\":\"73e9053ebabaab674df6a9062f83a8e77e85034de72d150899e979edffb914cb\"}],\"total_characters\":6,\"total_pages\":null},\"kind\":\"document\",\"missing\":[],\"title\":\"Synthetic document\"}",
+      "sha256": "36832fb295e5598e7c8ff285a1494e9a850c720cbca6c4c1de3a8c83e8d04113"
+    },
+    {
+      "name": "page-boundaries",
+      "raw_text": null,
+      "raw_pages": ["A", "📚B"],
+      "normalized_text": "A\n📚B",
+      "parts": [
+        {
+          "slot": 0,
+          "text": "A"
+        },
+        {
+          "slot": 1,
+          "text": "\n📚B"
+        }
+      ],
+      "digest_payload": {
+        "digest_version": 1,
+        "kind": "document",
+        "title": "Synthetic document",
+        "content": "",
+        "fields": {
+          "format": "pdf_text",
+          "extractor_version": "fixture.v1",
+          "total_pages": 2,
+          "total_characters": 4,
+          "slots": [
+            {
+              "slot": 0,
+              "start": 0,
+              "end": 1,
+              "page": 1,
+              "text_sha256": "559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd"
+            },
+            {
+              "slot": 1,
+              "start": 1,
+              "end": 4,
+              "page": 2,
+              "text_sha256": "a6c4be610c05e0dc0e4f9feefae9a27173ff472230fdf99ccdf5796e9654927b"
+            }
+          ],
+          "owner_kind": "syllabus",
+          "object_fields": {
+            "page_id": null,
+            "module_ids": null,
+            "source_format": "pdf_text"
+          }
+        },
+        "coverage": "complete",
+        "missing": []
+      },
+      "canonical_utf8": "{\"content\":\"\",\"coverage\":\"complete\",\"digest_version\":1,\"fields\":{\"extractor_version\":\"fixture.v1\",\"format\":\"pdf_text\",\"object_fields\":{\"module_ids\":null,\"page_id\":null,\"source_format\":\"pdf_text\"},\"owner_kind\":\"syllabus\",\"slots\":[{\"end\":1,\"page\":1,\"slot\":0,\"start\":0,\"text_sha256\":\"559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd\"},{\"end\":4,\"page\":2,\"slot\":1,\"start\":1,\"text_sha256\":\"a6c4be610c05e0dc0e4f9feefae9a27173ff472230fdf99ccdf5796e9654927b\"}],\"total_characters\":4,\"total_pages\":2},\"kind\":\"document\",\"missing\":[],\"title\":\"Synthetic document\"}",
+      "sha256": "9e7842cb9ea6f7e8ed756e233bb432fcb8881cd6b4d4a1966a285bb46a007345"
+    },
+    {
+      "name": "page-boundaries-single-page",
+      "raw_text": null,
+      "raw_pages": ["A\n📚B"],
+      "normalized_text": "A\n📚B",
+      "parts": [
+        {
+          "slot": 0,
+          "text": "A\n📚B"
+        }
+      ],
+      "digest_payload": {
+        "digest_version": 1,
+        "kind": "document",
+        "title": "Synthetic document",
+        "content": "",
+        "fields": {
+          "format": "pdf_text",
+          "extractor_version": "fixture.v1",
+          "total_pages": 1,
+          "total_characters": 4,
+          "slots": [
+            {
+              "slot": 0,
+              "start": 0,
+              "end": 4,
+              "page": 1,
+              "text_sha256": "a7a03bfe2955d998cc60e503b1d52185219462ff1101770a1c718f20f4bac11f"
+            }
+          ],
+          "owner_kind": "syllabus",
+          "object_fields": {
+            "page_id": null,
+            "module_ids": null,
+            "source_format": "pdf_text"
+          }
+        },
+        "coverage": "complete",
+        "missing": []
+      },
+      "canonical_utf8": "{\"content\":\"\",\"coverage\":\"complete\",\"digest_version\":1,\"fields\":{\"extractor_version\":\"fixture.v1\",\"format\":\"pdf_text\",\"object_fields\":{\"module_ids\":null,\"page_id\":null,\"source_format\":\"pdf_text\"},\"owner_kind\":\"syllabus\",\"slots\":[{\"end\":4,\"page\":1,\"slot\":0,\"start\":0,\"text_sha256\":\"a7a03bfe2955d998cc60e503b1d52185219462ff1101770a1c718f20f4bac11f\"}],\"total_characters\":4,\"total_pages\":1},\"kind\":\"document\",\"missing\":[],\"title\":\"Synthetic document\"}",
+      "sha256": "ac0f6abdb5803c69e1f2fd7773ad01a7ffecc856724f4777886b2c59eec8e555"
+    },
+    {
+      "name": "page-gap",
+      "raw_text": null,
+      "raw_pages": ["A", "", "B"],
+      "normalized_text": "A\nB",
+      "parts": [
+        {
+          "slot": 0,
+          "text": "A"
+        },
+        {
+          "slot": 1,
+          "text": "\nB"
+        }
+      ],
+      "digest_payload": {
+        "digest_version": 1,
+        "kind": "document",
+        "title": "Synthetic document",
+        "content": "",
+        "fields": {
+          "format": "pdf_text",
+          "extractor_version": "fixture.v1",
+          "total_pages": 3,
+          "total_characters": 3,
+          "slots": [
+            {
+              "slot": 0,
+              "start": 0,
+              "end": 1,
+              "page": 1,
+              "text_sha256": "559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd"
+            },
+            {
+              "slot": 1,
+              "start": 1,
+              "end": 3,
+              "page": 3,
+              "text_sha256": "bbfd71abb9fcc1f3e41a9ba4774ae7f11060da4b01e8cd4d93e779d4b8d353d3"
+            }
+          ],
+          "owner_kind": "syllabus",
+          "object_fields": {
+            "page_id": null,
+            "module_ids": null,
+            "source_format": "pdf_text"
+          }
+        },
+        "coverage": "partial",
+        "missing": ["page_2_image_only"]
+      },
+      "canonical_utf8": "{\"content\":\"\",\"coverage\":\"partial\",\"digest_version\":1,\"fields\":{\"extractor_version\":\"fixture.v1\",\"format\":\"pdf_text\",\"object_fields\":{\"module_ids\":null,\"page_id\":null,\"source_format\":\"pdf_text\"},\"owner_kind\":\"syllabus\",\"slots\":[{\"end\":1,\"page\":1,\"slot\":0,\"start\":0,\"text_sha256\":\"559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd\"},{\"end\":3,\"page\":3,\"slot\":1,\"start\":1,\"text_sha256\":\"bbfd71abb9fcc1f3e41a9ba4774ae7f11060da4b01e8cd4d93e779d4b8d353d3\"}],\"total_characters\":3,\"total_pages\":3},\"kind\":\"document\",\"missing\":[\"page_2_image_only\"],\"title\":\"Synthetic document\"}",
+      "sha256": "46cde015cf570b71bd3f87d68b0b45302d3ba810ed475fbd122be7cf6ed5d9e6"
+    },
+    {
+      "name": "zero-text",
+      "raw_text": null,
+      "raw_pages": ["", ""],
+      "normalized_text": "",
+      "parts": [],
+      "digest_payload": {
+        "digest_version": 1,
+        "kind": "document",
+        "title": "Synthetic document",
+        "content": "",
+        "fields": {
+          "format": "pdf_text",
+          "extractor_version": "fixture.v1",
+          "total_pages": 2,
+          "total_characters": 0,
+          "slots": [],
+          "owner_kind": "syllabus",
+          "object_fields": {
+            "page_id": null,
+            "module_ids": null,
+            "source_format": "pdf_text"
+          }
+        },
+        "coverage": "unsupported",
+        "missing": ["image_only"]
+      },
+      "canonical_utf8": "{\"content\":\"\",\"coverage\":\"unsupported\",\"digest_version\":1,\"fields\":{\"extractor_version\":\"fixture.v1\",\"format\":\"pdf_text\",\"object_fields\":{\"module_ids\":null,\"page_id\":null,\"source_format\":\"pdf_text\"},\"owner_kind\":\"syllabus\",\"slots\":[],\"total_characters\":0,\"total_pages\":2},\"kind\":\"document\",\"missing\":[\"image_only\"],\"title\":\"Synthetic document\"}",
+      "sha256": "1be7606fdb5c8f3d5dfafd61b0ad6a45d1bbfda699a30042ff5a4315e9263e1b"
+    },
+    {
+      "name": "transition-A",
+      "raw_text": "Version A",
+      "raw_pages": null,
+      "normalized_text": "Version A",
+      "parts": [
+        {
+          "slot": 0,
+          "text": "Version A"
+        }
+      ],
+      "digest_payload": {
+        "digest_version": 1,
+        "kind": "document",
+        "title": "Synthetic document",
+        "content": "",
+        "fields": {
+          "format": "text",
+          "extractor_version": "fixture.v1",
+          "total_pages": null,
+          "total_characters": 9,
+          "slots": [
+            {
+              "slot": 0,
+              "start": 0,
+              "end": 9,
+              "page": null,
+              "text_sha256": "43ff3bf150823915ce847115607ae4b7abe037614f2d69d00384fb9ab69bca27"
+            }
+          ],
+          "owner_kind": "syllabus",
+          "object_fields": {
+            "page_id": null,
+            "module_ids": null,
+            "source_format": "text"
+          }
+        },
+        "coverage": "complete",
+        "missing": []
+      },
+      "canonical_utf8": "{\"content\":\"\",\"coverage\":\"complete\",\"digest_version\":1,\"fields\":{\"extractor_version\":\"fixture.v1\",\"format\":\"text\",\"object_fields\":{\"module_ids\":null,\"page_id\":null,\"source_format\":\"text\"},\"owner_kind\":\"syllabus\",\"slots\":[{\"end\":9,\"page\":null,\"slot\":0,\"start\":0,\"text_sha256\":\"43ff3bf150823915ce847115607ae4b7abe037614f2d69d00384fb9ab69bca27\"}],\"total_characters\":9,\"total_pages\":null},\"kind\":\"document\",\"missing\":[],\"title\":\"Synthetic document\"}",
+      "sha256": "3a95e7c23d52887d3bae0e8e86c4da52a44227d2611e0737ffa7f32d49eec8f0"
+    },
+    {
+      "name": "transition-B",
+      "raw_text": "Version B",
+      "raw_pages": null,
+      "normalized_text": "Version B",
+      "parts": [
+        {
+          "slot": 0,
+          "text": "Version B"
+        }
+      ],
+      "digest_payload": {
+        "digest_version": 1,
+        "kind": "document",
+        "title": "Synthetic document",
+        "content": "",
+        "fields": {
+          "format": "text",
+          "extractor_version": "fixture.v1",
+          "total_pages": null,
+          "total_characters": 9,
+          "slots": [
+            {
+              "slot": 0,
+              "start": 0,
+              "end": 9,
+              "page": null,
+              "text_sha256": "f3374dca7da114bd170379274ba6ae309eda1f593fc489e4dd332825ceb08f21"
+            }
+          ],
+          "owner_kind": "syllabus",
+          "object_fields": {
+            "page_id": null,
+            "module_ids": null,
+            "source_format": "text"
+          }
+        },
+        "coverage": "complete",
+        "missing": []
+      },
+      "canonical_utf8": "{\"content\":\"\",\"coverage\":\"complete\",\"digest_version\":1,\"fields\":{\"extractor_version\":\"fixture.v1\",\"format\":\"text\",\"object_fields\":{\"module_ids\":null,\"page_id\":null,\"source_format\":\"text\"},\"owner_kind\":\"syllabus\",\"slots\":[{\"end\":9,\"page\":null,\"slot\":0,\"start\":0,\"text_sha256\":\"f3374dca7da114bd170379274ba6ae309eda1f593fc489e4dd332825ceb08f21\"}],\"total_characters\":9,\"total_pages\":null},\"kind\":\"document\",\"missing\":[],\"title\":\"Synthetic document\"}",
+      "sha256": "4aae9b4e91b288f80846f38bcada050f27406854e6dd97c70bc5673fc578bf4c"
+    },
+    {
+      "name": "transition-A-again",
+      "raw_text": "Version A",
+      "raw_pages": null,
+      "normalized_text": "Version A",
+      "parts": [
+        {
+          "slot": 0,
+          "text": "Version A"
+        }
+      ],
+      "digest_payload": {
+        "digest_version": 1,
+        "kind": "document",
+        "title": "Synthetic document",
+        "content": "",
+        "fields": {
+          "format": "text",
+          "extractor_version": "fixture.v1",
+          "total_pages": null,
+          "total_characters": 9,
+          "slots": [
+            {
+              "slot": 0,
+              "start": 0,
+              "end": 9,
+              "page": null,
+              "text_sha256": "43ff3bf150823915ce847115607ae4b7abe037614f2d69d00384fb9ab69bca27"
+            }
+          ],
+          "owner_kind": "syllabus",
+          "object_fields": {
+            "page_id": null,
+            "module_ids": null,
+            "source_format": "text"
+          }
+        },
+        "coverage": "complete",
+        "missing": []
+      },
+      "canonical_utf8": "{\"content\":\"\",\"coverage\":\"complete\",\"digest_version\":1,\"fields\":{\"extractor_version\":\"fixture.v1\",\"format\":\"text\",\"object_fields\":{\"module_ids\":null,\"page_id\":null,\"source_format\":\"text\"},\"owner_kind\":\"syllabus\",\"slots\":[{\"end\":9,\"page\":null,\"slot\":0,\"start\":0,\"text_sha256\":\"43ff3bf150823915ce847115607ae4b7abe037614f2d69d00384fb9ab69bca27\"}],\"total_characters\":9,\"total_pages\":null},\"kind\":\"document\",\"missing\":[],\"title\":\"Synthetic document\"}",
+      "sha256": "3a95e7c23d52887d3bae0e8e86c4da52a44227d2611e0737ffa7f32d49eec8f0"
+    },
+    {
+      "name": "structured-field-change",
+      "raw_text": "Version A",
+      "raw_pages": null,
+      "normalized_text": "Version A",
+      "parts": [
+        {
+          "slot": 0,
+          "text": "Version A"
+        }
+      ],
+      "digest_payload": {
+        "digest_version": 1,
+        "kind": "document",
+        "title": "Synthetic document",
+        "content": "",
+        "fields": {
+          "format": "text",
+          "extractor_version": "fixture.v1",
+          "total_pages": null,
+          "total_characters": 9,
+          "slots": [
+            {
+              "slot": 0,
+              "start": 0,
+              "end": 9,
+              "page": null,
+              "text_sha256": "43ff3bf150823915ce847115607ae4b7abe037614f2d69d00384fb9ab69bca27"
+            }
+          ],
+          "owner_kind": "syllabus",
+          "object_fields": {
+            "page_id": "2",
+            "module_ids": null,
+            "source_format": "text"
+          }
+        },
+        "coverage": "complete",
+        "missing": []
+      },
+      "canonical_utf8": "{\"content\":\"\",\"coverage\":\"complete\",\"digest_version\":1,\"fields\":{\"extractor_version\":\"fixture.v1\",\"format\":\"text\",\"object_fields\":{\"module_ids\":null,\"page_id\":\"2\",\"source_format\":\"text\"},\"owner_kind\":\"syllabus\",\"slots\":[{\"end\":9,\"page\":null,\"slot\":0,\"start\":0,\"text_sha256\":\"43ff3bf150823915ce847115607ae4b7abe037614f2d69d00384fb9ab69bca27\"}],\"total_characters\":9,\"total_pages\":null},\"kind\":\"document\",\"missing\":[],\"title\":\"Synthetic document\"}",
+      "sha256": "2ab8bf7e7adeb45938527ddb230779a906e5f1d60eb150501c355fa49cf2c42e"
+    }
+  ],
+  "wire_cases": [
+    {
+      "name": "stage-begin",
+      "input": {
+        "schema_version": 2,
+        "connection_id": "00000000-0000-4000-8000-000000000001",
+        "generation": 1,
+        "scan_id": "00000000-0000-4000-8000-000000000002",
+        "subject": "synthetic-subject",
+        "lease_token": "00000000-0000-4000-8000-000000000003",
+        "request_key": "synthetic-begin",
+        "operation": "begin_document",
+        "resource": {
+          "course_id": "101",
+          "kind": "syllabus"
+        },
+        "owner_object": {
+          "kind": "syllabus",
+          "provider_id": "101"
+        },
+        "object_fields": {
+          "page_id": null,
+          "module_ids": null,
+          "source_format": "text"
+        },
+        "metadata": {
+          "title": "Synthetic document",
+          "format": "text",
+          "extractor_version": "fixture.v1",
+          "provider_updated_at": null,
+          "total_pages": null,
+          "total_characters": 6,
+          "coverage": "complete",
+          "missing": []
+        },
+        "manifest": [
+          {
+            "slot": 0,
+            "start": 0,
+            "end": 6,
+            "page": null,
+            "text_sha256": "73e9053ebabaab674df6a9062f83a8e77e85034de72d150899e979edffb914cb"
+          }
+        ]
+      },
+      "accepted": true,
+      "parser": "staging"
+    },
+    {
+      "name": "stage-put",
+      "input": {
+        "schema_version": 2,
+        "connection_id": "00000000-0000-4000-8000-000000000001",
+        "generation": 1,
+        "scan_id": "00000000-0000-4000-8000-000000000002",
+        "subject": "synthetic-subject",
+        "lease_token": "00000000-0000-4000-8000-000000000003",
+        "request_key": "synthetic-put",
+        "operation": "put_document_parts",
+        "upload_id": "00000000-0000-4000-8000-000000000004",
+        "parts": [
+          {
+            "slot": 0,
+            "text": "Café\n📚"
+          }
+        ]
+      },
+      "accepted": true,
+      "parser": "staging"
+    },
+    {
+      "name": "stage-finish",
+      "input": {
+        "schema_version": 2,
+        "connection_id": "00000000-0000-4000-8000-000000000001",
+        "generation": 1,
+        "scan_id": "00000000-0000-4000-8000-000000000002",
+        "subject": "synthetic-subject",
+        "lease_token": "00000000-0000-4000-8000-000000000003",
+        "request_key": "synthetic-finish",
+        "operation": "finish_document",
+        "upload_id": "00000000-0000-4000-8000-000000000004"
+      },
+      "accepted": true,
+      "parser": "staging"
+    },
+    {
+      "name": "publish-documents",
+      "input": {
+        "schema_version": 2,
+        "batch_type": "canvas_documents",
+        "connection_id": "00000000-0000-4000-8000-000000000001",
+        "generation": 1,
+        "scan_id": "00000000-0000-4000-8000-000000000002",
+        "batch_key": "synthetic-publish",
+        "subject": "synthetic-subject",
+        "resource": {
+          "course_id": "101",
+          "kind": "syllabus"
+        },
+        "observed_at": "2026-11-01T12:00:00Z",
+        "items": [
+          {
+            "kind": "syllabus",
+            "provider_id": "101",
+            "provider_updated_at": null,
+            "title": "Synthetic document",
+            "reference": "https://canvas.example.edu/courses/101/assignments/syllabus",
+            "upload_id": "00000000-0000-4000-8000-000000000004"
+          }
+        ],
+        "coverage": {
+          "state": "complete",
+          "reason": null,
+          "seen_count": 1
+        },
+        "next_cursor": null
+      },
+      "accepted": true,
+      "parser": "publication"
+    },
+    {
+      "name": "staging-forbids-batch-type",
+      "input": {
+        "schema_version": 2,
+        "connection_id": "00000000-0000-4000-8000-000000000001",
+        "generation": 1,
+        "scan_id": "00000000-0000-4000-8000-000000000002",
+        "subject": "synthetic-subject",
+        "lease_token": "00000000-0000-4000-8000-000000000003",
+        "request_key": "synthetic-begin",
+        "operation": "begin_document",
+        "resource": {
+          "course_id": "101",
+          "kind": "syllabus"
+        },
+        "owner_object": {
+          "kind": "syllabus",
+          "provider_id": "101"
+        },
+        "object_fields": {
+          "page_id": null,
+          "module_ids": null,
+          "source_format": "text"
+        },
+        "metadata": {
+          "title": "Synthetic document",
+          "format": "text",
+          "extractor_version": "fixture.v1",
+          "provider_updated_at": null,
+          "total_pages": null,
+          "total_characters": 6,
+          "coverage": "complete",
+          "missing": []
+        },
+        "manifest": [
+          {
+            "slot": 0,
+            "start": 0,
+            "end": 6,
+            "page": null,
+            "text_sha256": "73e9053ebabaab674df6a9062f83a8e77e85034de72d150899e979edffb914cb"
+          }
+        ],
+        "batch_type": "canvas_documents"
+      },
+      "accepted": false,
+      "parser": "staging"
+    },
+    {
+      "name": "publication-requires-batch-type",
+      "input": {
+        "schema_version": 2,
+        "connection_id": "00000000-0000-4000-8000-000000000001",
+        "generation": 1,
+        "scan_id": "00000000-0000-4000-8000-000000000002",
+        "batch_key": "synthetic-publish",
+        "subject": "synthetic-subject",
+        "resource": {
+          "course_id": "101",
+          "kind": "syllabus"
+        },
+        "observed_at": "2026-11-01T12:00:00Z",
+        "items": [
+          {
+            "kind": "syllabus",
+            "provider_id": "101",
+            "provider_updated_at": null,
+            "title": "Synthetic document",
+            "reference": "https://canvas.example.edu/courses/101/assignments/syllabus",
+            "upload_id": "00000000-0000-4000-8000-000000000004"
+          }
+        ],
+        "coverage": {
+          "state": "complete",
+          "reason": null,
+          "seen_count": 1
+        },
+        "next_cursor": null
+      },
+      "accepted": false,
+      "parser": "publication"
+    },
+    {
+      "name": "publication-forbids-staging-operation",
+      "input": {
+        "schema_version": 2,
+        "batch_type": "canvas_documents",
+        "connection_id": "00000000-0000-4000-8000-000000000001",
+        "generation": 1,
+        "scan_id": "00000000-0000-4000-8000-000000000002",
+        "batch_key": "synthetic-publish",
+        "subject": "synthetic-subject",
+        "resource": {
+          "course_id": "101",
+          "kind": "syllabus"
+        },
+        "observed_at": "2026-11-01T12:00:00Z",
+        "items": [
+          {
+            "kind": "syllabus",
+            "provider_id": "101",
+            "provider_updated_at": null,
+            "title": "Synthetic document",
+            "reference": "https://canvas.example.edu/courses/101/assignments/syllabus",
+            "upload_id": "00000000-0000-4000-8000-000000000004"
+          }
+        ],
+        "coverage": {
+          "state": "complete",
+          "reason": null,
+          "seen_count": 1
+        },
+        "next_cursor": null,
+        "operation": "finish_document"
+      },
+      "accepted": false,
+      "parser": "publication"
+    },
+    {
+      "name": "staging-requires-operation",
+      "input": {
+        "schema_version": 2,
+        "connection_id": "00000000-0000-4000-8000-000000000001",
+        "generation": 1,
+        "scan_id": "00000000-0000-4000-8000-000000000002",
+        "subject": "synthetic-subject",
+        "lease_token": "00000000-0000-4000-8000-000000000003",
+        "request_key": "synthetic-begin"
+      },
+      "accepted": false,
+      "parser": "staging"
+    }
+  ]
+}

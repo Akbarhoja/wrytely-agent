@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "scope": "Synthetic acceptance evidence only; no real course, live inference or phone proof",
+  "candidate": "d3d0ff1344578bf02a5d233e061d571dde33781f",
+  "journey": {
+    "tests_passed": 1,
+    "seconds": 16.78,
+    "warnings": 1,
+    "signed_commands_and_replays": 6,
+    "signed_status_callbacks": 2,
+    "providers": "scripted"
+  },
+  "native_word": [
+    {
+      "file": "download-1.docx",
+      "synthetic": true,
+      "chars": 330,
+      "pages": 1,
+      "word_version": "16.0",
+      "disclosure_present": true
+    },
+    {
+      "file": "download-2.docx",
+      "synthetic": true,
+      "chars": 338,
+      "pages": 1,
+      "word_version": "16.0",
+      "disclosure_present": true
+    }
+  ],
+  "files": [
+    {
+      "file": "download-1.docx",
+      "bytes": 1146,
+      "sha256": "98d38f4c7426cc533d6e49d7546007e69d051de457d74334da2d5f1466b30580",
+      "synthetic": true
+    },
+    {
+      "file": "download-1.png",
+      "bytes": 51281,
+      "sha256": "9df64361356825c118907e2d244e424cda2038fc6340ae77d6d7e85471bd2851",
+      "synthetic": true
+    },
+    {
+      "file": "download-2.docx",
+      "bytes": 1151,
+      "sha256": "6abaf526721df7abbfed5e9e7892802e78ca02272f0d8612273386e508c7bac4",
+      "synthetic": true
+    },
+    {
+      "file": "download-2.png",
+      "bytes": 52466,
+      "sha256": "a6a1bec72054aeffbaeec9a1c50eb3e668592798901fc172f77caf964326fc7b",
+      "synthetic": true
+    }
+  ]
+}

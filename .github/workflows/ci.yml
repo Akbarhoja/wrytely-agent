@@ -1,0 +1,95 @@
+name: ci
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  canvas-access-diagnostic:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: node --test scripts/canvas-access/probe.test.mjs scripts/canvas-access/details.test.mjs
+  foundation:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: agent_test
+          POSTGRES_PASSWORD: local_ci_only
+          POSTGRES_DB: agent_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U agent_test -d agent_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      AGENT_TEST_DATABASE_URL: postgresql://agent_test:local_ci_only@localhost:5432/agent_test
+      AGENT_TEST_ALLOW_RESET: "yes"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.13.6"
+          python-version: "3.12"
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - name: One-course supervisor integration (fail fast)
+        run: >-
+          uv run pytest -q tests/test_course_supervision.py tests/test_supervisor_protocol.py
+          tests/test_telegram.py tests/test_telegram_store.py
+          tests/test_telegram_commands.py tests/test_telegram_command_store.py
+          tests/test_telegram_academic_delivery.py tests/test_telegram_documents.py
+          tests/test_telegram_delivery_journey.py tests/test_telegram_delivery_worker.py
+          tests/test_telegram_worker.py tests/test_telegram_api.py
+          tests/test_fireworks_model.py tests/test_json_actions.py
+          tests/test_model_transport_limits.py
+          tests/test_artifact_rendering.py tests/test_artifact_delivery.py tests/test_course_offer_delivery.py
+          tests/test_delivery_store.py tests/test_template_policy.py tests/test_model_budgets.py
+          tests/test_model_client.py tests/test_model_output_limits.py tests/test_config.py
+          tests/test_canvas_html_extract.py tests/test_canvas_document_extract_api.py
+          tests/test_canvas_file_extract.py
+          tests/test_artifact_revisions.py tests/test_course_supervision_api.py
+          tests/test_course_result_api.py tests/test_course_service.py tests/test_whatsapp_delivery.py
+          tests/test_whatsapp_commands.py tests/test_whatsapp.py tests/test_whatsapp_flow.py
+          tests/test_whatsapp_command_api.py tests/test_signed_course_journey.py
+          tests/test_one_course_journey.py tests/test_store.py
+      - run: uv run pytest -m "not live" -q
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+  canvas-extension:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: >-
+          node --test
+          extension/canvas/*.test.mjs
+          extension/canvas-feasibility/*.test.mjs
+          extension/canvas-pairing/*.test.mjs
+          extension/canvas-browser/*.test.mjs

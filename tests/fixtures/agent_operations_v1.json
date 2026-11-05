@@ -1,0 +1,375 @@
+{
+  "status": "proposal_not_agreed",
+  "schema_version": 1,
+  "cases": [
+    {
+      "name": "accept-once",
+      "boundary": "C5",
+      "input": {
+        "schema_version": 1,
+        "kind": "accept_private_work",
+        "offer_token": "SYNTHETIC_NONFUNCTIONAL_TOKEN",
+        "expected_commitment_revision": 3,
+        "delivery_to_self": true,
+        "snooze_until": null,
+        "revision_request": null
+      },
+      "trusted_state": {
+        "same_owner": true,
+        "current_link": true,
+        "offer_revision": 3,
+        "offer_unexpired": true,
+        "clear_delegation": true
+      },
+      "expect": {
+        "outcome": "accepted",
+        "responsibilities_created": 1,
+        "draft_consent": true,
+        "delivery_to_linked_self_only": true
+      }
+    },
+    {
+      "name": "duplicate-acceptance",
+      "boundary": "C5",
+      "input": {
+        "same_actor_key_body": true,
+        "responsibility_already_created": true
+      },
+      "expect": {
+        "replayed": true,
+        "new_responsibilities": 0,
+        "new_dispatch_authority": false
+      }
+    },
+    {
+      "name": "changed-replay-body",
+      "boundary": "C5",
+      "input": {
+        "same_actor_key": true,
+        "changed_normalized_body": true
+      },
+      "expect": {
+        "http_status": 409,
+        "writes": 0
+      }
+    },
+    {
+      "name": "cross-account-offer",
+      "boundary": "C5",
+      "input": {
+        "valid_token": true,
+        "actor_is_owner": false
+      },
+      "expect": {
+        "http_status": 404,
+        "private_body_returned": false,
+        "writes": 0
+      }
+    },
+    {
+      "name": "stale-offer",
+      "boundary": "C5",
+      "input": {
+        "expected_revision": 3,
+        "current_revision": 4
+      },
+      "expect": {
+        "http_status": 409,
+        "delegation_created": false
+      }
+    },
+    {
+      "name": "ambiguous-yes",
+      "boundary": "C5",
+      "input": {
+        "text": "yes",
+        "pending_offer_count": 2
+      },
+      "expect": {
+        "outcome": "clarification_required",
+        "delegation_created": false
+      }
+    },
+    {
+      "name": "link-changed-before-dispatch",
+      "boundary": "C4",
+      "input": {
+        "queued_link_generation": 1,
+        "current_link_generation": 2
+      },
+      "expect": {
+        "state": "cancelled",
+        "provider_calls": 0
+      }
+    },
+    {
+      "name": "pause-before-dispatch",
+      "boundary": "C4",
+      "input": {
+        "paused": true
+      },
+      "expect": {
+        "state": "held",
+        "provider_calls": 0
+      }
+    },
+    {
+      "name": "missing-proactive-template",
+      "boundary": "C4",
+      "input": {
+        "reply_window_open": false,
+        "approved_eligible_template": false
+      },
+      "expect": {
+        "state": "held",
+        "raw_text_fallback": false,
+        "provider_calls": 0
+      }
+    },
+    {
+      "name": "unknown-send-after-crash",
+      "boundary": "C4",
+      "input": {
+        "dispatch_at_committed": true,
+        "acknowledgment_available": false,
+        "claim_expired": true
+      },
+      "expect": {
+        "state": "unknown",
+        "automatic_resend": false
+      }
+    },
+    {
+      "name": "late-delivery-after-cancel",
+      "boundary": "C4",
+      "input": {
+        "cancelled": true,
+        "matching_signed_delivery_evidence": true
+      },
+      "expect": {
+        "record_delivery_evidence": true,
+        "reactivate_goal": false,
+        "resend": false
+      }
+    },
+    {
+      "name": "artifact-revision-changed",
+      "boundary": "C6",
+      "input": {
+        "uploaded_revision": 2,
+        "current_revision": 3,
+        "sha256_matches_upload": true
+      },
+      "expect": {
+        "finalize_current_file": false,
+        "new_dispatch_authority": false
+      }
+    },
+    {
+      "name": "upload-checksum-mismatch",
+      "boundary": "C6",
+      "input": {
+        "received_bytes": 128,
+        "expected_bytes": 128,
+        "sha256_matches": false
+      },
+      "expect": {
+        "durable_ack": false,
+        "downloadable": false
+      }
+    },
+    {
+      "name": "lost-upload-ack",
+      "boundary": "C6",
+      "input": {
+        "render_id_matches": true,
+        "descriptor_and_bytes_match": true,
+        "durable_upload_exists": true
+      },
+      "expect": {
+        "reuse_upload_ack": true,
+        "new_message_dispatch": false
+      }
+    },
+    {
+      "name": "reservation-upper-bound",
+      "boundary": "C7",
+      "input": {
+        "max_input_tokens": 1000,
+        "max_output_tokens": 100,
+        "input_rate_micro_usd_per_million": 1000000,
+        "output_rate_micro_usd_per_million": 2000000,
+        "overhead_micro_usd": 0
+      },
+      "expect": {
+        "reserved_micro_usd": 1200
+      }
+    },
+    {
+      "name": "reservation-race",
+      "boundary": "C7",
+      "input": {
+        "cap_micro_usd": 100000,
+        "settled_micro_usd": 0,
+        "prior_reserved_micro_usd": 0,
+        "concurrent_requests_micro_usd": [60000, 60000]
+      },
+      "expect": {
+        "allowed_requests": 1,
+        "denied_requests": 1,
+        "remaining_micro_usd": 40000
+      }
+    },
+    {
+      "name": "unknown-call-liability",
+      "boundary": "C7",
+      "input": {
+        "reserved_micro_usd": 60000,
+        "provider_dispatched": true,
+        "usage_complete": false,
+        "task_lease_expired": true
+      },
+      "expect": {
+        "retained_liability_micro_usd": 60000,
+        "commit_work": false,
+        "free_retry": false
+      }
+    },
+    {
+      "name": "late-known-settlement",
+      "boundary": "C7",
+      "input": {
+        "reserved_micro_usd": 60000,
+        "actual_micro_usd": 25000,
+        "usage_complete": true,
+        "task_paused": true
+      },
+      "expect": {
+        "settled_micro_usd": 25000,
+        "released_micro_usd": 35000,
+        "commit_work": false
+      }
+    },
+    {
+      "name": "unpriced-model",
+      "boundary": "C7",
+      "input": {
+        "verified_price_revision": null
+      },
+      "expect": {
+        "reservation_created": false,
+        "provider_calls": 0
+      }
+    },
+    {
+      "name": "operator-stop",
+      "boundary": "C7",
+      "input": {
+        "operator_stop": true,
+        "in_flight_calls": 1
+      },
+      "expect": {
+        "new_claims": 0,
+        "new_dispatch": 0,
+        "retain_inflight_liability": true,
+        "allow_stop_ingestion": true
+      }
+    },
+    {
+      "name": "authorization-consumed-before-return",
+      "boundary": "C4",
+      "input": {
+        "attempt_current": true,
+        "all_current_checks_pass": true
+      },
+      "expect": {
+        "commit_before_permitted": true,
+        "consumed_before_permitted": true,
+        "provider_calls_before_return": 0,
+        "separate_consume_required": false
+      }
+    },
+    {
+      "name": "consumed-offer-different-key-same-decision",
+      "boundary": "C5",
+      "input": {
+        "offer_consumed": true,
+        "same_actor": true,
+        "same_decision": true,
+        "different_replay_key": true
+      },
+      "expect": {
+        "http_status": 409,
+        "code": "offer_consumed",
+        "new_responsibilities": 0,
+        "new_dispatch_authority": false
+      }
+    },
+    {
+      "name": "consumed-offer-different-key-different-decision",
+      "boundary": "C5",
+      "input": {
+        "offer_consumed": true,
+        "same_actor": true,
+        "same_decision": false,
+        "different_replay_key": true
+      },
+      "expect": {
+        "http_status": 409,
+        "code": "offer_consumed",
+        "new_responsibilities": 0,
+        "existing_work_mutated": false
+      }
+    },
+    {
+      "name": "decline-does-not-create-responsibility",
+      "boundary": "C5",
+      "input": {
+        "valid_unconsumed_offer": true,
+        "kind": "decline"
+      },
+      "expect": {
+        "outcome": "declined",
+        "responsibilities_created": 0,
+        "token_consumed": true
+      }
+    }
+  ],
+  "health_examples": {
+    "operator": {
+      "schema_version": 1,
+      "operator_stop": true,
+      "worker_heartbeats": [
+        {
+          "role": "runtime",
+          "instance_id": "runtime-dev-01",
+          "last_seen_at": null,
+          "ready": false,
+          "state": "unknown"
+        }
+      ],
+      "oldest_due_at": null,
+      "pending_count": 0,
+      "held_count": 0,
+      "unknown_dispatch_count": 0,
+      "last_successful_sync_at": null,
+      "last_delivered_at": null,
+      "budget_remaining_micro_usd": null,
+      "budget_reserved_micro_usd": null
+    },
+    "student": {
+      "schema_version": 1,
+      "paused": false,
+      "service_state": "held",
+      "connection_state": "unknown",
+      "sync_state": "unknown",
+      "last_successful_sync_at": null,
+      "last_delivered_at": null,
+      "next_check_at": null,
+      "pending_count": 0,
+      "held_count": 0,
+      "budget_remaining_micro_usd": null,
+      "budget_reserved_micro_usd": null
+    }
+  }
+}

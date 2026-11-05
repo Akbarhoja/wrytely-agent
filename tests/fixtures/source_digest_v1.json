@@ -1,0 +1,35 @@
+[
+  {
+    "name": "assignment-v1",
+    "input": {
+      "digest_version": 1,
+      "kind": "assignment",
+      "title": "Essay",
+      "content": "Write an essay.",
+      "fields": {
+        "due_at": "2026-11-02T05:59:00Z",
+        "points_possible": "20"
+      },
+      "coverage": "complete",
+      "missing": []
+    },
+    "canonical_utf8": "{\"content\":\"Write an essay.\",\"coverage\":\"complete\",\"digest_version\":1,\"fields\":{\"due_at\":\"2026-11-02T05:59:00.000000Z\",\"points_possible\":\"20\"},\"kind\":\"assignment\",\"missing\":[],\"title\":\"Essay\"}",
+    "sha256": "dfd9e9ebd3898a49e990f84b56ec54818ffa69decb88ee81a0a927cd68549b33"
+  },
+  {
+    "name": "unicode-and-lines",
+    "input": {
+      "digest_version": 1,
+      "kind": "syllabus",
+      "title": "Syllabus",
+      "content": "Café\r\nRead page 2.\r",
+      "fields": {
+        "due_at": null
+      },
+      "coverage": "partial",
+      "missing": ["attachment", "attachment"]
+    },
+    "canonical_utf8": "{\"content\":\"Café\\nRead page 2.\\n\",\"coverage\":\"partial\",\"digest_version\":1,\"fields\":{\"due_at\":null},\"kind\":\"syllabus\",\"missing\":[\"attachment\"],\"title\":\"Syllabus\"}",
+    "sha256": "c8e1e03da4cdb267aba89b43b86f570214076d126507b88c11193cc118936c9c"
+  }
+]

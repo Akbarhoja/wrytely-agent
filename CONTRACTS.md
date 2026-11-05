@@ -1,0 +1,1772 @@
+# Contracts — implemented boundaries and historical increments
+
+## Telegram academic delivery candidate
+
+[Academic delivery v1](docs/contracts/TELEGRAM-ACADEMIC-DELIVERY-v1.md) extends
+the original outbox with proactive offers, fixed command acknowledgments and
+explicit checked-file requests. Additive032, default-false document capability,
+one-use artifact-byte read and adapter.send_document preserve original source/
+owner/consent/receipt fences. M worker assembly and live proof remain pending.
+
+## Telegram academic commands candidate
+
+[Telegram academic commands v1](docs/contracts/TELEGRAM-ACADEMIC-COMMANDS-v1.md)
+composes explicit accept/decline/revision with the original authenticated Telegram
+ingestion and academic Store. Additive031 persists atomic command receipts, not
+new model or transport authority. Bot acknowledgments, offers and checked document
+delivery remain separate; no deployment/migration or live command proof yet.
+
+## Telegram fallback candidate — November4
+
+[Telegram v1](docs/contracts/TELEGRAM-v1.md) adds a distinct provider link, replay
+receipts and transport outbox inside the original Store/runtime. Migration030 is not
+deployed. A owns new transport/shared code; M consumes it in HTTP/web/worker assembly.
+No Telegram chat ID, consent, source readiness or delivery state is substituted for
+WhatsApp authority. Bot creation/getMe proof is separate from end-to-end delivery.
+
+## Private preparation checklist candidate — November4
+
+[Course preparation v1](docs/contracts/COURSE-PREPARATION-v1.md) adds a typed `prepare`
+supervisor decision and migration029 private checklist history inside the existing
+monitor. Current inspected partial originals may supply verified quotations and
+student-input questions, with missing reasons retained. Existing full drafting,
+offer acceptance and channel gates are unchanged. M consumes `preparations` through
+the existing session-owned supervision status route; UI/live activation remain separate.
+
+## Linked Canvas file candidate — November4
+
+[Selected linked files v1](docs/contracts/CANVAS-LINKED-FILES-v1.md) adds optional,
+digest-bound file `linked_from` provenance and parent-category scope validation,
+plus inert C-source text MIME aliases. Collector0.3.4 uses the original file/journal
+pipeline after an initial denied listing. No migration or live activation is implied.
+Parent completeness and automatic dependency readiness remain unchanged.
+
+## November 3 one-course supervisor candidate
+
+[Executable Store/runtime boundary](docs/contracts/COURSE-SUPERVISION-v1.md).
+Migration023 adds private persisted checks/offers. No paid worker or channel
+authorization is enabled by this implementation.
+
+Current dependent candidates: [proactive offer/recovery boundary](docs/contracts/COURSE-OFFER-DELIVERY-v1.md)
+(024), [cumulative model budgets](docs/contracts/MODEL-BUDGET-v1.md) (025),
+source-event wakeup026, [immutable revisions](docs/contracts/ARTIFACT-REVISION-v1.md)
+and [typed checked attachment delivery](docs/contracts/ARTIFACT-DELIVERY-v1.md) (027).
+[Signed explicit WhatsApp commands](docs/contracts/WHATSAPP-COMMANDS-v1.md) (028)
+compose existing actions atomically under the original inbound replay receipt;
+M supplies actual raw-signature parser/webhook assembly. No generic reasoning task
+is created merely to accept/decline/revise/request a file.
+All use the original Store/runtime/outbox. Candidate code is not live activation;
+see STATUS for exact CI/deployment/provider evidence.
+
+
+> November 1 supervisor execution update: mandatory preimplementation consumer
+> agreement is removed. The interface owner may version/document and implement
+> owned boundaries, notifying consumers asynchronously. Historical “await agreement”
+> notes (including #157) no longer block this work. A proposal is still not an
+> implemented API; required code review, compatibility, access and merge gates remain.
+
+> Revision7 planning note (October 30): this file describes implemented contracts
+> and their historical increments. New C1–C7 interfaces in
+> [WORK-ORDERS.md](docs/WORK-ORDERS.md#shared-interface-checklist-proposed-not-executable-yet)
+> are proposals until both owners agree a version. No sync endpoint, supervisor
+> action, freshness relaxation or proactive send permission exists merely because
+> the plan names it. Existing private-draft and policy gates remain effective.
+
+## Opt-in HTML text readiness candidate — November 3
+
+[Canvas literal HTML v2](docs/contracts/CANVAS-HTML-v2.md) introduces a separate,
+default-off converter for newly supplied self-contained text fragments. Legacy v1
+and stored evidence stay partial. Scope checks, independent rubric/constraint gaps,
+resource completeness, drafting and delivery authorization remain unchanged.
+No migration, deployed converter change or live recollection is implied.
+
+## Connected P1 candidate — November 2
+
+On codex/p1-completion, modules/module-items are additional schema2 document owner
+pairs using shared typed field validation. Schema1 inline resource literals remain
+unchanged. Credential-scoped `/documents/resource` closes selected document
+resources; `/documents/file-extract` accepts bounded base64 PDF/plain-text/HTML
+bytes with exact connection/generation/scope/course/file context, not a remote URL.
+Trusted converter Settings default to an empty tuple and allow only local
+canvas.html.v1/json.v1/text.v1/pdf.v1 implementations. Authority is rechecked after
+conversion. Existing source publication/read behavior and protected-main gates remain.
+
+Session-owned connection listing, configured Canvas origins and paginated course/
+resource coverage are assembled on `/v1/source-connections`; student proxy access
+excludes ingestion routes. Web v2 document-result reads use the exact existing
+artifact/check/reference identities and never coerce schema2 into legacy v1 IDs.
+[Exact candidate boundaries and acceptance](docs/P1-COMPLETION-CANDIDATE.md).
+These routes/UI are locally tested; they are not yet deployed/live-accepted.
+
+## Agreed connection and sync design; implementation pending
+
+[C1/C2 v1 proposal](docs/contracts/CONNECTION-SYNC-v1.md) (#47) defines pairing,
+connection identity, sync receipts/coverage and last_checked semantics. M agreed exact
+ccf84dc in [review6537274371](https://github.com/Akbarhoja/wrytely-agent/pull/48#issuecomment-6537274371).
+This is design agreement, not implemented routes/store methods or relaxed permission gates.
+[C3–C7 v1 proposal](docs/contracts/AGENT-ACTIONS-v1.md) adds retrieval, student
+decisions, typed delivery, private files and operational accounting for the same
+owner review. C3 design and exact C4–C7 agreements are recorded below; implemented capability
+and consumer acceptance remain separate from those design agreements.
+
+Detailed [Canvas C3 retrieval/document-segment proposal](docs/contracts/CANVAS-RETRIEVAL-SEGMENTS-v1.md)
+(#77/#78) has M agreement for short-text sections1–2 and the immutable root/slot
+architecture, recorded in comments6541105179 and6541182136. These agreements do not
+supply executable document APIs. The explicit deferred document-consumer gate now
+has a [document-only v2 wire review candidate](docs/contracts/CANVAS-DOCUMENT-WIRE-v2.md)
+with exact upload/publication/receipt shapes, canonical vectors and bounded orphan
+cleanup. M agreed exact7f4f09f as DESIGN in [6554751370](https://github.com/Akbarhoja/wrytely-agent/pull/118#issuecomment-6554751370).
+Schema1 and inactive source behavior remain unchanged. Shared document staging/
+publication/cleanup are implemented on the later candidate slices documented below;
+M HTTP/extension consumers and independent implementation reviews remain separate. M also agreed exact C4–C7 wire3b86710 as DESIGN in
+[6554751518](https://github.com/Akbarhoja/wrytely-agent/pull/119#issuecomment-6554751518).
+
+## C4–C7 agreed wire design; implementation pending
+
+[Agent operations wire v1](docs/contracts/AGENT-OPERATIONS-WIRE-v1.md) supplements the
+existing architecture with exact action/authorization/result, student-decision,
+private-file and model-accounting boundaries, defaults, and migration/stop/rollback
+order. [Twenty synthetic review cases](tests/fixtures/agent_operations_v1.json)
+cover replay, ownership, stale scope, unknown send, file mismatch and cost races.
+These are proposed examples, not implemented validation or authorization grants.
+M reviewed20 cases and retained behavioral design agreement in6554440608. Revision
+3b86710 now answers its dispatch-consumption, consumed-offer and typed-health questions;
+24 review cases/two health samples accompany the final agreement. M confirmed the
+exact clarification3b86710 in6554751518. Current executable text/reply/delivery
+contracts remain in force until the new implementation is separately reviewed.
+No new paid allowance, migration, runtime, queue or source activation is implied.
+
+## Implemented private v2 artifact Store reads
+
+Latest P1 continuation adds discussion entry documents: discussions permits both
+discussion and entry owner kinds with original EvidenceItem fields. Shared header
+and publication validators use one kind predicate. The existing host/reader follows
+topic entries and each top-level entry's full paginated replies, keeping content-free
+topic/parent/page continuation in the existing private scan cursor. Derived topic/
+parent context is checked and cannot come from a provider-forged marker. Every page
+refreshes topic visibility; no initial-post/locked-content bypass or quiz/write route.
+Original text, identity, source authority, partial gaps and replay fences remain.
+[Implemented behavior](docs/P1-CONNECTED-PUBLICATION.md#durable-discussion-entries-and-replies).
+
+November2 status/grade continuation adds schema2 pairs submissions/submission and
+grades/grade using existing academic fields. Own-student course submissions GETs
+validate returned student/assignment/course IDs and feed explicit partial JSON
+projections into the existing producer/journal/publication. Trusted canvas.json.v1
+formatting requires server configuration; defaults stay off. No model, provider
+write, quiz attempt read or new schema/HTTP extraction route. Null grades remain
+unknown; grade_basis distinguishes verified current/previous/unverified attempt;
+excusal/visibility and omitted body/feedback/course-total/policy gaps remain explicit.
+[Exact scope](docs/P1-CONNECTED-PUBLICATION.md#read-only-submission-status-and-assignment-grades).
+
+November2 P1 extension: schema2 document header/publication now also accepts
+announcements/announcement and discussions/discussion with the existing canonical
+EvidenceItem fields. The existing documents/extract endpoint accepts those selected
+resource kinds using the same trusted canvas.html.v1 parser. The host automatically
+collects full announcement/discussion-prompt text through course-scoped list/detail
+GETs. Replies remain explicitly unread; author roles and effective discussion dates
+are not inferred. A403 closes only that resource as restricted; a404 records partial
+read failure rather than deletion. [Exact behavior](docs/P1-CONNECTED-PUBLICATION.md#announcements-discussion-prompts-and-resource-failures).
+No schema migration, new permission, external write or deployment is introduced.
+
+P1 collection assembly now also registers POST
+`/v1/source-connections/canvas/documents/extract`. Exact schema2/operation
+extract_document, current ingestion connection/generation/scope and selected-course
+resource are required. At most four HTML items pass through the original bounded
+parser; actual extractor canvas.html.v1 must be enabled by server configuration.
+It returns text and explicit partial gaps, stores nothing and rechecks context after
+conversion. The host connects assignment/syllabus/page reads to the original document
+producer/journal/publication. [Scope and remaining gaps](docs/P1-CONNECTED-PUBLICATION.md).
+
+November1 P1 reassignment implementation: the proposed `/v2` list/detail/evidence
+HTTP routes are now registered with verified sessions, no-store, strict queries and
+bounded encoded cursors. The website proxy explicitly forwards these GET routes;
+the student results UI remains unwired. Document publication is now available at
+`POST /v1/source-connections/canvas/documents/batch`, using the existing Store and
+durable discovery journal. [Exact assembly and evidence](docs/P1-CONNECTED-PUBLICATION.md).
+These updates supersede the HTTP-missing/M-owned statements in older evidence.
+
+[Private artifact reads v2](docs/contracts/PRIVATE-ARTIFACT-READ-v2.md) and
+[implementation evidence](docs/P1-PRIVATE-ARTIFACT-READS.md) define implemented
+list_private_artifacts_v2, read_private_artifact_v2 and
+read_private_artifact_evidence_v2 on the existing Store. They return metadata-only
+keyset lists, validated saved check projections and exact original mixed evidence,
+with current source authority and separate inspection status. No task lease, model
+call, work permission, new migration or public route is introduced. Controls expose
+agent_paused and actual responsibility_status, not a nonexistent duty pause flag.
+M owns HTTP/UI assembly; previous mandatory #157 agreement pauses are superseded.
+Existing v1 projection filters remain unchanged. PrivateArtifactReadLimit maps to
+redacted413; SourceRefreshRequired to409; LookupError to opaque404 and invalid
+bounds to redacted400. Identity must come from a verified session; all HTTP outcomes
+must be no-store. A saved passed check is never authorization to send or submit.
+
+## Internal typed v2 document drafting
+
+Under M's exact design agreement6560955094, contracts/document_artifacts.py adds
+internal discriminated legacy/canvas_document evidence for policy, rubric and draft
+claims. Legacy refs retain actual version_id; document refs retain exact object,
+observation, root, segment, page, Unicode offsets and quote. IDs are not interchangeable.
+Public contracts/artifacts.py DTOs remain unchanged. No new HTTP schema is approved.
+
+The existing planner, requirement assessor, private intent, draft generator, format
+checker, independent reviewer, checkpoints/revisions and final completion now share
+this internal v2 path. Explicit Canvas delegation selects it; ordinary conversation
+cannot activate it. No parallel agent or new public intake route is introduced.
+The earlier document_drafting_not_wired staging hold is replaced by source-backed
+assessment and mandatory verification; scope alone still grants no policy permission.
+Unknown/limited/prohibited policy or missing rubric blocks, and sources cannot change
+student consent. Model-assessed completeness/support remains fallible.
+
+TypedEvidenceStore resolves originals under the current agent/task fence. Published
+document-only roots need no fake source_versions or legacy pointer promotion. Actual
+inline Canvas versions can be read through their explicit object scope; their current
+Canvas coverage/control/draft6h policy applies. Direct legacy bound evidence retains
+its24h policy, with known Canvas mappings rechecked against current authorization.
+Source text and original structured fields (including rubric) are supplied together.
+A quote must still match an original text section/version: a criterion present only
+in structured fields cannot acquire an invented section/offset. Such gaps require
+further extraction/investigation, not an assumed complete rubric.
+
+Complete original section context is bounded to80000 code points and512000 serialized
+UTF-8 bytes, at most16 entries across existing legacy and explicit object bindings.
+Oversized evidence returns evidence_context_requires_paged_investigation before a
+model call, never silently truncates or assumes absent policy. General investigative
+retrieval for larger bundles remains future work. Partial/stale/history gaps return
+a refresh/block; current root/section/hash/quote checks precede semantic assessment.
+Inspection24h is never substituted for the server-owned Canvas drafting6h policy.
+An unchanged sync can create a new observation without changing the root/task
+revision. Old pinned references stay historical and require reassessment; this
+increment does not silently re-pin a saved policy/draft to a new observation.
+Automatic reassessment/follow-through remains P4 work.
+Credential expiry, controls, memory revision and lease clocks are rechecked after
+reads and at commits. Late requirements/control changes cannot certify an old draft.
+
+Migration022 adds artifacts.evidence_schema (default1, internal v2=2). Drafts/checks
+remain in the existing immutable request-key/recovery machinery. V2 provenance is
+embedded in the draft; it cannot use the old v1 sidecar. Passing check commit, cached
+recovery and private completion reload current originals and authorization; a previous
+passed report is not fresh authority. Existing word/disclosure checks retain exact
+v2 evidence in their findings. Failed content can take bounded revisions; source
+failures stop. Old artifact(), artifact_review(), responsibility_artifacts() and the
+unversioned status artifact pointer deliberately do not project v2 results. M needs
+a separately reviewed versioned private-result consumer before exposing these rows.
+No old client receives a document root disguised as a legacy citation.
+
+Evidence here is scripted-model/local synthetic publication, not live Meta schema/
+quality acceptance, real Canvas collection, WhatsApp delivery or continuous operation.
+Migration022 is disposable-test-only; no worker, provider call or deployment enabled.
+
+## P1 internal original-section quote discovery
+
+`runtime/document_quote_search.py` adds internal find_document_quotes and
+find_document_quotes_for_task over the existing authorized pinned section readers.
+User identity must already be verified; task scope is still the existing current
+responsibility binding. No Store/HTTP/model DTO, tool or capability is added.
+
+Inputs pin object_id, observation_id and document_version_id; quote must be exact
+normalized nonblank text1–4000 code points. Search defaults to first_slot0, offset0,
+max_pages2, max_matches10; bounds are slot0–512, section-local offset0–24000,
+max_pages1–8 and max_matches1–30, with bool rejected for integers. Each page uses
+the existing20-slot/40000-character reader. An additional one-slot postflight read
+reauthorizes the pinned source and supplies current coverage/history/inspection
+freshness for every earlier match. Revocation, scope removal, credential expiry or
+a lost task lease prevents returning the result. A newly historical observation
+can remain inspectable but all its matches are labeled unusable for current work.
+
+Matches reuse exact citation proofs: original root/segment, PDF page, global Unicode
+code-point offsets, quote, original section hash and evidence metadata. Unquoted
+section bodies, provider URLs and credentials are not returned. Repeated and overlapping
+occurrences are preserved. Page/match limits return explicit next={first_slot,offset};
+a match-limit continuation can resume inside a section without dropping occurrences.
+Continuations are internal positions, not authorization tokens: callers repeat the
+same pinned IDs/quote and every invocation reauthorizes them.
+
+range_start and range_complete describe only the requested search suffix in the
+stored sections. match_scope is single_section_exact_quotes: quotes are never spliced
+across section/page boundaries. No match, even in a fully searched range, cannot
+establish absence of policy or complete course coverage. Partial/stale/history
+metadata remains explicit; inspection usability is not drafting permission. There
+is no implicit fallback to another observation/root and no document-only task grant.
+This helper is not registered as an agent/model tool or connected to generation;
+that consumer wiring remains subject to the separately proposed contract below.
+
+## Document-only task scope design and first implementation
+
+[Document-only drafting and task scope v1](docs/contracts/DOCUMENT-DRAFT-SCOPE-v1.md)
+received M's exact internal design agreement at e9a8fe4 in
+[6560955094](https://github.com/Akbarhoja/wrytely-agent/pull/142#issuecomment-6560955094).
+This does not approve new HTTP/UI shapes or activate source/model/send consumers.
+
+The first internal increment implements create_canvas_draft_responsibility with
+that signature/bounds/errors and canonical replay specification. Migration021 adds
+owned generation-bound responsibility_canvas_objects. Creation atomically validates
+1–8 current owned selected published objects, persists responsibility/intent/object
+bindings/replay specification and a task, then re-reads current authorization before
+commit. Exact replay also rechecks current authority and stored binding generations;
+it never creates another task or silently restores scope after reconnection.
+No text source version or legacy responsibility_sources binding is manufactured.
+
+Existing task list/body/document readers now accept the task's explicit object scope
+as an alternative to a legacy source binding. Every task fence rechecks all explicit
+object bindings against current subject, selection, connection and generation, with
+final credential/task-clock checks. Connection reset/scope changes invalidate scoped
+active duties. Changed document or inline content/coverage reuses memory invalidation
+and revokes old task leases, deduplicating duties bound through both mechanisms.
+Unchanged observations refresh evidence status without new tasks or responsibility
+revisions; old pinned observations remain historical, never silently rebound.
+
+At #150 the planner held new object-scoped intents with internal reason
+document_drafting_not_wired without a model call. The internal typed v2 path above
+now supersedes that staging guard; live/public consumer assembly is still separate. Existing legacy flows and external DTOs remain
+unchanged. Migration021 is disposable-test-only; no route or live service enabled.
+
+## Agreed document staging HTTP design; implementation pending
+
+A reviewed and agreed M's exact #14847db193 proposal in
+[6563512653](https://github.com/Akbarhoja/wrytely-agent/pull/148#issuecomment-6563512653):
+POST /v1/source-connections/canvas/documents/{begin,parts,finish}, unchanged schema2
+operations/receipts, ingestion authority, 1MiB streaming limits, document400/empty404/
+controlled409/429, no-store/redaction, Retry-After30 minimum hint and default-off
+trusted extractor injection. M's first app-only base is reviewed #135019d6c7.
+This is design agreement only; no routes/configuration/provider activation supplied.
+M owns that implementation. Host/package #144/#146 review/integration is separate.
+
+The existing generator now treats document_evidence_missing_or_stale and
+document_evidence_failed_at_commit as terminal source failures, alongside legacy
+source/policy failures. It returns blocked with the saved artifact/report rather
+than generating another revision. Current document evidence can still pass review;
+ordinary content deficiencies retain the bounded revision path.
+
+## P1 internal draft document provenance
+
+Internal `save_draft(..., document_citations=[...])` can now persist pinned document
+references alongside the unchanged external DraftArtifact. Empty/default retains
+legacy behavior. Once supplied, the list must match all draft citations in order
+and each quote must be identical. Verification also requires the observation
+version to equal that citation's legacy version; the same text in another bound
+source cannot impersonate its provenance. Exact normalized references use the fields and
+limits below. Same request-key replay cannot drop or change provenance; attach it
+when saving a new draft, not after an artifact has passed review. Migration020 adds
+only a bounded JSON array to artifacts in wrytely_agent; it has run in disposable
+tests only.
+
+`artifact_document_evidence(lease, artifact_id)` is an internal verifier read, not
+an HTTP route or model tool. It reuses current responsibility source bindings,
+owned observation/root/segment identity, original hash/offset/page checks and
+server-owned **draft-purpose six-hour freshness**. Partial/historical evidence,
+failed latest resource checks, revoked/expired/unselected connections and unbound
+objects fail closed. Agent locks serialize control changes; final credential,
+evidence-age and task-clock checks prevent work crossing a validity deadline.
+Returned proofs establish exact quotations, not semantic support by themselves.
+The existing full-source model assessment and policy/rubric gates remain mandatory.
+
+Verification checks declared document provenance before spending a model call.
+Successful-check commit, cached-check recovery and private-draft completion re-read
+it inside their existing agent transaction; an old report is never fresh authority.
+No nested Store connection is opened while holding its agent lock. The pure exact
+reference/page checker moved to shared/document_citations.py; inspection helpers
+retain their original behavior and 24-hour inspection policy.
+
+**Consumer limit:** current automatic generation and external API/model schemas do
+not yet supply these references. This slice connects the guard for trusted internal
+callers; it is not document-only drafting or automatic source activation. Published
+document-only objects without source/responsibility bindings remain unavailable to
+tasks, even for the same account. No fake legacy versions or semester-wide access
+are created. Future generator/source-consumer wiring needs its scoped agreement
+and review; M's extension/API files are unchanged.
+
+## P1 internal exact document citations
+
+`runtime/document_citations.py` adds internal verify_document_citation and
+verify_document_citation_for_task helpers over the existing authorized pinned
+section readers. Caller supplies a server-verified identity/current task lease;
+models never choose it. No Store/HTTP/extension wire or model tool is added.
+Citation fields are exact object_id,observation_id,document_version_id,segment_id,
+slot,page,start,end,quote. Quote is nonblank normalized text up to4000 code points;
+offsets are global code points and must span that exact quote within one section.
+
+Helpers read exactly one pinned slot, verify root/observation/segment/page identity,
+recheck its exact UTF8 SHA256 and compare the explicit substring. They return only
+the quote/reference/hash and original coverage/missing/history/inspection freshness,
+not the remaining section text. Unknown/mismatched IDs or a fabricated quote never
+fall back to another root, section or current observation. Existing Store permission,
+task-source binding, pause/lease/connection/scope/expiry and section-integrity fences
+remain authoritative; a task gains no semester-wide source capability.
+
+quote_matches is literal containment, not a semantic claim or drafting permission.
+A match can remain historical/stale/partial/unusable. evidence_usable_for_inspection
+requires the current reader's inspection policy plus complete/no-gap/nonhistorical
+state. This is not the stricter drafting/action policy. A future integrated draft/
+verification/dispatch must rerun reference/control checks under its own purpose and
+current lease at final commit; a previous return value is not reusable authority.
+No fact persistence, automatic source promotion, model activation or deployment occurs.
+
+## P1 explicit bounded document staging cleanup
+
+`Store.cleanup_canvas_document_staging(*,limit=100)` is a trusted operator-only
+maintenance entry. It has no HTTP endpoint, worker, timer or automatic invocation.
+Integers1–100 are required. Each pass selects at most limit expired-upload candidates
+and limit orphan-root candidates total, skipping busy rows rather than waiting.
+It returns aggregate counts only, with no source text or student identifiers.
+
+Migration019 adds cleaned_at plus pointer/binding/age indexes. Maintenance acquires
+the same agent lock as writers with SKIP LOCKED before upload/root row locks. It
+rechecks expiry and references inside one transaction, so interruption rolls the
+pass back. Expired staging parts and entire headers are removed; ready pointers are
+cleared and a cleaned tombstone remains. All original receipts, IDs and expiry stay;
+no receipt body or digest changes. Expired retries still fail current expiry checks.
+Published roots and source evidence are not deleted to release staging quota.
+
+Only protocol roots at least24h old can be considered. Transactional anti-joins
+protect ALL observation bindings, matching published observation payloads (including
+history/reversion), and every retained upload pointer, even expired pointers not yet
+processed. The locked root and foreign keys prevent dangling publications. Legacy
+internal null-protocol roots are excluded. Original source/check/observation times
+and events never change. Remaining expired staging bytes stay counted until cleaned;
+a backlog does not relax quotas.019 ran only against disposable test databases.
+
+## P1 document-only atomic evidence publication
+
+`Store.commit_sync_batch` dispatches the exact schema2+batch_type=canvas_documents
+envelope to `contracts.canvas_document_publication.DocumentBatch` and the shared
+transaction in `shared/canvas_document_publication.py`. Operation staging fields,
+inline bodies, client digests, unknown keys, mixed kinds and duplicate uploads reject.
+Existing schema1 models remain strict and unchanged. No M HTTP route consumes this
+new model yet; shared support does not activate the connector or model runtime.
+
+The existing scan/subject/generation/credential/scope/lease and checkpoint fences,
+size/page/cursor/count/time bounds, receipt namespace and transactional final checks
+are reused. Item ownership, exact header/resource/owner/title/update metadata and
+unexpired ready upload/root integrity must match. All items atomically create owned
+observations with pinned015 bindings, resource items/checks, structured change events,
+checkpoint and the exact document receipt. A missing or invalid second item rolls
+back the first too. Source versions are not fabricated from empty root content.
+
+Additive018 records per-resource inline/documents mode and published_at on uploads.
+A scan resource cannot mix inline and document content across pages; empty pages
+also select an explicit mode. Existing batch replay keys span both versions, so
+changed-schema key reuse conflicts. Published uploads leave the4-unpublished-upload
+count, but retained upload-part bytes remain conservatively counted until cleanup.
+No published data is deleted to release quota.
+
+Unchanged syncs reuse roots and add observations without duplicate events; changed
+academic fields are reported by original names (due_at/rubric), and A→B→A preserves
+transition observations while reusing roots. Older captures stay historical and
+cannot replace current pointers or emit new change events. Same-instant conflicting
+content rejects by UTC instant. Existing bound work is invalidated on actual change,
+without source promotion or automatic drafting permission.
+
+Student metadata reads expose the pinned document_version_id. The old short-body
+reader rejects protocol documents with an instruction to use the pinned section
+reader, avoiding a falsely complete empty/prefix body. Section reads reuse existing
+owner/generation/selection/lease/freshness checks and bounded original sections.
+Complete-resource finalization includes document digests and selected file resources;
+partial/historical/latest-failed attempts cannot fall back to older complete proof.
+No new observation/source causes model readiness or starts a worker.
+
+Counterpart review, M HTTP/extraction/extension consumers, safe bounded cleanup and
+live/installed-host acceptance remain separate.018 ran only in disposable tests.
+
+## P1 ready document finish transaction
+
+`Store.finish_document_upload(actor,body,*,extractor_versions)` consumes the agreed
+exact schema2/operation finish body (upload_id, no parts). It reuses current owned
+scan/credential/subject/generation/scope/lease/open-resource/expiry checks, loads all
+immutable parts, and runs full `validate_canvas_document`, including whole-text NFC
+across section boundaries. Missing text or corrupt manifests reject before a root
+or receipt commits. Zero-text unsupported evidence remains explicitly incomplete.
+
+Additive017 extends015 private roots with nullable canonical protocol_payload and
+uploads with same-agent/object/root foreign-key pointers. Legacy internal fingerprints
+are unchanged when protocol_payload is null. Protocol root fingerprints additionally
+bind the canonical document digest, so changed dates/rubrics create a different root
+even with identical sections. Same owned A→B→A roots deduplicate without changing
+history or observation time. Stored section reads recompute this integrity identity.
+
+Finish creates/reuses an owned shell object and private015 sections, then atomically
+saves a ready receipt with document_version_id/document_digest. A shell without an
+observation is absent from evidence readers; no observation, binding, checkpoint,
+event, legacy text version, current source pointer or source freshness is created.
+The existing final receipt authority/expiry check rolls back shell/root/parts on
+late failure. Concurrent identical finishes commit one root and original receipt.
+Publication and bounded orphan cleanup remain separate.017 ran only in disposable tests.
+
+## P1 private document upload staging — begin and put only
+
+`Store.begin_document_upload(actor,body,*,extractor_versions)` and
+`Store.put_document_parts(actor,body)` implement the agreed #118 begin_document and
+put_document_parts operations internally. They are not HTTP endpoints. Staging bodies
+require integer schema_version2 and the exact operation, forbid batch_type and all
+unknown keys, and are bounded to1MiB UTF-8 JSON. Context UUIDs and generation are
+strict; user/agent IDs are never accepted as authority. The trusted caller supplies
+configured extractor identifiers. Body text enters only through declared parts.
+
+Migration016 adds private uploads, parts and immutable original receipts. The scan/
+connection/generation composite FK and agent/connection FK retain ownership. Existing
+Store actor/agent/connection locks and scan helpers fence credentials, provider subject,
+selected scope/generation, open resource, current lease and scan expiry. The same
+checks run before replay and again before saving a new receipt. Expiry is fixed at
+min(scan expiry,begin time+30minutes); replay/put/resume never extend it.
+
+The header validator is factored from #129's root validator, preserving all ten
+canonical vectors. It validates/detaches exact metadata/owner/resource/academic fields
+and manifest offsets, slot/hash/page bounds before persistence. Parts are1–50 unique
+slots, match declared hashes and normalized text, and retain slot immutability even
+under a new request key. Whole-text reconstruction/NFC and ready-root validation
+remain required at the future finish operation. No prefix or staged bytes are marked
+ready by begin/put.
+
+Replay identity is a SHA256 of sorted request JSON excluding only lease_token.
+The operation/scan/request key namespace retains the original receipt; changed
+payload conflicts. Current authority is required even for an old receipt. Cumulative
+received_slots reflect that original operation's commit, not present upload state.
+A new current lease can replay the same captured body without acquiring new source
+readiness. Responses contain no source text, subject or credentials.
+
+At most4 unexpired unpublished uploads exist per connection. Sum of retained staged
+UTF-8 text, including expired uncollected uploads, is capped at8MiB; conservative
+expired-byte accounting prevents storage growth before cleanup exists. Quotas and
+writes share existing agent/connection serialization. Exceeding either raises
+CanvasDocumentUploadLimited for a future controlled429 mapping. Invalid/nonowned
+upload IDs miss generically; expired uploads/changed text raise controlled conflicts.
+
+Finish/root materialization, schema2 publication/checkpoints/evidence, orphan cleanup,
+HTTP/extractor/collector consumers and deployment remain separate increments. No
+observation, source version,015 root/binding, resource coverage/freshness, task or
+model readiness is created or advanced by these methods.016 ran only in disposable
+tests. Retention/cleanup must preserve receipt tombstones and every referenced root.
+
+## P1-A2 agreed document root validation
+
+`shared/canvas_document_wire.py::validate_canvas_document` validates a fully assembled
+long-document root under the agreed #118 design. It accepts exact resource/owner/
+metadata fields, object_fields, manifest, parts and a trusted configured extractor
+ID tuple/frozenset. It reuses `validate_document_sections`, `EvidenceItem.payload`
+for assignment/syllabus/page field validation and `canonical_source_bytes` for the
+root digest. Files require a numeric provider ID, normalized bounded filename without
+path separators/NUL, and one of the three agreed MIME types. No duplicate parser or
+alternate canonical hash algorithm is introduced.
+
+All text/section/page bounds and LF/NFC/hash/offset reconstruction checks remain.
+Complete requires nonblank text/title, no missing evidence and all PDF pages present.
+Empty or page-gapped evidence requires explicit missing reasons. Owner kind and
+structured academic fields participate in the document digest; a deadline/rubric
+change changes identity even if long text does not. Course/provider identity and
+provider_updated_at remain validated separate provenance outside the root hash.
+The frozen result holds immutable sections/UTF-8 bytes/digest; payload returns a
+fresh detached dict. This validator is not authority, persisted staging, schema2
+request/receipt parsing, an HTTP endpoint, an extractor, or source/model activation.
+The next staged publisher must enforce current owned scan/lease/scope/expiry/quotas
+and invoke validation at finish; no legacy storage behavior changes here.
+
+## P1-A2 internal document section storage and pinned reads
+
+`shared/canvas_documents.py` composes into Store with additive migration015. Three
+private tables store immutable section versions, stable segment UUIDs and exact
+observation bindings. Composite foreign keys bind the same agent AND source object
+through root, parts and observation. Internal `_stage_canvas_document_sections` and
+`_bind_canvas_document_sections` require a trusted caller-owned transaction; they
+are not upload/user/model endpoints. A future C2 publisher must supply its live
+scan/credential/lease/expiry/quota fences. Root/parts and binding roll back together
+with caller failure; unbound roots cannot be read. Same bytes/manifest/format/extractor
+under the same owned object reuse a version; a binding cannot change to another root.
+The internal section_fingerprint is integrity/dedup only, not #118's pending protocol
+canonical document_digest. No pending wire/root-digest fields are adopted here.
+
+`read_canvas_document_sections(verified_user,object_id,*,observation_id,
+document_version_id,first_slot=0,limit=10)` and its `_for_task(lease,...)` variant
+require both pinned IDs; no latest-root fallback. They reuse existing verified actor,
+task-bound source scope, current subject/generation, configured origin, selected
+course/resource, credential expiry and final task/clock fences. Part hashes,
+provenance, full manifest and internal fingerprint are revalidated before a bounded
+original-section response. Stable segment IDs accompany code-point offsets/pages/text.
+Response has the agreed object/observation/document IDs, sections,next_slot,total_slots,
+coverage,missing,historical,freshness. Owned stale/partial history remains inspectable
+but unusable; source age comes from evidence, never a new storage timestamp.
+
+An empty or page-gapped section set cannot bind to evidence claiming complete or
+without explicit missing evidence. SQL/helper checks never manufacture text. Staging/
+binding does not change observations, legacy latest pointers, checks/events, scan
+coverage or model readiness. No existing list/short-body reader or schema1 shape is
+changed. No HTTP/collector upload path consumes these methods yet. #118 wire agreement,
+real root/publication assembly and separate retention/cleanup work remain required.
+Migration015 was applied only to disposable tests; no retained DB/deployment change.
+
+## P1-A2 internal immutable document sections
+
+`shared/document_sections.py` implements only the section/manifest invariants from
+M's accepted #78 document architecture. `split_document_text` reuses existing
+canonical LF/NFC normalization on the whole non-PDF text before splitting, then
+computes SHA256 for each exact UTF-8 section. Bounds:200000 normalized code points,
+512 sections and24000 code points/section; oversized input rejects without prefix
+output. Input is also bounded before normalization; malformed Unicode rejects.
+
+`validate_document_sections` checks exact manifest `{slot,start,end,page,text_sha256}`
+and part `{slot,text}` records. Parts may arrive out of order, but duplicate/missing
+slots, extra fields, bad hashes, gaps/overlap, non-normalized text, wrong totals and
+whole-text NFC changes across boundaries reject. Page provenance is positive,
+nondecreasing and within1–200; non-PDF sections require page=null. Returned dataclasses
+and section tuples are immutable and independent of mutable input containers.
+Unrepresented PDF pages are exposed as gaps, not invented text or complete coverage.
+
+`page_document_sections` returns whole sections, maximum20/40000 code points, with
+explicit next_slot. Ending exactly at total slots returns an empty terminal page;
+no section prefix is presented as the full document. These pure internal functions
+have no persistence, parsing, root digest, IDs, ownership, freshness or coverage
+policy. Callers must authenticate/fence a pinned root and its observations separately.
+No C2/schema2/HTTP or model tool consumes them. #118 wire agreement and M's existing
+parser/collector remain required; this does not duplicate PDF/HTML extraction.
+
+## P1-A2 structured Canvas change details
+
+`shared/canvas_evidence.py` now records private canonical comparisons in the existing
+`canvas_evidence_events` transaction. Additive migration014 adds nullable
+`previous_observation_id` (foreign-key scoped to the same agent AND object) and
+`changes`. Legacy rows retain null detail; no inferred/backfilled change history.
+New detail is exactly `{schema_version:1,initial,changed_fields,title_changed,
+content_changed,coverage_changed,missing_changed}`. changed_fields is sorted field
+names only (for example due_at/rubric); flags compare canonical stored payloads.
+No source text, field values or private rubric descriptions are duplicated in events.
+
+Initial observations mark initial=true without claiming a before/after change.
+Subsequent events link the latest prior check even when that check reused the same
+immutable version. Unchanged canonical text/dates/fields, provenance-only updates,
+replays and historical captures add no new change event. A→B→A retains both transitions.
+Existing source_observed/source_changed/coverage_changed kinds and C2 receipts remain
+unchanged. Failed batches roll back detail, source versions and checkpoints together.
+The event remains staged/private: no HTTP consumer, notification, model-source promotion,
+supervisor or deployment is activated. Migration014 was applied only to disposable tests.
+
+## P1-A1 first slice — Canvas pairing and credential lifecycle (#58)
+
+Implemented in shared/source_connections.py, composed into Store with additive migration010.
+No HTTP route, extension pairing UI, sync ingestion or Outlook secret storage is added.
+C1/C2 design agreement remains separate from review of this implementation.
+
+`Store(url, *, canvas_origins=())` takes an operator-owned tuple of exact HTTPS origins.
+Default is empty: pairing and credential use are disabled until M's assembly explicitly
+supplies approved configuration. Reject paths, ports, query/fragment, userinfo, non-ASCII
+and noncanonical origins; no URL fetch occurs. This is not a browser-posted allowlist.
+Existing Store callers are unchanged. Origin consent/actual Canvas access remain separate.
+
+Operator configuration slice #61: `Settings.canvas_origins` reads
+`AGENT_CANVAS_ORIGINS` as a JSON list, for example
+`["https://canvas.example.edu"]`. Default/explicit empty list becomes `()`.
+At most20 distinct exact origins; malformed JSON, null, scalar/object values,
+duplicates and invalid origins fail validation rather than being trimmed or guessed.
+The same canvas_origin function validates Settings and Store. M passes the validated
+tuple to Store in owned app assembly; this configuration field alone does not wire
+routes, grant school access, prove readiness or modify a deployed environment.
+
+- `create_pairing(verified_user, allowed_origin)` requires a provisioned verified user
+  and configured origin. Returns `{challenge, code, expires_at}`. challenge and code are
+  the same192-bit copyable one-use secret, expires_at an aware ISO timestamp10 minutes
+  ahead. Persist only SHA256. A new code replaces the previous unconsumed code. Maximum
+  five issuances per account per10-minute window persists across redemption. Never log
+  this return value, expose it to another account or put it into model/conversation data.
+- `redeem_pairing(code, device_public_id)` atomically consumes a valid code and creates
+  a pending_identity connection. Device ID is1–128 ASCII letters/digits/dot/underscore/
+  colon/hyphen, not student authority. Return safe status below plus ingestion_bearer,
+  a256-bit random bearer shown once, stored only as SHA256, default expiry30 days.
+  Re-pairing the same owner/origin/device preserves connection_id, increments generation,
+  clears prior subject and replaces the credential. Different devices are distinct.
+  Issuance is not a successful device connection until this transaction commits.
+  If a successful redemption response is lost, the server cannot recover its hash-only
+  bearer: request a fresh pairing code and re-pair, fencing the lost credential.
+- `bind_canvas_identity(credential, origin, provider_subject)` validates live credential
+  under an agent lock and binds one nonblank bounded provider subject. M must obtain/check
+  it in the same-session adapter, not a browser account-ID input. Same subject rebind is
+  idempotent; changed subject commits generation increment, credential revocation and
+  reconnect_required before raising SourceCredentialRejected. No relabeling old evidence.
+- `source_connection(verified_user, connection_id)` returns None for missing/nonowned/
+  malformed IDs. Otherwise only connection_id, provider, origin, state, generation and
+  credential_expires_at. UUID/timestamp are strings; no subject/device, digest or secret.
+  Expired pending/connected credentials project reconnect_required, without writing on read.
+- `rotate_or_revoke(verified_user, connection_id)` implements revoke, not an unconfirmed
+  credential replacement. Owner lock scopes update, increments generation, clears digest,
+  marks disconnected and invalidates that account's outstanding pairing challenge.
+  Fresh authenticated pairing is required to reconnect. Nonowned/missing/malformed IDs
+  raise the same LookupError("Not found"). Revoke/re-pair and bind use the same agent lock.
+
+Internal `_lock_canvas_credential` authenticates/fences in an existing transaction;
+it is not an exposed method or independent grant to sync. Future sync must additionally
+check connected state, subject, selected scope and exact generation in that transaction.
+There are no scan rows in010 to abort yet. Source keys must retain subject/generation
+provenance when a device is re-paired; old evidence must not become a new login's data.
+
+Redemption budgets persist for schema-valid attempts, including wrong/expired/used
+codes: at most120 per server per minute and10 per claimed device per minute.
+Malformed code/device syntax is rejected before the database budget, so these are
+not limits on every HTTP request; M must bound and rate-limit the public route. Global limit is checked
+before inserting device buckets, with one transaction lock and expired-bucket cleanup.
+Device identity alone is untrusted and cannot bypass the global cap. The cap is an
+initial deployment-wide pairing throttle, not protection against service denial or
+an IP/authenticated-user HTTP rate limit. M must review its capacity and assembly rate
+limits before public rollout; no rate row stores the actual device ID or code.
+PairingLimited maps to429; PairingRejected has one generic invalid/expired/used-code
+message; SourceCredentialRejected maps to generic401/reconnect. Storage exceptions
+propagate and roll back credential/challenge changes, never empty successful responses.
+No mutation or data from these secrets is sent to providers/models. Private/no-cache
+HTTP assembly and extension-private secret storage remain M-owned and unimplemented.
+
+Migration010 only adds three Canvas lifecycle tables in wrytely_agent, replayed by the
+existing checksum ledger. Applied historical migrations remain unchanged;008 stays
+parked. Test only against a disposable database here. Roll out010 explicitly before
+assembling these methods; rollback application consumers first and retain additive data
+for review, rather than automatically deleting credentials/history. No Railway database
+or existing Wrytely production migration is authorized by publishing this code.
+
+## P1-A1 next slice — Canvas context, selection and discovery sync (#58)
+
+Implemented in shared/canvas_sync.py, contracts/canvas_sync.py and additive migration011;
+composed into the existing Store. M agreed scope/bearer direction and requested context
+in [6537874178](https://github.com/Akbarhoja/wrytely-agent/issues/58#issuecomment-6537874178).
+A confirmed the exact context in6538966628 and list in6539057716; implementation still
+requires counterpart review before HTTP consumers. This is metadata discovery storage,
+not academic source ingestion, a public sync route or completed P1-A1.
+
+`canvas_connection_context(credential, origin)` checks the current ingestion bearer,
+configured exact origin and credential expiry under the existing agent lock. Returns
+unchanged safe C1 projection plus scope_revision, mode, course_ids, resource_kinds and
+`discovery: {coverage,last_attempt_at,last_complete_at}`. Initial scope_revision=0,
+mode=explicit_set, both lists empty, coverage=unknown and timestamps=null. Pending
+identity can read that safe context but cannot begin sync. Connected empty selection
+permits metadata discovery only. No subject/device/hash/bearer/opaque cursor is projected.
+Dates are ISO strings. last_complete_at is terminal receipt time, not an academic source
+freshness grant; captured observation times stay in catalog rows. P1 freshness consumers
+and source check records are not implemented here.
+
+`list_source_connections(verified_user, *, limit=20, cursor=None)` returns
+`{connections:[safe C1 projections],next_cursor}`. Strict integer1–20; immutable
+created_at/id descending. Opaque cursor is last returned connection UUID, looked up
+under the current verified account on each request. Malformed/absent/other-account
+cursor raises the same LookupError("Not found"). It grants no authority and contains
+no embedded user data/signature. Empty/unprovisioned list is empty. No total count,
+provider subject/device or credentials. New rows require restarting pagination to see.
+
+`set_canvas_scope(verified_user, connection_id, generation, *, mode, course_ids,
+resource_kinds)` requires current connected owned generation and nonexpired credential.
+Modes explicit_set/all_active. Up to1000 distinct numeric-string course IDs from the
+current generation's observed catalog; missing_pending_confirmation entries cannot be
+newly selected. all_active takes course_ids=[] and derives known active courses only,
+not unknown/missing courses from a partial catalog. Kinds: syllabus, assignments,
+announcements, discussions, modules, pages, files, submissions, grades. Return context.
+Duplicate IDs/kinds, arbitrary IDs and unsupported kinds reject. Identical normalized
+selection returns existing scope; changed selection advances scope_revision/generation,
+retains the live bearer and carries same-subject catalog provenance forward. Old scans
+abort with scope_changed. Device obtains current generation through context without a
+Clerk session or re-pair. Re-pair/account switch/revoke instead clear scope/catalog view,
+advance revision and abort active scans. Old evidence remains private historical data.
+
+### Discovery scan methods and limits
+
+The C2 begin/resume/commit/finish signatures in CONNECTION-SYNC-v1.md are implemented
+for discovery metadata. actor is the ingestion bearer, resolved inside the transaction;
+no posted owner ID. Each operation checks connected state, current generation/scope and
+subject where supplied before reading a receipt. One active scan/connection,300-second
+replaceable writer lease,24-hour lifetime, monotonically increasing scan_sequence.
+Begin replay returns its ORIGINAL saved lease/checkpoint, not a later writer's token.
+Resume key replays its original response; a new resume key replaces the writer lease
+and returns the latest durable checkpoint. Resume does not refresh observations.
+
+Checkpoint exactly `{resource:"courses",next_cursor,sequence,scope_revision}`; strict
+integers, bounded private cursor, sequence0 initially. commit_sync_batch accepts only
+schema_version integer1 and resource `{course_id:null,kind:"courses"}` in this slice.
+At most50 items/page,100 pages/scan,5000 cumulative records,1MiB serialized envelope,
+4000-character opaque cursor; replay keys1–128 ASCII letters/digits/dot/underscore/
+colon/hyphen. Client network body limits remain M's responsibility. Cursor stays opaque
+and private, never fetched here. More-pages cursor must accompany partial/more_pages;
+repeated current cursor rejects. Cumulative seen_count must match. No duplicate course
+IDs in a page or across pages. Captures require strict aware RFC3339, within scan start
+and at most five minutes ahead of server time. Historical pre-scan uploads are rejected
+in this increment; no historical-source ingestion is claimed.
+
+Each course item has provider_id (positive numeric string), provider_updated_at (nullable
+metadata), title<=500, exact origin/courses/ID reference, content="", fields exactly
+course_code/timezone/enrollment_state (bounded nullable strings), coverage and missing.
+Full syllabus/assignment text cannot be smuggled into discovery. Server computes C2
+content digests; course metadata does not create academic source_versions, so batch
+receipt source_versions is []. Receipt/checkpoint/catalog update atomically; storage
+failure rolls back all of them. Same batch key + canonical body/checkpoint replays its
+original receipt even after lease replacement/expiry, with replayed=true and no cursor,
+observation or completion-time advance. Changed payload/key reuse conflicts. An unseen
+batch needs the current live lease/checkpoint; retry the same capture after resume.
+
+finish_resource takes key "courses" or a selected course/kind key from the scan's
+resource ledger. Complete courses requires an observed final complete page (including
+an explicitly observed empty page). Partial/restricted/unsupported terminal receipts
+can close a failed enumeration without pretending completeness. No academic resource
+can be completed here: only controlled failure/unsupported receipts, or leave it open
+for a later implemented collector. Complete course discovery is independent of those
+resources. finish_sync requires every resource terminal; aggregate is partial if any
+required resource is not complete. It cannot imply academic collection from metadata.
+all_active newly observed active courses acquire required resource rows; they cannot
+silently disappear from the scan's completeness requirements.
+
+Only complete enumeration marks previously known absent courses
+missing_pending_confirmation; partial/restricted/expired scans do not delete or mark
+absence. Prior metadata is retained. Reappearance clears pending absence. Active-course
+selection excludes pending entries. No confirmed deletion is implemented here. A prior
+complete timestamp is retained on failure and never advanced by receipt replay. Terminal
+resources reject new writes/different outcomes; exact finish-key replays are allowed.
+
+Hard scan expiry is enforced on every operation. Expiry/aborted-resource history is
+persisted when authenticated context/new begin performs cleanup; a rejected transaction
+rolls back its attempted cleanup but still rejects expired writes. Context never grants
+freshness from that cleanup. No continuous cleanup worker is deployed. Revoke/scope
+changes abort scans in the same transaction that fences credentials/generation.
+
+Controlled CanvasSyncConflict.code includes identity_required, generation_changed,
+scope_changed, subject_changed, replay_conflict, resume_existing_scan, checkpoint_changed,
+lease_expired/replaced, scan_terminal, resource_terminal, resource_not_selected,
+incomplete_resource, resources_open and pagination/cursor/selection limits. HTTP mapping
+is M-owned:409 for state conflicts, generic401 for SourceCredentialRejected,422 for
+invalid envelope/selection, private404 for missing owned connection. Never log raw
+validation input, bearer, checkpoint/cursor or provider data. No runtime task, model call,
+source content event, email actor/secret or external action is introduced here.
+
+Migration011 adds metadata/receipt/catalog/resource tables and scope columns, tested only
+on disposable Postgres. Apply explicitly after010 before any new consumer deployment;
+do not modify applied SQL. Existing production/dev ledger remains001–007+009 until
+separately authorized. Roll back consumers first and preserve additive history for review.
+Remaining P1-A1: academic version/check/event transactions and segmentation, shared
+freshness consumption, Outlook credential/actor lifecycle, then assembled/live checks.
+
+## P1-A1 academic content increment — staged evidence (#58)
+
+Implemented in contracts/canvas_evidence.py, shared/canvas_evidence.py and additive012.
+The existing C2 commit_sync_batch/finish_resource signatures now accept bounded extracted
+academic content as well as discovery. No HTTP route/collector/parser, runtime source
+activation, model call or live access is added. Counterpart review remains necessary.
+
+Academic resource is `{course_id,kind}` with kinds assignments, syllabus, pages,
+announcements, discussions, submissions or grades. Item kind defaults to its corresponding
+singular (discussion for discussions); an explicit entry is also allowed in discussions.
+Provider IDs are bounded ASCII1–128; title<=300, reference<=2000, text<=24000 characters,
+50 items/batch and1MiB envelope remain hard limits. Text is already extracted by M's
+adapter, not raw HTML/PDF parsing here. Modules/file segments/document manifests remain
+unimplemented; their resources cannot be falsely marked complete. Oversize text rejects
+instead of clipping. This does not narrow the required full-source collection plan.
+
+Each item has the existing provider_updated_at/title/reference/fields/content/coverage/
+missing envelope, plus optional kind. Exact field sets are the C2 v1 table. Unknown
+fields/kinds and nonportable floats reject. Decimal strings and dates normalize before
+content hashing; equivalent formatting, collection timestamps and rotating reference URLs
+cannot create a content revision. Rubric shape follows M's reviewed #60 convention:
+criterion requires id/description/points/ratings; optional long_description,
+criterion_use_range/ignore_for_scoring/learning_outcome_id/vendor_guid; ratings have
+id/description/points and optional long_description. Nullable values remain unknown.
+Up to100 criteria,50 ratings/criterion, normalized unique IDs, bounded text and decimal
+points. Undeclared assignment constraints are still coverage gaps, not inferred defaults.
+Complete evidence needs nonblank title/text and no declared missing fields. Unknown source
+semantics/provider truth are not established merely by schema validation.
+
+References require configured exact HTTPS origin and the declared course path; decoded
+traversal/control paths reject. Store never follows a URL. Current bearer/owner/subject/
+generation, scope ledger, writer lease/checkpoint and changed-body replay fences apply
+before any source write. Selected course/kind resources must be terminalized sequentially
+before switching resources. Checkpoint.resource can now be courses or course/kind;
+sequence is globally bounded10000/scan. Per-resource next_cursor/page count prevents
+rewinds, cursor loops and false completion;100 pages/5000 records per resource. These
+are protocol bounds, not a deployed per-account storage quota or rollout approval.
+
+### Atomic persistence and explicit staging
+
+One existing Store transaction saves immutable source_versions, normalized full field
+payload/provenance, observation/check, content-change event, resource item, checkpoint and
+receipt. The public observe_source behavior is preserved; its shared transaction helper
+has an internal promote=False mode used here. Academic source_key hashes connection,
+provider-subject namespace, course, item kind and provider ID; it stays stable across a
+pure scope-generation change. Another login/connection cannot reuse that namespace.
+
+Collected versions deliberately leave academic_sources.latest_version_id unset: existing
+manual-source/drafting readers and their freshness gates cannot accidentally treat this
+partly integrated connector path as current evidence. The model is not consuming collected
+sources yet. This is staging, not completed P1 memory/read integration. P1-A2 must add
+owned freshness/coverage-aware retrieval and readiness checks before activating them.
+Never expose complete_version_id alone as a current-source guarantee.
+
+canvas_evidence_payloads binds canonical fields to immutable version IDs. Observations
+retain generation, source resource, observed_at, server received_at, provider-updated time,
+reference, canonical payload/digest, coverage and optional version ID. Empty restricted/
+partial text is retained as an observation with no invented text/version. Immutable version
+retrieved_at never changes. A genuinely new successful check can move
+last_successful_check_at to its observation time; a receipt replay cannot. Current source
+coverage must come from the latest observation plus resource/connection state, not the old
+immutable version's transport coverage='api'. These new check fields do not relax existing
+runtime policy.
+
+Object latest_observation_id and last_observed_at advance only for nonhistorical captures.
+Partial new extraction never overwrites complete_version_id or last_successful_check_at;
+previous complete evidence remains historical if the latest observation has gaps. Captures
+older than a newer observation can be retained as historical without promotion/check/event
+advance. Equal timestamps with different content conflict rather than guessing order.
+Existing pre-scan capture rejection remains; arbitrary historical import is not implemented.
+A->B->A reuses A's immutable version but records the new current transition/check. Unchanged
+repeat checks create no new version/content event. Pure selection retains namespace, whereas
+reconnect requires fresh catalog/scope and checked evidence; generation is always recorded.
+
+Durable events source_observed/source_changed/coverage_changed reference owned observations;
+they are not executed and authorize no workflow. A changed observation invalidates any bound
+responsibility through the existing memory fence. No supervisor/event consumer is deployed.
+Partial/resource failures and pending absence are state, not automatic deletion or outreach.
+
+Receipt source_versions lists actual staged text versions only; additive observations lists
+provider_id, kind, observation_id, nullable version_id, content_digest, coverage and historical.
+A partial/empty item may therefore appear only in observations. Model/HTTP clients cannot
+use these IDs as authority. Exact lost-ack replay returns original IDs/checkpoint with
+replayed=true, without extra versions/checks/events. All writes roll back on malformed later
+items, storage failure, stale state or lease expiry before receipt commit.
+
+finish_resource(complete) requires an observed final complete page, no cursor, and no partial/
+historical items. Otherwise close explicitly partial/restricted/unsupported; do not relabel
+it complete. A complete empty enumeration marks previously known absent objects
+missing_pending_confirmation, retaining original evidence. Partial enumeration never marks
+absence. Reappearance clears the flag. No confirmed deletion is implemented. Completed course
+discovery remains independent of academic-content coverage.
+
+Migration012 creates only staged evidence/payload/observation/event/resource-item tables and
+adds per-resource cursor/incompleteness fields. It was applied only to disposable tests;
+existing deployed ledger and workers remain unchanged. Apply explicitly after011 only in an
+authorized environment before a reviewed consumer; roll back consumers first, preserve
+additive evidence for review. Remaining: full document/segment manifests, unified private
+retrieval/freshness/readiness, Outlook credentials/actor and assembled/live collection tests.
+
+## Agreed staged Canvas short-text readers — issue #85
+
+M accepted #78 sections1–2 at unchanged75df211 in
+[review6541105179](https://github.com/Akbarhoja/wrytely-agent/pull/78#issuecomment-6541105179).
+Shared implementation is `CanvasReadStore`, composed into Store. No M HTTP route,
+model tool, source promotion or document reader is introduced. Migration013 adds
+private read-cursor storage; it has only been applied to disposable tests.
+
+- `list_canvas_evidence(verified_user, *, connection_id, course_id=None, limit=20,
+cursor=None)` returns the agreed safe identity/coverage/freshness projection and
+  next_cursor. Bounds1–50; no body, payload fields, arbitrary provider reference,
+  subject or credential is returned in a list. Object UUID order is stable.
+- `read_canvas_evidence(verified_user, object_id, *, observation_id=None, offset=0,
+limit=12000)` returns original normalized text sections, exact fields/missing flags
+  and server-derived inert `canvas-object:course:kind:provider_id` provenance. Nonzero
+  offsets require an explicit observation. Code-point offsets preserve emoji; out-of-range
+  reads reject. Explicit old observations never fall back to a new version.
+- The corresponding `_for_task(lease,...)` methods fence the existing lease and restrict
+  results to sources bound to that task's current responsibility. An unbound reply task
+  gets no source bodies; course-filter failures do not reveal unbound course existence.
+  Student cursors cannot be reused as task cursors. No semester-wide model scope exists.
+
+Reads serialize with revoke/scope/ingest using the existing agent lock. Body access
+requires connected, unexpired, operator-configured origin, current subject/generation
+and selected course/resource. Owned disconnected metadata remains visible. Historical
+same-generation observations can be inspected but are explicitly unusable for current
+decisions. Different-account/missing object/observation returns LookupError; invalid
+bounds/cursors return ValueError; owned unavailable body access raises
+`shared.canvas_reads.SourceRefreshRequired` with only `source_refresh_required`.
+The future M route must map these to agreed generic404/400/409 and private/no-store;
+this implementation does not itself expose an HTTP surface.
+
+The latest scan/resource attempt determines coverage, including open, failed or missing
+resource attempts; a prior complete attempt cannot conceal a new gap. Text-version
+references come from the selected immutable observation, while latest_version_id
+always names the current observation's actual text version (possibly null).
+Freshness uses the shared inspection policy, not draft/action authorization. Empty
+restricted observations have empty sections/null versions rather than fake text evidence.
+Actual serialized read responses are capped at1MiB; source/model activation remains off.
+
+Opaque cursors are192-bit random handles, stored only as hashes with owner, connection,
+generation, course filter, task and anchor bindings. Expire after15 minutes; reuse does
+not renew TTL or source freshness. Under the agent lock, at most256 handles per agent
+are retained; issuance reclaims at most256 expired owner rows and rejects at the quota.
+No new operator signing key/configuration is needed. No global cleanup worker is deployed;
+inactive owners' bounded expired handles remain until another issuance or explicit
+future retention cleanup. Cursors do not act as source-access credentials.
+
+Final return checks use database wall-clock time for task lease and body credential
+expiry; transaction-fixed now() cannot keep an expired reader authorized. Validation:
+26 new reader cases and the full disposable backend suite **623 passed**. #82 API
+assembly was independently reviewed separately with36 passing focused cases, not
+included as an integrated runtime/API deployment on this branch.
+
+The #84 ordering/normalization fix still needs counterpart acceptance. Long documents,
+schema2 envelopes/digest vectors, original PDF sections, collector/API assembly and
+activation checks remain separate. Passing these readers does not complete P1-A2.
+
+## Canonical short-text bounds and legacy continuations — issue #97
+
+Every staged academic payload now checks normalized title<=300 and content<=24000
+code points after NFC/newline normalization, independently of coverage, title presence
+or whether a text version will be created. Oversized canonical payloads reject before
+any batch effects; mixed batches preserve no partial pointers/events/checkpoints.
+Input/envelope bounds remain in force. No text is truncated.
+
+Readers validate offset as a nonnegative exact integer, then against the selected
+immutable body's actual length. This replaces the fixed24000 offset cap so an older
+observation admitted before this fix cannot advertise a next_offset that the next
+read refuses. Per-page12000 and serialized1MiB response limits, pinned observation,
+owner/task/connection fences and historical/partial labels remain unchanged. Existing
+oversized observations are not rewritten, promoted or reclassified as complete.
+
+Ten new synthetic regression cases cover all coverage paths, normalized boundaries,
+atomic rejection and complete legacy/accepted continuation; six reproduced failures
+before the fix. Full disposable backend suite633 passed. No migration/deployment,
+provider call, current-source promotion or reader API/model activation is included.
+
+## Canvas absence ordering and canonical ID fix — issue #83
+
+A complete enumeration may mark an unseen course/object missing-pending only when
+its latest positive observed_at is strictly before the scan's persisted server
+started_at. Equal/newer observations are preserved. This existing server timestamp
+is a conservative enumeration lower bound; collector future-clock tolerance, later
+pages, finish time and receipt replay cannot manufacture a newer absence observation.
+Partial enumeration still cannot infer absence, and no evidence is deleted. A
+clock-ahead positive observation can delay a missing flag until a later scan, which
+is preferable to contradicting newer evidence. No new timestamp field/wire contract
+or migration is introduced.
+
+module_ids and submission_types retain input bounds but validate sorted/unique values
+after canonical NFC/newline normalization. Canonical collisions or reordered arrays
+are rejected; canonically ordered decomposed text is accepted and stored normalized.
+No new source/model activation or broader collection permission is introduced.
+
+## Deterministic draft format checks — issue #37
+
+verify_artifact now checks supported formatting before semantic review and stores
+optional deterministic_checks in its existing report: errors, word_count,
+disclosure_placement, word_ranges and limits. No mandatory API/model field or
+schema changes. Report consumers may ignore this additive evidence; new error
+strings must remain visible through their generic finding fallback.
+
+Word count is len(body.split()): whitespace-delimited tokens; a hyphenated token
+or number counts once. Title, citations and separate disclosure are excluded.
+If default policy requires disclosure inside body, those body tokens are counted.
+Supported numeric rubric syntax is an exact quoted instruction beginning
+“Write [a] N–M word[s]”, optionally with a hyphen before word; hyphen/en dash/em
+dash ranges are recognized case-insensitively. Each bound is 1–10,000, inclusive.
+All recognized whole-draft ranges apply; incompatible ranges report
+word_count_bounds_conflict. Too-short/long reports word_count_out_of_range.
+Numeric word requirements not parsed by this narrow syntax report
+word_count_requirement_unparsed; invalid bounds report word_count_requirement_invalid.
+No unsupported numeric limit is silently called deterministically verified.
+This does not interpret section-specific counts or all natural language. Only
+supplied exact rubric quotes are scanned; completeness of extraction still needs
+semantic review. Unsupported constraints require clarified source evidence.
+
+Disclosure-required policy retains the existing body-and-field gate by default.
+Only the cited policy source's explicit standalone line
+“Include this disclosure separately from the word-counted body:” followed by a
+nonempty required text line selects separate_field. The disclosure must equal
+that exact line and be absent from body. Missing/different text reports
+disclosure_text_mismatch; duplicate body insertion reports disclosure_must_be_separate;
+conflicting instructions report disclosure_format_ambiguous. This honors the
+existing M2 assignment, not a new permission policy. No researcher/group source
+may relax placement unless it is the cited policy source; evidence/provenance
+checks remain mandatory. Other wording retains the existing conservative body
+gate and requires review. Generation prompts request matching placement; semantic
+review still assesses actual disclosure/policy adequacy.
+
+Format failures persist needs_revision and reach bounded revision feedback before
+a separate semantic call; a model cannot override failed deterministic checks.
+Review drafts remain privately inspectable. This does not grant consent, final
+readiness on its own, sharing, submission or sending. Default policy tests remain
+unchanged; the M2 fixture now correctly uses its required separate disclosure.
+
+## Explicit private-draft intent and routing — issue #33
+
+Agreement: coordination #4 comment6492493685. Migration 009 adds
+private_draft_intents; 008/A4 stays excluded. No deployment/migration execution
+is implied. Apply 009 on an isolated environment before running this worker code.
+
+`create_draft_responsibility(verified_user_id, objective, key, *, source_ids,
+max_steps=6, pending_limit=20, max_revisions=2)` reuses atomic bound setup and
+returns the same native responsibility row. The authenticated app calls it only
+after explicit student confirmation: prepare one private draft, with no sharing,
+submission or sending. Pasted instructions are evidence, not that confirmation.
+Budgets are server-owned; max_revisions is an integer 0–2. Source limits/ownership,
+rollback and idempotency match create_bound_responsibility. Intent's original
+memory revision and revision budget persist in the same transaction as bindings
+and the initial plan. Original request metadata includes private_draft mode and
+revision budget. Changing either conflicts; an analysis-only key cannot upgrade,
+and a draft key cannot downgrade. The old analysis-only method is unchanged.
+
+At a planning episode with intent, the runtime assesses current owned bound
+evidence using assess_draft_requirements, then commits the result through a
+lease/pause/current-revision fence. Evidence quotes and freshness are revalidated
+in storage. A missing/nonpermitting policy or missing rubric blocks the draft duty
+and its task with draft_policy_or_rubric_blocked. Saved assessment is reused across
+attempts and planner episodes. It remains a fallible interpretation of sources,
+not a truth guarantee; the existing separate drafting preflight and mandatory
+artifact verification remain required. Provider failures use bounded normal retry.
+
+Only a duty with intent receives DraftPlannerDecision's extra action=draft. work
+remains ordinary analysis; draft creates one academic task and attaches its
+immutable policy/rubric/revision specification atomically before commit/claim.
+Stored intent, current evidence, step budget and duplicate checks constrain this
+choice. A consumed intent cannot spawn another drafting workflow under a new key.
+done before an actually completed, ready artifact is blocked as private_draft_not_ready.
+No model can grant its own consent or readiness. Model/source instructions cannot
+enable drafting on an analysis-only duty. Draft generation/checkpoint/revision
+continues through the existing worker path. No app polling upgrades are needed.
+
+Source changes revoke old task leases through existing memory invalidation;
+intent's original revision cannot be reused for new evidence. Pause fences both
+assessment commit and subsequent work. No A4 automatic reauthorization is added.
+Crash before a result is persisted may repeat model usage; saved assessment and
+drafting checkpoints avoid repeating already committed progress. This is not
+exactly-once model billing or an unbounded agent loop.
+
+`draft_responsibility_status(verified_user_id, responsibility_id)` is the exact
+private app read. None means absent/not-owned, mapped to the same private 404.
+Storage errors propagate. One SQL snapshot returns JSON-safe fields:
+
+| Field             | Values / meaning                                                                                                                                                                               |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| responsibility_id | UUID string                                                                                                                                                                                    |
+| requested_mode    | analysis or private_draft                                                                                                                                                                      |
+| status            | active, blocked or done; revision mismatch reports blocked                                                                                                                                     |
+| reason            | null, source_changed, draft_policy_or_rubric_blocked or draft_work_blocked; never raw model prose                                                                                              |
+| assessment_state  | not_requested for analysis; pending, assessed or blocked for draft intent                                                                                                                      |
+| workflow_state    | not_requested for analysis; pending before attachment; queued/running after attachment; ready_for_review only for a completed task with a ready artifact; blocked on failure or stale revision |
+| artifact_id       | latest saved draft UUID string or null; may reference an unready/stale review artifact                                                                                                         |
+
+Assessment state is historical and can remain assessed after source change;
+status/reason/workflow and artifact stale flags take precedence. requested_mode
+does not mean policy permits drafting, and ready_for_review never means shared,
+sent, submitted or approved by an instructor. Use artifact_review to inspect
+private draft/check details; do not hide unready drafts or present stale ones as
+current. Existing no-cache/private ownership rules apply. Store.draft_intent,
+draft_intent_sources and commit_draft_assessment are fenced internal runtime
+methods, not API/model tools. Do not accept browser CoursePolicy, task IDs or
+assessment/verifier output as authority. The app/UI consumer remains Murtazo-owned.
+
+The first new planner episode may use two model turns (assessment plus planning);
+subsequent planning reuses assessment, and drafting uses its existing bounded
+preflight/generation/check/revision limits. Account/global usage gates and live
+quality evaluation remain separate; this change makes no live budget expansion.
+
+## Draft requirement assessment — issue #31 (internal helper)
+
+`runtime.draft_requirements.assess_draft_requirements(model, sources)` accepts
+1–8 distinct current owned bound source-version records, supplied by trusted
+runtime storage (the existing drafting_sources shape: id, content, retrieved_at,
+coverage). It does not accept browser-supplied evidence as authoritative. Each
+content is nonblank and at most 24,000 characters; timestamps are aware, no older
+than 24 hours and no more than five minutes in the future. Invalid/oversized/stale
+input fails before inference rather than silently truncating policy evidence.
+
+One structured existing ModelClient call extracts a candidate nullable CoursePolicy,
+0–30 RubricItems and a bounded reason. Exact nonblank policy/rubric quotes must
+occur in their cited supplied version; malformed output or unbound/invented evidence
+raises ValueError. Only a permitting/disclosure-required policy with a nonempty
+rubric returns state=assessed; otherwise state=blocked. JSON-safe output includes
+policy, rubric, reason, input_tokens, output_tokens, limits and always
+authorizes_drafting=false. Sources' freshness is checked again after inference.
+
+This helper has no database/task/action side effects and is not connected to the
+worker yet. It does not persist authorization, classify user consent, guarantee
+policy interpretation/rubric completeness or make a draft ready. Semantic results
+are fallible even with exact quote validation; source injection resistance needs
+live evaluation, not a scripted verdict. Provider exceptions propagate to the
+runtime's normal bounded/redacted failure path. Before persisting/using results,
+the caller must recheck lease, pause and source/memory revision through existing
+fenced Store boundaries, persist reusable checkpoints, require explicit student
+draft delegation, and retain existing drafting preflight and verification.
+
+The app-facing explicit-delegation and atomic planner-routing proposal is posted
+in coordination #4 comment6492266670; consumer agreement is pending. Existing
+B2 create_bound_responsibility remains analysis-only. This internal helper does
+not expand the agreed B2 API or authorize its app consumer to bypass that gate.
+
+## B2 atomic setup and private reads — issue #29
+
+Agreed in coordination #4 comment 6491917360. Implemented in
+shared/bound_responsibilities.py and shared/academic_reads.py, composed into the
+existing Store. No migration, endpoint, connector or full-draft authority is added.
+App consumers derive user_id exclusively from a verified session. These methods
+do not authorize sharing, submission, automatic assignment drafting or inference
+from account creation. Existing create_responsibility remains unchanged.
+
+`create_bound_responsibility(user_id, objective, key, *, source_ids,
+max_steps=6, pending_limit=20)` returns the existing responsibility row (native
+database UUID/datetime fields, as with create_responsibility). Source IDs may be
+UUID objects or UUID strings, in a list/tuple of 1–8 distinct IDs. Objective is
+trimmed and bounded 1–12,000 characters; key is 1–128; integer max_steps is 1–12;
+integer pending_limit is 1–1,000. One transaction locks the user's agent, verifies
+every owned source has a current version, creates the duty/bindings with initial
+memory_revision equal to source count, then queues one plan at that revision.
+Agent locking serializes with source observation/binding and worker claims.
+Partial setup is not claimable; failures roll back duty, bindings, messages and
+tasks. Paused accounts may save work but workers cannot claim it.
+
+An internal attempt-0 bound_responsibility_setup event retains the canonical
+original source set/objective/step budget. Reordered identical requests return the
+same duty before capacity checks, without resetting progress or rebinding after
+later source updates. Changed payload, or reuse of a legacy unbound request key,
+raises RequestConflict. Missing, invalid UUID or other-user source IDs raise the
+same LookupError("Source not found"); invalid count/duplicates/bounds raise
+ValueError, exhausted pending capacity raises QueueFull, unprovisioned users raise
+LookupError("Complete setup first"). Apps validate UUID syntax and map source
+absence/not-owned identically. Storage failures propagate; never report them as
+empty successful reads. This creates an analysis-only duty, not a drafting request.
+
+Private reads return JSON-compatible dictionaries/lists: UUIDs are strings and
+aware timestamps are ISO 8601. Source coverage is the recorded evidence type;
+snapshots do not imply live monitoring. All lists have a hard limit of 50 and no
+cursor yet; consumers must explain this limit. Lists are stably ordered:
+
+- `source_snapshots(user_id)` returns current source summaries, ordered by
+  retrieved_at descending, source_id descending. Empty/unprovisioned account: [].
+  Fields: source_id, version_id, title, reference, coverage, retrieved_at,
+  external_revision. Historical versions are excluded.
+- `source_snapshot(user_id, source_id)` returns that summary plus full stored
+  content (bounded by SourceObservation's 24,000-character limit), or None for
+  absent/not-owned. Source body is untrusted evidence, not authority.
+- `responsibility_artifacts(user_id, responsibility_id)` returns None for
+  absent/not-owned duty; otherwise a list (possibly empty), ordered created_at
+  descending, artifact id descending. Fields: id, task_id, title, state, stale,
+  created_at. Ownership and list retrieval share a repeatable-read snapshot.
+- `artifact_review(user_id, artifact_id)` returns None for absent/not-owned;
+  otherwise {artifact, latest_check}. artifact fields: id, responsibility_id,
+  task_id, memory_revision, draft, state, created_at, stale. draft is the existing
+  DraftArtifact payload. latest_check is null before any completed check or the
+  latest stored verification report (ordered created_at descending, check id
+  descending); it includes passed/errors, assessment, policy/rubric evidence,
+  token usage and limits. No raw model histories, lease tokens, agent/user IDs,
+  operator credentials or internal request keys are projected. One SQL statement
+  reads artifact state, current memory revision and latest report coherently.
+
+stale is independent of historical readiness/check success; it means the bound
+responsibility's source memory revision changed. Neither ready nor passed grants
+external-action authority. API assembly must retain no-cache responses and private
+404 semantics. Do not expose internal readiness commits or accept browser-supplied
+CoursePolicy/verification results. Trusted responsibility-level draft intent and
+atomic pre-claim routing remain the next separately specified runtime increment;
+the app must label this first delegation path as analysis only.
+
+Status: implemented and locally tested; live provider validation remains pending.
+Boundary types: `contracts/models.py`. Database: `contracts/001_foundation.sql`.
+All private operations use the verified Clerk `sub` as `user_id`.
+
+## HTTP
+
+Base URL: deployment configuration, not hardcoded. Bearer authentication only.
+Browser obtains a short-lived session token from existing Clerk authentication and
+sends `Authorization: Bearer <token>`. `__session` cookies and user-ID headers are
+not accepted by this backend. CORS origins and JWT authorized parties must be
+configured for the actual frontend. No credentials go into browser storage code
+or source control.
+
+| Method/path            | Input                             | Output / semantics                                                                                                                                                     |
+| ---------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET /healthz           | none                              | Process liveness only                                                                                                                                                  |
+| GET /readyz            | none                              | Configuration flags; never a claim that live services were tested                                                                                                      |
+| POST /v1/bootstrap     | authenticated, no body            | Existing or newly provisioned agent for this user                                                                                                                      |
+| GET /v1/me             | authenticated                     | Agent ID, own user ID, paused flag; 404 before bootstrap                                                                                                               |
+| POST /v1/messages      | `{content}` and `Idempotency-Key` | 202 `{task_id,status}`; durable queueing, not a completed answer                                                                                                       |
+| GET /v1/messages       | authenticated                     | Own recent messages in chronological order, at most 100                                                                                                                |
+| GET /v1/tasks/{id}     | authenticated                     | Own task state; 404 also for another user's task                                                                                                                       |
+| GET /v1/tasks          | authenticated                     | `{tasks}`: own latest 50 tasks, newest first; includes status, attempts, controlled error, creation time and a title clipped to 180 characters from the source message |
+| POST /v1/agent/control | `{paused: true/false}`            | Own agent state                                                                                                                                                        |
+
+Repeat a message request with the same key and identical content to safely retrieve
+the original task. Reusing its key for different content returns 409. Missing key
+or invalid body returns 422. Pending-work limit returns 429. Unauthenticated or
+invalid sessions return 401. Unconfigured storage returns 503.
+
+## Background execution
+
+`TaskLease` identifies task, agent, user and owning attempt. Only a live lease can
+write events or complete. `ModelClient.turn(history, tools)` returns typed model
+output and usage. Meta's Responses API is the production adapter. Test models are
+only injected in tests; no runtime fake-model mode exists.
+
+The current tool is `get_academic_context` with exactly `{}` arguments. Scope is
+server-controlled. Initial context is the current message, not a synchronized
+semester model. Full planner, handoff resumption and course ingestion are later
+work, not hidden assumptions in the foundation contract.
+
+## Messaging adapter boundary for B1b
+
+`ChannelAdapter.send(recipient, text, action_id)` returns `DeliveryResult` with a
+durable internal ID and accurate provider evidence. The current API does not yet
+call an adapter. Discuss durable delivery tables, verified account linking,
+webhook signatures and ambiguous outcomes with the lead before implementing B1b.
+No phone/chat identifier is trusted as a Clerk identity without verified linking.
+
+## Contract changes
+
+Propose a small PR with new types, documented behavior and tests. No duplicate
+database client or parallel auth mechanism. Do not alter migration 001 after it
+has been deployed; add a versioned migration instead. Both engineers may inspect
+all implementation code to diagnose problems.
+
+## B1b adapter preparation — October 28
+
+`integrations/whatsapp.py` implements raw-body HMAC signature verification, configured
+business/phone filtering and text extraction, plus a single-attempt Cloud API text
+sender. HTTP clients must have transport retries disabled. Provider acceptance is
+not recipient delivery; timeouts, server failures and malformed successes remain
+`unknown`. The action ID refers to our ledger, not provider deduplication.
+
+These functions are not exposed as HTTP routes or called by the worker yet.
+Before enabling them: persist webhook IDs uniquely, verify account/number linking,
+add durable outbound intents and permission checks, enforce the conversation
+window, implement approved templates and consume status callbacks. Never route a
+phone number directly to a Clerk user ID. Media intake remains future work.
+
+## B1b durable inbound path
+
+Migration 002 adds link challenges, verified numbers, inbound IDs and a reply
+outbox. Migration runner now applies ordered versioned migrations with checksum
+validation; 001 is unchanged.
+
+- `POST /v1/whatsapp/link`: Clerk-authenticated; bootstrapped accounts receive one
+  single-use challenge, valid ten minutes. Reissue invalidates its predecessor.
+- `POST /v1/whatsapp/unlink`: Clerk-authenticated; unlink own number, revoke pending
+  challenge and cancel own queued/deferred outbound messages.
+- `GET /webhooks/whatsapp`: configured token challenge verification.
+- `POST /webhooks/whatsapp`: bounded raw body, app-secret signature, configured
+  business and phone filtering. Persist accepted text and task atomically; unique
+  provider ID prevents duplicate tasks. Unknown senders are ignored. Return 503
+  when work cannot be durably accepted because of queue capacity or storage.
+
+Worker completion for an inbound WhatsApp task atomically creates its queued reply
+if the original link is still current. Web tasks do not create WhatsApp replies.
+Delivery worker, status callback ingestion, template/window rules and web linking
+controls are still pending. No automatic WhatsApp sends are enabled.
+
+## A1 episode resumption
+
+`Store.episode_history(lease)` verifies the current live lease and returns only
+that task's committed model turns and tool outputs across attempts. The runtime
+reconstructs the model history in event order, retains encrypted reasoning blocks,
+executes pending read-only calls, and reuses a saved final response. A model turn
+now records `text` as well as its full output and usage. Legacy turns without text
+cannot recover their final text through this new field and may require inference.
+
+Each episode remains bounded and total attempts remain capped. Source mutations,
+new responsibilities and true next-task selection are separate future stages.
+Do not add a side-effect tool to replay without an action ledger and documented
+reconciliation behavior. A crash after an external action but before its checkpoint
+can otherwise duplicate that action. Current tools are read-only.
+
+## A2 responsibility planner — internal integration contract
+
+Migration 003 adds responsibilities and typed plan/academic tasks. Trusted callers
+use `Store.create_responsibility(verified_user_id, objective, request_key,
+max_steps=6, pending_limit=20)` only after explicit delegation. The caller must
+supply a verified session identity; do not accept user IDs generated by a model or
+read from an arbitrary request body. No new HTTP endpoint or web UI is added here.
+`Store.responsibilities(user_id)` returns the account's latest 50 duties.
+
+Creation is idempotent for the same objective/key/budget and atomically queues one
+planning task. Changed payload under the same key conflicts. Missing agent fails;
+existing pending-work capacity is respected. Steps are internal analysis only,
+not externally authorized actions or verified assignment artifacts.
+
+The worker requests one typed `record_plan` decision from the configured model.
+Choices are work, blocked or done. A saved decision survives a new worker attempt.
+Applying it atomically completes the planner task and creates at most one academic
+step. Finishing that step saves its result and queues the next planner atomically.
+The planner sees the objective and up to 12 step records (result excerpts limited
+to 4,000 characters). Model calls and attempts retain existing bounds.
+
+A repeated step key, empty work instruction or exhausted step budget blocks the
+duty. Step budget defaults to six, hard maximum twelve. Different names for
+semantically repetitive work are not deterministically detected; the model is
+instructed to avoid them and the hard budget bounds this failure. Failed tasks
+block their responsibility after attempt exhaustion. Blocked work occupies no
+worker slot. Pause prevents new claims; active tool/result writes recheck pause.
+
+Internal task prompts use role `internal`, and internal results are excluded from
+the ordinary conversation list. They must not be presented as student messages.
+`done` here means internal analysis completed according to the planner; it is not
+independent verification, grading, delivery, or submission. Initial done without
+any work is blocked. Source/version change handling, commitment extraction,
+verified artifacts, student decision requests and blocked-duty resumption are
+future stages. This loop does not yet activate through ordinary chat messages.
+
+## A2 academic memory — draft internal contract (issue #6)
+
+Connector handoff is proposed in coordination issue #4, not yet agreed or wired.
+No new HTTP endpoints, adapters or frontend controls are part of this change.
+Trusted assembly must derive user identity from the verified session/connection;
+a source body or model may never provide the authority to access another account.
+
+`SourceObservation` contains source_key (stable connector/item key), external_revision,
+title, reference, coverage (`snapshot`, `api`, `feed`, `group`), content and a
+mandatory timezone-aware retrieved_at. Text is limited to 24,000 characters.
+References are stored as evidence only; the memory layer does not fetch URLs.
+Adapters must not pass credentials in content or references.
+
+`Store.observe_source(user_id, observation)` stores immutable version evidence and
+returns its ID and source_id. Repeated key/revision with identical evidence returns
+the original version and original retrieval time; it does not manufacture a fresh
+sync. Changed evidence under the same revision raises RequestConflict. Distinct
+versions with equal retrieval time conflict. A late observation is preserved but
+cannot displace a version with a newer retrieval timestamp. This orders recorded
+observations, not arbitrary vendor revision strings. Adapters must reconcile vendor
+ordering where necessary. Retrieval timestamps over five minutes in the future
+are rejected. Unprovisioned identities fail.
+
+`Store.bind_source(user_id, responsibility_id, source_id)` explicitly attaches one
+owned source to one owned duty, idempotently; max eight sources per responsibility.
+Before the initial plan starts, binding enriches its memory revision atomically.
+Once work starts, adding a source blocks old work as source_changed. No cross-user
+or unbound source is exposed to the planner.
+
+`Store.record_source_fact(lease, version_id, claim, quote)` is a fenced internal
+storage boundary, not a model tool or a public route in this stage. It requires a
+current source version bound to this responsibility and an exact substring quote.
+Identical fact retries deduplicate by a SHA-256 digest of claim/quote. Claim and
+quote limits are 2,000 characters each. Exact quote validation establishes text
+presence only, not that the quote supports the claim. A3 must implement that check.
+
+The planner/context now receives academic_memory: up to eight source excerpts
+(6,000 characters each, with truncation flags), version IDs/revisions, references,
+coverage and retrieval timestamps; up to 50 recent facts with current-version flags.
+A fixed 24-hour heuristic flags freshness review; it is not a provider freshness SLA
+or proof that a portal was checked. Snapshot input does not monitor later changes.
+
+Promoting a newly observed version increments attached duties' memory revision,
+blocks queued/running tasks, revokes their leases and blocks each affected duty
+with source_changed. Past facts/results remain for audit; old facts are flagged
+noncurrent and old step results stale. Task commits also check the responsibility
+revision. A stale saved model/planning turn cannot complete or spawn fresh work.
+This stage stops stale work; automatic revision/resumption belongs to A4. Existing
+step budgets are not reset. Source evidence cannot expand action permissions.
+
+## Delivery storage, issue #8 — draft typed handoff to #5
+
+Stacked on memory PR #7; migration 005 preserves 001–004. Contract definitions:
+`contracts/delivery.py`. Store implementation: `shared/delivery_store.py` composed
+into existing Store. No network IO, transport, callback parsing or worker assembly
+is implemented here. Murtazo must review/agree this typed handoff before wiring it.
+
+- `claim_whatsapp_delivery(worker_id, lease_seconds=60)` returns DeliveryClaim or
+  None. Worker ID <=100 chars, lease 5–300 seconds. Claim contains action/agent/task
+  IDs, recipient, content, persisted link_generation, worker_id, attempt_token and
+  deadline. It atomically changes queued/due deferred to sending. Expired sending
+  becomes unknown, including attempts that may not have dispatched: conservative
+  recovery avoids blind resend. Unknown/accepted/failed/cancelled are not reclaimed.
+- `authorize_whatsapp_send(claim, business_id=..., phone_number_id=...)` returns
+  SendAuthorization: permitted with authoritative recipient/text, held with reason
+  and retry_at, or cancelled with reason. It locks agent then action, validates
+  attempt ownership/expiry, current link generation and phone, pause, completed
+  reply task, explicit consent, timezone/quiet-hour preferences, trusted inbound
+  event timestamp and text length <=4096. Internal academic/plan results are never
+  deliverable through this reply path. Source-dependent artifact delivery must use
+  a later verified-artifact contract; it is not implicitly authorized here.
+- Permitted authorization atomically stamps dispatch_at and business/number IDs.
+  Repeating authorization raises LeaseLost. Worker must send immediately using the
+  returned payload ONCE. Do not reuse authorization after restarting. There is a
+  residual database-authorization/network-dispatch race: pause/unlink after this
+  boundary cannot recall an in-flight request. Never claim stronger cancellation.
+- `record_whatsapp_result(claim, DeliveryResult)` requires the live owning attempt,
+  prior dispatch authorization and matching internal_id. Only accepted (with
+  provider_ref), failed or unknown are valid transport evidence. It reconciles
+  stored early callbacks if a reference is known. Late/stale result writes raise
+  LeaseLost, storage failures are not success, and no result path schedules resend.
+- `record_whatsapp_status(event, business_id=..., phone_number_id=...)` accepts
+  WhatsAppStatusEvent ONLY after signature validation by Murtazo's assembly.
+  Match configured account/number, provider reference AND recipient; never infer
+  account ownership from recipient alone. Record event evidence idempotently.
+  delivered/read aggregate to delivered; failed overrides sent/accepted; sent
+  cannot override failed; delivered never regresses. Read evidence remains in the
+  event record, not a fabricated aggregate read state.
+- Callback-before-response is persisted unmatched and reconciled when the exact
+  provider reference is saved. Callback and result writes serialize by reference.
+  Orphans are retained seven days, capped at 10,000 with an explicit failure when
+  full. Expired orphan cleanup occurs on callback ingestion. Without a known
+  provider reference (lost send response), an orphan stays unmatched; manual/provider
+  reconciliation is required and no automatic resend is permitted.
+
+Trusted assembly calls `record_whatsapp_inbound_time(provider_id, sender, event_at)`
+after signature validation AND successful durable inbound ingestion. It requires
+a persisted inbound ID matching the current phone/link, timezone-aware provider
+event time and at most five minutes future skew; stored time is capped to receipt
+and never moves backwards. Old signed events do not reopen an expired 24-hour
+window. Receipt-only `last_inbound_at` is not used for send eligibility. Existing
+links retain unknown event time. New link generations are random; historical reply
+rows without a proven generation are cancelled at authorization, never backfilled
+with assumed permission.
+
+`set_communication_preferences(verified_user_id, consent=bool, timezone=IANA,
+quiet_start=0..23, quiet_end=0..23)` persists explicit account-scoped preferences.
+Equal start/end explicitly disables quiet hours; overnight ranges are supported.
+No preference rows are inferred for existing students. Missing preferences,
+revoked consent, pause, unknown inbound time, quiet hours and oversized text hold
+sending for a five-minute reevaluation; ownership/result mismatch cancels. No
+model/source can set preferences by calling an untrusted interface.
+
+IMPORTANT REMAINING GAP: an expired conversation window returns held with
+`approved_template_required`. This PR intentionally does not invent an approved
+template name, parameters or permission. Approved-template configuration/payload
+support needs the next jointly agreed contract before proactive >24-hour sends
+can work. Murtazo's transport may prepare templates independently, but must not
+bypass this hold. Setup/API preference endpoints, timestamp parser wiring, delivery
+worker and signed callback assembly remain Murtazo's tasks. No live send enabled.
+
+## A3 draft artifacts and verification — issue #10 (internal, not wired)
+
+Migration 006 adds private immutable draft payloads and append-only check reports.
+Stack dependency: #9 → #7 → integration baseline. No earlier migration modified.
+
+`save_draft(lease, DraftArtifact, request_key)` is fenced to a running academic
+responsibility task. It persists title, body, structured claim/quote/source-version
+citations and disclosure as `review`, with the responsibility's memory revision.
+The same task/key/payload returns the same draft; changed payload conflicts. New
+keys create revisions as new artifact IDs. Ordinary conversation tasks cannot
+save academic artifacts. Student retrieval through `artifact(verified_user_id,id)`
+is private and reports `stale` if source memory changed. No HTTP routes or model
+drafting tools are exposed by this increment.
+
+Only `runtime.verification.verify_artifact(store, model, settings, lease, id,
+policy=CoursePolicy, rubric=list[RubricItem])` can use the internal readiness commit.
+Callers must not expose `_commit_artifact_check` to a model or API. Model responses
+alone never change state. Structural checks require current bound source versions,
+exact quotes, cited claims present in the draft, a bounded nonempty source-backed
+rubric and explicit source-backed course policy. Prohibited, limited or unknown
+policy cannot finalize this full-draft path; other permitted assistance belongs
+to its own workflow. Required disclosure must appear in the body.
+
+Next, a separate reviewer call through existing ModelClient assesses all citations
+against full current sources, all rubric items against the body, uncited claims,
+policy classification, disclosure sufficiency and completeness of the supplied
+rubric. Structured arrays must match input cardinality; every claim must be
+supported and every rubric item covered. Unsupported/uncertain/missing/invalid
+assessments cannot pass. Missing/older-than-24-hour evidence blocks before inference;
+this is a conservative starting freshness rule, not proof sources are up to date.
+The model may still misjudge support or miss requirements: this is fallible semantic
+assessment, not a guarantee of correctness or instructor approval.
+
+Each completed check persists policy/rubric evidence, errors, assessment and usage;
+pass updates state to ready, failure to needs_revision. Drafts remain readable in
+review before checks, preventing a verification deadlock. Provider failure leaves
+the draft unready and propagates to the caller for normal bounded retry handling.
+Final commit rechecks lease, pause, task ownership and memory revision; a concurrent
+source change cannot approve old work. Persisted ready state is historical evidence
+of checks at that time; consumers must check stale and revalidate current permissions
+before sharing. It is not authorization to send, submit or disclose anything.
+
+This stage supplies an internal boundary only. Draft generation tools, rubric/
+policy extraction, end-to-end worker orchestration, student review/download APIs,
+sharing and automatic change-driven revision are still pending. The existing
+internal academic worker continues producing working notes, not ready artifacts.
+
+## P1-A2 internal freshness increment — issue #73
+
+`shared.freshness.legacy_freshness` centralizes the existing 24-hour limit and
+five-minute future-clock tolerance for manual/API/feed snapshot evidence. Unknown
+or timezone-naive timestamps fail closed. Existing context flags, extraction,
+drafting preflight and verification use this policy; it does not certify that a
+provider has been checked recently.
+
+The verifier rechecks all policy, rubric and saved-draft citation version IDs against
+current owned responsibility bindings using database wall-clock time immediately
+before persisting a successful check. Expired/future evidence becomes a failed
+`evidence_freshness_failed_at_commit` report; missing/currently unbound versions
+become `evidence_unavailable_at_commit`. Failure leaves the artifact `needs_revision`,
+retains inference usage, and blocks the draft workflow without spending another
+revision call. The returned report is the committed report. Recovery also rechecks
+cached successful reports, appending one failed check when necessary; subsequent
+reads reuse that failure. Private-draft responsibility completion independently
+requires still-fresh evidence, rather than relying on historical ready state.
+Readable artifacts and historical successful reports are not renewed by these checks.
+
+The **unwired** `canvas_freshness` policy foundation requires connected state,
+matching positive integer generations, selected scope, known nonhistorical/nonmissing
+status, and complete item plus resource coverage. Age uses the earlier of client
+observation and server receipt; neither timestamp may exceed server time by more
+than five minutes. Proposed purpose limits are inspect 24 hours, draft six hours,
+act one hour, with urgent decisions capped at 30 minutes. Exact expiry is inclusive.
+Purpose/urgency must be server-owned and valid. Ownership and exact version/resource
+binding remain separate caller requirements. These are internal tested policy inputs,
+not agreed C3 consumer interfaces or a grant to activate staged Canvas evidence.
+
+No new API, schema migration, source promotion, model tool, continuous worker or
+provider call is introduced. C3 retrieval, original-section paging/segments and new
+Canvas evidence activation still need counterpart agreement and implementation.
+
+## A3 generation helper — issue #12
+
+`runtime.drafting.generate_checked_draft(store, model, settings, lease,
+workflow_key=..., policy=CoursePolicy, rubric=list[RubricItem], max_revisions=2)`
+connects current bound evidence, source-policy preflight, generation, saved drafts,
+mandatory verification and bounded revision. This is an internal helper, not yet
+registered in normal worker dispatch or student APIs. It never sends or submits.
+
+A bounded nonempty source-backed rubric is required. Exact policy/rubric quotes
+must match current sources retrieved within 24 hours. Unknown/prohibited/limited
+policy blocks before generating assignment text. A separate structured model call
+must find the source policy permits the requested work; caller classifications
+cannot override it. This model judgment is fallible and needs live evaluation.
+
+Default maximum three drafts: initial plus two revisions (configurable 0–2).
+Failures feed the previous draft/report into revision. Policy/evidence failures
+stop rather than revise around them. Returns ready, needs_revision or blocked;
+none authorizes delivery. It does not complete the task or choose its next step.
+
+Persisted workflow keys (1–100 chars) bind policy, rubric and revision budget;
+changed payload under the same task/key conflicts. Saved preflight, draft and
+checkpoints recover across attempts under task fencing. Source changes/pause
+prevent stale writes. Committed drafts resume at review; reports are reused.
+Crashes before persisting inference can repeat model usage; no exactly-once billing
+claim. Callers must not use new keys to evade task/account execution budgets.
+Automatic source-policy extraction and end-to-end worker wiring remain pending.
+
+## A3 worker dispatch — issue #15
+
+Migration 007 stores immutable drafting-request specifications. Existing worker
+run_once now dispatches academic tasks with a persisted request through the checked
+draft workflow; tasks without a request retain the internal-analysis path.
+
+Trusted assembly calls `configure_drafting_task(verified_user_id, task_id,
+policy=CoursePolicy, rubric=list[RubricItem], max_revisions=2)` only after explicit
+student delegation. It requires an owned, current, ready, never-attempted academic
+step under an active responsibility, source-backed permitted/disclosure-required
+policy and 1–30 exact current bound rubric quotes. It must be configured before the
+worker claims it; otherwise configuration fails rather than upgrading active work.
+Repeated identical configuration is idempotent; changed configuration conflicts.
+A model, connector payload or arbitrary caller-supplied identity cannot authorize
+this operation. This change adds no HTTP endpoint or automatic delegation classifier.
+
+The worker reloads the persisted policy/rubric under its fence and calls
+`generate_checked_draft` using a fixed task-scoped workflow key. Current sources,
+freshness, preflight, draft/checkpoint recovery, pause and revision limits remain
+mandatory. Passing saves a private ready_for_review result referencing the artifact
+and completes the task via the existing fenced transaction, which also creates the
+next responsibility planning job. This path does not create WhatsApp delivery or
+imply instructor approval. It does not publish the draft body in ordinary chat.
+
+Blocked policy or exhausted revisions record a private drafting_outcome event and
+atomically block the task and responsibility, release the lease and preserve saved
+artifacts/checks for review. Other work can proceed. Provider/validation exceptions
+use existing bounded retries and redacted error codes. Source-change revocation
+prevents old drafts/tasks from completing. Trusted API/connector assembly must still
+coordinate how delegation, policy evidence and rubric extraction reach this boundary;
+Murtazo owns that assembly. Automatic task selection for drafting remains future.
+
+## Private WhatsApp connection read — issue #18, requested by #17
+
+`Store.whatsapp_connection(verified_user_id)` returns None before provisioning;
+otherwise `{linked: bool, phone_last4: str|null, preferences: object|null,
+latest_delivery: object|null}`. Preferences, when saved, contain consent (bool),
+timezone (IANA string), quiet_start and quiet_end (integers). Explicit false/zero
+values are preserved. Missing preferences remain null. Latest delivery, when any,
+contains state (existing persisted enum), reason (nullable controlled hold reason)
+and retry_at (nullable aware datetime, serialized as ISO by API assembly).
+
+State `sending` means a pending attempt, not confirmed delivery. accepted means
+provider acceptance; only delivered reflects recipient delivery evidence. unknown
+must remain visibly uncertain. This is the latest historical account action, not
+necessarily a send for the currently linked generation. On unlink, phone_last4 is
+null and linked false; explicit saved preferences and historical delivery remain.
+Return no full phone, source/result text, account IDs, challenge/hash, worker IDs,
+attempt tokens or secrets. The query uses one statement snapshot. Database errors
+propagate; do not replace them with disconnected/default success state. Caller
+identity must come from verified auth, never a model or arbitrary request body.
+
+Existing Settings now includes optional whatsapp_business_number (environment:
+AGENT_WHATSAPP_BUSINESS_NUMBER), default None, validated 7–15 digits with nonzero
+first digit, no plus/spacing. This is a PUBLIC destination number, distinct from
+Meta's internal phone_number_id. No guessed/default number is configured. This is
+shape validation, not proof the business owns/configured the number.
+
+Murtazo owns authenticated GET /v1/whatsapp assembly, public configuration/readiness
+fields, proxy allowlist and student controls under #17. No app/frontend endpoints
+are added here. No migration, connection authorization or sending permission is
+introduced. Approved-template policy/configuration remains a separate Codex-owned
+shared-contract task; expired-window delivery stays held.
+
+## Approved reply templates — issue #21 (review before worker opt-in)
+
+Settings adds whatsapp_approved_templates (max 20 ApprovedTemplate entries, default
+empty) and whatsapp_reply_template_key (default None). Environment names use the
+existing AGENT_ prefix. Configuration is trusted server/operator input, never a
+student API or model/source tool. Operator must verify actual provider approval for
+the exact account/name/language/body schema; provider_approved=true is an explicit
+configuration assertion, NOT a provider approval lookup performed by Wrytely.
+No real template/name/approval is configured by this code change.
+
+ApprovedTemplate fields: key, name (lowercase letters/digits/underscore), language,
+business_id, phone_number_id, provider_approved (literal boolean True), body_parameters
+(tuple of 1–10 TemplateParameter). Each parameter has source literal/reply_text,
+optional literal value, and max_length 1–1024. Literal values must be nonblank and
+fit the bound; reply_text cannot set literal. Exactly one reply_text parameter is
+required to carry the complete authorized reply. No notification-only substitution
+or truncation is allowed in this first contract. Static transport templates may
+exist, but this authorization path does not use them to claim answer delivery.
+
+`authorize_whatsapp_send` adds supports_templates=False, approved_templates=(),
+reply_template_key=None. Existing workers remain held for expired windows, even if
+operator templates exist. Murtazo must review and explicitly opt in a worker that
+can branch on SendAuthorization.payload.kind. TextPayload is {kind:text,text};
+TemplatePayload is {kind:template,key,name,language,body_parameters}. For permitted
+text, legacy authorization.text is preserved. For permitted template, legacy text
+is None: worker MUST consume the typed payload, not fall back to claim.content.
+
+For expired conversation windows only: match exactly one selected approved key,
+verify configured business/number, populate only allowed parameters, and ensure
+the entire reply fits. Missing key/approval/capability remains approved_template_required;
+wrong account holds template_account_mismatch; invalid/oversized body holds
+template_parameter_invalid. Existing link, consent, pause, quiet hours, known trusted
+inbound time and completed reply requirements remain enforced. No body truncation,
+model-selected template or new recipient permission. Within-window text is unchanged.
+
+Dispatch authorization atomically records delivery_authorized evidence in the
+existing private episode ledger (task ID, action ID, owning attempt, typed payload).
+The one-use dispatch fence and accepted/failed/unknown/status correlation remain
+unchanged. This is no new migration. Existing send/network cancellation race and
+unknown-outcome rules still apply. Murtazo owns passing Settings values/capability,
+dispatching payload to the existing adapter once, and adding worker/API tests after
+agreement. No transport/worker/app code was changed by Codex in this increment.
+
+## Unsuccessful Meta call evidence — issue #39
+
+MetaModelClient raises ModelCallFailed (a RuntimeError) for received non-completed
+responses and HTTP status failures. evidence() returns only controlled status,
+HTTP400–599 or null, allowlisted provider code/unknown/null and nonnegative known
+input/output token counts or null. No output, provider message/body, response ID,
+credentials or source text is included. Null usage is unknown, never zero cost.
+Incomplete responses remain unsuccessful and cannot be replayed as final answers.
+No transport retry or model/token limit is changed.
+
+The runtime worker saves this metadata as a private fenced model_failure event
+before its existing bounded retry/block behavior. These events are excluded from
+model-turn replay. If fencing is lost (for example pause), no event is committed;
+operator reservations must remain until reconciliation. This is failure evidence,
+not a cumulative billing cap, and does not release any reservation automatically.
+
+## Pause recovery and execution-failure allowance — issue #41
+
+Store.set_paused keeps its verified-user/boolean interface and agent-row return.
+Pausing atomically revokes each live running task lease, records one trusted private
+control_interrupted event per interrupted claim, and returns that task to ready.
+The paused agent cannot be claimed. Resuming never restores the old token; a fresh
+claim has a new token and monotonically larger attempt number. Existing committed
+model/tool/draft checkpoints remain available under the fresh fence.
+
+max_attempts bounds execution/crash attempts separately from recorded control
+interruptions. Claim and retry subtract distinct interrupted claim numbers; repeated
+Pause while already paused does not grant extra allowance. An already expired
+claim remains an ordinary crash, and subsequent real failure still exhausts the
+configured allowance. No attempt number is decremented or reused. Source-revision
+and responsibility fences remain mandatory. No schema or HTTP payload change.
+
+Pause cannot cancel a provider call already in flight. Its late result cannot
+commit through the revoked lease. Unknown/billable interrupted usage must retain
+its operator reservation; this recovery mechanism is not a billing cap. Repeated
+user controls may cause more claims, so cumulative per-account/global inference
+budgets remain a separate M4 gate before public pilot. Nothing starts a worker,
+resumes outbound sends or changes consent by itself.
+
+
+## Explicit model-provider factory
+
+`BudgetedMetaRouter(store, settings).for_user(verified_user)` remains the service
+boundary. `Settings.meta_provider` is operator-only `meta` (default) or `fireworks`;
+selected constructor validates its own key. Consumers must not duplicate a
+Meta-hosted-key requirement. Readiness reports selected-key presence, not endpoint
+health. The same budget reservation/settlement and tool authorization apply.
+[Fireworks transcript/configuration contract](docs/FIREWORKS-PROVIDER.md) specifies
+canonical text/tool conversion and private reasoning replay. Do not migrate an
+in-flight episode's provider-specific reasoning state across providers. No live
+activation, fallback, model-controlled routing or wider user access is implied.

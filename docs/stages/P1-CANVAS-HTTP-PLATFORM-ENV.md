@@ -1,0 +1,11 @@
+# HTTP harness runtime environment portability
+
+Owner: Murtazo (`murtazokhon-tech`), [#123](https://github.com/Akbarhoja/wrytely-agent/issues/123). Base own #116 `36c17400`; branch `codex/canvas-http-platform-env`. This narrow fix unblocks the startup precondition reported by Akbar in [6553629521](https://github.com/Akbarhoja/wrytely-agent/pull/116#issuecomment-6553629521). Collection #117 remains preserved in its separate worktree.
+
+Akbar's macOS Node child adds `__CF_USER_TEXT_ENCODING` after Python passes a filtered environment. The former name guard rejected it before client setup; that failure did not exercise assignment transactions. The parent whitelist is unchanged. The child retains every explicit allowed inherited name and additionally permits only that exact runtime-added name on Darwin. Other platforms and near-matching names remain rejected. The predicate never reads, forwards or uses environment values. No production environment policy, credential handling, transport, authentication or source code changed.
+
+The new policy tests first failed for the absent module; all 21 focused policy cases and 331 extension cases pass on Windows. Synthetic platform inputs cover Darwin/Linux/Windows, canary and credential/database exclusion, near matches and getters that fail if values are read. The actual driver calls the tested predicate. Fresh independent read-only review found no blocker, independently ran 214 pairing cases, and checked syntax/diffs; it did not run database or real macOS tests.
+
+Full `uv run pytest -q` passed 721 tests, including all 17 actual HTTP/Store scenarios, on the designated disposable database in 556.95 seconds with two existing warnings. Required Ruff check/format on 152 files, Prettier and diff checks passed. An actual macOS rerun of all 17 HTTP scenarios and the combined candidate remains Akbar's requested acceptance step. Simulated platform arguments are unit tests, not a macOS end-to-end pass. No whitelist bypass, scenario skip or fake platform flag is added to the driver.
+
+Only the existing driver, the new predicate/test and this scoped note change. Akbar retains CI and combined #121 consolidation. No main merge, production migration, deployment, source read, provider call, external send, grant or spend occurred. Chrome remained untouched; automation stayed off.
