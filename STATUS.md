@@ -1672,3 +1672,14 @@ acceptance remain separate. No live operation,
 credential inspection, provider retry, hold release, migration or deployment.
 Existing held liabilities and submitted history remain preserved; no full-product
 acceptance is implied by the documentation or fixed status labels.
+
+## State-specific supervision wording correction
+
+A review6647367169 correctly identified that `source_changed_during_decision` in
+state `ready` is scheduled for autonomous reassessment. M now restricts the
+no-automatic-retry statement to `blocked` holds and shows scheduled reassessment
+for that ready/source-change pair. The Store schedule is unchanged. A regression
+reproduced the incorrect wording before correction; focused24 and full196 web
+tests plus TypeScript now pass. POSIX `cp` and test-environment equivalents were
+added alongside PowerShell setup. Production build/new exact CI are tracked in
+the PR; earlier fa93efd full CI covers unchanged Python only, not this new web head.

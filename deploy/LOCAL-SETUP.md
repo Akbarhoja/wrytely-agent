@@ -41,6 +41,24 @@ never copy another product's environment or paste secrets into logs/chat/GitHub.
 Reuse the approved existing Clerk development instance; do not create a new app.
 No inference, database access or Telegram send is needed to install dependencies.
 
+The Git, uv, npm and Python commands in this guide also work in a macOS/Linux
+terminal. Replace the two PowerShell copy commands with:
+
+```sh
+cp .env.example .env
+cp web/.env.example web/.env.local
+```
+
+Use separate terminal tabs for the API and web commands below; no PowerShell-only
+environment assignment is required because uv explicitly loads the root `.env`
+and Next loads `web/.env.local`. For disposable tests only, macOS/Linux uses
+`export AGENT_TEST_DATABASE_URL='DISPOSABLE_TEST_DSN'` and
+`export AGENT_TEST_ALLOW_RESET=yes`; PowerShell uses
+`$env:AGENT_TEST_DATABASE_URL='DISPOSABLE_TEST_DSN'` and
+`$env:AGENT_TEST_ALLOW_RESET='yes'`. Replace the DSN placeholder with the isolated
+test target, never a retained or production database. These assignments authorize
+that test database's reset only, not a deployment or service activation.
+
 ## 2. Configure only the needed services
 
 | Service          | Configuration names                                                                                                                                                                                                                                                               | Independent requirement                                                                                                |

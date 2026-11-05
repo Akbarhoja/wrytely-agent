@@ -188,8 +188,13 @@ function Session({
           </p>
           {monitor.reason && (
             <p role="status">
-              {supervisionReason(monitor.reason)} No automatic retry was started. Refresh only
-              checks the saved state.
+              {supervisionReason(monitor.reason)}{" "}
+              {monitor.state === "blocked"
+                ? "No automatic retry was started. "
+                : monitor.state === "ready" && monitor.reason === "source_changed_during_decision"
+                  ? "Reassessment is scheduled. "
+                  : ""}
+              Refresh only checks the saved state.
             </p>
           )}
           <div className={styles.controls}>

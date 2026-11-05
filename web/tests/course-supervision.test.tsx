@@ -179,3 +179,22 @@ it("explains a provider hold without rendering raw failure text or starting a re
   expect(screen.queryByRole("button", { name: /retry|resume/i })).toBeNull();
   expect(fetch.mock.calls).toHaveLength(2);
 });
+
+it("shows ready source-change reassessment without describing it as a blocked retry", async () => {
+  const value = {
+    ...monitor(),
+    state: "ready",
+    offers: [],
+    reason: "source_changed_during_decision",
+    next_check_at: "2026-11-05T03:44:10Z",
+  };
+  const fetch = vi.fn(async (url: unknown) =>
+    Response.json(String(url).includes("?connection_id=") ? { supervision: value } : value),
+  );
+  vi.stubGlobal("fetch", fetch);
+  render(<CourseSupervision {...props} />);
+  await screen.findByText(/Course evidence changed while this check was running/);
+  expect(screen.queryByText(/No automatic retry was started/)).toBeNull();
+  expect(screen.getByText(/Reassessment is scheduled/)).toBeTruthy();
+  expect(fetch.mock.calls).toHaveLength(2);
+});
