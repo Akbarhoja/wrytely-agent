@@ -205,3 +205,9 @@ The next operator gate is documented in
 [M2 development student-path acceptance](../docs/stages/M2-LIVE-ACCEPTANCE.md).
 All live cases and setup/budget approvals remain pending; the sheet does not
 authorize provider calls or retained database changes.
+
+## Post-submission installation handoff
+
+Use [fresh-clone app/API/extension/Telegram setup](../deploy/LOCAL-SETUP.md) with the
+exact reviewed candidate, existing approved Clerk instance and isolated development
+resources. A passing local preflight does not start a model or message worker.
