@@ -6,6 +6,21 @@ Updated November 4, 2026. [Plan revision8](docs/BUILD-PLAN.md) ·
 
 ## Post-submission continuation
 
+### Latest verified checkpoint
+
+Exact JSON executableb806a49 fullCI41966467067 SUCCESS:700 focused integration,
+2150 full backend (two existing warnings), web/build, extension and access. M's
+independent review6649566181 has no blocking consumer finding. Original Telegram
+candidatec6f6530 fullCI41965576400 SUCCESS:659 integration/2132 full backend +alljobs.
+
+Owner's conditional2-call/0.05 synthetic JSON test ran ONCE after exactCI passed.
+Both real Meta requests succeeded: validated fake read action then canonical
+result continuation/final answer. Known usage397/141 and521/99; no student context,
+database mutation, deployment, worker or Telegram send. Retain conservative new
+maximum0.02981550 and every prior2.16581000, aggregate2.19562550/3. Test complete;
+no further calls authorized. [Acceptance record](docs/JSON-ACTIONS-SYNTHETIC-CHECK.md).
+Real course preparation/phone receipt/continuous acceptance remain open.
+
 A `codex/fireworks-json-actions` from finalcombinedc6f6530 adds explicit default-off
 JSON decision transport for the SAME Meta model and original typed runtime; native
 mode remains default and no automatic fallback is introduced. Full request/replay/
