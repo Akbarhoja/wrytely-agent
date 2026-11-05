@@ -4,6 +4,18 @@ import json
 from decimal import Decimal
 
 from shared.model_budgets import ModelBudgetExceeded, usd
+from shared.model_client import ModelCallFailed
+
+
+class BudgetedModelCallFailed(ModelBudgetExceeded):
+    """Preserve controlled diagnostics while retaining the full unknown-cost hold."""
+
+    def __init__(self, failure: ModelCallFailed):
+        super().__init__("Model outcome unknown; reservation held")
+        self._failure_evidence = failure.evidence()
+
+    def evidence(self):
+        return dict(self._failure_evidence)
 
 
 class BudgetedModelClient:
@@ -38,8 +50,10 @@ class BudgetedModelClient:
         reservation = self.store.reserve_model_call(self.user, self.key, maximum)
         try:
             result = self.model.turn(history, tools)
-        except Exception:
+        except Exception as exc:
             self.store.settle_model_call(self.user, reservation)
+            if isinstance(exc, ModelCallFailed):
+                raise BudgetedModelCallFailed(exc) from None
             raise ModelBudgetExceeded("Model outcome unknown; reservation held") from None
         if not result.usage_known:
             self.store.settle_model_call(self.user, reservation)
