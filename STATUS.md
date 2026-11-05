@@ -18,6 +18,21 @@ The focused local disposable Postgres attempt also hit the sandbox's shared-memo
 denial during initdb; no real database was substituted.031 includes a partial
 current-command lookup index so private status does not scan global inbound history.
 
+Exact command executable6404949 integration step in41950562197 is SUCCESS; web,
+extension and access jobs also pass, full backend remains running. First96bc628
+integration had620 passes and one exact-version ledger expectation failure; fixed
+by explicitly adding031 to tests/test_store.py, without relaxing migration checks.
+The new command transaction/privacy/replay tests passed in that first real run.
+76 local pure/parser/protocol checks plus lint/335-file format pass. No live proof.
+
+M publishedfa93efd for review with receipt-fence correction, fixed UI reason labels
+and setup docs. A verified the worker change and identified a UI defect: source
+changes are scheduled ready for reassessment, so that state cannot unconditionally
+claim no automatic retry. Correction requested6647367169; M code not yet imported.
+Readiness executable9538c51 fullCI41948679355 now SUCCESS:594 focused integration,
+2077 backend tests (two existing warnings), and all web/build/extension/access jobs.
+This evidence is distinct from the newer command candidate's pending full run.
+
 Owner reports submission complete in chat; this is not an independently observed
 submission receipt or proof of the exact submitted revision. A starts
 `codex/post-submission-readiness` from4ba5185, preserving earlier candidate history.
