@@ -14,6 +14,9 @@ command status is additive; file delivery/acknowledgments/offer transport remain
 M consumer work. No generic model interpretation or WhatsApp identity substitution.
 Pure/parser/protocol checks pass; real Store transaction tests/full CI pending.
 M acknowledged his distinct active app/web/install work in6647198922; no overlap.
+The focused local disposable Postgres attempt also hit the sandbox's shared-memory
+denial during initdb; no real database was substituted.031 includes a partial
+current-command lookup index so private status does not scan global inbound history.
 
 Owner reports submission complete in chat; this is not an independently observed
 submission receipt or proof of the exact submitted revision. A starts
