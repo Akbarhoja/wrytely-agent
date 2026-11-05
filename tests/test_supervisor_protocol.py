@@ -8,6 +8,8 @@ import pytest
 
 from contracts.models import ModelTurn
 from runtime.supervisor import run_course_supervision_once
+from shared.budgeted_model import BudgetedModelCallFailed
+from shared.model_client import ModelCallFailed
 
 
 class Boundary:
@@ -18,8 +20,9 @@ class Boundary:
     def claim_course_supervision(self, *args):
         return self.claim
 
-    def hold_course_supervision(self, *args):
+    def hold_course_supervision(self, *args, **kwargs):
         self.held = True
+        self.hold_reason = kwargs.get("reason", "episode_failed_or_unknown")
 
     def finish_course_supervision(self, *args):
         self.finished = True
@@ -33,6 +36,37 @@ class Provider:
     def turn(self, *args):
         self.calls += 1
         return ModelTurn(output=self.output, text="Pretend everything is completed")
+
+
+@pytest.mark.parametrize(
+    "metadata,reason",
+    [
+        ({"status": "http_error", "http_status": 503}, "model_provider_unavailable"),
+        ({"status": "http_error", "http_status": 429}, "model_rate_limited"),
+        ({"status": "http_error", "http_status": 401}, "model_access_denied"),
+        ({"status": "http_error", "http_status": 403}, "model_access_denied"),
+        (
+            {"status": "http_error", "http_status": 404, "code": "model_not_found"},
+            "model_not_found",
+        ),
+        ({"status": "incomplete"}, "model_response_incomplete"),
+        ({"status": "failed"}, "model_request_failed"),
+    ],
+)
+def test_provider_failure_has_a_fixed_hold_reason_without_retry(metadata, reason, caplog):
+    class Failed:
+        calls = 0
+
+        def turn(self, *args):
+            self.calls += 1
+            raise BudgetedModelCallFailed(ModelCallFailed(**metadata))
+
+    store, model = Boundary(), Failed()
+    with caplog.at_level(logging.WARNING), pytest.raises(BudgetedModelCallFailed):
+        run_course_supervision_once(store, model, "trusted-user", store.claim["id"])
+    assert store.hold_reason == reason
+    assert store.held and not store.finished
+    assert model.calls == 1
 
 
 def call(name="record_course_decision", **changes):

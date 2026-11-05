@@ -113,6 +113,13 @@ uv run --env-file .env python -m app.migrate
 uv run --env-file .env uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
+For a secret-free configuration report, run
+`uv run --env-file .env python -m runtime.preflight`.
+It performs no network calls, inference, migrations or sends. An explicit
+`--database-check` adds a read-only migration-ledger check. See
+[installation diagnostics](docs/INSTALLATION-CHECKS.md) for profiles, exit codes
+and what passing configuration does and does not establish.
+
 The course supervisor and delegated drafting are separate entrypoints. The supervisor
 reads stored course evidence and chooses inspect/prepare/offer/wait; acceptance is required
 before the existing draft worker prepares work. For a separately authorized one-course

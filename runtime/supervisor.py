@@ -187,7 +187,21 @@ def run_course_supervision_once(store, model, verified_user, supervision_id):
         )
         raise
     except BudgetedModelCallFailed as exc:
-        store.hold_course_supervision(verified_user, claim)
+        evidence = exc.evidence()
+        status = evidence.get("http_status")
+        if status is not None and 500 <= status <= 599:
+            reason = "model_provider_unavailable"
+        elif status == 429:
+            reason = "model_rate_limited"
+        elif status in {401, 403}:
+            reason = "model_access_denied"
+        elif evidence.get("code") == "model_not_found":
+            reason = "model_not_found"
+        elif evidence.get("status") == "incomplete":
+            reason = "model_response_incomplete"
+        else:
+            reason = "model_request_failed"
+        store.hold_course_supervision(verified_user, claim, reason=reason)
         logging.getLogger(__name__).warning("course_model_failed %s", json.dumps(exc.evidence()))
         raise
     except Exception:
