@@ -35,6 +35,11 @@ inference is not retried. Notification queueing is off by default; `--queue-offe
 requires approved proactive activation and each student's separate opt-in. It never
 sends directly. Dispatch remains in the original durable outbox worker.
 
+The WhatsApp worker uses the same trusted `AGENT_CANVAS_ORIGINS` configuration as
+the API and course service. It must pass that allowlist into its Store when
+rechecking Canvas-backed offer and artifact authority. An empty allowlist still
+rejects those sources; transport credentials never authorize an origin.
+
 Health preparation: set `--health-file` to an existing private operator directory.
 The atomically replaced JSON contains state, UTC time and counts only. A supervisor
 can treat a stale timestamp as unhealthy; a present file alone is not liveness.

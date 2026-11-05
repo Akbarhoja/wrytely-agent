@@ -1549,3 +1549,38 @@ code, schemas, model tool registration and draft paths preserved.
 inactive Chrome host claim. Review requested when available; P0reviews#139/#46
 remain pending. No monitor/browser/provider/model/send/spend/grant/install/retained
 migration/worker/deploy/mainmerge. P1 remains open.
+
+## M private preparation consumer — November4 candidate
+
+M claimed [preparation consumer scope](https://github.com/Akbarhoja/wrytely-agent/issues/4#issuecomment-6644234620)
+on `codex/course-preparation-view`, based on A PR170 `ce7e6f8`. The existing private
+supervision panel now displays bounded literal excerpts, clarification questions,
+notice, original gaps/unread continuation and current/historical limited evidence.
+No preparation draft/download/send actions exist. Session/access/account changes
+and failed refreshes clear cached preparation data. No new backend route/runtime.
+
+Evidence: 165 web tests, TypeScript, 27 preparation/API tests against disposable
+Postgres, Ruff/310-file format checks passed; synthetic IAB layout inspected at
+390/768/1440px; production webpack build passed. Full backend regression/CI and
+counterpart review remain pending at this checkpoint.
+See [consumer evidence and limits](docs/M-COURSE-PREPARATION-VIEW.md). This does not
+activate029, refresh source coverage, authorize submissions or demonstrate live
+phone delivery. Existing blockers, budgets and historical evidence remain intact.
+
+## M Telegram assembly candidate — November4
+
+M consumes A588c504 on `codex/telegram-assembly`, combined with M PR172.
+Authenticated link/status/preferences/unlink, private web controls, secret-first
+bounded callback and explicit one-use dispatch worker are implemented. Original
+Store/runtime are reused; no provider/Store duplication. Telegram consents remain
+separate/defaultfalse. Session/account changes clear pairing data. HTTP/UI do not
+invoke models or send. Worker preserves unknown outcomes and stops without blind
+retry. Configured bot identity is never browser-provided.
+
+Local61 adapter/Store/HTTP/worker checks and4 focused web checks passed with
+synthetic/scripted data and disposable Postgres. Full web/build/combined backend
+CI and counterpart review remain pending. [Operator preparation](deploy/TELEGRAM-ASSEMBLY.md)
+is not activation permission. No migration/deployment/webhook/send performed.
+Telegram v1 lacks /accept /file /revise and checked-coursework file delivery;
+WhatsApp verification/full-product/live-phone gates remain open. Existing pauses,
+source/policy gates and historical budget liabilities remain preserved.

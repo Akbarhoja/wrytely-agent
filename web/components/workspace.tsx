@@ -20,6 +20,7 @@ import {
 } from "@phosphor-icons/react";
 import { useWorkspace } from "@/lib/use-workspace";
 import { Overview } from "./overview";
+import { TelegramConnection } from "./telegram-connection";
 import { WhatsAppConnection } from "./whatsapp-connection";
 import { useWhatsAppConnection } from "../lib/use-whatsapp-connection";
 import { CanvasConnection } from "./canvas-connection";
@@ -284,6 +285,11 @@ function WorkspaceSession({
                 enabled={connectionsReady}
                 onSessionExpired={data.retry}
                 onViewResults={() => setView("results")}
+              />
+              <TelegramConnection
+                userId={userId || "guest"}
+                enabled={signedIn && !data.expired}
+                onSessionExpired={onSessionExpired}
               />
               <WhatsAppConnection
                 key={userId || "guest"}
