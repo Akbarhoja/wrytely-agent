@@ -6,6 +6,14 @@ Updated November 4, 2026. [Plan revision8](docs/BUILD-PLAN.md) ·
 
 ## Post-submission continuation
 
+A `codex/telegram-delivery-completion` extends the original Telegram outbox with
+offer/command/checked-file kinds, explicit /file, immutable artifact-file reuse and
+official single-attempt sendDocument. M owns its worker/HTTP/UI consumer; concrete
+sequence is in docs/contracts/TELEGRAM-ACADEMIC-DELIVERY-v1.md. Additive032 is NOT
+deployed.104 local pure/parser/adapter/protocol checks plus lint/338-format pass;
+real transaction and full CI pending. No worker, paid inference, send or retained
+migration started. Original source/policy/grade gates and unknown holds unchanged.
+
 A next owned workflow: `codex/telegram-academic-commands` from9538c51, coordinated
 in6647208640. Original authenticated Telegram ingestion now parses explicit
 accept/decline/revision targets and atomically composes original scoped academic

@@ -34,6 +34,7 @@ from shared.model_budgets import ModelBudgetStore
 from shared.private_artifact_reads import PrivateArtifactReadStore
 from shared.responsibilities import ResponsibilityStore
 from shared.source_connections import SourceConnectionStore, canvas_origin
+from shared.telegram_academic_delivery import TelegramAcademicDeliveryStore
 from shared.telegram_store import TelegramStore
 from shared.typed_evidence_store import TypedEvidenceStore
 from shared.whatsapp_commands import WhatsAppCommandStore
@@ -53,6 +54,7 @@ class QueueFull(Exception):
 
 
 class Store(
+    TelegramAcademicDeliveryStore,
     TelegramStore,
     WhatsAppCommandStore,
     ArtifactDeliveryStore,

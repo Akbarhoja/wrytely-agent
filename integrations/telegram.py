@@ -1,5 +1,6 @@
 """Official Bot API, private text updates and one-attempt outbound IO only."""
 
+import hashlib
 import hmac
 import logging
 import re
@@ -8,6 +9,7 @@ from uuid import UUID
 
 import httpx
 
+from contracts.delivery import ArtifactDeliveryFile
 from contracts.models import DeliveryResult
 from contracts.telegram import TelegramText, positive_id
 
@@ -113,47 +115,71 @@ class TelegramAdapter:
                     follow_redirects=False,
                     timeout=20,
                 )
-            if response.status_code in (400, 401, 403, 404):
-                return DeliveryResult(state="failed", internal_id=action_id)
-            if response.status_code == 429:
-                # Store may defer an explicit provider rejection; no adapter retry.
-                body = response.json() if len(response.content) <= 200000 else None
-                rejected = (
-                    isinstance(body, dict)
-                    and body.get("ok") is False
-                    and body.get("error_code") == 429
-                )
-                retry_after = (
-                    body.get("parameters", {}).get("retry_after", 60) if rejected else None
-                )
-                if type(retry_after) is not int or not 1 <= retry_after <= 86400:
-                    rejected = False
-                return DeliveryResult(
-                    state="deferred" if rejected else "unknown",
-                    internal_id=action_id,
-                    retry_at=(
-                        datetime.now(UTC) + timedelta(seconds=max(60, retry_after))
-                    ).isoformat()
-                    if rejected
-                    else None,
-                )
-            if response.status_code != 200 or len(response.content) > 200000:
-                return DeliveryResult(state="unknown", internal_id=action_id)
-            body = response.json()
-            result = body.get("result") if isinstance(body, dict) else None
-            if (
-                body.get("ok") is not True
-                or not isinstance(result, dict)
-                or result.get("chat", {}).get("type") != "private"
-                or positive_id(result.get("chat", {}).get("id")) != chat_id
-                or positive_id(result.get("from", {}).get("id")) != self.bot_id
-            ):
-                return DeliveryResult(state="unknown", internal_id=action_id)
-            message_id = positive_id(result.get("message_id"))
-            return DeliveryResult(
-                state="accepted", internal_id=action_id, provider_ref=str(message_id)
-            )
+            return self._receipt(response, chat_id, action_id)
         except (httpx.HTTPError, ValueError, TypeError, AttributeError):
             # Exceptions can contain the credential-bearing request URL. Never
             # expose or log them, and never resend an uncertain transmission.
             return DeliveryResult(state="unknown", internal_id=action_id)
+
+    def send_document(self, *, recipient: str, file: ArtifactDeliveryFile, action_id: UUID):
+        if not isinstance(recipient, str) or not re.fullmatch(r"[1-9][0-9]{0,15}", recipient):
+            raise ValueError("Private numeric recipient required")
+        chat_id = positive_id(int(recipient))
+        if not isinstance(file, ArtifactDeliveryFile):
+            raise ValueError("Checked artifact bytes required")
+        d = file.descriptor
+        if (
+            not isinstance(file.content, bytes)
+            or not 0 < len(file.content) <= 10485760
+            or len(file.content) != d.byte_length
+            or hashlib.sha256(file.content).hexdigest() != d.sha256
+            or d.filename != f"wrytely-{d.artifact_id}.docx"
+            or d.media_type
+            != "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        ):
+            raise ValueError("Checked artifact descriptor mismatch")
+        try:
+            response = self._client.post(
+                self._url + "/sendDocument",
+                data={"chat_id": str(chat_id), "protect_content": "true"},
+                files={"document": (d.filename, file.content, d.media_type)},
+                follow_redirects=False,
+                timeout=20,
+            )
+            return self._receipt(response, chat_id, action_id)
+        except (httpx.HTTPError, ValueError, TypeError, AttributeError):
+            return DeliveryResult(state="unknown", internal_id=action_id)
+
+    def _receipt(self, response, chat_id, action_id):
+        if response.status_code in (400, 401, 403, 404):
+            return DeliveryResult(state="failed", internal_id=action_id)
+        if response.status_code == 429:
+            # Store may defer an explicit provider rejection; no adapter retry.
+            body = response.json() if len(response.content) <= 200000 else None
+            rejected = (
+                isinstance(body, dict) and body.get("ok") is False and body.get("error_code") == 429
+            )
+            retry_after = body.get("parameters", {}).get("retry_after", 60) if rejected else None
+            if type(retry_after) is not int or not 1 <= retry_after <= 86400:
+                rejected = False
+            return DeliveryResult(
+                state="deferred" if rejected else "unknown",
+                internal_id=action_id,
+                retry_at=(datetime.now(UTC) + timedelta(seconds=max(60, retry_after))).isoformat()
+                if rejected
+                else None,
+            )
+        if response.status_code != 200 or len(response.content) > 200000:
+            return DeliveryResult(state="unknown", internal_id=action_id)
+        body = response.json()
+        result = body.get("result") if isinstance(body, dict) else None
+        if (
+            body.get("ok") is not True
+            or not isinstance(result, dict)
+            or result.get("chat", {}).get("type") != "private"
+            or positive_id(result.get("chat", {}).get("id")) != chat_id
+            or positive_id(result.get("from", {}).get("id")) != self.bot_id
+        ):
+            return DeliveryResult(state="unknown", internal_id=action_id)
+        message_id = positive_id(result.get("message_id"))
+        return DeliveryResult(state="accepted", internal_id=action_id, provider_ref=str(message_id))

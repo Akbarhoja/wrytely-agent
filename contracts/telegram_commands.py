@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 class TelegramAcademicCommand(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
-    kind: Literal["accept_offer", "decline_offer", "revise_artifact"]
+    kind: Literal["accept_offer", "decline_offer", "revise_artifact", "send_artifact"]
     target_id: UUID
     instructions: str = Field(default="", max_length=4000)
 
@@ -27,7 +27,7 @@ def parse_academic_command(text):
     if not isinstance(text, str) or len(text) > 12000:
         raise ValueError("Invalid command")
     parts = text.split(maxsplit=2)
-    if not parts or parts[0] not in {"/accept", "/decline", "/revise"}:
+    if not parts or parts[0] not in {"/accept", "/decline", "/revise", "/file"}:
         return None
     if len(parts) < 2:
         raise ValueError("Explicit command target required")
@@ -45,6 +45,7 @@ def parse_academic_command(text):
             "/accept": "accept_offer",
             "/decline": "decline_offer",
             "/revise": "revise_artifact",
+            "/file": "send_artifact",
         }[parts[0]],
         target_id=target,
         instructions=instructions,
