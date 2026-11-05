@@ -128,3 +128,50 @@ def test_command_receipt_is_literal_and_old_generation_cannot_send(device):
     assert "declined" in claim.content and str(offer["id"]) not in claim.content
     db.unlink_telegram("user_alice", BOT)
     assert db.authorize_telegram_dispatch(claim).state == "cancelled"
+
+
+def test_file_request_is_private_and_a_new_link_cannot_repeat_unknown_send(device):
+    db, artifact, claim = file_claim(device)
+    db.provision("user_bob")
+    with pytest.raises((ValueError, LookupError)):
+        db.enqueue_telegram_artifact_delivery("user_bob", BOT, artifact["id"])
+    assert db.authorize_telegram_dispatch(claim, supports_documents=True).state == "permitted"
+    assert db.finish_telegram_delivery(
+        claim, DeliveryResult(state="unknown", internal_id=claim.action_id)
+    )
+    db.unlink_telegram("user_alice", BOT)
+    challenge = db.create_telegram_challenge("user_alice", BOT)
+    assert db.ingest_telegram(BOT, event(challenge["message"], 5)) == "linked"
+    db.set_telegram_preferences(
+        "user_alice",
+        BOT,
+        consent=True,
+        notification_consent=True,
+        timezone="UTC",
+        quiet_start=0,
+        quiet_end=0,
+    )
+    assert (
+        db.enqueue_telegram_artifact_delivery("user_alice", BOT, artifact["id"])["state"]
+        == "unknown"
+    )
+    assert db.claim_telegram_delivery(BOT) is None
+
+
+def test_offer_and_preparation_share_the_daily_dispatch_cap(device):
+    db, monitor, offer = offered(device)
+    db.set_course_notification_consent("user_alice", monitor["id"], consent=True)
+    db.queue_telegram_offer("user_alice", BOT, monitor["id"], offer["id"])
+    claim = db.claim_telegram_delivery(BOT)
+    with db.connection() as conn:
+        for number in range(3):
+            conn.execute(
+                "INSERT INTO wrytely_agent.telegram_outbound "
+                "(id,agent_id,bot_id,chat_id,generation,intent_key,kind,content,"
+                "supervision_id,offer_id,state,dispatch_at) SELECT gen_random_uuid(),agent_id,"
+                "bot_id,chat_id,generation,%s,kind,content,supervision_id,offer_id,'unknown',"
+                "clock_timestamp() FROM wrytely_agent.telegram_outbound WHERE id=%s",
+                (f"prior-notification:{number}", claim.action_id),
+            )
+    permit = db.authorize_telegram_dispatch(claim)
+    assert permit.state == "cancelled" and permit.reason == "notification_limit"
