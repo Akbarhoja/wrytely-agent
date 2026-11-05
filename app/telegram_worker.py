@@ -38,7 +38,10 @@ def run_once(store, adapter, bot_id):
         )
     except Exception:
         receipt = DeliveryResult(state="unknown", internal_id=claim.action_id)
-    store.finish_telegram_delivery(claim, receipt)
+    if not store.finish_telegram_delivery(claim, receipt):
+        # Provider acceptance is not a persisted receipt when our fence was lost.
+        # Leave reconciliation to Store; never repeat a possibly delivered send.
+        return "unknown"
     return receipt.state
 
 
