@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api, ApiError } from "../lib/client";
 import styles from "./telegram-connection.module.css";
+import { commandStatus, type CommandStatus } from "../lib/telegram-command-status";
 
 type Preferences = {
   consent: boolean;
@@ -13,6 +14,7 @@ type Preferences = {
 };
 type Status = {
   linked: boolean;
+  latest_command?: CommandStatus | null;
   preferences: Preferences | null;
   bot_username: string | null;
   latest_delivery: { state: string; reason: string | null } | null;
@@ -52,7 +54,10 @@ function Session({
   const request = useRef<AbortController | null>(null);
   const [expired, setExpired] = useState(false);
   async function read(signal: AbortSignal) {
-    const value = await api<Status>("telegram", { signal });
+    const value = await api<Omit<Status, "latest_command"> & { latest_command?: unknown }>(
+      "telegram",
+      { signal },
+    );
     if (
       typeof value?.linked !== "boolean" ||
       (value.preferences !== null &&
@@ -64,7 +69,10 @@ function Session({
     )
       throw Error();
     if (!signal.aborted) {
-      setStatus(value);
+      setStatus({
+        ...value,
+        latest_command: value.linked ? commandStatus(value.latest_command) : null,
+      });
       setPrefs(value.preferences ?? defaults);
       if (value.linked) setChallenge(null);
     }
@@ -138,7 +146,8 @@ function Session({
       </header>
       <p className="connection-lead">
         Private preparation checklists and replies. WhatsApp remains separate and inactive while
-        verification is pending. Telegram does not support /accept, /file or /revise yet.
+        verification is pending. Academic commands require a compatible installed backend; linking
+        alone does not prove command execution or file delivery.
       </p>
       {!enabled ? (
         <p>Sign in to manage Telegram.</p>
@@ -265,6 +274,14 @@ function Session({
             >
               Unlink Telegram
             </button>
+          )}
+          {status?.linked && status.latest_command && (
+            <section aria-label="Latest Telegram command">
+              <h3>Latest saved command</h3>
+              <p>{status.latest_command.label}</p>
+              <p>Recorded {new Date(status.latest_command.receivedAt).toLocaleString()}.</p>
+              <p>A saved command is not proof that work is complete or a file was received.</p>
+            </section>
           )}
           {status?.latest_delivery && (
             <p>

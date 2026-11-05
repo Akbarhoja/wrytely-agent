@@ -1680,3 +1680,64 @@ is not activation permission. No migration/deployment/webhook/send performed.
 Telegram v1 lacks /accept /file /revise and checked-coursework file delivery;
 WhatsApp verification/full-product/live-phone gates remain open. Existing pauses,
 source/policy gates and historical budget liabilities remain preserved.
+
+## M post-submission app and setup follow-up
+
+M claim [6647198922](https://github.com/Akbarhoja/wrytely-agent/issues/4#issuecomment-6647198922),
+branch `codex/post-submission-app` from A9538c51. A retains final integration.
+Worker now reports unknown when its receipt persistence fence is lost; it cannot
+advertise a late provider result as persisted acceptance or retry it. Three actual
+expired/reconciled-fence regressions reproduced the old behavior before the fix.
+Private supervision now uses fixed provider-hold labels with generic fallback and
+no automatic retry. [Fresh-clone setup](deploy/LOCAL-SETUP.md),
+[three-minute script](docs/M-DEMO-SCRIPT.md) and
+[channel gaps/evidence](docs/M-POST-SUBMISSION-HANDOFF.md) distinguish post-submission
+changes, actual pairing/collection, scripted files and unproved live preparation.
+
+Focused disposable-Postgres Telegram/HTTP/worker/supervision85PASS; focusedUI23PASS;
+Ruff333format and new-doc relative links pass. Executable `fa93efd` now has successful
+full CI runs [41950738416](https://github.com/Akbarhoja/wrytely-agent/actions/runs/41950738416)
+and [41950631248](https://github.com/Akbarhoja/wrytely-agent/actions/runs/41950631248),
+including foundation, web/build, extension and access checks. Local Windows full
+regression finished 2076 passed/4 PDF extraction-discovery failures/2 warnings in
+3649.41s; it is not a local all-green result. The four failures match the recorded
+Windows PDF boundary; independent Linux CI is green. Documentation-only verification
+updates do not change the tested executable. A review/import and actual live
+acceptance remain separate. No live operation,
+credential inspection, provider retry, hold release, migration or deployment.
+Existing held liabilities and submitted history remain preserved; no full-product
+acceptance is implied by the documentation or fixed status labels.
+
+## State-specific supervision wording correction
+
+A review6647367169 correctly identified that `source_changed_during_decision` in
+state `ready` is scheduled for autonomous reassessment. M now restricts the
+no-automatic-retry statement to `blocked` holds and shows scheduled reassessment
+for that ready/source-change pair. The Store schedule is unchanged. A regression
+reproduced the incorrect wording before correction; focused24 and full196 web
+tests plus TypeScript now pass. POSIX `cp` and test-environment equivalents were
+added alongside PowerShell setup. Production build/new exact CI are tracked in
+the PR; earlier fa93efd full CI covers unchanged Python only, not this new web head.
+
+## M Telegram academic delivery consumer candidate
+
+M claim [6649206861](https://github.com/Akbarhoja/wrytely-agent/issues/4#issuecomment-6649206861),
+branch `codex/telegram-delivery-consumer`, composes A c17d327 and corrected M9b397e9
+preserving authorship. A retains final integration. Existing worker now recovers
+academic offers/acks, requests typed document permits, reads the fenced immutable
+file, compares the exact descriptor and calls official send_document once. False
+receipt persistence remains unknown. UI shows only fixed current-link command
+labels/time, clears private state and does not equate recorded with completed work
+or delivery. No runtime/Store/adapter/contract edits by M.
+
+Focused worker/Store/document checks28PASS; final connected HTTP/worker/command/
+control checks34PASS113.01s (overlapping scopes, not62 distinct checks). PrivateUI20
+focused and212fullweb/TypeScript/webpackbuild PASS; Ruff345format/Prettier/diff pass.
+Synthetic real-component IAB390/768/1440 inspected, temporary preview stopped and
+viewport restored. Rehearsal verifies stable acceptance intent, explicit checked
+file + fixed ack, exact replay without resend and private revision intent/ack;
+models/providers scripted, no actual completed new revision or phone proof.
+Required exact full backend CI/regression and A review remain pending. Additive
+031–032 stay undeployed by M. No new live call/send/spend/migration/deployment or
+hold release; submitted history and all existing source/policy/control gates remain.
+See [consumer handoff](docs/M-TELEGRAM-DELIVERY-CONSUMER.md).

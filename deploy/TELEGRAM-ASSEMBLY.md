@@ -35,3 +35,12 @@ full WhatsApp equivalence. WhatsApp remains separate/inactive, not marked comple
 Initial local61 adapter/Store/HTTP/worker checks PASS with disposable Postgres and
 scripted provider. Full web, exact combined full backend CI and counterpart review
 are required before acceptance; record actual results in the PR. No live proof.
+
+## Academic delivery continuation
+
+The original v1 limits above describe that earlier implementation. The later
+[academic delivery consumer](../docs/M-TELEGRAM-DELIVERY-CONSUMER.md) consumes A's
+031–032 command, offer, fixed acknowledgment and checked-document interfaces on a
+separate post-submission candidate. Code support does not establish installed/live
+capability. Use its exact reviewed checkout and matching ledger; no migration,
+worker start, provider call, scope change or send is authorized by this note.

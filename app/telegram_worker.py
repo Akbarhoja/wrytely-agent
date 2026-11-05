@@ -7,6 +7,7 @@ from pathlib import Path
 import httpx
 
 from contracts.models import DeliveryResult
+from contracts.templates import ArtifactPayload
 from integrations.telegram import TelegramAdapter, bot_id_for_token
 from shared.canvas_reads import SourceRefreshRequired
 from shared.config import Settings
@@ -24,21 +25,35 @@ def run_once(store, adapter, bot_id):
         except (ValueError, LookupError, SourceRefreshRequired):
             continue
     store.queue_telegram_replies(bot_id)
+    store.queue_telegram_academic_actions(bot_id)
     claim = store.claim_telegram_delivery(bot_id)
     if claim is None:
         return "idle"
     if claim.bot_id != bot_id:
         raise ValueError("Telegram claim mismatch")
-    permit = store.authorize_telegram_dispatch(claim)
+    permit = store.authorize_telegram_dispatch(claim, supports_documents=True)
     if permit.state != "permitted":
         return permit.state
     try:
-        receipt = adapter.send(
-            recipient=str(claim.chat_id), text=permit.content, action_id=claim.action_id
-        )
+        if permit.payload is not None:
+            if not isinstance(permit.payload, ArtifactPayload):
+                raise ValueError("Unsupported Telegram payload")
+            file = store.read_telegram_artifact_delivery(claim)
+            if file.descriptor != permit.payload:
+                raise ValueError("Checked file changed")
+            receipt = adapter.send_document(
+                recipient=str(claim.chat_id), file=file, action_id=claim.action_id
+            )
+        else:
+            receipt = adapter.send(
+                recipient=str(claim.chat_id), text=permit.content, action_id=claim.action_id
+            )
     except Exception:
         receipt = DeliveryResult(state="unknown", internal_id=claim.action_id)
-    store.finish_telegram_delivery(claim, receipt)
+    if not store.finish_telegram_delivery(claim, receipt):
+        # Provider acceptance is not a persisted receipt when our fence was lost.
+        # Leave reconciliation to Store; never repeat a possibly delivered send.
+        return "unknown"
     return receipt.state
 
 
