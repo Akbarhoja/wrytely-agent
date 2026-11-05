@@ -6,6 +6,41 @@ Updated November 4, 2026. [Plan revision8](docs/BUILD-PLAN.md) ·
 
 ## Post-submission continuation
 
+### Scheduled cloud decision completed and stopped
+
+Owner-approved one-call/$0.12/285-second test used existing live-tested7abb runtime.
+One-offec0b35af persisted a due time120seconds ahead; a fresh cloud process ran
+123seconds later, made one real Meta request and committed an inspection of saved
+ECE253 Lab8 evidence. Known usage10620/258; new0.01437150, allold2.32163000 unchanged,
+cumulative2.33600150/3. Monitorpaused,budgetoff,Telegrampreferencesuntouched,no sends.
+Normal migration-only/API-only configuration restored/read back; cleanupb1195f7a
+SUCCESS. See docs/SCHEDULED-COURSE-LIVE-CHECK.md for exact times and health evidence.
+Owner reported laptop closure, but physical duration/overlap was not instrumented.
+This is real scheduled fresh-process cloud evidence, not continuous-operation proof.
+Completed approval allows no more calls. Actual graded-drafting gates remain intact.
+
+Release1813d84 full CI41975136272 and JSON acceptance144ff14 full CI41975853359 are
+now SUCCESS. Combined test candidatec1cf2a6 CI41976787343 is still running; its early
+integration and web/extension/access jobs pass. M's independent scoped review6650868989
+passed the two JSON tests on a separate disposable database with no blocking finding.
+
+A's `codex/json-draft-revision-acceptance` now combines JSON drafting acceptance
+144ff14 and M's connected Telegram revision rehearsal666f49a (imported asafe1f9d,
+preserving authorship). The former uses real Store/original worker/Fireworks SDK
+MockTransport; the latter uses authenticated HTTP/original worker/official Telegram
+adapter MockTransport. Both verify checked immutable v1/v2 Word files, replay and
+pause boundaries. M additionally checks exact decoded multipart bytes and queued-file
+unlink/source-revocation fencing. Neither is live graded coursework or a real phone
+file receipt. A reviewed the narrow test-only M diff; his 30 focused disposable-DB
+checks pass, with exact full CI still pending.
+
+A's two new JSON integration tests passed the early disposable-Postgres step in
+41975853359. Full regression remains pending; combined candidate needs its own run.
+Local Ruff and353-file formatting pass. No deployment, migration, paid call or send.
+Original2.32163000/3 liability and paused operations are unchanged. Release1813d84
+full CI also remains pending. Remaining live gates: checked-file/revision receipt,
+scheduled laptop-closed/restart operation, and release/onboarding verification.
+
 ### Real preparation delivered and received
 
 Exacttimeout7abbefc fullCI41971364035 SUCCESS714integration/2164backend+alljobs,
@@ -1846,3 +1881,29 @@ This UI follow-up has a new web head and does not inherit an older web CI result
 No backend executable changed, so that completed full backend run remains the
 relevant local evidence. Scripted transport and model tests do not establish
 completed live preparation, revision or recipient delivery.
+
+## Connected Telegram full revision rehearsal
+
+Claim [6650755523](https://github.com/Akbarhoja/wrytely-agent/issues/4#issuecomment-6650755523)
+extends M's existing authenticated Telegram HTTP/Store/worker journey. A scripted
+revision now runs through the original drafting/checking runtime to a ready v2,
+then explicit `/file` delivers its exact private-download bytes through the official
+adapter with MockTransport. The test compares SHA-256 and decoded multipart bytes,
+retains the original v1 draft/file, and replays revision/file callbacks across a new
+Store instance without another revision or document send. Pause prevents model work
+and file reads until the owner resumes. Additional queued-file cases exercise pause,
+HTTP unlink and source revocation; revoked sources prevent file delivery while the
+fixed command acknowledgment can still be sent.
+
+This change touches the connected test and status only. It does not alter runtime,
+Store, provider, transport implementation, deployment or live authorizations. Model
+turns and Telegram responses are scripted; checked content quality and real revised
+phone-file receipt remain independent live gates. Verification results and exact
+candidate CI are recorded in the handoff; no earlier green is transferred.
+
+Focused connected journey, academic delivery, original artifact revisions and
+Telegram worker regression: 30 passed/1 existing warning in 116.38s. Ruff/345-file
+format and diff checks passed. Initial rehearsal failures were test assumptions
+(UUID/string comparison, unlink route and missing bot identity in the scripted
+response), corrected without implementation changes. Required full regression
+and exact candidate CI remain pending; this is not yet a full-green handoff.
