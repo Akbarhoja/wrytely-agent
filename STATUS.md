@@ -6,6 +6,17 @@ Updated November 4, 2026. [Plan revision8](docs/BUILD-PLAN.md) ·
 
 ## Post-submission continuation
 
+A `codex/fireworks-json-actions` from finalcombinedc6f6530 adds explicit default-off
+JSON decision transport for the SAME Meta model and original typed runtime; native
+mode remains default and no automatic fallback is introduced. Full request/replay/
+failure/parser mocks pass; live JSON inference has NOT been attempted.79 focused
+client/protocol/budget checks pass. Details in docs/FIREWORKS-JSON-ACTIONS.md.
+Owner-approved three-case tool diagnostic completed once: documentedminimal,
+supervisorschemawithoutstrict and withstrict ALL503, no context flag in any case.
+Additional0.04880575 retained, prior2.11700425 unchanged, aggregate2.16581000/3.
+No further paid-call allowance remains from that diagnostic. No student data,
+worker, deployment, migration or Telegram send. Current JSON candidate CI pending.
+
 A final integration branch `codex/telegram-final-integration` imports reviewed M
 consumer5c1b0eb (including corrected9b397e9 UI) and A c17d327, preserving authorship.
 The prior always-no-retry UI finding is fixed; worker consumes typed offer/ack/file

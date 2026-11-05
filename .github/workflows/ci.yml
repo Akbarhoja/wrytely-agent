@@ -48,6 +48,7 @@ jobs:
           tests/test_telegram_academic_delivery.py tests/test_telegram_documents.py
           tests/test_telegram_delivery_journey.py tests/test_telegram_delivery_worker.py
           tests/test_telegram_worker.py tests/test_telegram_api.py
+          tests/test_fireworks_model.py tests/test_json_actions.py
           tests/test_artifact_rendering.py tests/test_artifact_delivery.py tests/test_course_offer_delivery.py
           tests/test_delivery_store.py tests/test_template_policy.py tests/test_model_budgets.py
           tests/test_model_client.py tests/test_model_output_limits.py tests/test_config.py

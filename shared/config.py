@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     canvas_document_extractors: Annotated[tuple[str, ...], NoDecode] = ()
     meta_api_key: SecretStr | None = None
     meta_provider: Literal["meta", "fireworks"] = "meta"
+    fireworks_action_mode: Literal["native", "json"] = "native"
     fireworks_api_key: SecretStr | None = None
     meta_model: str = "muse-spark-1.3"
     meta_max_output_tokens: int = Field(default=2048, ge=256, le=16384)
