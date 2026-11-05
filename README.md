@@ -45,9 +45,12 @@ synthetic tool continuation and one real ECE253 inspection; they do not establis
 that the current provider request or complete journey works.
 
 Telegram replaces WhatsApp only for the disclosed submission fallback. WhatsApp
-business verification remains pending. Telegram v1 supports ordinary replies and
-preparation text/TXT, **not /accept, checked-coursework /file or /revise**. Original
-WhatsApp command/draft machinery is separately scripted-tested, not Telegram-equivalent.
+business verification remains pending. The deployed Telegram v1 supports ordinary
+replies and preparation text/TXT. The post-submission candidate adds explicit
+`/accept`, `/decline`, `/revise` and checked-DOCX `/file` commands, offer notifications,
+command acknowledgments and private command status. These require the reviewed
+compatible worker and migrations031–032; they are not deployed or live-proven.
+See the [academic delivery boundary](docs/contracts/TELEGRAM-ACADEMIC-DELIVERY-v1.md).
 Current partial real-course evidence and unknown AI-submission policy do not authorize
 graded drafting. Labs require the student's physical work and actual results.
 

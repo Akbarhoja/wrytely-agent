@@ -6,6 +6,21 @@ Updated November 4, 2026. [Plan revision8](docs/BUILD-PLAN.md) ·
 
 ## Post-submission continuation
 
+A final integration branch `codex/telegram-final-integration` imports reviewed M
+consumer5c1b0eb (including corrected9b397e9 UI) and A c17d327, preserving authorship.
+The prior always-no-retry UI finding is fixed; worker consumes typed offer/ack/file
+authority and current-link UI command status without raw private instructions.
+Connected scripted acceptance/file/revision/replay tests are in the early CI step.
+Full combined CI is pending; this is not deployed or live-proven.
+
+Owner separately approved up to2 synthetic recovery requests/$0.03 within3.
+Completed once: plain request200/stop (185input304output); supervisor tool shape503.
+No student data, deployment, workers or Telegram sends. Additional maximum external
+reservation0.02715850 is retained conservatively, original2.08984575 unchanged;
+aggregate2.11700425/3. No further calls authorized by this completed check. Plain
+success establishes partial inference recovery only, not working agent tools or
+actual recipient delivery. No provider/model swap or automatic retry occurred.
+
 A `codex/telegram-delivery-completion` extends the original Telegram outbox with
 offer/command/checked-file kinds, explicit /file, immutable artifact-file reuse and
 official single-attempt sendDocument. M owns its worker/HTTP/UI consumer; concrete
