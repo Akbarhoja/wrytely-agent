@@ -10,6 +10,7 @@ import logging
 from pydantic import ValidationError
 
 from contracts.course_supervision import CourseDecision
+from shared.budgeted_model import BudgetedModelCallFailed
 from shared.canvas_reads import SourceRefreshRequired
 from shared.db import json_text
 
@@ -184,6 +185,10 @@ def run_course_supervision_once(store, model, verified_user, supervision_id):
         logging.getLogger(__name__).warning(
             "course_decision_rejected %s", json.dumps(exc.evidence())
         )
+        raise
+    except BudgetedModelCallFailed as exc:
+        store.hold_course_supervision(verified_user, claim)
+        logging.getLogger(__name__).warning("course_model_failed %s", json.dumps(exc.evidence()))
         raise
     except Exception:
         store.hold_course_supervision(verified_user, claim)

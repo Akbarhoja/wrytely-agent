@@ -8,7 +8,7 @@ from contracts.document_artifacts import CoursePolicyV2, RubricItemV2
 from contracts.models import ModelClient, TaskLease
 from runtime.drafting import generate_checked_draft
 from runtime.planner import run_planning_episode
-from shared.budgeted_model import BudgetedMetaRouter
+from shared.budgeted_model import BudgetedMetaRouter, BudgetedModelCallFailed
 from shared.config import Settings
 from shared.db import LeaseLost, Store, json_text
 from shared.model_budgets import ModelBudgetExceeded
@@ -189,7 +189,7 @@ def run_once(store: Store, model: ModelClient, settings: Settings) -> bool:
         # No exception messages: provider errors may echo secrets or source content.
         code = "episode_limit" if isinstance(exc, EpisodeLimit) else "execution_failed"
         try:
-            if isinstance(exc, ModelCallFailed):
+            if isinstance(exc, (ModelCallFailed, BudgetedModelCallFailed)):
                 store.event(lease, "model_failure", exc.evidence())
             if isinstance(exc, ModelBudgetExceeded):
                 store.hold_model_task(lease)

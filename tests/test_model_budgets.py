@@ -147,6 +147,46 @@ def test_budget_unknown_blocks_worker_instead_of_an_automatic_retry(store, alice
     assert provider.calls == 1
 
 
+def test_budgeted_provider_503_is_persisted_safely_and_does_not_retry(store, alice):
+    from runtime.worker import run_once
+    from shared.config import Settings
+    from shared.model_client import ModelCallFailed
+
+    configured(store, alice)
+    task = store.enqueue("user_alice", "Synthetic question", "provider-503-evidence")
+
+    class FailedProvider:
+        calls = 0
+
+        def turn(self, history, tools):
+            self.calls += 1
+            raise ModelCallFailed(
+                status="http_error", http_status=503, code="invalid_request_error"
+            )
+
+    provider = FailedProvider()
+    assert run_once(store, wrapper(store, provider), Settings())
+    assert not run_once(store, wrapper(store, provider), Settings())
+    assert provider.calls == 1
+    with store.connection() as conn:
+        rows = conn.execute(
+            "SELECT kind,data FROM wrytely_agent.episode_events "
+            "WHERE task_id=%s AND kind='model_failure'",
+            (task["task_id"],),
+        ).fetchall()
+        reservation = conn.execute(
+            "SELECT state,liability_usd,maximum_usd FROM wrytely_agent.model_call_reservations"
+        ).fetchone()
+    assert len(rows) == 1 and rows[0]["data"]["http_status"] == 503
+    assert rows[0]["data"]["code"] == "invalid_request_error"
+    assert rows[0]["data"]["input_tokens"] is None
+    assert (
+        reservation["state"] == "unknown"
+        and reservation["liability_usd"] == reservation["maximum_usd"]
+    )
+    assert store.task("user_alice", task["task_id"])["status"] == "blocked"
+
+
 def test_operator_stop_survives_setup_replay_and_keeps_unknown_liabilities(store, alice):
     configured(store, alice)
     reservation = store.reserve_model_call("user_alice", "pilot", "0.10")
