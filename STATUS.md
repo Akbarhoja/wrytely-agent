@@ -6,6 +6,13 @@ Updated November 4, 2026. [Plan revision8](docs/BUILD-PLAN.md) ·
 
 ## Post-submission continuation
 
+The file-acceptance audit found that Telegram `protect_content=true` blocks
+saving the requested Word file. A fixes only checked DOCX delivery to use false;
+ordinary messages and long checklist TXT retain true. Official sendDocument docs
+confirm the option's effect.45 focused adapter tests and Ruff/356-format pass.
+This transport change is not yet deployed or live-proven; exact new CI and scoped
+counterpart review are required before the conditionally approved file test.
+
 A owns `codex/live-practice-file-acceptance` from9bf16aa: an operator-only,
 explicitly labelled synthetic practice fixture for the remaining live Word-file/
 revision acceptance. It uses original source/task/artifact storage and original

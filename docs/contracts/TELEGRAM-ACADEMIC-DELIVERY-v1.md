@@ -68,3 +68,13 @@ promoted to a checked Word file.
 Automatic discovery/notification of newly ready draft artifacts, natural-language
 delegation, callback buttons and timed quiz work are not added by this boundary.
 This completes explicit file-request transport, not proof of an always-on product.
+
+## Requested Word-file export
+
+Checked DOCX delivery fulfills an explicit owner request for a usable file. The
+adapter sends these Word documents with Telegram `protect_content=false`, allowing
+the recipient to save/export their copy. Ordinary messages and long checklist TXT
+attachments retain `protect_content=true`. This does not create a public download
+URL or bypass the original owner, consent, checked-byte, source and receipt gates.
+
+Provider reference: [Telegram sendDocument](https://core.telegram.org/bots/api#senddocument).

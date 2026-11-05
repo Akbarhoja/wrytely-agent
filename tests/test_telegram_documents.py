@@ -1,5 +1,7 @@
 import hashlib
 from dataclasses import replace
+from email import policy
+from email.parser import BytesParser
 from uuid import uuid4
 
 import httpx
@@ -40,7 +42,15 @@ def test_checked_document_uses_exact_bytes_and_one_attempt(status, state):
         assert (
             file.content in request.content and file.descriptor.filename.encode() in request.content
         )
-        assert b"protect_content" in request.content
+        message = BytesParser(policy=policy.default).parsebytes(
+            f"Content-Type: {request.headers['content-type']}\r\n\r\n".encode() + request.content
+        )
+        fields = {
+            part.get_param("name", header="content-disposition"): part.get_payload(decode=True)
+            for part in message.iter_parts()
+            if not part.get_filename()
+        }
+        assert fields["protect_content"] == b"false"
         return httpx.Response(status, json=response())
 
     with httpx.Client(transport=httpx.MockTransport(handle)) as client:
@@ -59,3 +69,25 @@ def test_modified_checked_bytes_are_rejected_before_network():
             TelegramAdapter(TOKEN, client).send_document(
                 recipient="991", file=replace(file, content=b"changed"), action_id=uuid4()
             )
+
+
+def test_long_checklist_attachment_keeps_protection():
+    def handle(request):
+        message = BytesParser(policy=policy.default).parsebytes(
+            f"Content-Type: {request.headers['content-type']}\r\n\r\n".encode() + request.content
+        )
+        parts = list(message.iter_parts())
+        fields = {
+            part.get_param("name", header="content-disposition"): part.get_payload(decode=True)
+            for part in parts
+            if not part.get_filename()
+        }
+        assert fields["protect_content"] == b"true"
+        assert [p.get_filename() for p in parts if p.get_filename()] == ["wrytely-result.txt"]
+        return httpx.Response(200, json=response())
+
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        result = TelegramAdapter(TOKEN, client).send(
+            recipient="991", text="Checklist " * 1000, action_id=uuid4()
+        )
+    assert result.state == "accepted"

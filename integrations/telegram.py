@@ -138,10 +138,13 @@ class TelegramAdapter:
             != "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         ):
             raise ValueError("Checked artifact descriptor mismatch")
+        # This path serves an explicit owner request for a usable Word file.
+        # Telegram's protect_content=True prevents saving/exporting that file.
+        # Text and long checklist attachments retain their separate protection.
         try:
             response = self._client.post(
                 self._url + "/sendDocument",
-                data={"chat_id": str(chat_id), "protect_content": "true"},
+                data={"chat_id": str(chat_id), "protect_content": "false"},
                 files={"document": (d.filename, file.content, d.media_type)},
                 follow_redirects=False,
                 timeout=20,
