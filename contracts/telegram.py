@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
+from contracts.templates import ArtifactPayload
+
 
 def positive_id(value):
     if type(value) is not int or not 0 < value < 2**52:
@@ -30,6 +32,7 @@ class TelegramClaim:
     user_id: str
     kind: str
     content: str
+    artifact_file_id: UUID | None = None
 
 
 @dataclass(frozen=True)
@@ -37,3 +40,4 @@ class TelegramPermit:
     state: str
     reason: str | None = None
     content: str | None = None
+    payload: ArtifactPayload | None = None

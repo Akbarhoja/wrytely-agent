@@ -463,9 +463,12 @@ class TelegramStore:
                 row["user_id"],
                 row["kind"],
                 row["content"],
+                row["artifact_file_id"],
             )
 
-    def authorize_telegram_dispatch(self, claim):
+    def authorize_telegram_dispatch(self, claim, *, supports_documents=False):
+        if type(supports_documents) is not bool:
+            raise ValueError("Explicit document capability required")
         with self._atomic_connection() as conn:
             agent = self._telegram_owner(conn, claim.user_id)
             row = conn.execute(
@@ -486,6 +489,7 @@ class TelegramStore:
                 (agent["id"], row["bot_id"]),
             ).fetchone()
             reason = None
+            payload = None
             if (
                 agent["paused"]
                 or not link
@@ -497,6 +501,21 @@ class TelegramStore:
                 reason = "control_changed"
             elif row["created_at"] + timedelta(hours=24) <= now or row["attempts"] >= 3:
                 reason = "intent_expired_or_exhausted"
+            elif row["kind"] == "artifact" and not supports_documents:
+                conn.execute(
+                    "UPDATE wrytely_agent.telegram_outbound SET state='queued',"
+                    "reason='document_transport_unavailable',attempt_token=NULL,lease_until=NULL,"
+                    "available_at=clock_timestamp()+interval '5 minutes' WHERE id=%s",
+                    (row["id"],),
+                )
+                return TelegramPermit("held", "document_transport_unavailable")
+            elif row["kind"] in {"offer", "artifact", "command"}:
+                try:
+                    reason, payload = self._telegram_academic_authority(
+                        conn, row, claim.user_id, link
+                    )
+                except (ValueError, LookupError, SourceRefreshRequired):
+                    reason = "academic_source_or_controls_changed"
             elif row["kind"] == "preparation":
                 status = self.course_supervision_status(claim.user_id, row["supervision_id"])
                 record = next(
@@ -510,13 +529,6 @@ class TelegramStore:
                     or preparation_text(record) != row["content"]
                 ):
                     reason = "preparation_changed_or_consent_missing"
-                count = conn.execute(
-                    "SELECT count(*) AS n FROM wrytely_agent.telegram_outbound WHERE agent_id=%s "
-                    "AND kind='preparation' AND dispatch_at>clock_timestamp()-interval '24 hours'",
-                    (agent["id"],),
-                ).fetchone()["n"]
-                if count >= 3:
-                    reason = "notification_limit"
             else:
                 valid = conn.execute(
                     "SELECT m.content FROM wrytely_agent.telegram_inbound i "
@@ -529,6 +541,17 @@ class TelegramStore:
                 ).fetchone()
                 if not valid or valid["content"] != row["content"]:
                     reason = "reply_changed"
+            if row["artifact_file_id"] != claim.artifact_file_id:
+                reason = "artifact_claim_changed"
+            if row["kind"] in {"offer", "preparation"}:
+                count = conn.execute(
+                    "SELECT count(*) AS n FROM wrytely_agent.telegram_outbound WHERE agent_id=%s "
+                    "AND kind IN ('preparation','offer') "
+                    "AND dispatch_at>clock_timestamp()-interval '24 hours'",
+                    (agent["id"],),
+                ).fetchone()["n"]
+                if count >= 3:
+                    reason = "notification_limit"
             if reason:
                 conn.execute(
                     "UPDATE wrytely_agent.telegram_outbound SET state='cancelled',reason=%s,"
@@ -556,7 +579,7 @@ class TelegramStore:
                 "attempts=attempts+1,reason=NULL WHERE id=%s",
                 (row["id"],),
             )
-            return TelegramPermit("permitted", content=row["content"])
+            return TelegramPermit("permitted", content=row["content"], payload=payload)
 
     def finish_telegram_delivery(self, claim, result):
         if result.internal_id != claim.action_id or result.state not in (
@@ -579,12 +602,20 @@ class TelegramStore:
             ).fetchone()
             if not row:
                 return False
-            if (claim.bot_id, claim.chat_id, claim.generation, claim.kind, claim.content) != (
+            if (
+                claim.bot_id,
+                claim.chat_id,
+                claim.generation,
+                claim.kind,
+                claim.content,
+                claim.artifact_file_id,
+            ) != (
                 row["bot_id"],
                 row["chat_id"],
                 row["generation"],
                 row["kind"],
                 row["content"],
+                row["artifact_file_id"],
             ) or not conn.execute(
                 "SELECT 1 FROM wrytely_agent.agents WHERE id=%s AND user_id=%s",
                 (row["agent_id"], claim.user_id),

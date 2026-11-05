@@ -22,6 +22,13 @@ def test_revision_preserves_explicit_multiline_instructions():
     assert command.instructions == "Make the title clearer.\nKeep the citations."
 
 
+def test_file_request_requires_an_explicit_artifact():
+    target = uuid4()
+    assert parse_academic_command(f"/file {target}").kind == "send_artifact"
+    with pytest.raises(ValueError):
+        parse_academic_command("/file latest")
+
+
 @pytest.mark.parametrize(
     "text",
     [
@@ -40,6 +47,6 @@ def test_malformed_recognized_commands_fail_closed(text):
         parse_academic_command(text)
 
 
-@pytest.mark.parametrize("text", ["/file any", "/help", "/acceptance", "Please accept my offer"])
+@pytest.mark.parametrize("text", ["/help", "/acceptance", "Please accept my offer"])
 def test_unsupported_commands_and_natural_language_are_not_delegation(text):
     assert parse_academic_command(text) is None

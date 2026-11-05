@@ -1,5 +1,13 @@
 # Contracts — implemented boundaries and historical increments
 
+## Telegram academic delivery candidate
+
+[Academic delivery v1](docs/contracts/TELEGRAM-ACADEMIC-DELIVERY-v1.md) extends
+the original outbox with proactive offers, fixed command acknowledgments and
+explicit checked-file requests. Additive032, default-false document capability,
+one-use artifact-byte read and adapter.send_document preserve original source/
+owner/consent/receipt fences. M worker assembly and live proof remain pending.
+
 ## Telegram academic commands candidate
 
 [Telegram academic commands v1](docs/contracts/TELEGRAM-ACADEMIC-COMMANDS-v1.md)

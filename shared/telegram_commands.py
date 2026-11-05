@@ -43,6 +43,10 @@ def apply_academic_command(store, conn, owner, command, *, bot_id, update_id):
                     command.instructions,
                     f"telegram:{bot_id}:{update_id}",
                 )
+            elif command.kind == "send_artifact":
+                result = store.enqueue_telegram_artifact_delivery(
+                    owner["user_id"], bot_id, command.target_id
+                )
             else:
                 raise ValueError("Unsupported command")
     except SourceRefreshRequired:
