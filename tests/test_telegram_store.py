@@ -23,10 +23,13 @@ def event(text, update_id=1, chat_id=CHAT):
     )
 
 
-def link(db, user="user_alice", chat=CHAT):
+def link(db, user="user_alice", chat=CHAT, *, update_id=1):
     db.provision(user)
     challenge = db.create_telegram_challenge(user, BOT)
-    assert db.ingest_telegram(BOT, event(challenge["message"], chat_id=chat)) == "linked"
+    assert (
+        db.ingest_telegram(BOT, event(challenge["message"], update_id=update_id, chat_id=chat))
+        == "linked"
+    )
     db.set_telegram_preferences(
         user,
         BOT,

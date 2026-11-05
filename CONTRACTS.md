@@ -1,5 +1,13 @@
 # Contracts — implemented boundaries and historical increments
 
+## Telegram academic commands candidate
+
+[Telegram academic commands v1](docs/contracts/TELEGRAM-ACADEMIC-COMMANDS-v1.md)
+composes explicit accept/decline/revision with the original authenticated Telegram
+ingestion and academic Store. Additive031 persists atomic command receipts, not
+new model or transport authority. Bot acknowledgments, offers and checked document
+delivery remain separate; no deployment/migration or live command proof yet.
+
 ## Telegram fallback candidate — November4
 
 [Telegram v1](docs/contracts/TELEGRAM-v1.md) adds a distinct provider link, replay
