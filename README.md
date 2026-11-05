@@ -3,60 +3,64 @@
 A new personal academic agent powered by Meta models. Built separately from the
 existing Wrytely handwriting product for the Meta Global AI Developer Hackathon.
 
-## Current implementation
+## Current implementation and submission evidence
 
-The November3 delivery target is a **one-course autonomous prototype**: Canvas
-collection, a persisted Meta-powered supervisor that investigates stored evidence
-and offers help, explicit student acceptance, checked private DOCX drafts and
-revisions, source-change reassessment and WhatsApp communication. See the
-[one-course plan and exact owners](docs/ONE-COURSE-DELIVERY.md).
+Wrytely is an owned Meta-powered academic-agent prototype, separate from the existing
+handwriting product. The submission scope is one selected Canvas course. The Chrome
+extension discovers courses and collects authorized originals; the cloud supervisor
+chooses inspections, preparations, work offers or waiting from saved evidence. Closing
+Chrome stops collection, so the agent cannot claim unseen course updates.
 
-Supervisor, budget, offer recovery and checked-file authorization code is on the
-candidate branch. M's student controls, HTTP/download/revision/budgeted service and
-media transport assembly is combined. The Store's explicit WhatsApp command intake
-and its signed parser/webhook consumer are combined. The connected rehearsal sends
-signed HTTP commands and receipt callbacks through the actual application, with
-simulated models/provider responses. It reuses original linkage/inbound replay and
-creates no unrelated generic chat task.
-Scripted integration evidence is separate from actual Meta quality, installed
-collection coverage, continuous cloud operation and phone delivery. Meta business
-verification is submitted and under review; the messaging restriction is not cleared.
+The reviewed combined application is **992fe0d**; its full CI run41939102967 passed
+582 real-Postgres integration and2042 backend tests plus web/build, extension and
+access checks. It contains Clerk authentication, private account-bound memory,
+resumable scoped Canvas collection, persisted supervision, a source-backed preparation
+view, original checked-draft/revision/download machinery and the official Telegram
+fallback. [Plan](docs/ONE-COURSE-DELIVERY.md), [status](STATUS.md),
+[Telegram boundary/setup](deploy/TELEGRAM-ASSEMBLY.md).
 
-The P1 completion candidate on `codex/p1-completion` connects the existing Canvas
-extension to document storage and a student connection/coverage interface. It
-collects discovered courses, assignment instructions/rubrics, syllabus text,
-announcements, discussion threads/replies, modules/items, pages, own submissions/
-feedback, assignment grades and readable course files. PDF support extracts text;
-images, restricted or external content and unsupported formats remain explicit gaps.
-Students can choose course/content scope, inspect coverage and disconnect. Manual
-snapshots remain troubleshooting, not the normal connection flow.
+Actual pilot evidence:
 
-Existing foundations include Clerk sign-in, a private agent per verified account,
-scoped Postgres memory, durable bounded Meta tasks, explicit delegation and checked
-private drafts. Document-based saved drafts now have an explicit v2 inspection view
-with pinned original evidence and current access checks. Saved checks do not grant
-permission to send or submit work.
+- Canvas discovered seven courses; the latest approved scan selected ECE253 only.
+  The linked-file refresh saved25 assignments,27files and one syllabus. The target
+  lab starter text is stored; its9-page manual has extracted text with explicit
+  unread layout/image gaps. No claim of complete course or assignment readiness.
+- The official Telegram bot is [@wrytely_agent_bot](https://t.me/wrytely_agent_bot).
+  Real authenticated webhook pairing and a short inbound test message reached the
+  existing task journal. Reply and proactive-preparation consents are separate.
+- The latest live model test stopped on its first request, with no outbound send.
+  Two later authorized synthetic requests, minimal and tool-enabled, both returned
+  HTTP503. Fireworks' official status reported a MuseSparkOpenUS incident. The exact
+  causal relationship is not established; the failed reservations remain held.
+  **Real preparation output, Telegram receipt and continuous operation are not yet
+  proven.** Model and delivery workers remain stopped outside bounded tests.
+- Existing draft, revision and Word-export acceptance evidence uses scripted models
+  and synthetic sources. It must not be presented as completed real coursework.
+  [Evidence and synthetic examples](docs/M-INTEGRATION-EVIDENCE.md).
 
-**The live academic journey is not complete yet.** Reviewed executable `fe196c6`
-and migrations023–028 are deployed only to the isolated development API. Explicitly
-selected Meta Muse Spark Open through Fireworks passes synthetic tool continuation
-and now a real ECE253 supervisor turn: Wrytely chose to inspect original evidence
-and saved the investigation. An earlier turn failed typed validation; its exact
-invalid field remains unknown. Supervision is paused and the budget disabled after
-the bounded test. Real offers, checked academic drafts, phone delivery and continuous
-operation are not yet proved. See [the successful decision record](docs/FIREWORKS-COURSE-DECISION-PASS.md),
-[the earlier stopped check](docs/FIREWORKS-COURSE-CHECK.md) and
-[the provider boundary](docs/FIREWORKS-PROVIDER.md).
-Independent review/CI and protected-main merge status remain separate. See
-[the P1 candidate and live checklist](docs/P1-COMPLETION-CANDIDATE.md),
-[STATUS.md](STATUS.md) and [work orders](docs/WORK-ORDERS.md).
+The owned runtime uses Meta models; Fireworks serves Meta MuseSparkOpen via an
+explicit adapter. The OpenAI SDK is an HTTP client, not the inference model.
+[Provider boundary](docs/FIREWORKS-PROVIDER.md). Earlier bounded runs did establish
+synthetic tool continuation and one real ECE253 inspection; they do not establish
+that the current provider request or complete journey works.
 
-The broader multi-course semester vision remains P2–P6 roadmap work. Development
-model and WhatsApp workers stay stopped outside separately authorized tests; no
-completed 24/7 academic agent is claimed. WhatsApp live-delivery acceptance remains
-open. Outlook email is optional and paused; Teams, handwriting and Hermes are outside
-the first-version scope. The existing handwriting product and its production
-configuration are not changed by this repository.
+Telegram replaces WhatsApp only for the disclosed submission fallback. WhatsApp
+business verification remains pending. Telegram v1 supports ordinary replies and
+preparation text/TXT, **not /accept, checked-coursework /file or /revise**. Original
+WhatsApp command/draft machinery is separately scripted-tested, not Telegram-equivalent.
+Current partial real-course evidence and unknown AI-submission policy do not authorize
+graded drafting. Labs require the student's physical work and actual results.
+
+The broader semester product, multi-course priority, Teams/group chats, calendars,
+handwriting integration and long-term reliability remain roadmap work. Outlook is
+optional and paused. Existing Clerk/database/domain infrastructure is reused as
+agreed; the new agent code and isolated schema/development deployment are separate
+from the prior handwriting product. [Privacy notice](docs/PRIVACY.md).
+[Submission closeout checklist](docs/SUBMISSION-CHECKLIST.md).
+
+For reproducibility, use this candidate branch or exact commit; public repository
+visibility is not proof that protected main has received all reviewed candidates.
+Required human review/merge protection remains in place.
 
 ## Setup
 
@@ -110,7 +114,7 @@ uv run --env-file .env uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
 The course supervisor and delegated drafting are separate entrypoints. The supervisor
-reads stored course evidence and chooses inspect/offer/wait; acceptance is required
+reads stored course evidence and chooses inspect/prepare/offer/wait; acceptance is required
 before the existing draft worker prepares work. For a separately authorized one-course
 supervisor pass (with the current owner explicitly enrolled and its budget granted):
 
