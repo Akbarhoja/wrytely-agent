@@ -161,3 +161,21 @@ it("does not enable an unselected course or expose a late prior-account response
     screen.getByRole<HTMLButtonElement>("button", { name: "Enable supervision" }).disabled,
   ).toBe(true);
 });
+
+it("explains a provider hold without rendering raw failure text or starting a retry", async () => {
+  const value = {
+    ...monitor(),
+    state: "blocked",
+    offers: [],
+    reason: "model_provider_unavailable",
+  };
+  const fetch = vi.fn(async (url: unknown) =>
+    Response.json(String(url).includes("?connection_id=") ? { supervision: value } : value),
+  );
+  vi.stubGlobal("fetch", fetch);
+  render(<CourseSupervision {...props} />);
+  await screen.findByText(/The model service is unavailable/);
+  expect(screen.getByText(/No automatic retry was started/)).toBeTruthy();
+  expect(screen.queryByRole("button", { name: /retry|resume/i })).toBeNull();
+  expect(fetch.mock.calls).toHaveLength(2);
+});

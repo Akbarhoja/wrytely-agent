@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api, ApiError } from "../lib/client";
 import styles from "./course-supervision.module.css";
+import { supervisionReason } from "../lib/supervision-reason";
 import { CoursePreparations } from "./course-preparations";
 import { parsePreparations, type Preparation } from "../lib/preparations";
 
@@ -185,7 +186,12 @@ function Session({
             {monitor.calls_reserved} of {monitor.call_limit} checks reserved. Checks use saved
             evidence and depend on service availability.
           </p>
-          {monitor.reason && <p>Attention needed: {monitor.reason.replaceAll("_", " ")}.</p>}
+          {monitor.reason && (
+            <p role="status">
+              {supervisionReason(monitor.reason)} No automatic retry was started. Refresh only
+              checks the saved state.
+            </p>
+          )}
           <div className={styles.controls}>
             <button
               className="quiet-button"

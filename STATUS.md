@@ -1645,3 +1645,23 @@ is not activation permission. No migration/deployment/webhook/send performed.
 Telegram v1 lacks /accept /file /revise and checked-coursework file delivery;
 WhatsApp verification/full-product/live-phone gates remain open. Existing pauses,
 source/policy gates and historical budget liabilities remain preserved.
+
+## M post-submission app and setup follow-up
+
+M claim [6647198922](https://github.com/Akbarhoja/wrytely-agent/issues/4#issuecomment-6647198922),
+branch `codex/post-submission-app` from A9538c51. A retains final integration.
+Worker now reports unknown when its receipt persistence fence is lost; it cannot
+advertise a late provider result as persisted acceptance or retry it. Three actual
+expired/reconciled-fence regressions reproduced the old behavior before the fix.
+Private supervision now uses fixed provider-hold labels with generic fallback and
+no automatic retry. [Fresh-clone setup](deploy/LOCAL-SETUP.md),
+[three-minute script](docs/M-DEMO-SCRIPT.md) and
+[channel gaps/evidence](docs/M-POST-SUBMISSION-HANDOFF.md) distinguish post-submission
+changes, actual pairing/collection, scripted files and unproved live preparation.
+
+Focused disposable-Postgres Telegram/HTTP/worker/supervision85PASS; focusedUI23PASS;
+Ruff333format and new-doc relative links pass. Full web/build and required complete
+backend validation remain pending for this new exact head. No live operation,
+credential inspection, provider retry, hold release, migration or deployment.
+Existing held liabilities and submitted history remain preserved; no full-product
+acceptance is implied by the documentation or fixed status labels.
