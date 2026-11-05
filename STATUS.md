@@ -1660,8 +1660,15 @@ no automatic retry. [Fresh-clone setup](deploy/LOCAL-SETUP.md),
 changes, actual pairing/collection, scripted files and unproved live preparation.
 
 Focused disposable-Postgres Telegram/HTTP/worker/supervision85PASS; focusedUI23PASS;
-Ruff333format and new-doc relative links pass. Full web/build and required complete
-backend validation remain pending for this new exact head. No live operation,
+Ruff333format and new-doc relative links pass. Executable `fa93efd` now has successful
+full CI runs [41950738416](https://github.com/Akbarhoja/wrytely-agent/actions/runs/41950738416)
+and [41950631248](https://github.com/Akbarhoja/wrytely-agent/actions/runs/41950631248),
+including foundation, web/build, extension and access checks. Local Windows full
+regression finished 2076 passed/4 PDF extraction-discovery failures/2 warnings in
+3649.41s; it is not a local all-green result. The four failures match the recorded
+Windows PDF boundary; independent Linux CI is green. Documentation-only verification
+updates do not change the tested executable. A review/import and actual live
+acceptance remain separate. No live operation,
 credential inspection, provider retry, hold release, migration or deployment.
 Existing held liabilities and submitted history remain preserved; no full-product
 acceptance is implied by the documentation or fixed status labels.

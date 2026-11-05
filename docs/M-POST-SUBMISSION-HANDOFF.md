@@ -61,3 +61,16 @@ Ruff/format/full disposable-Postgres checks and web tests/types/build must be re
 as actually passed/failed/pending; prior integration green is not transferred to
 these post-submission executable changes. Windows PDF failures remain separate
 from Linux CI and must not be hidden.
+
+### Verification closure — executable fa93efd
+
+Both exact-head full workflows
+[41950738416](https://github.com/Akbarhoja/wrytely-agent/actions/runs/41950738416) and
+[41950631248](https://github.com/Akbarhoja/wrytely-agent/actions/runs/41950631248)
+completed successfully, including foundation/web/extension/access jobs. Local web
+195 tests, TypeScript and production webpack build passed. Local native Windows
+full regression completed 2076 passed, four PDF extraction/discovery failures and
+two warnings in3649.41s. These are the same four recorded platform-boundary cases;
+no failed local run is relabeled green. This documentation-only evidence update
+leaves executable source unchanged. A's counterpart review/import and useful live
+model/recipient acceptance are still required; CI completion starts no service.
