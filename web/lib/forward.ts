@@ -42,7 +42,9 @@ export async function forward(request: Request, path: string[], deps: Dependenci
     canvasCoverage.test(route);
   const permitted =
     request.method === "GET"
-      ? ["me", "messages", "tasks", "whatsapp", "sources", "responsibilities"].includes(route) ||
+      ? ["me", "messages", "tasks", "whatsapp", "telegram", "sources", "responsibilities"].includes(
+          route,
+        ) ||
         resultRead.test(route) ||
         documentRead ||
         fileRead ||
@@ -58,6 +60,9 @@ export async function forward(request: Request, path: string[], deps: Dependenci
             "sources",
             "responsibilities",
             "agent/control",
+            "telegram/link",
+            "telegram/unlink",
+            "telegram/preferences",
             "whatsapp/link",
             "whatsapp/unlink",
             "whatsapp/preferences",
@@ -71,7 +76,15 @@ export async function forward(request: Request, path: string[], deps: Dependenci
             artifactRevision.test(route)));
   if (!permitted) return json(404, "Route not found");
   let query = "";
-  if (documentRead || connectionRead || fileRead || courseRoute || artifactRevision.test(route)) {
+  if (
+    documentRead ||
+    connectionRead ||
+    fileRead ||
+    courseRoute ||
+    artifactRevision.test(route) ||
+    route === "telegram" ||
+    route.startsWith("telegram/")
+  ) {
     const url = new URL(request.url);
     const allowed =
       route === "course-supervisions" && request.method === "GET"

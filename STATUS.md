@@ -16,6 +16,33 @@ P0/P1 remain open. No new live activation is inferred.
 
 ### Telegram fallback candidate
 
+Approved combined executable992fe0d fullCI41939102967 SUCCESS:582 realPostgres
+integration/2042 full backend tests (two existing warnings), web/build, extension
+and access checks pass. Owner-approved Telegram/Fireworks privacy notice published
+at5d4bdd5 (notice-only follow-up; executable tree unchanged). Owner then approved
+isolated development deployment,029–030, credential/webhook setup and one bounded
+five-minute ECE253/short-message test, max6 model requests/$0.45 additional within
+$3 total and3 Telegram replies/checklists. Existing handwriting production untouched.
+
+API3f443faa SUCCESS/health200;029–030 verified, official webhook registered and real
+Telegram private /start paired the owner's signed-in account. Both test consents
+were explicitly enabled only for the approved run. One-shot0f9223af stopped on its
+FIRST Fireworks request with ModelBudgetExceeded; exact provider cause is not saved
+by that generic failure wrapper.1 request/0 sends/0 real course preparations.
+The0.04123225 reservation stays held; prior1.99391225 liabilities preserved,
+combined2.03514450 under3. No blind retry. Read-only Fireworks catalog200 lists
+configured MuseSparkOpen, which does not establish successful inference.
+
+Test budget disabled, original test reply blocked, default Telegram consentsfalse
+and UTCquiet22–08 restored. No model/delivery continuous workers. Migration-only
+predeploy restored/read back and cleanup05de1ada SUCCESS/health200; API-only start
+unchanged. Duplicate automatically created64c49863 cancelled before operator ran;
+only one preflight/call observed. Collector remains paused. Owner remains linked,
+not a claim of outbound receipt, working preparation quality or24/7 acceptance.
+Coordination6646463405 records exact stopped evidence for M; investigate failure
+metadata before proposing a separately scoped diagnostic. No repeat run authorized
+by this completed activation. Private count/budget and UI evidence stays ignored.
+
 Akbar selected a new Telegram bot while WhatsApp business verification remains under
 review. A owns `codex/telegram-fallback` shared/contracts/adapter; M retains the
 preparation view and HTTP/web/worker assembly. Scope is recorded in
@@ -1549,3 +1576,38 @@ code, schemas, model tool registration and draft paths preserved.
 inactive Chrome host claim. Review requested when available; P0reviews#139/#46
 remain pending. No monitor/browser/provider/model/send/spend/grant/install/retained
 migration/worker/deploy/mainmerge. P1 remains open.
+
+## M private preparation consumer — November4 candidate
+
+M claimed [preparation consumer scope](https://github.com/Akbarhoja/wrytely-agent/issues/4#issuecomment-6644234620)
+on `codex/course-preparation-view`, based on A PR170 `ce7e6f8`. The existing private
+supervision panel now displays bounded literal excerpts, clarification questions,
+notice, original gaps/unread continuation and current/historical limited evidence.
+No preparation draft/download/send actions exist. Session/access/account changes
+and failed refreshes clear cached preparation data. No new backend route/runtime.
+
+Evidence: 165 web tests, TypeScript, 27 preparation/API tests against disposable
+Postgres, Ruff/310-file format checks passed; synthetic IAB layout inspected at
+390/768/1440px; production webpack build passed. Full backend regression/CI and
+counterpart review remain pending at this checkpoint.
+See [consumer evidence and limits](docs/M-COURSE-PREPARATION-VIEW.md). This does not
+activate029, refresh source coverage, authorize submissions or demonstrate live
+phone delivery. Existing blockers, budgets and historical evidence remain intact.
+
+## M Telegram assembly candidate — November4
+
+M consumes A588c504 on `codex/telegram-assembly`, combined with M PR172.
+Authenticated link/status/preferences/unlink, private web controls, secret-first
+bounded callback and explicit one-use dispatch worker are implemented. Original
+Store/runtime are reused; no provider/Store duplication. Telegram consents remain
+separate/defaultfalse. Session/account changes clear pairing data. HTTP/UI do not
+invoke models or send. Worker preserves unknown outcomes and stops without blind
+retry. Configured bot identity is never browser-provided.
+
+Local61 adapter/Store/HTTP/worker checks and4 focused web checks passed with
+synthetic/scripted data and disposable Postgres. Full web/build/combined backend
+CI and counterpart review remain pending. [Operator preparation](deploy/TELEGRAM-ASSEMBLY.md)
+is not activation permission. No migration/deployment/webhook/send performed.
+Telegram v1 lacks /accept /file /revise and checked-coursework file delivery;
+WhatsApp verification/full-product/live-phone gates remain open. Existing pauses,
+source/policy gates and historical budget liabilities remain preserved.
