@@ -28,9 +28,7 @@ For a permitted artifact, `TelegramPermit.payload` is an `ArtifactPayload`. Then
 file = store.read_telegram_artifact_delivery(claim)
 if file.descriptor != permit.payload:
     raise ValueError("Checked file changed")
-receipt = adapter.send_document(
-    recipient=str(claim.chat_id), file=file, action_id=claim.action_id
-)
+receipt = adapter.send_document(recipient=str(claim.chat_id), file=file, action_id=claim.action_id)
 ```
 
 This reads bytes only after the one-use dispatch permit has been consumed; it
