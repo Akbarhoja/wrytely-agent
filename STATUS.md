@@ -6,6 +6,27 @@ Updated November 4, 2026. [Plan revision8](docs/BUILD-PLAN.md) ·
 
 ## Post-submission continuation
 
+The file-acceptance audit found that Telegram `protect_content=true` blocks
+saving the requested Word file. A fixes only checked DOCX delivery to use false;
+ordinary messages and long checklist TXT retain true. Official sendDocument docs
+confirm the option's effect.45 focused adapter tests and Ruff/356-format pass.
+This transport change is not yet deployed or live-proven; exact new CI and scoped
+counterpart review are required before the conditionally approved file test.
+
+A owns `codex/live-practice-file-acceptance` from9bf16aa: an operator-only,
+explicitly labelled synthetic practice fixture for the remaining live Word-file/
+revision acceptance. It uses original source/task/artifact storage and original
+checked-drafting/runtime functions; no course identity, policy, check result or
+model decision is fabricated. Only fixture task setup is manual and labelled.
+Exact newly queued task claims reject other owners, prior attempts, pause and
+concurrent owner work. No web endpoint/automatic entrypoint, new runtime, course
+rescan or live activation. Three real-Store/JSON-wire test cases are collected;
+actual database CI and independent review remain pending. Current live workers
+stay stopped and cumulative liability stays2.33600150/3.
+
+Combined prior candidatec1cf2a6 full CI41976787343 is now SUCCESS. The next fixture
+candidate does not inherit a new-test result from that run.
+
 ### Scheduled cloud decision completed and stopped
 
 Owner-approved one-call/$0.12/285-second test used existing live-tested7abb runtime.
