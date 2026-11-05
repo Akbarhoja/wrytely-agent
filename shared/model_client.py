@@ -1,4 +1,4 @@
-from openai import APIStatusError, OpenAI
+from openai import APIConnectionError, APIStatusError, APITimeoutError, OpenAI
 
 from contracts.models import ModelTurn
 from shared.config import Settings
@@ -9,7 +9,15 @@ class ModelCallFailed(RuntimeError):
 
     def __init__(self, *, status, http_status=None, code=None, usage=None, incomplete_reason=None):
         super().__init__("Model response did not complete")
-        statuses = {"incomplete", "failed", "cancelled", "in_progress", "queued", "http_error"}
+        statuses = {
+            "incomplete",
+            "failed",
+            "cancelled",
+            "in_progress",
+            "queued",
+            "http_error",
+            "transport_error",
+        }
         codes = {
             "model_not_found",
             "insufficient_quota",
@@ -17,6 +25,8 @@ class ModelCallFailed(RuntimeError):
             "invalid_api_key",
             "invalid_request_error",
             "server_error",
+            "request_timeout",
+            "connection_error",
         }
         self._evidence = {
             "status": status if isinstance(status, str) and status in statuses else "unknown",
@@ -58,7 +68,7 @@ class MetaModelClient:
         self._client = OpenAI(
             api_key=settings.meta_api_key.get_secret_value(),
             base_url="https://api.meta.ai/v1",
-            timeout=30,
+            timeout=settings.meta_request_timeout_seconds,
             max_retries=0,  # Task retries are managed durably by the worker.
         )
 
@@ -83,6 +93,10 @@ class MetaModelClient:
                 max_output_tokens=self.max_output_tokens,
                 **options,
             )
+        except APITimeoutError:
+            raise ModelCallFailed(status="transport_error", code="request_timeout") from None
+        except APIConnectionError:
+            raise ModelCallFailed(status="transport_error", code="connection_error") from None
         except APIStatusError as exc:
             raise ModelCallFailed(
                 status="http_error", http_status=exc.status_code, code=exc.code

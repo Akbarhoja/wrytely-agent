@@ -189,7 +189,11 @@ def run_course_supervision_once(store, model, verified_user, supervision_id):
     except BudgetedModelCallFailed as exc:
         evidence = exc.evidence()
         status = evidence.get("http_status")
-        if status is not None and 500 <= status <= 599:
+        if evidence.get("code") == "request_timeout":
+            reason = "model_request_timed_out"
+        elif evidence.get("code") == "connection_error":
+            reason = "model_connection_failed"
+        elif status is not None and 500 <= status <= 599:
             reason = "model_provider_unavailable"
         elif status == 429:
             reason = "model_rate_limited"

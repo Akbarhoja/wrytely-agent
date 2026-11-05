@@ -311,6 +311,8 @@ class CourseSupervisionStore:
             "model_not_found",
             "model_response_incomplete",
             "model_request_failed",
+            "model_request_timed_out",
+            "model_connection_failed",
         }:
             raise ValueError("Invalid supervision hold reason")
         with self.connection() as conn:

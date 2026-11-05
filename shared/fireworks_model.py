@@ -7,7 +7,7 @@ never ModelTurn.text; encrypted Meta state cannot be translated across providers
 import re
 from types import SimpleNamespace
 
-from openai import APIStatusError, OpenAI
+from openai import APIConnectionError, APIStatusError, APITimeoutError, OpenAI
 
 from contracts.models import ModelTurn
 from shared.json_actions import action_messages, parse_actions
@@ -146,7 +146,7 @@ class FireworksModelClient:
         self._client = OpenAI(
             api_key=settings.fireworks_api_key.get_secret_value(),
             base_url="https://api.fireworks.ai/inference/v1",
-            timeout=30,
+            timeout=settings.meta_request_timeout_seconds,
             max_retries=0,
         )
 
@@ -168,6 +168,10 @@ class FireworksModelClient:
                 n=1,
                 **options,
             )
+        except APITimeoutError:
+            raise ModelCallFailed(status="transport_error", code="request_timeout") from None
+        except APIConnectionError:
+            raise ModelCallFailed(status="transport_error", code="connection_error") from None
         except APIStatusError as exc:
             raise ModelCallFailed(
                 status="http_error", http_status=exc.status_code, code=exc.code

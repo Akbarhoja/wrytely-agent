@@ -72,3 +72,12 @@ The original verified-owner/lease/state checks fence failure persistence, so a l
 failure cannot overwrite a later pause or a previously committed hold. The existing
 `hold_course_supervision(user, claim)` call remains compatible; trusted runtime can
 add the keyword-only allowlisted `reason` argument. No schema migration is needed.
+
+The transport-diagnostic candidate additionally recognizes `model_request_timed_out`
+and `model_connection_failed`. These distinguish the SDK's timeout/connection error
+classes while retaining unknown token usage/full cost holds. Neither starts a retry.
+`AGENT_META_REQUEST_TIMEOUT_SECONDS` is an explicit5–120-second network timeout
+setting, default30. Both model adapters apply it with SDK retries disabled. It does
+not increase episode deadlines, leases, output limits or budgets. Increasing it
+requires the operator to leave enough room inside the separately approved live
+test/worker deadline. A delayed response must never be represented as known zero cost.

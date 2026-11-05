@@ -51,6 +51,8 @@ class Provider:
         ),
         ({"status": "incomplete"}, "model_response_incomplete"),
         ({"status": "failed"}, "model_request_failed"),
+        ({"status": "transport_error", "code": "request_timeout"}, "model_request_timed_out"),
+        ({"status": "transport_error", "code": "connection_error"}, "model_connection_failed"),
     ],
 )
 def test_provider_failure_has_a_fixed_hold_reason_without_retry(metadata, reason, caplog):
