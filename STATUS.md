@@ -6,6 +6,25 @@ Updated November 4, 2026. [Plan revision8](docs/BUILD-PLAN.md) ·
 
 ## Post-submission continuation
 
+### Real JSON course check completed and stopped
+
+Owner-approved exactb806 isolated deployment10267f68 SUCCESS/health200 and031–032
+applied. One-off4795afd6 verified originalowner/newestECE253-onlyscope and unchanged
+opening2.19562550, then persisted3 actual Meta inspection decisions. Fourth request
+stopped after30.15s with unknown outcome; no fifth request/retry, preparation or send.
+New known/held0.08853500, aggregate2.28416050/3; oldrowsverifiedunchanged. Monitor
+paused, budgetdisabled, Telegramconsentsfalse/UTCquiet22–08 restored. Normal
+migration-only predeploy/API-only start restored/readback; cleanup3441baea SUCCESS,
+health200. Explicit JSON mode retained, no continuous workers. Full record in
+docs/JSON-COURSE-LIVE-CHECK.md. This completed activation authorizes no repeat.
+
+A `codex/model-timeout-evidence` adds default30/explicit5–120-second transport timeout
+and fixed timeout/connection failure evidence through original budget/monitor holds.
+No automatic retry, changed default, larger output allowance or weakened source gate.
+103 focused local client/parser/protocol/budget checks and lint350format pass;
+exact new full CI pending, not deployed. Fourth-call duration suggests timeout but
+original failure root cause remains unconfirmed; unknown cost stays reserved.
+
 ### Latest verified checkpoint
 
 Exact JSON executableb806a49 fullCI41966467067 SUCCESS:700 focused integration,
