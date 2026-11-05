@@ -1718,3 +1718,26 @@ reproduced the incorrect wording before correction; focused24 and full196 web
 tests plus TypeScript now pass. POSIX `cp` and test-environment equivalents were
 added alongside PowerShell setup. Production build/new exact CI are tracked in
 the PR; earlier fa93efd full CI covers unchanged Python only, not this new web head.
+
+## M Telegram academic delivery consumer candidate
+
+M claim [6649206861](https://github.com/Akbarhoja/wrytely-agent/issues/4#issuecomment-6649206861),
+branch `codex/telegram-delivery-consumer`, composes A c17d327 and corrected M9b397e9
+preserving authorship. A retains final integration. Existing worker now recovers
+academic offers/acks, requests typed document permits, reads the fenced immutable
+file, compares the exact descriptor and calls official send_document once. False
+receipt persistence remains unknown. UI shows only fixed current-link command
+labels/time, clears private state and does not equate recorded with completed work
+or delivery. No runtime/Store/adapter/contract edits by M.
+
+Focused worker/Store/document checks28PASS; final connected HTTP/worker/command/
+control checks34PASS113.01s (overlapping scopes, not62 distinct checks). PrivateUI20
+focused and212fullweb/TypeScript/webpackbuild PASS; Ruff345format/Prettier/diff pass.
+Synthetic real-component IAB390/768/1440 inspected, temporary preview stopped and
+viewport restored. Rehearsal verifies stable acceptance intent, explicit checked
+file + fixed ack, exact replay without resend and private revision intent/ack;
+models/providers scripted, no actual completed new revision or phone proof.
+Required exact full backend CI/regression and A review remain pending. Additive
+031–032 stay undeployed by M. No new live call/send/spend/migration/deployment or
+hold release; submitted history and all existing source/policy/control gates remain.
+See [consumer handoff](docs/M-TELEGRAM-DELIVERY-CONSUMER.md).

@@ -36,7 +36,7 @@ it("loads read-only, creates an explicit private challenge and clears it on acco
   ).toBe("https://t.me/wrytely_agent_bot?start=" + "a".repeat(43));
   view.rerender(<TelegramConnection userId="bob" enabled={false} />);
   expect(screen.queryByDisplayValue("/start " + "a".repeat(43))).toBeNull();
-  expect(screen.getByText(/does not support \/accept/)).toBeTruthy();
+  expect(screen.getByText(/Academic commands require a compatible installed backend/)).toBeTruthy();
 });
 it("requires separate false-default consents and saves only explicit preferences", async () => {
   const state = {
@@ -103,4 +103,47 @@ it("proxies only the private Telegram surface, never the public webhook or forge
       )
     ).status,
   ).toBe(404);
+});
+
+it("shows only a fixed current-link command label and clears it on account change", async () => {
+  const value = {
+    ...unlinked,
+    linked: true,
+    latest_command: {
+      outcome: "command_applied",
+      received_at: "2026-11-05T03:44:10Z",
+      command_result: {
+        state: "applied",
+        kind: "send_artifact",
+        target_id: "00000000-0000-4000-8000-000000000001",
+        result: { PRIVATE: "revision instructions" },
+      },
+    },
+  };
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => Response.json(value)),
+  );
+  const view = render(<TelegramConnection userId="alice" enabled />);
+  await screen.findByText("File request recorded.");
+  expect(screen.getByText(/not proof that work is complete or a file was received/)).toBeTruthy();
+  expect(screen.queryByText("revision instructions")).toBeNull();
+  view.rerender(<TelegramConnection userId="bob" enabled={false} />);
+  expect(screen.queryByText("File request recorded.")).toBeNull();
+});
+it("does not display malformed command receipt content", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () =>
+      Response.json({
+        ...unlinked,
+        linked: true,
+        latest_command: { outcome: "PRIVATE provider body" },
+      }),
+    ),
+  );
+  render(<TelegramConnection userId="alice" enabled />);
+  await screen.findByRole("alert");
+  expect(screen.queryByText("PRIVATE provider body")).toBeNull();
+  expect(screen.queryByRole("region", { name: "Latest Telegram command" })).toBeNull();
 });
