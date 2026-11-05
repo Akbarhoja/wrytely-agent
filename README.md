@@ -13,8 +13,8 @@ Chrome stops collection, so the agent cannot claim unseen course updates.
 
 The live-tested backend is **7abbefc**; full CI41971364035 passed714 integration
 and2164 backend tests plus web/build, extension and access. The release candidate
-also includes M's separately reviewed timeout-status UI labels; its combined CI
-is tracked in the release PR rather than inferred from the backend result.
+also includes M's separately reviewed timeout-status UI labels; release1813d84
+passed full CI41975136272. New combined acceptance tests are tracked in PR #185.
 It contains Clerk authentication, private account-bound memory,
 resumable scoped Canvas collection, persisted supervision, a source-backed preparation
 view, original checked-draft/revision/download machinery and the official Telegram
@@ -35,8 +35,12 @@ Actual pilot evidence:
   the owner confirmed receipt. This used explicit JSON action mode on the same Meta
   model after native tool requests failed503. Earlier unknown reservations remain
   held. [Exact build, test and cleanup](docs/JSON-PREPARATION-DELIVERY-ACCEPTANCE.md).
+  A subsequent bounded cloud test persisted a two-minute timer, reconstructed the
+  runtime in a fresh process and committed one real Meta inspection decision.
+  The owner reported briefly closing the laptop; that physical interval was not
+  independently measured. [Scheduling evidence](docs/SCHEDULED-COURSE-LIVE-CHECK.md).
   **Continuous operation and real checked-coursework file/revision receipt remain
-  unproven.** Model and delivery workers are stopped after the bounded test.
+  unproven.** Model and delivery processing is paused after the bounded tests.
 - Existing draft, revision and Word-export acceptance evidence uses scripted models
   and synthetic sources. It must not be presented as completed real coursework.
   [Evidence and synthetic examples](docs/M-INTEGRATION-EVIDENCE.md).

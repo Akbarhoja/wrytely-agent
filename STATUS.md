@@ -6,6 +6,24 @@ Updated November 4, 2026. [Plan revision8](docs/BUILD-PLAN.md) ·
 
 ## Post-submission continuation
 
+### Scheduled cloud decision completed and stopped
+
+Owner-approved one-call/$0.12/285-second test used existing live-tested7abb runtime.
+One-offec0b35af persisted a due time120seconds ahead; a fresh cloud process ran
+123seconds later, made one real Meta request and committed an inspection of saved
+ECE253 Lab8 evidence. Known usage10620/258; new0.01437150, allold2.32163000 unchanged,
+cumulative2.33600150/3. Monitorpaused,budgetoff,Telegrampreferencesuntouched,no sends.
+Normal migration-only/API-only configuration restored/read back; cleanupb1195f7a
+SUCCESS. See docs/SCHEDULED-COURSE-LIVE-CHECK.md for exact times and health evidence.
+Owner reported laptop closure, but physical duration/overlap was not instrumented.
+This is real scheduled fresh-process cloud evidence, not continuous-operation proof.
+Completed approval allows no more calls. Actual graded-drafting gates remain intact.
+
+Release1813d84 full CI41975136272 and JSON acceptance144ff14 full CI41975853359 are
+now SUCCESS. Combined test candidatec1cf2a6 CI41976787343 is still running; its early
+integration and web/extension/access jobs pass. M's independent scoped review6650868989
+passed the two JSON tests on a separate disposable database with no blocking finding.
+
 A's `codex/json-draft-revision-acceptance` now combines JSON drafting acceptance
 144ff14 and M's connected Telegram revision rehearsal666f49a (imported asafe1f9d,
 preserving authorship). The former uses real Store/original worker/Fireworks SDK
