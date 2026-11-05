@@ -11,18 +11,21 @@ readiness and final integration; this M-owned guide covers the app/web/channel s
 gh repo clone Akbarhoja/wrytely-agent
 cd wrytely-agent
 git fetch origin
-git switch --track origin/codex/post-submission-app
+git switch --detach origin/codex/telegram-final-integration
 git rev-parse HEAD
 ```
 
 Without GitHub CLI, use `git clone https://github.com/Akbarhoja/wrytely-agent.git`.
-This branch is a review candidate, not protected main. Record the actual SHA and
-its checks from the PR; do not assume the default checkout contains these features.
-A's readiness base is `9538c514c78bc83b96984d8838721666d34f2ee0`; submitted/live
-integration evidence belongs to executable `992fe0d`, not these later changes.
+This is A's release-review branch, not protected main. Compare the actual SHA with
+[PR182](https://github.com/Akbarhoja/wrytely-agent/pull/182) and its checks before
+using it; a moving branch name is not an approved deployment. Feature candidates
+such as the practice-file transport in PR186 have separate evidence and approval.
+Default main can still be an early baseline. Submitted history and later work
+remain distinct. For an isolated hosted entrypoint, use the
+[judge-frontend handoff](JUDGE-FRONTEND-HANDOFF.md); this guide starts local services only.
 
 Prerequisites: Git, Python3.12+, uv, Node24/npm and a separately designated disposable
-Postgres for tests. CI uses Linux/Postgres18. Native Windows has four known PDF
+Postgres for tests. CI uses Linux/Postgres18. Native Windows has known PDF
 extraction/discovery failures because the bounded PDF child uses POSIX `resource`;
 do not remove resource limits or call a partially passing Windows suite green.
 Use a supported Linux environment/CI for full PDF acceptance.
@@ -150,8 +153,14 @@ save preparation. Do not start any of these paid/send-capable processes merely
 because the UI is linked. See [service separation](ONE-COURSE-SERVICES.md) and
 [bounded Telegram assembly](TELEGRAM-ASSEMBLY.md). A concrete live approval specifies
 candidate/environment, data/recipient, budget/attempt limit and stop/reconciliation.
-Telegram `/accept`, `/file` and `/revise` are not implemented; long TXT is not a
-checked coursework artifact. No alternative provider or unofficial WhatsApp bypass.
+Current reviewed code supports explicit `/accept OFFER_UUID`, `/decline OFFER_UUID`,
+`/file ARTIFACT_UUID` and `/revise ARTIFACT_UUID instructions`. These use trusted
+linked-owner commands, replay receipts and the original source/control gates.
+An accepted command is not completed work or proof of file receipt; current
+checked artifact/one-use delivery authorization is required. Long checklist TXT
+is not a checked coursework DOCX. Availability depends on the exact installed
+backend and separately approved operation; do not assume a local UI activates it.
+No alternative provider or unofficial WhatsApp bypass.
 
 ## 7. Verify and report the actual layer
 

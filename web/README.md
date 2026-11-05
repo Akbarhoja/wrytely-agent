@@ -38,6 +38,21 @@ are never returned to the browser.
 Only public shell routes work without Clerk configuration; private API calls fail
 closed. No test-session switch or authentication bypass exists in the runtime.
 
+## Current integrated capabilities
+
+The current reviewed candidate includes scoped Canvas connection/coverage controls,
+course supervision/offer decisions, private preparations, checked artifact download
+and revision requests, and Telegram linking/preferences/command status. The browser
+does not collect Canvas itself: the separately paired collector and backend provide
+that evidence. Telegram file/command processing and model work use separate fenced
+services. Opening the website starts neither. Teams and calendar are not implemented;
+Outlook is optional and paused. The earlier stage notes below are historical
+validation snapshots, not the latest capability inventory.
+
+For source SHA, isolated hosting commands, auth-origin requirements, collector
+handoff and pending live smoke checks, see
+[judge-frontend preparation](../deploy/JUDGE-FRONTEND-HANDOFF.md).
+
 ## Conversation behavior
 
 - Bootstrap restores the same account's agent.
@@ -52,7 +67,9 @@ closed. No test-session switch or authentication bypass exists in the runtime.
 - Pause/resume is confirmed with the API. Paused work remains saved; polling stops
   until resumed. A failed poll stops with a reconnect action rather than claiming
   completion.
-- Canvas, Teams, calendar and outbound messaging are not implemented here.
+- Teams and calendar are not implemented. Current Canvas and Telegram presentation
+  uses the integrated capabilities above; collection, reasoning and delivery are
+  backend/collector services, not browser-side work.
 
 ## Design
 
@@ -203,8 +220,9 @@ malformed or internally contradictory format evidence stays unavailable.
 
 The next operator gate is documented in
 [M2 development student-path acceptance](../docs/stages/M2-LIVE-ACCEPTANCE.md).
-All live cases and setup/budget approvals remain pending; the sheet does not
-authorize provider calls or retained database changes.
+That historical sheet records its own pending cases. Later bounded live evidence
+belongs to the exact candidate and current STATUS; it does not close all of those
+cases or authorize new provider calls or retained database changes.
 
 ## Post-submission installation handoff
 

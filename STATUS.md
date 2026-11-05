@@ -1791,3 +1791,24 @@ format and diff checks passed. Initial rehearsal failures were test assumptions
 (UUID/string comparison, unlink route and missing bot identity in the scripted
 response), corrected without implementation changes. Required full regression
 and exact candidate CI remain pending; this is not yet a full-green handoff.
+
+## M666 revision verification closure and judge-entry preparation
+
+Exact executable `666f49a0a9a26bb34f72dce96efe48d6692ac25a` completed the required
+local full regression: 2132 passed,3 recorded Windows PDF extraction/discovery
+failures,2 warnings in3477.54s. The failed cases are auto_documents_pdf discovery,
+bounded-child PDF original extraction and scoped PDF page extraction. This is
+not local all-green. Exact Linux M666 CI passed independently, and A reviewed/
+imported the rehearsal preserving authorship. No active M full/reset suite remains.
+New documentation does not change that executable or require redundant suites.
+
+A assigned isolated judge-frontend preparation6651657301; M claim6652182735 delivers
+[the concrete handoff](deploy/JUDGE-FRONTEND-HANDOFF.md), corrects stale unsupported
+Canvas/Telegram claims in web setup and selects the A release-review path rather
+than the old app branch. It records a reviewed candidate SHA, web root/build/start,
+configuration names only, unresolved exact-origin choices, public/private smoke
+acceptance and A's already built collector0.3.4 identity. No package inspection,
+new collector build, hosted entrypoint, real sign-in or deployment is claimed.
+A must supply/select the final release/package location, hosting target and auth
+origins for scoped owner approval. No original product, account configuration,
+DNS, deployment, provider spend, retained migration or live service was changed.
