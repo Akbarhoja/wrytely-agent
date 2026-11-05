@@ -6,6 +6,8 @@ const labels: Record<string, string> = {
   model_not_found: "The configured model could not be found.",
   model_response_incomplete: "The model response was incomplete.",
   model_request_failed: "The model request failed.",
+  model_request_timed_out: "The model request timed out. Its outcome is unknown.",
+  model_connection_failed: "The connection to the model service failed. Its outcome is unknown.",
   episode_failed_or_unknown: "This check failed or its outcome is unknown.",
   inference_outcome_unknown: "The previous model call has an unknown outcome.",
   call_limit: "This supervision has reached its reserved-check limit.",
