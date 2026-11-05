@@ -6,6 +6,15 @@ Updated November 4, 2026. [Plan revision8](docs/BUILD-PLAN.md) ·
 
 ## Post-submission continuation
 
+A continues on `codex/json-draft-revision-acceptance` from release1813d84:
+real Store/original worker/Fireworks SDK MockTransport JSON drafting, checking,
+immutable revision and private Word export acceptance. This is synthetic model
+IO, not live course work. It is separate from M's Telegram signed-HTTP/full-v2
+file/revision rehearsal requested6650654975/6650718589. No app/transport edit or
+duplicate collector/runtime. New integration tests await actual CI/database proof;
+no live call, migration, deployment, grant or send. Original2.32163000/3 liability
+and paused operations unchanged. Existing release1813d84 full CI remains pending.
+
 ### Real preparation delivered and received
 
 Exacttimeout7abbefc fullCI41971364035 SUCCESS714integration/2164backend+alljobs,
