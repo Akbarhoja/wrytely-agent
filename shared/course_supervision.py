@@ -212,7 +212,7 @@ class CourseSupervisionStore:
                 preparations=[
                     {k: p[k] for k in ("key", "object_id", "evidence")} for p in row["preparations"]
                 ],
-                last_decision=row["last_decision"],
+                last_decision=row["last_decision"] if digest == row["snapshot_digest"] else None,
                 snapshot_digest=digest,
             )
 
